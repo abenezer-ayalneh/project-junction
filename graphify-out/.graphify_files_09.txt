@@ -1,0 +1,15 @@
+/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/security/ASVS-5-LEVEL-2-MATRIX.md
+/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/security/AUTHENTICATION-AUTHORIZATION-AND-DUAL-CONTROL.md
+/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/security/PRIVACY-DATA-SUBJECT-RIGHTS-AND-RETENTION.md
+/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/security/SECURITY-VERIFICATION-AND-RELEASE-GATES.md
+/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/security/THREAT-MODEL.md
+/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/security/WORKSPACE-VENDOR-AND-LOCATION-ISOLATION.md
+/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/state-machines/BOOKING-MEETING-AMENDMENT-AND-ATTENDANCE.md
+/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/state-machines/EARNING-TRANSFER-AND-PAYOUT.md
+/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/state-machines/INVENTORY-HOLD-CHECKOUT-AND-PAYMENT.md
+/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/state-machines/MODERATION-AND-DEMO-WORKSPACE.md
+/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/state-machines/PURCHASE-ORDER-AND-FULFILLMENT.md
+/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/state-machines/RETURN-DISPUTE-AND-SUPPORT-CASE.md
+/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/state-machines/STATE-MACHINE-INDEX.md
+/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/state-machines/VENDOR-LISTING-AND-MEDIA.md
+/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/ventures/verified-social-checkout-parked.md

@@ -1,0 +1,807 @@
+{
+	"nodes": [
+		{
+			"id": "runbooks_security_incident_and_data_breach_security_incident_response",
+			"label": "Security Incident Response",
+			"file_type": "rationale",
+			"source_file": "docs/operations/runbooks/SECURITY-INCIDENT-AND-DATA-BREACH.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null,
+			"rationale": "Contain the smallest safe scope, preserve restricted evidence, remediate through clean verified paths, and avoid unvalidated public or legal conclusions."
+		},
+		{
+			"id": "runbooks_security_incident_and_data_breach_restricted_incident_evidence",
+			"label": "Restricted Incident Evidence",
+			"file_type": "concept",
+			"source_file": "docs/operations/runbooks/SECURITY-INCIDENT-AND-DATA-BREACH.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "runbooks_stuck_holds_jobs_and_outbox_idempotent_operational_recovery",
+			"label": "Idempotent Operational Recovery",
+			"file_type": "rationale",
+			"source_file": "docs/operations/runbooks/STUCK-HOLDS-JOBS-AND-OUTBOX.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null,
+			"rationale": "Stuck holds, workers, and outbox events are resolved through declared state-machine transitions, lease checks, idempotent replay, and reconciliation instead of direct data repair."
+		},
+		{
+			"id": "runbooks_stuck_holds_jobs_and_outbox_rebuildable_projections",
+			"label": "Rebuildable Operational Projections",
+			"file_type": "concept",
+			"source_file": "docs/operations/runbooks/STUCK-HOLDS-JOBS-AND-OUTBOX.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "runbooks_vendor_suspension_and_appeal_vendor_suspension_appeal",
+			"label": "Vendor Suspension and Appeal",
+			"file_type": "rationale",
+			"source_file": "docs/operations/runbooks/VENDOR-SUSPENSION-AND-APPEAL.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null,
+			"rationale": "A documented case, proportionate action, preserved open commitments, protected communications, and independently reviewed appeal prevent enforcement from bypassing policy or financial remedies."
+		},
+		{
+			"id": "product_accessibility_i18n_and_low_connectivity_accessible_low_connectivity_experience",
+			"label": "Accessible Low-Connectivity Experience",
+			"file_type": "rationale",
+			"source_file": "docs/product/ACCESSIBILITY-I18N-AND-LOW-CONNECTIVITY.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null,
+			"rationale": "The target requires WCAG 2.2 AA, internationalization readiness, and safe offline behavior while authoritative availability, commerce, and provider mutations still require live confirmation."
+		},
+		{
+			"id": "product_audience_personas_and_jobs_technical_hiring_teams",
+			"label": "Technical Hiring Teams",
+			"file_type": "concept",
+			"source_file": "docs/product/AUDIENCE-PERSONAS-AND-JOBS.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "product_audience_personas_and_jobs_portfolio_reviewer",
+			"label": "Portfolio Reviewer Persona",
+			"file_type": "concept",
+			"source_file": "docs/product/AUDIENCE-PERSONAS-AND-JOBS.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "product_audience_personas_and_jobs_product_personas",
+			"label": "Marketplace Product Personas",
+			"file_type": "concept",
+			"source_file": "docs/product/AUDIENCE-PERSONAS-AND-JOBS.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "product_end_to_end_user_journeys_customer_mixed_commerce_journey",
+			"label": "Customer Mixed Commerce Journey",
+			"file_type": "concept",
+			"source_file": "docs/product/END-TO-END-USER-JOURNEYS.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "product_end_to_end_user_journeys_vendor_staff_journey",
+			"label": "Vendor and Staff Journey",
+			"file_type": "concept",
+			"source_file": "docs/product/END-TO-END-USER-JOURNEYS.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "product_end_to_end_user_journeys_platform_exception_journey",
+			"label": "Platform Exception-Handling Journey",
+			"file_type": "concept",
+			"source_file": "docs/product/END-TO-END-USER-JOURNEYS.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "product_feature_catalog_release_one_capability_boundary",
+			"label": "Release 1 Capability Boundary",
+			"file_type": "concept",
+			"source_file": "docs/product/FEATURE-CATALOG.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "product_feature_catalog_synthetic_public_demo",
+			"label": "Synthetic Public Demo",
+			"file_type": "concept",
+			"source_file": "docs/product/FEATURE-CATALOG.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "product_portfolio_positioning_and_claims_evidence_gated_portfolio_claims",
+			"label": "Evidence-Gated Portfolio Claims",
+			"file_type": "rationale",
+			"source_file": "docs/product/PORTFOLIO-POSITIONING-AND-CLAIMS.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null,
+			"rationale": "Claims may describe synthetic context, sandbox targets, and security verification targets, but cannot assert live payment, Vendor verification, deployment, certification, or marketplace operations without evidence."
+		},
+		{
+			"id": "product_product_description_portfolio_first_marketplace",
+			"label": "Portfolio-First Multi-Vendor Marketplace",
+			"file_type": "concept",
+			"source_file": "docs/product/PRODUCT-DESCRIPTION.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "product_product_description_integrity_promises",
+			"label": "Product Integrity Promises",
+			"file_type": "rationale",
+			"source_file": "docs/product/PRODUCT-DESCRIPTION.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null,
+			"rationale": "Every public claim must have normal, failure, security, accessibility, financial, support, and operational coverage, while the demo stays synthetic and commercial launch remains separately gated."
+		},
+		{
+			"id": "product_roles_permissions_and_responsibilities_product_role_model",
+			"label": "Product-Facing Role Model",
+			"file_type": "concept",
+			"source_file": "docs/product/ROLES-PERMISSIONS-AND-RESPONSIBILITIES.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "product_scope_and_exclusions_release_one_scope",
+			"label": "First Public Portfolio Release Scope",
+			"file_type": "concept",
+			"source_file": "docs/product/SCOPE-AND-EXCLUSIONS.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "product_scope_and_exclusions_excluded_capabilities",
+			"label": "Excluded and Deferred Capabilities",
+			"file_type": "concept",
+			"source_file": "docs/product/SCOPE-AND-EXCLUSIONS.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "product_seed_categories_and_synthetic_content_synthetic_dire_dawa_seed_content",
+			"label": "Synthetic Dire Dawa Seed Content",
+			"file_type": "concept",
+			"source_file": "docs/product/SEED-CATEGORIES-AND-SYNTHETIC-CONTENT.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "product_ux_design_system_and_responsiveness_adaptive_marketplace_pwa",
+			"label": "Adaptive Marketplace PWA",
+			"file_type": "concept",
+			"source_file": "docs/product/UX-DESIGN-SYSTEM-AND-RESPONSIVENESS.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "product_ux_design_system_and_responsiveness_design_token_system",
+			"label": "Design Token System",
+			"file_type": "concept",
+			"source_file": "docs/product/UX-DESIGN-SYSTEM-AND-RESPONSIVENESS.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "product_vision_outcomes_and_success_evidence_based_success",
+			"label": "Evidence-Based Success",
+			"file_type": "rationale",
+			"source_file": "docs/product/VISION-OUTCOMES-AND-SUCCESS.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null,
+			"rationale": "Future success requires release-gate, security, provider-failure, recovery, and reviewer-journey evidence rather than polished UI alone."
+		},
+		{
+			"id": "product_portfolio_demo_isolated_demo_workspace",
+			"label": "Isolated Demo Workspace",
+			"file_type": "concept",
+			"source_file": "docs/product/portfolio-demo.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "product_portfolio_demo_deterministic_demo_providers",
+			"label": "Deterministic Demo Provider Substitutes",
+			"file_type": "concept",
+			"source_file": "docs/product/portfolio-demo.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "product_portfolio_demo_demo_reviewer_journeys",
+			"label": "Demo Reviewer Journeys",
+			"file_type": "concept",
+			"source_file": "docs/product/portfolio-demo.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "quality_accessibility_i18n_and_low_connectivity_accessibility_quality_proof",
+			"label": "Accessibility, I18N, and Low-Connectivity Quality Proof",
+			"file_type": "concept",
+			"source_file": "docs/quality/ACCESSIBILITY-I18N-AND-LOW-CONNECTIVITY.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "quality_concurrency_and_financial_correctness_adversarial_concurrency_testing",
+			"label": "Adversarial Concurrency Testing",
+			"file_type": "concept",
+			"source_file": "docs/quality/CONCURRENCY-AND-FINANCIAL-CORRECTNESS.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "quality_concurrency_and_financial_correctness_financial_reconciliation",
+			"label": "Financial Reconciliation",
+			"file_type": "concept",
+			"source_file": "docs/quality/CONCURRENCY-AND-FINANCIAL-CORRECTNESS.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "quality_deployment_and_recovery_testing_recovery_drill_evidence",
+			"label": "Deployment and Recovery Drill Evidence",
+			"file_type": "concept",
+			"source_file": "docs/quality/DEPLOYMENT-AND-RECOVERY-TESTING.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "quality_evidence_index_evidence_index",
+			"label": "Evidence Index",
+			"file_type": "document",
+			"source_file": "docs/quality/EVIDENCE-INDEX.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "quality_evidence_index_requirement_acceptance_evidence",
+			"label": "Requirement and Acceptance Evidence",
+			"file_type": "concept",
+			"source_file": "docs/quality/EVIDENCE-INDEX.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "quality_evidence_index_security_review_evidence",
+			"label": "Security Review Evidence",
+			"file_type": "concept",
+			"source_file": "docs/quality/EVIDENCE-INDEX.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "quality_evidence_index_provider_contract_evidence",
+			"label": "Provider Contract Evidence",
+			"file_type": "concept",
+			"source_file": "docs/quality/EVIDENCE-INDEX.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "quality_evidence_index_recovery_runbook_drill_evidence",
+			"label": "Recovery Runbook Drill Evidence",
+			"file_type": "concept",
+			"source_file": "docs/quality/EVIDENCE-INDEX.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "quality_evidence_index_portfolio_claim_evidence",
+			"label": "Portfolio Claim Evidence",
+			"file_type": "concept",
+			"source_file": "docs/quality/EVIDENCE-INDEX.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		}
+	],
+	"edges": [
+		{
+			"source": "runbooks_security_incident_and_data_breach_security_incident_response",
+			"target": "runbooks_security_incident_and_data_breach_restricted_incident_evidence",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/operations/runbooks/SECURITY-INCIDENT-AND-DATA-BREACH.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "runbooks_security_incident_and_data_breach_security_incident_response",
+			"target": "quality_evidence_index_security_review_evidence",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/operations/runbooks/SECURITY-INCIDENT-AND-DATA-BREACH.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "runbooks_stuck_holds_jobs_and_outbox_idempotent_operational_recovery",
+			"target": "runbooks_stuck_holds_jobs_and_outbox_rebuildable_projections",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/operations/runbooks/STUCK-HOLDS-JOBS-AND-OUTBOX.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "runbooks_stuck_holds_jobs_and_outbox_idempotent_operational_recovery",
+			"target": "quality_concurrency_and_financial_correctness_adversarial_concurrency_testing",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/operations/runbooks/STUCK-HOLDS-JOBS-AND-OUTBOX.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "runbooks_vendor_suspension_and_appeal_vendor_suspension_appeal",
+			"target": "product_roles_permissions_and_responsibilities_product_role_model",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/operations/runbooks/VENDOR-SUSPENSION-AND-APPEAL.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "product_audience_personas_and_jobs_technical_hiring_teams",
+			"target": "product_audience_personas_and_jobs_portfolio_reviewer",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/product/AUDIENCE-PERSONAS-AND-JOBS.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "product_audience_personas_and_jobs_portfolio_reviewer",
+			"target": "product_portfolio_demo_demo_reviewer_journeys",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/product/portfolio-demo.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "product_audience_personas_and_jobs_product_personas",
+			"target": "product_end_to_end_user_journeys_customer_mixed_commerce_journey",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/product/END-TO-END-USER-JOURNEYS.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "product_audience_personas_and_jobs_product_personas",
+			"target": "product_end_to_end_user_journeys_vendor_staff_journey",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/product/END-TO-END-USER-JOURNEYS.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "product_audience_personas_and_jobs_product_personas",
+			"target": "product_end_to_end_user_journeys_platform_exception_journey",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/product/END-TO-END-USER-JOURNEYS.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "product_end_to_end_user_journeys_customer_mixed_commerce_journey",
+			"target": "product_feature_catalog_release_one_capability_boundary",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/product/END-TO-END-USER-JOURNEYS.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "product_end_to_end_user_journeys_platform_exception_journey",
+			"target": "runbooks_stuck_holds_jobs_and_outbox_idempotent_operational_recovery",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/product/END-TO-END-USER-JOURNEYS.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "product_feature_catalog_release_one_capability_boundary",
+			"target": "product_feature_catalog_synthetic_public_demo",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/product/FEATURE-CATALOG.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "product_feature_catalog_release_one_capability_boundary",
+			"target": "product_scope_and_exclusions_release_one_scope",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/product/FEATURE-CATALOG.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "product_feature_catalog_release_one_capability_boundary",
+			"target": "product_scope_and_exclusions_excluded_capabilities",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/product/FEATURE-CATALOG.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "product_product_description_portfolio_first_marketplace",
+			"target": "product_product_description_integrity_promises",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/product/PRODUCT-DESCRIPTION.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "product_product_description_portfolio_first_marketplace",
+			"target": "product_feature_catalog_release_one_capability_boundary",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/product/PRODUCT-DESCRIPTION.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "product_product_description_integrity_promises",
+			"target": "product_portfolio_positioning_and_claims_evidence_gated_portfolio_claims",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/product/PORTFOLIO-POSITIONING-AND-CLAIMS.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "product_product_description_integrity_promises",
+			"target": "product_portfolio_demo_isolated_demo_workspace",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/product/PRODUCT-DESCRIPTION.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "product_roles_permissions_and_responsibilities_product_role_model",
+			"target": "product_audience_personas_and_jobs_product_personas",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/product/ROLES-PERMISSIONS-AND-RESPONSIBILITIES.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "product_seed_categories_and_synthetic_content_synthetic_dire_dawa_seed_content",
+			"target": "product_portfolio_demo_isolated_demo_workspace",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/product/SEED-CATEGORIES-AND-SYNTHETIC-CONTENT.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "product_ux_design_system_and_responsiveness_adaptive_marketplace_pwa",
+			"target": "product_ux_design_system_and_responsiveness_design_token_system",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/product/UX-DESIGN-SYSTEM-AND-RESPONSIVENESS.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "product_ux_design_system_and_responsiveness_adaptive_marketplace_pwa",
+			"target": "product_accessibility_i18n_and_low_connectivity_accessible_low_connectivity_experience",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/product/UX-DESIGN-SYSTEM-AND-RESPONSIVENESS.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "product_accessibility_i18n_and_low_connectivity_accessible_low_connectivity_experience",
+			"target": "quality_accessibility_i18n_and_low_connectivity_accessibility_quality_proof",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/quality/ACCESSIBILITY-I18N-AND-LOW-CONNECTIVITY.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "product_vision_outcomes_and_success_evidence_based_success",
+			"target": "quality_evidence_index_evidence_index",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/product/VISION-OUTCOMES-AND-SUCCESS.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "product_portfolio_demo_isolated_demo_workspace",
+			"target": "product_portfolio_demo_deterministic_demo_providers",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/product/portfolio-demo.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "product_portfolio_demo_isolated_demo_workspace",
+			"target": "product_portfolio_demo_demo_reviewer_journeys",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/product/portfolio-demo.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "quality_concurrency_and_financial_correctness_adversarial_concurrency_testing",
+			"target": "quality_concurrency_and_financial_correctness_financial_reconciliation",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/quality/CONCURRENCY-AND-FINANCIAL-CORRECTNESS.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "quality_deployment_and_recovery_testing_recovery_drill_evidence",
+			"target": "quality_evidence_index_recovery_runbook_drill_evidence",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/quality/DEPLOYMENT-AND-RECOVERY-TESTING.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "quality_evidence_index_evidence_index",
+			"target": "quality_evidence_index_requirement_acceptance_evidence",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/quality/EVIDENCE-INDEX.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "quality_evidence_index_evidence_index",
+			"target": "quality_evidence_index_security_review_evidence",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/quality/EVIDENCE-INDEX.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "quality_evidence_index_evidence_index",
+			"target": "quality_evidence_index_provider_contract_evidence",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/quality/EVIDENCE-INDEX.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "quality_evidence_index_evidence_index",
+			"target": "quality_evidence_index_recovery_runbook_drill_evidence",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/quality/EVIDENCE-INDEX.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "quality_evidence_index_evidence_index",
+			"target": "quality_evidence_index_portfolio_claim_evidence",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/quality/EVIDENCE-INDEX.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "product_portfolio_positioning_and_claims_evidence_gated_portfolio_claims",
+			"target": "quality_evidence_index_portfolio_claim_evidence",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/product/PORTFOLIO-POSITIONING-AND-CLAIMS.md",
+			"source_location": null,
+			"weight": 1.0
+		}
+	],
+	"hyperedges": [
+		{
+			"id": "complete_public_feature_evidence",
+			"label": "Complete Public Feature Evidence",
+			"nodes": [
+				"product_product_description_integrity_promises",
+				"product_vision_outcomes_and_success_evidence_based_success",
+				"quality_evidence_index_requirement_acceptance_evidence",
+				"quality_evidence_index_security_review_evidence",
+				"quality_evidence_index_provider_contract_evidence",
+				"quality_evidence_index_recovery_runbook_drill_evidence",
+				"quality_evidence_index_portfolio_claim_evidence"
+			],
+			"relation": "participate_in",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/product/VISION-OUTCOMES-AND-SUCCESS.md"
+		},
+		{
+			"id": "safe_synthetic_demo_review",
+			"label": "Safe Synthetic Demo Review",
+			"nodes": [
+				"product_audience_personas_and_jobs_portfolio_reviewer",
+				"product_feature_catalog_synthetic_public_demo",
+				"product_portfolio_demo_isolated_demo_workspace",
+				"product_portfolio_demo_deterministic_demo_providers",
+				"product_portfolio_demo_demo_reviewer_journeys",
+				"product_seed_categories_and_synthetic_content_synthetic_dire_dawa_seed_content"
+			],
+			"relation": "participate_in",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/product/portfolio-demo.md"
+		}
+	],
+	"input_tokens": 0,
+	"output_tokens": 0
+}

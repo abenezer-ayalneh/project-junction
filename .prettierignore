@@ -1,0 +1,7 @@
+.nx
+.pnpm-store
+coverage
+dist
+logs
+node_modules
+tmp

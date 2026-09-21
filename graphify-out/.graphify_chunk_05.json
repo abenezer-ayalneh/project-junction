@@ -1,0 +1,1171 @@
+{
+	"nodes": [
+		{
+			"id": "environments_developer_workflows_and_troubleshooting_target_daily_workflow",
+			"label": "Target Daily Workflow",
+			"file_type": "concept",
+			"source_file": "docs/environments/DEVELOPER-WORKFLOWS-AND-TROUBLESHOOTING.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "environments_developer_workflows_and_troubleshooting_generated_contracts",
+			"label": "Generated Contracts",
+			"file_type": "concept",
+			"source_file": "docs/environments/DEVELOPER-WORKFLOWS-AND-TROUBLESHOOTING.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "environments_developer_workflows_and_troubleshooting_synthetic_journey_evidence",
+			"label": "Synthetic Journey Evidence",
+			"file_type": "concept",
+			"source_file": "docs/environments/DEVELOPER-WORKFLOWS-AND-TROUBLESHOOTING.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "environments_environment_matrix_environment_classes",
+			"label": "Environment Classes",
+			"file_type": "concept",
+			"source_file": "docs/environments/ENVIRONMENT-MATRIX.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "environments_environment_matrix_environment_isolation",
+			"label": "Environment Isolation Invariants",
+			"file_type": "concept",
+			"source_file": "docs/environments/ENVIRONMENT-MATRIX.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "environments_local_development_prerequisites_required_tool_families",
+			"label": "Required Local Tool Families",
+			"file_type": "concept",
+			"source_file": "docs/environments/LOCAL-DEVELOPMENT-PREREQUISITES.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "environments_local_development_prerequisites_node_24_lts",
+			"label": "Node.js 24 LTS",
+			"file_type": "concept",
+			"source_file": "docs/environments/LOCAL-DEVELOPMENT-PREREQUISITES.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "environments_local_development_setup_target_bootstrap_procedure",
+			"label": "Target Local Bootstrap Procedure",
+			"file_type": "concept",
+			"source_file": "docs/environments/LOCAL-DEVELOPMENT-SETUP.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "environments_local_development_setup_synthetic_local_seed",
+			"label": "Synthetic Local Seed",
+			"file_type": "concept",
+			"source_file": "docs/environments/LOCAL-DEVELOPMENT-SETUP.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "environments_local_services_ports_and_dependencies_intended_service_map",
+			"label": "Intended Local Service Map",
+			"file_type": "concept",
+			"source_file": "docs/environments/LOCAL-SERVICES-PORTS-AND-DEPENDENCIES.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "environments_local_services_ports_and_dependencies_dependency_readiness",
+			"label": "Dependency Readiness Order",
+			"file_type": "concept",
+			"source_file": "docs/environments/LOCAL-SERVICES-PORTS-AND-DEPENDENCIES.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "environments_provider_sandbox_and_fake_adapters_adapter_modes",
+			"label": "Provider Adapter Modes",
+			"file_type": "concept",
+			"source_file": "docs/environments/PROVIDER-SANDBOX-AND-FAKE-ADAPTERS.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "environments_provider_sandbox_and_fake_adapters_fake_payment",
+			"label": "FakePayment Adapter",
+			"file_type": "concept",
+			"source_file": "docs/environments/PROVIDER-SANDBOX-AND-FAKE-ADAPTERS.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "environments_provider_sandbox_and_fake_adapters_callback_boundary",
+			"label": "Provider Callback Boundary",
+			"file_type": "concept",
+			"source_file": "docs/environments/PROVIDER-SANDBOX-AND-FAKE-ADAPTERS.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "future_bounded_pilot_and_go_no_go_bounded_pilot",
+			"label": "Bounded Pilot",
+			"file_type": "concept",
+			"source_file": "docs/future/BOUNDED-PILOT-AND-GO-NO-GO.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "future_bounded_pilot_and_go_no_go_go_no_go_record",
+			"label": "Go/No-Go Record",
+			"file_type": "concept",
+			"source_file": "docs/future/BOUNDED-PILOT-AND-GO-NO-GO.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "future_deferred_capability_backlog_deferred_capability_backlog",
+			"label": "Deferred Capability Backlog",
+			"file_type": "concept",
+			"source_file": "docs/future/DEFERRED-CAPABILITY-BACKLOG.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "future_dire_dawa_commercial_launch_gates_commercial_launch_gates",
+			"label": "Dire Dawa Commercial Launch Gates",
+			"file_type": "concept",
+			"source_file": "docs/future/DIRE-DAWA-COMMERCIAL-LAUNCH-GATES.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "future_dire_dawa_research_plan_market_research",
+			"label": "Dire Dawa Market Research",
+			"file_type": "concept",
+			"source_file": "docs/future/DIRE-DAWA-RESEARCH-PLAN.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "future_environment_separation_and_no_data_promotion_no_data_promotion",
+			"label": "No Data Promotion",
+			"file_type": "concept",
+			"source_file": "docs/future/ENVIRONMENT-SEPARATION-AND-NO-DATA-PROMOTION.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "future_regulatory_payment_tax_kyb_and_invoicing_validation_regulatory_validation",
+			"label": "Regulatory and Commercial Validation",
+			"file_type": "concept",
+			"source_file": "docs/future/REGULATORY-PAYMENT-TAX-KYB-AND-INVOICING-VALIDATION.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "future_vendor_demand_logistics_and_unit_economics_unit_economics",
+			"label": "Vendor Demand, Logistics, and Unit Economics",
+			"file_type": "concept",
+			"source_file": "docs/future/VENDOR-DEMAND-LOGISTICS-AND-UNIT-ECONOMICS.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "governance_assumptions_risks_and_open_questions_accepted_assumptions",
+			"label": "Accepted Baseline Assumptions",
+			"file_type": "concept",
+			"source_file": "docs/governance/ASSUMPTIONS-RISKS-AND-OPEN-QUESTIONS.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "governance_assumptions_risks_and_open_questions_future_validation_risks",
+			"label": "Future Validation Risks",
+			"file_type": "concept",
+			"source_file": "docs/governance/ASSUMPTIONS-RISKS-AND-OPEN-QUESTIONS.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "governance_authoritative_source_register_authoritative_source_register",
+			"label": "Authoritative Source Register",
+			"file_type": "concept",
+			"source_file": "docs/governance/AUTHORITATIVE-SOURCE-REGISTER.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "governance_authoritative_source_register_owasp_asvs_5_0",
+			"label": "OWASP ASVS 5.0",
+			"file_type": "document",
+			"source_file": "docs/governance/AUTHORITATIVE-SOURCE-REGISTER.md",
+			"source_location": null,
+			"source_url": "https://github.com/OWASP/ASVS/blob/master/5.0/en/0x03-What-is-the-ASVS.md",
+			"captured_at": "2026-08-27",
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "governance_authoritative_source_register_stripe_connect_testing",
+			"label": "Stripe Connect Testing",
+			"file_type": "document",
+			"source_file": "docs/governance/AUTHORITATIVE-SOURCE-REGISTER.md",
+			"source_location": null,
+			"source_url": "https://docs.stripe.com/connect/testing",
+			"captured_at": "2026-08-27",
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "governance_authoritative_source_register_node_releases",
+			"label": "Node.js Releases",
+			"file_type": "document",
+			"source_file": "docs/governance/AUTHORITATIVE-SOURCE-REGISTER.md",
+			"source_location": null,
+			"source_url": "https://nodejs.org/en/about/previous-releases",
+			"captured_at": "2026-08-27",
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "governance_coverage_audit_0_1_documentation_audit",
+			"label": "Documentation Coverage Audit",
+			"file_type": "concept",
+			"source_file": "docs/governance/COVERAGE-AUDIT-0.1.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "governance_documentation_conventions_normative_home",
+			"label": "Single Normative Home",
+			"file_type": "concept",
+			"source_file": "docs/governance/DOCUMENTATION-CONVENTIONS.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "governance_documentation_conventions_provenance_rules",
+			"label": "Documentation Provenance Rules",
+			"file_type": "concept",
+			"source_file": "docs/governance/DOCUMENTATION-CONVENTIONS.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "governance_rejected_deferred_and_superseded_release_1_exclusions",
+			"label": "Release 1 Exclusions",
+			"file_type": "concept",
+			"source_file": "docs/governance/REJECTED-DEFERRED-AND-SUPERSEDED.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "governance_rejected_deferred_and_superseded_superseded_release_strategy",
+			"label": "Superseded Public Release Strategy",
+			"file_type": "concept",
+			"source_file": "docs/governance/REJECTED-DEFERRED-AND-SUPERSEDED.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "governance_source_ledger_direct_selection_source_map",
+			"label": "Direct Selection Source Map",
+			"file_type": "concept",
+			"source_file": "docs/governance/SOURCE-LEDGER.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "governance_source_ledger_non_decision_sources",
+			"label": "Non-Decision Source Classification",
+			"file_type": "concept",
+			"source_file": "docs/governance/SOURCE-LEDGER.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "governance_traceability_matrix_traceability_chain",
+			"label": "Decision-to-Evidence Traceability Chain",
+			"file_type": "concept",
+			"source_file": "docs/governance/TRACEABILITY-MATRIX.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "governance_source_ledger_appendix_individual_source_classification",
+			"label": "Individual Source Classification",
+			"file_type": "concept",
+			"source_file": "docs/governance/SOURCE-LEDGER-APPENDIX.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "governance_decision_register_dec_004_uniform_production_depth",
+			"label": "DEC-004 Uniform Production Depth",
+			"file_type": "concept",
+			"source_file": "docs/governance/DECISION-REGISTER.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "governance_decision_register_dec_077_stripe_sandbox_simulation",
+			"label": "DEC-077 Stripe Sandbox Simulation",
+			"file_type": "concept",
+			"source_file": "docs/governance/DECISION-REGISTER.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "governance_decision_register_dec_109_no_data_promotion",
+			"label": "DEC-109 Permanent Environment Separation",
+			"file_type": "concept",
+			"source_file": "docs/governance/DECISION-REGISTER.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "governance_decision_register_dec_121_target_toolchain",
+			"label": "DEC-121 Target Toolchain",
+			"file_type": "concept",
+			"source_file": "docs/governance/DECISION-REGISTER.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "governance_decision_register_dec_125_atomic_checkout_hold",
+			"label": "DEC-125 Atomic Checkout Hold",
+			"file_type": "concept",
+			"source_file": "docs/governance/DECISION-REGISTER.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "governance_decision_register_dec_138_superseded_release",
+			"label": "DEC-138 Superseded Release Scope",
+			"file_type": "concept",
+			"source_file": "docs/governance/DECISION-REGISTER.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "governance_decision_register_dec_153_asvs_level_2",
+			"label": "DEC-153 ASVS Level 2",
+			"file_type": "concept",
+			"source_file": "docs/governance/DECISION-REGISTER.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "governance_decision_register_dec_157_broader_public_release",
+			"label": "DEC-157 Mixed Goods and Bookings Release",
+			"file_type": "concept",
+			"source_file": "docs/governance/DECISION-REGISTER.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "governance_decision_register_dec_179_service_cost_ceiling",
+			"label": "DEC-179 Third-Party Service Cost Ceiling",
+			"file_type": "concept",
+			"source_file": "docs/governance/DECISION-REGISTER.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		},
+		{
+			"id": "governance_decision_register_dec_189_pending_vendor_restriction",
+			"label": "DEC-189 Pending Vendor Restriction",
+			"file_type": "concept",
+			"source_file": "docs/governance/DECISION-REGISTER.md",
+			"source_location": null,
+			"source_url": null,
+			"captured_at": null,
+			"author": null,
+			"contributor": null
+		}
+	],
+	"edges": [
+		{
+			"source": "environments_developer_workflows_and_troubleshooting_target_daily_workflow",
+			"target": "environments_local_development_setup_target_bootstrap_procedure",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/environments/DEVELOPER-WORKFLOWS-AND-TROUBLESHOOTING.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "environments_developer_workflows_and_troubleshooting_target_daily_workflow",
+			"target": "environments_developer_workflows_and_troubleshooting_generated_contracts",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/environments/DEVELOPER-WORKFLOWS-AND-TROUBLESHOOTING.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "environments_developer_workflows_and_troubleshooting_target_daily_workflow",
+			"target": "environments_developer_workflows_and_troubleshooting_synthetic_journey_evidence",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/environments/DEVELOPER-WORKFLOWS-AND-TROUBLESHOOTING.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "environments_developer_workflows_and_troubleshooting_generated_contracts",
+			"target": "environments_developer_workflows_and_troubleshooting_synthetic_journey_evidence",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/environments/DEVELOPER-WORKFLOWS-AND-TROUBLESHOOTING.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "environments_environment_matrix_environment_classes",
+			"target": "environments_environment_matrix_environment_isolation",
+			"relation": "implements",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/environments/ENVIRONMENT-MATRIX.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "environments_environment_matrix_environment_isolation",
+			"target": "future_environment_separation_and_no_data_promotion_no_data_promotion",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/environments/ENVIRONMENT-MATRIX.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "environments_environment_matrix_environment_classes",
+			"target": "environments_provider_sandbox_and_fake_adapters_adapter_modes",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/environments/ENVIRONMENT-MATRIX.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "environments_local_development_prerequisites_required_tool_families",
+			"target": "environments_local_development_prerequisites_node_24_lts",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/environments/LOCAL-DEVELOPMENT-PREREQUISITES.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "environments_local_development_prerequisites_node_24_lts",
+			"target": "governance_decision_register_dec_121_target_toolchain",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/environments/LOCAL-DEVELOPMENT-PREREQUISITES.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "environments_local_development_setup_target_bootstrap_procedure",
+			"target": "environments_local_services_ports_and_dependencies_intended_service_map",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/environments/LOCAL-DEVELOPMENT-SETUP.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "environments_local_development_setup_target_bootstrap_procedure",
+			"target": "environments_local_development_setup_synthetic_local_seed",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/environments/LOCAL-DEVELOPMENT-SETUP.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "environments_local_development_setup_target_bootstrap_procedure",
+			"target": "environments_provider_sandbox_and_fake_adapters_adapter_modes",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/environments/LOCAL-DEVELOPMENT-SETUP.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "environments_local_services_ports_and_dependencies_intended_service_map",
+			"target": "environments_local_services_ports_and_dependencies_dependency_readiness",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/environments/LOCAL-SERVICES-PORTS-AND-DEPENDENCIES.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "environments_local_services_ports_and_dependencies_dependency_readiness",
+			"target": "environments_local_development_setup_target_bootstrap_procedure",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/environments/LOCAL-SERVICES-PORTS-AND-DEPENDENCIES.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "environments_provider_sandbox_and_fake_adapters_adapter_modes",
+			"target": "environments_provider_sandbox_and_fake_adapters_fake_payment",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/environments/PROVIDER-SANDBOX-AND-FAKE-ADAPTERS.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "environments_provider_sandbox_and_fake_adapters_adapter_modes",
+			"target": "environments_provider_sandbox_and_fake_adapters_callback_boundary",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/environments/PROVIDER-SANDBOX-AND-FAKE-ADAPTERS.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "environments_provider_sandbox_and_fake_adapters_fake_payment",
+			"target": "governance_decision_register_dec_077_stripe_sandbox_simulation",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/environments/PROVIDER-SANDBOX-AND-FAKE-ADAPTERS.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "environments_provider_sandbox_and_fake_adapters_callback_boundary",
+			"target": "environments_developer_workflows_and_troubleshooting_synthetic_journey_evidence",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/environments/PROVIDER-SANDBOX-AND-FAKE-ADAPTERS.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "future_bounded_pilot_and_go_no_go_bounded_pilot",
+			"target": "future_dire_dawa_commercial_launch_gates_commercial_launch_gates",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/future/BOUNDED-PILOT-AND-GO-NO-GO.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "future_bounded_pilot_and_go_no_go_go_no_go_record",
+			"target": "future_bounded_pilot_and_go_no_go_bounded_pilot",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/future/BOUNDED-PILOT-AND-GO-NO-GO.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "future_deferred_capability_backlog_deferred_capability_backlog",
+			"target": "future_regulatory_payment_tax_kyb_and_invoicing_validation_regulatory_validation",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/future/DEFERRED-CAPABILITY-BACKLOG.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "future_deferred_capability_backlog_deferred_capability_backlog",
+			"target": "future_vendor_demand_logistics_and_unit_economics_unit_economics",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/future/DEFERRED-CAPABILITY-BACKLOG.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "future_dire_dawa_commercial_launch_gates_commercial_launch_gates",
+			"target": "future_dire_dawa_research_plan_market_research",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/future/DIRE-DAWA-COMMERCIAL-LAUNCH-GATES.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "future_dire_dawa_commercial_launch_gates_commercial_launch_gates",
+			"target": "future_regulatory_payment_tax_kyb_and_invoicing_validation_regulatory_validation",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/future/DIRE-DAWA-COMMERCIAL-LAUNCH-GATES.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "future_dire_dawa_commercial_launch_gates_commercial_launch_gates",
+			"target": "future_vendor_demand_logistics_and_unit_economics_unit_economics",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/future/DIRE-DAWA-COMMERCIAL-LAUNCH-GATES.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "future_dire_dawa_commercial_launch_gates_commercial_launch_gates",
+			"target": "future_bounded_pilot_and_go_no_go_go_no_go_record",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/future/DIRE-DAWA-COMMERCIAL-LAUNCH-GATES.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "future_dire_dawa_research_plan_market_research",
+			"target": "future_bounded_pilot_and_go_no_go_bounded_pilot",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/future/DIRE-DAWA-RESEARCH-PLAN.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "future_environment_separation_and_no_data_promotion_no_data_promotion",
+			"target": "environments_environment_matrix_environment_isolation",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/future/ENVIRONMENT-SEPARATION-AND-NO-DATA-PROMOTION.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "future_environment_separation_and_no_data_promotion_no_data_promotion",
+			"target": "future_dire_dawa_commercial_launch_gates_commercial_launch_gates",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/future/ENVIRONMENT-SEPARATION-AND-NO-DATA-PROMOTION.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "future_regulatory_payment_tax_kyb_and_invoicing_validation_regulatory_validation",
+			"target": "governance_authoritative_source_register_authoritative_source_register",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/future/REGULATORY-PAYMENT-TAX-KYB-AND-INVOICING-VALIDATION.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "future_regulatory_payment_tax_kyb_and_invoicing_validation_regulatory_validation",
+			"target": "governance_decision_register_dec_077_stripe_sandbox_simulation",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/future/REGULATORY-PAYMENT-TAX-KYB-AND-INVOICING-VALIDATION.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "future_vendor_demand_logistics_and_unit_economics_unit_economics",
+			"target": "future_bounded_pilot_and_go_no_go_bounded_pilot",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/future/VENDOR-DEMAND-LOGISTICS-AND-UNIT-ECONOMICS.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "future_vendor_demand_logistics_and_unit_economics_unit_economics",
+			"target": "governance_decision_register_dec_179_service_cost_ceiling",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/future/VENDOR-DEMAND-LOGISTICS-AND-UNIT-ECONOMICS.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "governance_assumptions_risks_and_open_questions_accepted_assumptions",
+			"target": "future_dire_dawa_commercial_launch_gates_commercial_launch_gates",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/governance/ASSUMPTIONS-RISKS-AND-OPEN-QUESTIONS.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "governance_assumptions_risks_and_open_questions_future_validation_risks",
+			"target": "future_regulatory_payment_tax_kyb_and_invoicing_validation_regulatory_validation",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/governance/ASSUMPTIONS-RISKS-AND-OPEN-QUESTIONS.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "governance_authoritative_source_register_authoritative_source_register",
+			"target": "governance_authoritative_source_register_owasp_asvs_5_0",
+			"relation": "cites",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/governance/AUTHORITATIVE-SOURCE-REGISTER.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "governance_authoritative_source_register_authoritative_source_register",
+			"target": "governance_authoritative_source_register_stripe_connect_testing",
+			"relation": "cites",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/governance/AUTHORITATIVE-SOURCE-REGISTER.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "governance_authoritative_source_register_authoritative_source_register",
+			"target": "governance_authoritative_source_register_node_releases",
+			"relation": "cites",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/governance/AUTHORITATIVE-SOURCE-REGISTER.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "governance_authoritative_source_register_owasp_asvs_5_0",
+			"target": "governance_decision_register_dec_153_asvs_level_2",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/governance/AUTHORITATIVE-SOURCE-REGISTER.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "governance_authoritative_source_register_stripe_connect_testing",
+			"target": "governance_decision_register_dec_077_stripe_sandbox_simulation",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/governance/AUTHORITATIVE-SOURCE-REGISTER.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "governance_authoritative_source_register_node_releases",
+			"target": "governance_decision_register_dec_121_target_toolchain",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/governance/AUTHORITATIVE-SOURCE-REGISTER.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "governance_coverage_audit_0_1_documentation_audit",
+			"target": "governance_source_ledger_direct_selection_source_map",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/governance/COVERAGE-AUDIT-0.1.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "governance_coverage_audit_0_1_documentation_audit",
+			"target": "governance_traceability_matrix_traceability_chain",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/governance/COVERAGE-AUDIT-0.1.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "governance_coverage_audit_0_1_documentation_audit",
+			"target": "governance_decision_register_dec_138_superseded_release",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/governance/COVERAGE-AUDIT-0.1.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "governance_documentation_conventions_normative_home",
+			"target": "governance_decision_register_dec_004_uniform_production_depth",
+			"relation": "conceptually_related_to",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/governance/DOCUMENTATION-CONVENTIONS.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "governance_documentation_conventions_provenance_rules",
+			"target": "governance_source_ledger_non_decision_sources",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/governance/DOCUMENTATION-CONVENTIONS.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "governance_rejected_deferred_and_superseded_release_1_exclusions",
+			"target": "future_deferred_capability_backlog_deferred_capability_backlog",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/governance/REJECTED-DEFERRED-AND-SUPERSEDED.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "governance_rejected_deferred_and_superseded_superseded_release_strategy",
+			"target": "governance_decision_register_dec_138_superseded_release",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/governance/REJECTED-DEFERRED-AND-SUPERSEDED.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "governance_rejected_deferred_and_superseded_superseded_release_strategy",
+			"target": "governance_decision_register_dec_157_broader_public_release",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/governance/REJECTED-DEFERRED-AND-SUPERSEDED.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "governance_source_ledger_direct_selection_source_map",
+			"target": "governance_source_ledger_appendix_individual_source_classification",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/governance/SOURCE-LEDGER.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "governance_source_ledger_direct_selection_source_map",
+			"target": "governance_traceability_matrix_traceability_chain",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/governance/SOURCE-LEDGER.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "governance_source_ledger_non_decision_sources",
+			"target": "governance_documentation_conventions_provenance_rules",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/governance/SOURCE-LEDGER.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "governance_traceability_matrix_traceability_chain",
+			"target": "governance_source_ledger_appendix_individual_source_classification",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/governance/TRACEABILITY-MATRIX.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "governance_traceability_matrix_traceability_chain",
+			"target": "governance_decision_register_dec_125_atomic_checkout_hold",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/governance/TRACEABILITY-MATRIX.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "governance_source_ledger_appendix_individual_source_classification",
+			"target": "governance_source_ledger_direct_selection_source_map",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/governance/SOURCE-LEDGER-APPENDIX.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "governance_source_ledger_appendix_individual_source_classification",
+			"target": "governance_decision_register_dec_004_uniform_production_depth",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/governance/SOURCE-LEDGER-APPENDIX.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "governance_source_ledger_appendix_individual_source_classification",
+			"target": "governance_decision_register_dec_189_pending_vendor_restriction",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/governance/SOURCE-LEDGER-APPENDIX.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "governance_decision_register_dec_109_no_data_promotion",
+			"target": "future_environment_separation_and_no_data_promotion_no_data_promotion",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/governance/DECISION-REGISTER.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "governance_decision_register_dec_138_superseded_release",
+			"target": "governance_decision_register_dec_157_broader_public_release",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/governance/DECISION-REGISTER.md",
+			"source_location": null,
+			"weight": 1.0
+		},
+		{
+			"source": "governance_decision_register_dec_179_service_cost_ceiling",
+			"target": "future_vendor_demand_logistics_and_unit_economics_unit_economics",
+			"relation": "references",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/governance/DECISION-REGISTER.md",
+			"source_location": null,
+			"weight": 1.0
+		}
+	],
+	"hyperedges": [
+		{
+			"id": "environment_boundary_controls",
+			"label": "Environment Boundary Controls",
+			"nodes": [
+				"environments_environment_matrix_environment_classes",
+				"environments_environment_matrix_environment_isolation",
+				"future_environment_separation_and_no_data_promotion_no_data_promotion",
+				"environments_provider_sandbox_and_fake_adapters_adapter_modes"
+			],
+			"relation": "participate_in",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/environments/ENVIRONMENT-MATRIX.md"
+		},
+		{
+			"id": "documentation_governance_traceability",
+			"label": "Documentation Governance Traceability",
+			"nodes": [
+				"governance_documentation_conventions_normative_home",
+				"governance_source_ledger_direct_selection_source_map",
+				"governance_source_ledger_appendix_individual_source_classification",
+				"governance_traceability_matrix_traceability_chain",
+				"governance_coverage_audit_0_1_documentation_audit"
+			],
+			"relation": "form",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/governance/TRACEABILITY-MATRIX.md"
+		},
+		{
+			"id": "commercial_launch_authorization",
+			"label": "Commercial Launch Authorization",
+			"nodes": [
+				"future_dire_dawa_commercial_launch_gates_commercial_launch_gates",
+				"future_dire_dawa_research_plan_market_research",
+				"future_regulatory_payment_tax_kyb_and_invoicing_validation_regulatory_validation",
+				"future_vendor_demand_logistics_and_unit_economics_unit_economics",
+				"future_bounded_pilot_and_go_no_go_bounded_pilot"
+			],
+			"relation": "participate_in",
+			"confidence": "EXTRACTED",
+			"confidence_score": 1.0,
+			"source_file": "docs/future/DIRE-DAWA-COMMERCIAL-LAUNCH-GATES.md"
+		}
+	],
+	"input_tokens": 0,
+	"output_tokens": 0
+}

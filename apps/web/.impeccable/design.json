@@ -1,0 +1,58 @@
+{
+	"schemaVersion": 2,
+	"generatedAt": "2026-08-31T00:00:00.000Z",
+	"title": "Design System: Project Junction",
+	"extensions": {
+		"colorMeta": {
+			"canvas": {
+				"role": "neutral",
+				"displayName": "Cool Canvas",
+				"canonical": "oklch(0.975 0.006 255)",
+				"tonalRamp": ["oklch(0.995 0.003 255)", "oklch(0.975 0.006 255)", "oklch(0.885 0.015 265)"]
+			},
+			"signal": {
+				"role": "primary",
+				"displayName": "Signal Indigo",
+				"canonical": "oklch(0.49 0.19 270)",
+				"tonalRamp": ["oklch(0.94 0.045 270)", "oklch(0.49 0.19 270)", "oklch(0.29 0.06 270)"]
+			}
+		},
+		"typographyMeta": {
+			"display": { "displayName": "Foundation Display", "purpose": "One platform-boundary statement per first viewport." },
+			"body": { "displayName": "Operational Body", "purpose": "Calm explanatory copy with an intentionally readable measure." }
+		},
+		"shadows": [
+			{ "name": "proof-panel", "value": "0 20px 45px oklch(0.2 0.02 267 / 0.11)", "purpose": "Lifts the current-proof instrument from the page field." }
+		],
+		"breakpoints": [
+			{ "name": "sm", "value": "640px" },
+			{ "name": "lg", "value": "1024px" }
+		]
+	},
+	"components": [
+		{
+			"name": "Synthetic Runtime Status",
+			"kind": "chip",
+			"refersTo": "status-chip",
+			"description": "Non-interactive disclosure of the current execution boundary.",
+			"html": "<span class=\"ds-status\">Synthetic runtime only</span>",
+			"css": ".ds-status { border: 1px solid oklch(0.885 0.015 265); border-radius: 999px; color: oklch(0.48 0.025 267); font: 650 12px/1.2 'Avenir Next', Avenir, 'Segoe UI', sans-serif; padding: 7px 11px; }"
+		},
+		{
+			"name": "Capability Marker",
+			"kind": "custom",
+			"refersTo": "capability-marker",
+			"description": "A compact sequence marker for independently auditable foundation capabilities.",
+			"html": "<span class=\"ds-marker\">01</span>",
+			"css": ".ds-marker { align-items: center; background: oklch(0.94 0.045 270); border-radius: 8px; color: oklch(0.49 0.19 270); display: inline-flex; font: 700 12px/1 'Avenir Next', Avenir, 'Segoe UI', sans-serif; height: 36px; justify-content: center; width: 36px; }"
+		}
+	],
+	"narrative": {
+		"northStar": "The Operational Briefing",
+		"overview": "A quiet control-room surface that makes a platform foundation auditable without borrowing the visual language of a live marketplace.",
+		"keyCharacteristics": ["restrained operational density", "clear synthetic disclosure", "indigo meaning signal"],
+		"rules": [{ "name": "The Signal Rule", "body": "Indigo communicates active meaning, focus, and status rather than decoration.", "section": "colors" }],
+		"dos": ["Do lead with the runtime boundary.", "Do keep focus treatment visible."],
+		"donts": ["Don't imply live providers or commerce.", "Don't organize the page as a generic icon-card grid."]
+	}
+}

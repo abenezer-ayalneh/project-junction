@@ -1,0 +1,9 @@
+{
+	"name": "worker",
+	"version": "0.0.1",
+	"private": true,
+	"dependencies": {
+		"contracts": "workspace:*",
+		"platform-core": "workspace:*"
+	}
+}

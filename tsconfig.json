@@ -1,0 +1,22 @@
+{
+	"extends": "./tsconfig.base.json",
+	"compileOnSave": false,
+	"files": [],
+	"references": [
+		{
+			"path": "./apps/web"
+		},
+		{
+			"path": "./apps/api"
+		},
+		{
+			"path": "./apps/worker"
+		},
+		{
+			"path": "./libs/contracts"
+		},
+		{
+			"path": "./libs/platform-core"
+		}
+	]
+}

@@ -1,0 +1,152 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../libs/platform-core/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  email     String   @unique
+  verifiedAt DateTime?
+  createdAt DateTime @default(now())
+  sessions  Session[]
+  memberships VendorMembership[]
+}
+
+model Workspace {
+  id        String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  kind      String
+  createdAt DateTime @default(now())
+  vendors   Vendor[]
+  sessions  Session[]
+  demos     DemoWorkspace[]
+}
+
+model Session {
+  id            String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  userId        String?  @db.Uuid
+  workspaceId   String   @db.Uuid
+  expiresAt     DateTime
+  revokedAt     DateTime?
+  mfaVerifiedAt DateTime?
+  recentAuthAt  DateTime?
+  activeVendorId String? @db.Uuid
+  activeRole String?
+  createdAt     DateTime @default(now())
+  user          User?    @relation(fields: [userId], references: [id])
+  workspace     Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@index([workspaceId, expiresAt])
+}
+
+model Vendor {
+  id          String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  workspaceId String   @db.Uuid
+  createdAt   DateTime @default(now())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  locations   Location[]
+  memberships VendorMembership[]
+
+  @@index([workspaceId])
+}
+
+model Location {
+  id       String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  vendorId String @db.Uuid
+  vendor   Vendor @relation(fields: [vendorId], references: [id])
+
+  @@index([vendorId])
+}
+
+model VendorMembership {
+  id          String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  userId      String   @db.Uuid
+  vendorId    String   @db.Uuid
+  role        String
+  locationIds String[] @db.Uuid
+  revokedAt   DateTime?
+  user        User     @relation(fields: [userId], references: [id])
+  vendor      Vendor   @relation(fields: [vendorId], references: [id])
+
+  @@unique([userId, vendorId])
+  @@index([vendorId, revokedAt])
+}
+
+model IdempotencyRecord {
+  id          String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  key         String
+  scopeHash   String
+  method      String
+  workspaceId String? @db.Uuid
+  requestHash String
+  outcome     Json
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime
+
+  @@unique([key, scopeHash, method])
+  @@index([expiresAt])
+}
+
+model OutboxEvent {
+  id          String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  eventId     String   @unique @db.Uuid
+  workspaceId String   @db.Uuid
+  type        String
+  payload     Json
+  state       String   @default("pending")
+  attempts    Int      @default(0)
+  claimedBy   String?
+  claimedAt   DateTime?
+  claimToken String? @db.Uuid
+  availableAt DateTime @default(now())
+  occurredAt  DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([state, occurredAt])
+  @@index([workspaceId, occurredAt])
+}
+
+model ProviderInboxEvent {
+  id              String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  workspaceId String? @db.Uuid
+  provider        String
+  providerEventId String
+  payloadHash     String
+  payload         Json
+  receivedAt      DateTime @default(now())
+  processedAt     DateTime?
+
+  @@unique([provider, providerEventId])
+}
+
+model DemoWorkspace {
+  id          String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  workspaceId String   @db.Uuid
+  expiresAt   DateTime
+  purgedAt    DateTime?
+  createdAt   DateTime @default(now())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@index([expiresAt, purgedAt])
+}
+
+model AuditLog {
+  id          String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  workspaceId String?  @db.Uuid
+  actorId     String?  @db.Uuid
+  action      String
+  correlationId String @db.Uuid
+  metadata    Json
+  createdAt   DateTime @default(now())
+
+  @@index([workspaceId, createdAt])
+}
+
+model OutboxReceipt {
+  eventId String @id @db.Uuid
+  workspaceId String @db.Uuid
+  processedAt DateTime @default(now())
+}

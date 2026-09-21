@@ -1,0 +1,43 @@
+# Coverage Audit — Baseline 0.1.0
+
+**Status:** Documentation audit complete; target system remains **Specified — Not Executed — Not Verified**  
+**Audit date:** 2026-08-28  
+**Scope:** the authoritative suite in [Manifest](../MANIFEST.md), conversation provenance, requirement/test traceability, local Markdown links, and documentation-only boundary.
+
+## Static-audit results
+
+| Check                       | Method                                                    | Result                                                                                                                                                                               |
+| --------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Required-document presence  | Manifest path existence and duplicate scan                | 169/169 listed documents present; 0 missing; 0 duplicate manifest paths                                                                                                              |
+| Source classification       | Source Ledger and individual-row appendix scan            | 194/194 sources classified exactly once; 189 direct-decision sources plus 5 constraint/derived/external/future sources; 0 unclassified                                               |
+| Source-to-decision anchors  | `SRC-CHAT-0001`–`0189` link/number/anchor scan            | 189/189 direct sources link one-to-one to matching `DEC-*` anchors; 0 mismatch                                                                                                       |
+| Decision inventory          | direct `DEC-001`–`DEC-189` entry/anchor/primary-link scan | 189/189 present; 0 duplicate, orphan, or unlinked primary-owner entries                                                                                                              |
+| Requirement assignment      | phase-requirement versus acceptance-catalog scan          | 57/57 `REQ-P##-*` IDs have a scenario mapping; 0 orphan requirements                                                                                                                 |
+| Acceptance catalog          | phase references versus catalog scan                      | 27 `TST-*` scenarios indexed; 0 referenced scenarios missing from catalog                                                                                                            |
+| State-machine contract      | index/heading/table/row scan                              | 14/14 indexed lifecycle machines have a matching heading; 16 transition tables have actor, guard, side effect, and timeout/terminal/recovery fields; 0 incomplete rows               |
+| External-source register    | canonical `REF-*` sequence and date/trigger scan          | 22/22 dated canonical rows (`REF-001`–`REF-022`); 0 duplicate/missing identifiers                                                                                                    |
+| Claim-label coverage        | Manifest target-document label scan                       | 128/128 target documents state `Specified — Not Executed — Not Verified`; 0 unlabeled implementation claims                                                                          |
+| Local normative links       | Markdown relative-link resolution                         | 0 broken local links                                                                                                                                                                 |
+| Documentation-only boundary | workspace artifact scan outside `docs/`                   | only `README.md` and `CONTEXT-MAP.md`; no source, package manifest, migration, container, CI, or infrastructure file                                                                 |
+| Parked venture separation   | preservation/repository inspection                        | parked record remains at `docs/ventures/verified-social-checkout-parked.md`; it was moved by direct filesystem rename without content transformation and remains independently gated |
+
+## Required release-scope check
+
+The active public-release contract consistently requires mixed multi-Vendor goods and Bookings, pickup and Vendor-managed delivery, in-person and online appointments, and completed finance/trust/support/moderation/operations workflows. `DEC-138` remains explicitly `SUPERSEDED`; it cannot authorize a smaller public release.
+
+The exact goods (7/14/30 day, no-restocking-fee, delivery/pickup) and Booking (Flexible/Standard, amendment, provider-cancellation, no-show, earnings) policies have one normative owner in the [Policy Catalog](../domain/POLICY-CATALOG-AND-SNAPSHOTS.md), with linked lifecycle and financial documents.
+
+## Closing counters
+
+```text
+unclassified sources = 0
+orphan decisions = 0
+orphan requirements = 0
+requirements without tests = 0
+broken normative links = 0
+unlabeled implementation claims = 0
+```
+
+## Audit limits
+
+This is a static documentation audit. It does not prove application behavior, provider availability, security controls, accessibility, performance, backup recovery, legal compliance, payment capability, or commercial readiness. Those claims remain future `EVD-*` work and, for Dire Dawa commercialization, require the separately documented research and launch gates.

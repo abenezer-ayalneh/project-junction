@@ -1,0 +1,7 @@
+# SHA-256 source snapshot for EVD-REQ-P00-20260921
+867611f338f9dde2f4b64324e17d32ebed36f484933d09d02e755b23bfdec345  prisma/schema.prisma
+b99c24b12e7eaf6ad16cd359309bc80a7c7bd3ed0f5a704b2ae82561ac350b14  prisma/migrations/20260921000000_durable_foundation/migration.sql
+99b82a42a0fc99a2d31cd128fcd62781ed85069f162f72beddc61434a349232d  libs/platform-core/src/lib/postgres-foundation.ts
+033d9a78360abea9b6d6d95feb33f26d8d592abc061eec96415a21a322bfa552  libs/platform-core/src/lib/postgres-foundation.integration.ts
+675b0602cabad2583177564cc2edad6a46f532093ef08a4ce3faff891db8517b  tools/run-integration.mjs
+0e82bc5d1d9e54a5ed15725eff48dfd422324243a8a0b2e329b767c50b173660  tools/runtime-smoke.mjs

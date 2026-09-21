@@ -1,0 +1,24 @@
+
+.nx/installation
+.nx/cache
+.nx/workspace-data
+.nx/self-healing
+.nx/migrate-runs
+.nx/polygraph
+.claude/worktrees
+.claude/settings.local.json
+
+# Next.js
+.next
+out
+
+test-output
+generated/
+.env
+
+# Dependencies and generated build artifacts
+node_modules/
+dist/
+out-tsc/
+*.tsbuildinfo
+logs/

@@ -1,0 +1,107 @@
+Command evidence captured 2026-09-21. Local synthetic workspace; paths and disposable schema names normalized.
+
+
+> project-junction@0.0.0 test:integration <workspace>
+> nx run platform-core:test-integration
+
+
+ NX   Running target test-integration for project platform-core and 5 tasks it depends on:
+
+
+
+> nx run contracts:build  [local cache]
+
+
+> nx run platform-core:generate-client  [local cache]
+
+> node tools/generate-prisma.mjs
+
+(node:73797) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+
+✔ Generated Prisma Client (v7.10.0) to ./libs/platform-core/generated/prisma in 107ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+
+
+> nx run platform-core:build  [local cache]
+
+> tsc --build tsconfig.lib.json
+
+
+> nx run worker:build:production  [local cache]
+
+
+> nx run api:build
+
+> webpack-cli build
+
+(node:75315) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+webpack compiled successfully (497ebc45f0b84137)
+
+> nx run platform-core:test-integration
+
+> node tools/run-integration.mjs
+
+(node:75347) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "<disposable-schema>" at "127.0.0.1:55432"
+
+2 migrations found in prisma/migrations
+
+Applying migration `20260831120000_platform_foundation`
+Applying migration `20260921000000_durable_foundation`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831120000_platform_foundation/
+    └─ migration.sql
+  └─ 20260921000000_durable_foundation/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+(node:75366) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "<disposable-schema>" at "127.0.0.1:55432"
+
+2 migrations found in prisma/migrations
+
+
+No pending migrations to apply.
+(node:75386) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:75387) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Test Suites: 1 passed, 1 total
+Tests:       8 passed, 8 total
+Snapshots:   0 total
+Time:        1.561 s, estimated 2 s
+Ran all test suites.
+(node:75458) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:75469) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Built API/worker smoke passed: health, denial, replay, conflict, cross-process delivery.
+
+
+
+ NX   Successfully ran target test-integration for project platform-core and 5 tasks it depends on
+
+Nx read the output from the cache instead of running the command for 4 out of 6 tasks.
+
+  Run duration:      7.7s
+  Cache:             4/6 hit (67%)
+  Critical path:     7.7s (4 tasks)
+  Recoverable time:  <1ms

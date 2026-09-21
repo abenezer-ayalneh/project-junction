@@ -1,0 +1,184 @@
+Command evidence captured 2026-09-21. Local synthetic workspace; paths and disposable schema names normalized.
+
+
+> project-junction@0.0.0 check <workspace>
+> pnpm docs:check && pnpm contracts:check && nx run-many -t lint,typecheck,test --projects=contracts,platform-core,api,worker,web --parallel=3
+
+
+> project-junction@0.0.0 docs:check <workspace>
+> node tools/docs-check.mjs
+
+Phase 00 requirement and acceptance traceability check passed.
+
+> project-junction@0.0.0 contracts:check <workspace>
+> node tools/contracts-check.mjs
+
+Public contract isolation check passed.
+
+ NX   Running targets lint, typecheck, test for 5 projects and 3 tasks they depend on:
+
+- contracts
+- platform-core
+- api
+- worker
+- web
+
+
+
+> nx run contracts:build
+
+> tsc --build tsconfig.lib.json
+
+
+> nx run contracts:typecheck
+
+> tsc --build tsconfig.json --emitDeclarationOnly
+
+
+> nx run contracts:test
+
+> jest
+
+(node:76288) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Test Suites: 1 passed, 1 total
+Tests:       2 passed, 2 total
+Snapshots:   0 total
+Time:        0.588 s, estimated 1 s
+Ran all test suites.
+
+> nx run platform-core:generate-client
+
+> node tools/generate-prisma.mjs
+
+(node:76304) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+
+✔ Generated Prisma Client (v7.10.0) to ./libs/platform-core/generated/prisma in 99ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+
+
+> nx run contracts:lint
+
+> eslint .
+
+(node:76311) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+> nx run platform-core:build
+
+> tsc --build tsconfig.lib.json
+
+
+> nx run platform-core:typecheck
+
+> tsc --build tsconfig.json --emitDeclarationOnly
+
+
+> nx run platform-core:lint
+
+> eslint .
+
+(node:76377) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+> nx run platform-core:test
+
+> jest
+
+(node:76395) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Test Suites: 1 passed, 1 total
+Tests:       4 passed, 4 total
+Snapshots:   0 total
+Time:        0.503 s, estimated 1 s
+Ran all test suites.
+
+> nx run web:test
+
+> jest
+
+(node:76401) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.798 s, estimated 1 s
+Ran all test suites.
+
+> nx run web:typecheck
+
+> pnpm exec tsc --project apps/web/tsconfig.json --noEmit
+
+(node:76475) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+> nx run api:lint
+
+> eslint .
+
+(node:76536) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+> nx run api:test
+
+> jest --passWithNoTests=true
+
+(node:76546) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Test Suites: 1 passed, 1 total
+Tests:       3 passed, 3 total
+Snapshots:   0 total
+Time:        0.519 s, estimated 1 s
+Ran all test suites.
+
+> nx run web:lint
+
+> eslint .
+
+(node:76552) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+> nx run worker:lint
+
+> eslint .
+
+(node:76620) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+> nx run worker:typecheck
+
+> tsc --build tsconfig.json --emitDeclarationOnly
+
+
+> nx run worker:test
+
+> jest --passWithNoTests=true
+
+(node:76627) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.308 s, estimated 1 s
+Ran all test suites.
+
+> nx run api:typecheck
+
+> tsc --build tsconfig.json --emitDeclarationOnly
+
+
+
+
+ NX   Successfully ran targets lint, typecheck, test for 5 projects and 3 tasks they depend on
+
+
+  Run duration:      4.8s
+  Cache:             0/18 hit (0%)
+  Critical path:     2.3s (3 tasks)
+  Recoverable time:  2.5s (52% of the run)

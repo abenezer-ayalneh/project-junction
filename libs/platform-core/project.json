@@ -1,0 +1,39 @@
+{
+	"name": "platform-core",
+	"$schema": "../../node_modules/nx/schemas/project-schema.json",
+	"sourceRoot": "libs/platform-core/src",
+	"projectType": "library",
+	"tags": ["type:domain", "scope:platform"],
+	"// targets": "to see all targets run: nx show project platform-core --web",
+	"targets": {
+		"test-integration": {
+			"executor": "nx:run-commands",
+			"cache": false,
+			"options": {
+				"command": "node tools/run-integration.mjs"
+			},
+			"dependsOn": [
+				"build",
+				{
+					"projects": ["api", "worker"],
+					"target": "build"
+				}
+			]
+		},
+		"generate-client": {
+			"executor": "nx:run-commands",
+			"cache": true,
+			"inputs": ["{workspaceRoot}/prisma/schema.prisma", "{workspaceRoot}/prisma.config.ts"],
+			"outputs": ["{projectRoot}/generated/prisma"],
+			"options": {
+				"command": "node tools/generate-prisma.mjs"
+			}
+		},
+		"build": {
+			"dependsOn": ["generate-client", "^build"]
+		},
+		"typecheck": {
+			"dependsOn": ["generate-client"]
+		}
+	}
+}

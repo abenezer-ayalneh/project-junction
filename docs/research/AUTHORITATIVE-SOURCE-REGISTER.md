@@ -1,0 +1,19 @@
+# Research Authoritative Source Register
+
+**Status:** Research register established; substantive external claims remain subject to retrieval and refresh.  
+**System claim:** Specified — Not Executed — Not Verified
+
+The global `REF-*` definitions, retrieval dates, affected decisions, drift risks, and refresh triggers live in the [governance source register](../governance/AUTHORITATIVE-SOURCE-REGISTER.md). This document is a research-facing routing view; it never reassigns a `REF-*` identifier. An expired source cannot authorize a commercial action.
+
+| Research area                                            | Current canonical evidence                 | What it supports only                                                         | Mandatory next research step                                                                                   |
+| -------------------------------------------------------- | ------------------------------------------ | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Security target                                          | `REF-001`                                  | planned ASVS 5.0 Level 2 applicability                                        | refresh at security/release-gate work                                                                          |
+| Stripe sandbox and role model                            | `REF-002`, `REF-003`, `REF-004`, `REF-017` | portfolio sandbox/payment-contract design                                     | refresh before integration, pricing change, or any commercial statement                                        |
+| Online meetings                                          | `REF-006`                                  | intended Google Meet boundary/private-staging validation                      | refresh before OAuth or API integration work                                                                   |
+| Maps/storage/runtime substrate                           | `REF-007`–`REF-010`, `REF-016`             | planned map, storage, Node, PostgreSQL, and cost constraints                  | refresh at repository initialization, selection, or deployment                                                 |
+| Application runtime/toolchain                            | `REF-018`–`REF-022`                        | planned Prisma/Nest/Next/Nx/pnpm compatibility and version-selection boundary | refresh at repository initialization, package-manager pin, or framework/ORM major-version decision             |
+| Host/backup tooling                                      | `REF-011`–`REF-014`                        | prospective deployment/recovery patterns                                      | refresh before VPS/backup work or recovery drill                                                               |
+| Synthetic city context                                   | `REF-015`                                  | only the stated synthetic context                                             | do not use as market, legal, payment, or demand proof                                                          |
+| Ethiopian legal/payment/tax/KYB/privacy/market questions | no source yet                              | nothing; no conclusion is authorized                                          | after explicit authorization, add official authority/date/effective-date evidence before a commercial decision |
+
+“Retrieved” means a source was located for planning, not that Project Junction has signed up, configured an account, or verified fit. Research findings belong in the provider and future-validation registers with a claim, quote/paraphrase limit, decision impact, and revalidation date.

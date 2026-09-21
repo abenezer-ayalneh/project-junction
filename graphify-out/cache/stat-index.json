@@ -1,0 +1,957 @@
+{
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/CONTEXT-MAP.md": {
+		"size": 2756,
+		"mtime_ns": 1787859802492923866,
+		"hash": "de82301870c5b50157c286847c8c82616bf605d5216c21a7c36ea09b9d82d7a2"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/README.md": {
+		"size": 2509,
+		"mtime_ns": 1787908960211369432,
+		"hash": "1fe2d714ccb8998e23c60383b6991772785acf354ad5a2fa7278bfee991bda97"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/CHANGELOG.md": {
+		"size": 635,
+		"mtime_ns": 1787908960362045031,
+		"hash": "b1a330dd45f8ea15022713e0d58b3a397091584497caa37b4771ebf438b82b10"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/INDEX.md": {
+		"size": 1846,
+		"mtime_ns": 1787859802590627399,
+		"hash": "08e20a0619762e5b5bc8c016db2819f285b3c4e86118b9c3296c3ded5bad281a"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/MANIFEST.md": {
+		"size": 23234,
+		"mtime_ns": 1787908292679780517,
+		"hash": "bb0e5c749805aac2ab4d29ec54f7c1208ccf6f059c2bd5996e273594e67d219a"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/STATUS.md": {
+		"size": 2624,
+		"mtime_ns": 1787908960287436936,
+		"hash": "b59ba268857938f1aec1d4473462d04d2f2b24344b5e330b88c03ab0d32c99a4"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/adr/ADR-0001-SEPARATE-PARKED-VENTURE.md": {
+		"size": 505,
+		"mtime_ns": 1787860515539194305,
+		"hash": "4a97c7c1749ddb8844616ab04ef5b47b02bc087dcbd82829148859809171356b"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/adr/ADR-0002-PORTFOLIO-FIRST-EVIDENCE-POSTURE.md": {
+		"size": 407,
+		"mtime_ns": 1787860515629301729,
+		"hash": "331698056f064759e5f3cf103c6daf60f3cbd50e2b7c99b5e3dfdd855836c1c7"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/adr/ADR-0003-MODULAR-MONOLITH-AND-WORKER.md": {
+		"size": 525,
+		"mtime_ns": 1787892612486152223,
+		"hash": "5586b88f1b302e321c732baaaded25ad27fbc4cbc5fd187d75bafba3ca06e0bb"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/adr/ADR-0004-ORDERING-AND-BOOKING-SEPARATION.md": {
+		"size": 454,
+		"mtime_ns": 1787892612567888494,
+		"hash": "2aa17f6c8759e2ee309dc35e044a07828ce3e4031ffdcd17d7d93780437bd8c9"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/adr/ADR-0005-ONE-NEXT-CLIENT-AUTHORITATIVE-NEST-API.md": {
+		"size": 468,
+		"mtime_ns": 1787892612651180029,
+		"hash": "2918d40d9fe82ce817f56843017c0af4a09f56d51560bccde86b8f76ead12ba1"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/adr/ADR-0006-TYPED-ACCESS-CONTEXT.md": {
+		"size": 447,
+		"mtime_ns": 1787892612734287353,
+		"hash": "fea2cdba5c62be01dec34016a7b03a008e8dfa06500a979ee108a6714e8207f0"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/adr/ADR-0007-ATOMIC-MIXED-CHECKOUT-AND-HOLDS.md": {
+		"size": 541,
+		"mtime_ns": 1787908292604686237,
+		"hash": "ed4cf3f7936541449b2fe4e23d3efa420762b51672875d3de6d2dfd800779bd5"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/adr/ADR-0008-PROVIDER-NEUTRAL-SANDBOX-PAYMENTS.md": {
+		"size": 547,
+		"mtime_ns": 1787892612905195542,
+		"hash": "f44f9cc53c09975eaa94b6870eb8bbdef678f9bbeb542a777f62b2a2354df25b"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/adr/ADR-0009-IMMUTABLE-DOUBLE-ENTRY-LEDGER.md": {
+		"size": 481,
+		"mtime_ns": 1787892612987845862,
+		"hash": "84c056067bede4a4fc9c2cabdd91cd81ad45cc997bdbc5f7ffbd7e60589f8165"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/adr/ADR-0010-POSTGRES-POSTGIS-PRISMA-AUDITED-SQL.md": {
+		"size": 523,
+		"mtime_ns": 1787892613070869478,
+		"hash": "0d3bd5417e73624eb944db3bc80e64c86770d475dd00f1789567e04d315f204a"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/adr/ADR-0011-OUTBOX-REBUILDABLE-PROJECTIONS.md": {
+		"size": 489,
+		"mtime_ns": 1787892613154050885,
+		"hash": "b691a76a1ba07ef0ff1f4e145324b829fa1b7cc14e1c4b40f22e22af9f223b91"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/adr/ADR-0012-SYNTHETIC-PUBLIC-DEMO-ISOLATION.md": {
+		"size": 436,
+		"mtime_ns": 1787892613237936800,
+		"hash": "99b78b0b903f35a1947381eec8e71d5292b6c57e9f2f98a02c808dc6df631794"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/adr/ADR-0013-MEDIA-QUARANTINE.md": {
+		"size": 457,
+		"mtime_ns": 1787892613323348143,
+		"hash": "c5a6246854dfc43beb671d8a4a637b307f5af94cb834c5c5de9afffb45303287"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/adr/ADR-0014-VPS-STAGING-PORTFOLIO-RECOVERY-MODEL.md": {
+		"size": 554,
+		"mtime_ns": 1787892613406493968,
+		"hash": "44422aa010c8802055ec905e723b88b39e3066af85538f0d152b66d285f492a1"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/adr/ADR-0015-ASVS-L2-SECURITY-TARGET.md": {
+		"size": 371,
+		"mtime_ns": 1787891392978481943,
+		"hash": "3e48452807722119d056ef29c5b141b8f1b7c8290558f676451fcbd9a31b0a53"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/adr/ADR-0016-PUBLIC-REPOSITORY-NO-OPEN-SOURCE-LICENSE.md": {
+		"size": 497,
+		"mtime_ns": 1787860516895542267,
+		"hash": "0badb608f69a49f7020386779c4aa07f859a1e79b7602ddf090befcc0c81c27d"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/architecture/BACKEND-CONTEXT-AND-DATA-ARCHITECTURE.md": {
+		"size": 5005,
+		"mtime_ns": 1787860387185962298,
+		"hash": "4b46a54ad7c622d84e734e3d67e35b616acfda413b44d2b4614296e783eb9378"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/architecture/BACKGROUND-JOBS-OUTBOX-AND-RECONCILIATION.md": {
+		"size": 1214,
+		"mtime_ns": 1787890806371726319,
+		"hash": "b3474299c658b30d29885c2133b14c572971a1562b4e663a00dc43b9b66d9107"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/architecture/COMPONENT-AND-DEPENDENCY-MODEL.md": {
+		"size": 1608,
+		"mtime_ns": 1787890806293021854,
+		"hash": "215f7f172aed6d8e366c240ba4aea3699fd04de3cc1a550b2c89e223df03f2c3"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/architecture/DEMO-ISOLATION-ARCHITECTURE.md": {
+		"size": 1052,
+		"mtime_ns": 1787890806600065692,
+		"hash": "eff0c2aad28d149d8e04d2890604bfac89dc7516707adebe2610303443ceaa48"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/architecture/FRONTEND-ARCHITECTURE.md": {
+		"size": 3921,
+		"mtime_ns": 1787860387290292884,
+		"hash": "3d29d82b11efbe4700c09aacd582b942ab60843b048153721d4b01b831828c5d"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/architecture/MAPS-ADDRESSES-AND-POSTGIS.md": {
+		"size": 3086,
+		"mtime_ns": 1787860667159514663,
+		"hash": "181ef074e1000e3fd2679cab0d8453376f5461756c9de7f5aaa75fb348156284"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/architecture/MEDIA-STORAGE-AND-PROCESSING.md": {
+		"size": 2773,
+		"mtime_ns": 1787860387498027641,
+		"hash": "b6555089c4876066c5843db02a1158d92a0d8843d72eaae4dbcbcb240af28803"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/architecture/PRODUCTION-SYSTEM-DESCRIPTION.md": {
+		"size": 1418,
+		"mtime_ns": 1787891392471243791,
+		"hash": "308349966a4b97e82e29b6a16938db65b958a69e4fda2037f41a1448dadf960c"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/architecture/PROVIDER-INTEGRATION-CONTRACTS.md": {
+		"size": 1639,
+		"mtime_ns": 1787890806525983139,
+		"hash": "68275ef77146f2e1f857228f545e1ff2a6caa2f0884296736cb8ac04a335cbaa"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/architecture/SEARCH-REALTIME-AND-ANALYTICS.md": {
+		"size": 1139,
+		"mtime_ns": 1787890806448625977,
+		"hash": "a3b545bd170dd3df4cc7ade77ea98b2b1b43086388fdf6fd7e3bb76f78aa4aad"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/architecture/TARGET-SYSTEM-DESCRIPTION.md": {
+		"size": 1400,
+		"mtime_ns": 1787891392385964232,
+		"hash": "21d661eb486b82627fc3b922de9cbb2fd4b0a8d92f8149b445e23b1d102d2829"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/architecture/data-ownership-and-persistence.md": {
+		"size": 3604,
+		"mtime_ns": 1787891053274756303,
+		"hash": "eabf3b9eabb264e130e1f9256e7f4fae83176132f48adb335e0f47a1d7ea0f8a"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/contexts/cart-and-checkout/CONTEXT.md": {
+		"size": 1122,
+		"mtime_ns": 1787891813982767308,
+		"hash": "e5da3bbda3dbbccf4540c167cfd070f1f5232fc8fc61d542da6a746fc735c25b"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/contexts/catalog-inventory-and-locations/CONTEXT.md": {
+		"size": 1232,
+		"mtime_ns": 1787891814061397438,
+		"hash": "1c2b7f8522f99cd87528f64b0637572eeef935e541576820d093b0fa3055ce0d"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/contexts/context-map.md": {
+		"size": 7969,
+		"mtime_ns": 1787860383369333608,
+		"hash": "9e97c78cff64a9c07a2bbdc50f93a2ed7de38c55c1e1bba1180c4078aad38335"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/contexts/cross-context-contracts.md": {
+		"size": 5762,
+		"mtime_ns": 1787860383580091725,
+		"hash": "9d60d59e41aecd6e0a345ad37b1ebb0b9dab8c5bb98973fc756e7d98aa3475f8"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/contexts/discovery-engagement-and-demo/CONTEXT.md": {
+		"size": 1005,
+		"mtime_ns": 1787891814138979561,
+		"hash": "bf9021a8cdaf5e72473695d85ccce15c5a02db4834d02ed36d03c21ef55bfbc8"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/contexts/glossary.md": {
+		"size": 10798,
+		"mtime_ns": 1787860383265357212,
+		"hash": "740c9bbaac765729e9d657ec9d28a7249e4ac3a877a229dfcb51c99164d72359"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/contexts/identity-access-and-vendors/CONTEXT.md": {
+		"size": 1391,
+		"mtime_ns": 1787891814220477631,
+		"hash": "11f0cf3b0480934ded25a4d55575b53bb9de9ae19b90c6a17d55a144710f4294"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/contexts/invariants.md": {
+		"size": 8298,
+		"mtime_ns": 1787860383474023970,
+		"hash": "9dda9c83671a9b9f477b8c8387802b0d3b4547911268f464fb5577fa5c7340b9"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/contexts/ordering-and-fulfillment/CONTEXT.md": {
+		"size": 1140,
+		"mtime_ns": 1787891814301569407,
+		"hash": "04ce0358a19abdd3716e674d0c2c2ee0b622999d49d1ca42b702edb16a9e843d"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/contexts/payments-ledger-and-payout/CONTEXT.md": {
+		"size": 1137,
+		"mtime_ns": 1787891814382536514,
+		"hash": "d8d66e7beab8ee85a5a7e44e23d4f214db944e43cf87f44a308b90aca56101a7"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/contexts/scheduling-and-booking/CONTEXT.md": {
+		"size": 1267,
+		"mtime_ns": 1787891814475412926,
+		"hash": "ccbf179bbacbc085d460398137a0f86fca1d590158a227d51d3259b4f34e1924"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/contexts/trust-support-and-moderation/CONTEXT.md": {
+		"size": 1039,
+		"mtime_ns": 1787891814558750761,
+		"hash": "9a999c3e19f23f249565b209389fa11f44b273053496a3467d23f45f1a96a8a0"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/data/CANONICAL-DATA-MODEL.md": {
+		"size": 5382,
+		"mtime_ns": 1787891539595644224,
+		"hash": "3456997950ac4513e5f3d0c8afd58fd5d18dab8a57d7927ad437956f6cbfc7c4"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/data/DATA-CLASSIFICATION-RETENTION-EXPORT-AND-DELETION.md": {
+		"size": 3989,
+		"mtime_ns": 1787860388014933003,
+		"hash": "470fdb0c4384ea768df5890b9cfd283fefdfa7def27017cf892d7afb6eb08d75"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/data/DATA-OWNERSHIP-AND-CONTEXT-BOUNDARIES.md": {
+		"size": 2795,
+		"mtime_ns": 1787860387603670248,
+		"hash": "9b13c357f60c4f288e33f32fb8dbd60e0340426184c983e581e2d19fcfbf17f4"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/data/LOCATION-ADDRESS-AND-GEOSPATIAL-MODEL.md": {
+		"size": 1379,
+		"mtime_ns": 1787890806675792424,
+		"hash": "752b7b526065ca42df7a5c17a09d2b2d20bc0fc9f22f81ffc28a5f9507d88165"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/data/MIGRATION-AND-COMPATIBILITY-STRATEGY.md": {
+		"size": 3017,
+		"mtime_ns": 1787860388118538915,
+		"hash": "db554151af36b0fb25ca9ae3203816cc40e8a23bc4553f9c9d09352f665d3e06"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/data/MONEY-AND-DOUBLE-ENTRY-LEDGER.md": {
+		"size": 4730,
+		"mtime_ns": 1787891539514903410,
+		"hash": "9974e6c85941ea4265eea9fed2b52c92f93c8e4075b76b5da902d395eff93dc6"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/demo/ISOLATION-QUOTAS-EXPIRY-AND-CLEANUP.md": {
+		"size": 1087,
+		"mtime_ns": 1787908292455831249,
+		"hash": "a9cef00b6aae4b67ef28cb004c6eec3d45984876671af9960a9563b7c335ed85"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/demo/PERSONA-AND-ROLE-SWITCHING-MATRIX.md": {
+		"size": 1628,
+		"mtime_ns": 1787860400270788997,
+		"hash": "8ceba96046e9596edbf1aec51c2fab2232506ac88ef2a2404f48059edc77376e"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/demo/PORTFOLIO-CLAIMS-AND-EVIDENCE.md": {
+		"size": 1224,
+		"mtime_ns": 1787891813903086377,
+		"hash": "fcac0d7cd6217debc1fb3f4ea477dc303bf93a54d1861a804845e83accde8c68"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/demo/PUBLIC-DEMO-DESCRIPTION.md": {
+		"size": 1372,
+		"mtime_ns": 1787908292376801505,
+		"hash": "913dc2759442b090699b6177d96f62662bfba30b50690cea6b2171a98b079207"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/demo/SANDBOX-PAYMENTS-AND-PROVIDER-SUBSTITUTES.md": {
+		"size": 1372,
+		"mtime_ns": 1787860400576739788,
+		"hash": "ceae5fdaef649dbd91635e9b6722f0d71d2fb98691644b5471bd439646d10cdb"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/demo/SYNTHETIC-SCENARIOS-AND-REVIEWER-GUIDE.md": {
+		"size": 1313,
+		"mtime_ns": 1787860400371452879,
+		"hash": "5171e426ecf3616f4171d8e026769449327e5e4c44661623c30193ba4a264e07"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/deployment/BACKUP-RESTORE-AND-DISASTER-RECOVERY.md": {
+		"size": 4283,
+		"mtime_ns": 1787892229340770672,
+		"hash": "1f23e7b6e29b12a78a71339352ff80722ef02b2b39cffbf42a544460f7cff32f"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/deployment/CAPACITY-COST-AND-SCALING.md": {
+		"size": 4257,
+		"mtime_ns": 1787892229515144229,
+		"hash": "1c766636b634e11beee111d9bbf9dc8dc8be191bfb9b34805e1a4c80299736e9"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/deployment/CI-CD-AND-RELEASE-PROMOTION.md": {
+		"size": 4948,
+		"mtime_ns": 1787892229174509475,
+		"hash": "a5c772b89ebf316009dd4a9e2ab65c835fb0b71f45f0383b8ab899b4a873ff40"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/deployment/DATABASE-MIGRATIONS-ROLLOUT-AND-ROLLBACK.md": {
+		"size": 3540,
+		"mtime_ns": 1787892229256797129,
+		"hash": "dc2580c78c491409c6a6747f0641e069581af9bd0888dcec962b4d814ffbdc2a"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/deployment/ENVIRONMENT-SEPARATION.md": {
+		"size": 3570,
+		"mtime_ns": 1787908977314657080,
+		"hash": "6587a956dcddd4bf691662aa41f3e76cfe21cc6e262eac80f271a65e7fe22267"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/deployment/INFRASTRUCTURE-AND-NETWORK-TOPOLOGY.md": {
+		"size": 4820,
+		"mtime_ns": 1787892228923625062,
+		"hash": "8144dd7e36634e88aadb1d1e40a61a7c2bdd0176d31026316ddfe483f5eb46cb"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/deployment/PORTFOLIO-PRODUCTION-DEPLOYMENT.md": {
+		"size": 4692,
+		"mtime_ns": 1787892229092144112,
+		"hash": "edba3ac6f921e8d6b027270cae1605dd2fdfe6a6729a219e83e2504a220e3839"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/deployment/SECRETS-TLS-AND-ORIGIN-SECURITY.md": {
+		"size": 3925,
+		"mtime_ns": 1787892229428842166,
+		"hash": "7ca274be16fb1b19ba333e7c49d2e0cb052d3024c70838c1c921797432cc58f2"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/deployment/STAGING-DEPLOYMENT.md": {
+		"size": 4559,
+		"mtime_ns": 1787892261871109585,
+		"hash": "9e8de4faedc414ae351ce8af858e8039dd611abbb4fc34740cfb897c152f1ddd"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/domain/ACTORS-AGGREGATES-AND-OWNERSHIP.md": {
+		"size": 2106,
+		"mtime_ns": 1787890611184178667,
+		"hash": "c9df27c46615d3e972278456c7af62ebb09025c6d4a8e15bc129f67bf4b5d4cf"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/domain/CART-CHECKOUT-PURCHASE-AND-ORDERS.md": {
+		"size": 1589,
+		"mtime_ns": 1787890611594319666,
+		"hash": "aa502cf6cdbb0fdc029006715d256659daa3a7dfabb16138ea22d06759c9e925"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/domain/CROSS-CONTEXT-INVARIANTS.md": {
+		"size": 1857,
+		"mtime_ns": 1787890611266286826,
+		"hash": "a8f82a3499615fb730e16fc17e777c57aa7fe1688de0089ed899c30d60de58f2"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/domain/LOCATIONS-INVENTORY-AND-FULFILLMENT.md": {
+		"size": 1605,
+		"mtime_ns": 1787890611431188649,
+		"hash": "1e14dd6a7d2a171955edac892584a5028ce905c18fbd04aff14880a970b5373b"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/domain/MESSAGING-NOTIFICATIONS-MODERATION-AND-ANALYTICS.md": {
+		"size": 1478,
+		"mtime_ns": 1787890611840469140,
+		"hash": "5bbe006e262f619046a2d61fbe412efa030776058a45309019edc1e6a65ab7f2"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/domain/PAYMENTS-LEDGER-PROMOTIONS-AND-PAYOUTS.md": {
+		"size": 2105,
+		"mtime_ns": 1787890611675984904,
+		"hash": "810e72d9e70f63407e37d38ac06987c0e060a18ad1c66d0751ad8b5699e432f2"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/domain/POLICY-CATALOG-AND-SNAPSHOTS.md": {
+		"size": 6269,
+		"mtime_ns": 1787892485742797803,
+		"hash": "c8ea74dfac59b029265fef07e45bf44c8624b90a2375e0c9ba0907f65e99e10b"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/domain/RETURNS-DISPUTES-SUPPORT-AND-REVIEWS.md": {
+		"size": 1727,
+		"mtime_ns": 1787890611758947611,
+		"hash": "2220ed3559bad945b49b2849bd51fa83fcca611e574adbb9e38e9a352271d73c"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/domain/SERVICES-SCHEDULING-AND-BOOKINGS.md": {
+		"size": 2219,
+		"mtime_ns": 1787890611512317883,
+		"hash": "90751c79b9d9bd49d3b54a91942e5cdfbc9896e8ca9f7ccdeedf2e8cb1e9e736"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/domain/VENDOR-STOREFRONT-CATALOG-AND-DISCOVERY.md": {
+		"size": 1804,
+		"mtime_ns": 1787890611349435160,
+		"hash": "17a5b64e119c65067a596184d462ebb75b704075b00041676b5873a2373c69dc"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/domain/catalog-discovery-storefronts.md": {
+		"size": 6742,
+		"mtime_ns": 1787860498053895174,
+		"hash": "719b7be8f0043b7d29e1e39cae919891f6496c59911e1753464921bd4eed553c"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/domain/checkout-orders.md": {
+		"size": 6237,
+		"mtime_ns": 1787860654525105488,
+		"hash": "0620e2a130e5a9358d5f4da9adb073fc6dd75d24d8f247dc10b6ba20b9e6f321"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/domain/identity-vendors.md": {
+		"size": 5926,
+		"mtime_ns": 1787860497963250942,
+		"hash": "62676f8df843945f8b2f904cbe6fc52b5ba793985470d9184b3c81e024891164"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/domain/inventory-locations-fulfillment.md": {
+		"size": 6511,
+		"mtime_ns": 1787860498144692648,
+		"hash": "3ed805780c90884d6ed4f26372310fca5b067de0d5caa336aa8909ba2e2acc5e"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/domain/messaging-notifications-moderation.md": {
+		"size": 4840,
+		"mtime_ns": 1787860654883854221,
+		"hash": "f5c3111215192ba24c16c7a8b62c5bab1ca55beefec8f86b1fb1f15882467412"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/domain/payments-ledger-payouts.md": {
+		"size": 7416,
+		"mtime_ns": 1787860654614477572,
+		"hash": "47df1d588d408bb24b6fa7e19e001187bb9e0fa9051fe0557e4c8d00c2e27cc6"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/domain/pricing-promotions-receipts.md": {
+		"size": 5303,
+		"mtime_ns": 1787860654704421086,
+		"hash": "5b2a1a761ae590cca538a34788e78d70d30fb547c6a3d2dd4119b9dcba8b59a7"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/domain/privacy-data-lifecycle.md": {
+		"size": 6219,
+		"mtime_ns": 1787860654977175991,
+		"hash": "bbcc8ca6c3a468357907179a6d74a160dcdb00d8d6c6a2aa65f83574e9d35a04"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/domain/returns-disputes-support-reviews.md": {
+		"size": 5367,
+		"mtime_ns": 1787860654793836335,
+		"hash": "0bba0f99aab3bbe4f63002d76208778182e53dc7f4abb8d96f8694288224b189"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/domain/services-bookings.md": {
+		"size": 6161,
+		"mtime_ns": 1787860498235700153,
+		"hash": "beb472b5c7d8e0c1d2f2dcbaf5320e66bf184c732620da843101a0eb1b8f7e66"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/environments/CONFIGURATION-SECRETS-AND-SEED-DATA.md": {
+		"size": 6102,
+		"mtime_ns": 1787892140239531615,
+		"hash": "f8b4328e79b96e8a1f54b94aaf7b39aae1771d9ff169e1e32e3768330ea639b5"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/environments/DEVELOPER-WORKFLOWS-AND-TROUBLESHOOTING.md": {
+		"size": 3408,
+		"mtime_ns": 1787860484588474598,
+		"hash": "4f963561637e479a10e28b32791e3460f8f399b42eae2a97dbb099ca6ece5025"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/environments/ENVIRONMENT-MATRIX.md": {
+		"size": 5205,
+		"mtime_ns": 1787892140494914766,
+		"hash": "ee00b891f1d86bacb525ce15b957677612391671832a2b2af3fd627c7ab73662"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/environments/LOCAL-DEVELOPMENT-PREREQUISITES.md": {
+		"size": 2697,
+		"mtime_ns": 1787892140407495738,
+		"hash": "ca5eae0ce22ba354128dc1c0f7c9324e23a2fa4cccf0286269c76df362b46ee6"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/environments/LOCAL-DEVELOPMENT-SETUP.md": {
+		"size": 3696,
+		"mtime_ns": 1787892140322185061,
+		"hash": "e8c2961909cc6367f254deb142c69e42336b379b8f221364098acbd445645593"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/environments/LOCAL-SERVICES-PORTS-AND-DEPENDENCIES.md": {
+		"size": 4388,
+		"mtime_ns": 1787892140068465424,
+		"hash": "5a490479c28b2e31c26c3c5a7a0c30c883f3ca7e1a0ac822a89b86f8e594f0e1"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/environments/PROVIDER-SANDBOX-AND-FAKE-ADAPTERS.md": {
+		"size": 4887,
+		"mtime_ns": 1787908977241663767,
+		"hash": "dbb8f1938a87618b38ac50bd63bb77d63d0fca4b1405b4f28cac7f71f5edd1e1"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/future/BOUNDED-PILOT-AND-GO-NO-GO.md": {
+		"size": 908,
+		"mtime_ns": 1787891392893826181,
+		"hash": "d64fca99dd5cae2fa7c5d2303191250fc66b0269108e42e4d7ef0ffca552627d"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/future/DEFERRED-CAPABILITY-BACKLOG.md": {
+		"size": 1657,
+		"mtime_ns": 1787860467186558248,
+		"hash": "255e4e119da6eaabaa9fc6c5621210c50a63098f961e1cf88578162690d408ff"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/future/DIRE-DAWA-COMMERCIAL-LAUNCH-GATES.md": {
+		"size": 1657,
+		"mtime_ns": 1787891392809508588,
+		"hash": "8a29a822901b9bd91d59823a216aec06d9b0dbc45d0b242ca8d128fbeabb1573"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/future/DIRE-DAWA-RESEARCH-PLAN.md": {
+		"size": 919,
+		"mtime_ns": 1787860467280643691,
+		"hash": "d7c7fe1e5bd489f36b7fedc702af5272d7521f985fe82be2f67d178c75585df1"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/future/ENVIRONMENT-SEPARATION-AND-NO-DATA-PROMOTION.md": {
+		"size": 1013,
+		"mtime_ns": 1787860467734363782,
+		"hash": "3640a9a227ce894ac9da84da190d16d8bda2d3511d5cdcc26ffd8f28b6027b3a"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/future/REGULATORY-PAYMENT-TAX-KYB-AND-INVOICING-VALIDATION.md": {
+		"size": 1119,
+		"mtime_ns": 1787908292529862455,
+		"hash": "6eb1b0282fc0510d4647fa75fa1e3c903aa393720760cfa52acb3fe4fa76fcd9"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/future/VENDOR-DEMAND-LOGISTICS-AND-UNIT-ECONOMICS.md": {
+		"size": 1090,
+		"mtime_ns": 1787860467554526584,
+		"hash": "923ca8635e9050f867255a66e4ceb1cd7d3390ebdf0b62e8afea9d793a5b60f3"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/governance/ASSUMPTIONS-RISKS-AND-OPEN-QUESTIONS.md": {
+		"size": 2631,
+		"mtime_ns": 1787859880991652989,
+		"hash": "6d9f0796f0aa9269c35749a835368753e1ef87575c6f81cdedb82693948e1ed4"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/governance/AUTHORITATIVE-SOURCE-REGISTER.md": {
+		"size": 5303,
+		"mtime_ns": 1787908560918435840,
+		"hash": "1f12ade230300a24ace58499fb133b2efafc5331199b049db97cc87cb13783bf"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/governance/COVERAGE-AUDIT-0.1.md": {
+		"size": 3743,
+		"mtime_ns": 1787908932464581635,
+		"hash": "f4838f6cdf558295c8dc2d4f02ce095a1cb2b835f93b075b80a7c8d496b1f211"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/governance/DECISION-REGISTER.md": {
+		"size": 36778,
+		"mtime_ns": 1787908679689250848,
+		"hash": "93d5c0d7b69a8cb297cf6269d39770f0d0299c3850244c554842821e0f300284"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/governance/DOCUMENTATION-CONVENTIONS.md": {
+		"size": 2424,
+		"mtime_ns": 1787890894974468651,
+		"hash": "f93e1713d1f55ee3076f2e2aeec6a07c06ef9fad28e7b9c926a48959ef1b8978"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/governance/REJECTED-DEFERRED-AND-SUPERSEDED.md": {
+		"size": 1726,
+		"mtime_ns": 1787859881089914785,
+		"hash": "e22934ed7e2058937002bf63f56601ac33e7b01d6fe44762543f979271e1a4b2"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/governance/SOURCE-LEDGER-APPENDIX.md": {
+		"size": 36283,
+		"mtime_ns": 1787908708555158453,
+		"hash": "d5803a5f939bbf25afbe55945096d0f913e03f9e860fd5da3ca61139c4fab478"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/governance/SOURCE-LEDGER.md": {
+		"size": 5110,
+		"mtime_ns": 1787908708629028012,
+		"hash": "4ae541127afe3e092d4dd22b5936f03c3ec0eafe43cd5b0f95a6d1a3c90b2f1b"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/governance/TRACEABILITY-MATRIX.md": {
+		"size": 4229,
+		"mtime_ns": 1787908271571777465,
+		"hash": "71d6f7e43cdc4b6acbd88185f6789283e2b2fa7140d02235a5114449d2eab508"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/interfaces/API-CAPABILITY-CATALOG.md": {
+		"size": 1400,
+		"mtime_ns": 1787890733525492367,
+		"hash": "93bc6d255325e5c1cdcb3cf221038827c13aade77b51ddc7517ff35f7d6215a7"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/interfaces/API-CONVENTIONS.md": {
+		"size": 1367,
+		"mtime_ns": 1787890733443425375,
+		"hash": "140dfe8e31d07cd39084c17e2fefc5d23c84685df5b039fc091eebd45027c42d"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/interfaces/CANONICAL-PUBLIC-TYPES.md": {
+		"size": 1648,
+		"mtime_ns": 1787891813822218353,
+		"hash": "83872f8a1d174c7491062cfda64d005892c677bb1c3d84197dbaae8e2bea95e4"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/interfaces/ERRORS-PAGINATION-AND-IDEMPOTENCY.md": {
+		"size": 1336,
+		"mtime_ns": 1787890733687885003,
+		"hash": "ecd4c831df0b68ecbe5cac5ffd6ce250cf6f4a9fafd320d4e22bf4d832a408a9"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/interfaces/EVENT-CATALOG.md": {
+		"size": 1908,
+		"mtime_ns": 1787890733766325382,
+		"hash": "a41a44387f3a526c7084c1e3fc9d9b32b206a37e849280a21b02eaa25107d5fe"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/interfaces/MEDIA-UPLOAD-AND-PROCESSING-CONTRACTS.md": {
+		"size": 1024,
+		"mtime_ns": 1787890734002026690,
+		"hash": "b2d64bb95c03d205ca53ae3ef06678b7be18a6bf1a5beee85ca0ed09a47d9075"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/interfaces/REALTIME-CONTRACTS.md": {
+		"size": 1096,
+		"mtime_ns": 1787890733923466726,
+		"hash": "753cb39ba0baf11bc1a571772209be24a01fb89271eadb8f51765903f09d50d4"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/interfaces/WEBHOOK-CONTRACTS.md": {
+		"size": 1273,
+		"mtime_ns": 1787890733843967422,
+		"hash": "bde5bc85cee6d72408af57529fd8360b5c14a34f5598441851161bfe8abef89e"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/operations/MONITORING-ALERTING-AND-STATUS-PAGE.md": {
+		"size": 1518,
+		"mtime_ns": 1787892263647689461,
+		"hash": "2227be672af3c15e677247da8936779ba76bc16901aff7f235bb7ccf03b698d0"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/operations/PRODUCTION-OPERATING-MODEL.md": {
+		"size": 1652,
+		"mtime_ns": 1787891539350406923,
+		"hash": "e246f06939b1bc3b3d648263cd665ef4cdf9953830f1a0f630577ad63cf75926"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/operations/RECONCILIATION-AND-FINANCIAL-OPERATIONS.md": {
+		"size": 1792,
+		"mtime_ns": 1787891539675248737,
+		"hash": "fe82ac1452bf46b2deb816d9a6e3a45a9655a315840685722da8100807f86313"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/operations/RUNBOOK-INDEX.md": {
+		"size": 1891,
+		"mtime_ns": 1787860357588407029,
+		"hash": "05805a4f4a7763de70c64c0718fe7dde326f651b2be7ca9e0f663b986a8236d3"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/operations/SUPPORT-TRUST-FINANCE-AND-VENDOR-OPERATIONS.md": {
+		"size": 1285,
+		"mtime_ns": 1787860357485144404,
+		"hash": "8f0f020d8ced2d44d237a129ee0dd6ba1fd51a6e1aac24401339e46a32e5fc5b"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/operations/runbooks/BACKUP-PITR-AND-CLEAN-HOST-REBUILD.md": {
+		"size": 3801,
+		"mtime_ns": 1787892386116501020,
+		"hash": "6c895c78fed4df5fc1449677e9e5ea55b2c8ccca96e3242774a0dbacfbeefb72"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/operations/runbooks/DEMO-PURGE-FAILURE.md": {
+		"size": 3216,
+		"mtime_ns": 1787892386201969989,
+		"hash": "c645900d4442281ca71e9cb6b78354e04b6c5a6a3729b9f3a2f3c2abae9ecbb4"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/operations/runbooks/DEPLOY-AND-ROLLBACK.md": {
+		"size": 3990,
+		"mtime_ns": 1787892386288667260,
+		"hash": "c69458b1d32fcb5ad5463253cfb76c3f3beb62a32f6b0553c3f2ca51fe0b5911"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/operations/runbooks/DISPUTE-REFUND-AND-CHARGEBACK.md": {
+		"size": 3722,
+		"mtime_ns": 1787892386374476483,
+		"hash": "e124faaa79effd8a7413707e42148fb70aa46a8c576980304087460af8bdc2a4"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/operations/runbooks/MEDIA-QUARANTINE-FAILURE.md": {
+		"size": 3213,
+		"mtime_ns": 1787892386461612383,
+		"hash": "59687d437f52a699ce64ecd876e5f477670cef5c5bd95c9a97541c65374bdeed"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/operations/runbooks/MIGRATION-FAILURE.md": {
+		"size": 3672,
+		"mtime_ns": 1787892386548216445,
+		"hash": "cfd8caf3beb107b71415dd423846bfb8e39eb7b9612a7144a93ca3e4d3f9f5c3"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/operations/runbooks/PAYMENT-LEDGER-AND-PAYOUT-MISMATCH.md": {
+		"size": 3778,
+		"mtime_ns": 1787892386633722331,
+		"hash": "79e906e9c4d9ca3a1f737db3376c995bafd3ed626e695ee44ccf0380ec146422"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/operations/runbooks/PROVIDER-OUTAGE.md": {
+		"size": 3569,
+		"mtime_ns": 1787892386718258251,
+		"hash": "abc7119dd4bc0aa61fc72279892544bfb5a8fc518e4a7dd3bb34199d1f026aeb"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/operations/runbooks/SEARCH-REBUILD.md": {
+		"size": 3057,
+		"mtime_ns": 1787892386804206641,
+		"hash": "3af57799e3ee9bdba8ee0c60a67e307136a6b7ea59b228dd36fbd5f4dc9b9df6"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/operations/runbooks/SECURITY-INCIDENT-AND-DATA-BREACH.md": {
+		"size": 3913,
+		"mtime_ns": 1787892386976100796,
+		"hash": "7fce2b08f6aa8f60861181b964cc8bb1c5f78503d93d80bf0e6f078847672b5c"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/operations/runbooks/STUCK-HOLDS-JOBS-AND-OUTBOX.md": {
+		"size": 3282,
+		"mtime_ns": 1787892387061113553,
+		"hash": "547550a6b4f5922012e980d12f100e36af31567338bb020fcb84e2a13de1b7c8"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/operations/runbooks/VENDOR-SUSPENSION-AND-APPEAL.md": {
+		"size": 3445,
+		"mtime_ns": 1787892387146265062,
+		"hash": "83c9e4e137b7501911c37c461470631914b42b69768a5bfcae1f0a9c9bd903bb"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/product/ACCESSIBILITY-I18N-AND-LOW-CONNECTIVITY.md": {
+		"size": 1315,
+		"mtime_ns": 1787890285914019058,
+		"hash": "a48196aa87b6e1a78fa96626547dd6eee3ff6a7738d53aebc7e28482443e7667"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/product/AUDIENCE-PERSONAS-AND-JOBS.md": {
+		"size": 1736,
+		"mtime_ns": 1787890285317849193,
+		"hash": "4b717bd19a1eb69954d20b48c89a782682b5d80267a52694bd5eceacc7959616"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/product/END-TO-END-USER-JOURNEYS.md": {
+		"size": 2197,
+		"mtime_ns": 1787890285659643060,
+		"hash": "779475f653e75f8d7b43bb938f8e15cd6519dddd8f4577908c96ff1e5012ed07"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/product/FEATURE-CATALOG.md": {
+		"size": 1938,
+		"mtime_ns": 1787890285574605627,
+		"hash": "6be6470d9f9e3137938742a14c740f51f3a5c38bf2bf2410334d44453299a13a"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/product/PORTFOLIO-POSITIONING-AND-CLAIMS.md": {
+		"size": 1053,
+		"mtime_ns": 1787891813659436256,
+		"hash": "7f921780521983f5d6a4a9197d991e0015e11169e050ea5ef08afc74420ad434"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/product/PRODUCT-DESCRIPTION.md": {
+		"size": 2283,
+		"mtime_ns": 1787890285141773072,
+		"hash": "a4dd537826211ba10782472db224545c5517b080d2540e0125d588eda3c701e0"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/product/ROLES-PERMISSIONS-AND-RESPONSIBILITIES.md": {
+		"size": 1705,
+		"mtime_ns": 1787890285403602256,
+		"hash": "2b690fd1225122a6a5cfa0d3e76c8f600fdb787c47cc5fb558582088b5d5eb55"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/product/SCOPE-AND-EXCLUSIONS.md": {
+		"size": 1962,
+		"mtime_ns": 1787890285488237018,
+		"hash": "4a1774fc55547cd3abb24548c87d9f4a0e3fd5898127f74c3d5350eec7a62449"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/product/SEED-CATEGORIES-AND-SYNTHETIC-CONTENT.md": {
+		"size": 1107,
+		"mtime_ns": 1787891813741130494,
+		"hash": "2854bafd9a3fbb7455e66701ab8dd9394bba25d35568784fd2f9422d4d98c9c4"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/product/UX-DESIGN-SYSTEM-AND-RESPONSIVENESS.md": {
+		"size": 1280,
+		"mtime_ns": 1787890285828762791,
+		"hash": "545f7d7836dd47f527b1ccef5943fbf6bd2d0ca2941446bafcc38a50d81c7c86"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/product/VISION-OUTCOMES-AND-SUCCESS.md": {
+		"size": 1586,
+		"mtime_ns": 1787891392556329682,
+		"hash": "89dc0b51eb0eba5fe6d3e1a8a2be904bb5896bbadebf560930c78780d30713d8"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/product/portfolio-demo.md": {
+		"size": 4526,
+		"mtime_ns": 1787860235255345374,
+		"hash": "74400e8c39e6ca7806f25419fbfd9ad9f22f651fad66d13c0d941a3398d5027b"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/product/production-description.md": {
+		"size": 11083,
+		"mtime_ns": 1787860234740106602,
+		"hash": "b78a84501845f3e87fa6e800543852e79f873bd926efd96c110dd6a370209d16"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/product/project-charter.md": {
+		"size": 5242,
+		"mtime_ns": 1787908977388212682,
+		"hash": "d6a0a1a7375402afd8da91c4a912493be3e2a9b92871fc1a45e2df36d2f2e2f1"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/product/release-roadmap.md": {
+		"size": 6645,
+		"mtime_ns": 1787860235457999808,
+		"hash": "0246ff36362e50851288009822934e34db265a634f2eac9963bc3f568b257342"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/quality/ACCESSIBILITY-I18N-AND-LOW-CONNECTIVITY.md": {
+		"size": 1271,
+		"mtime_ns": 1787860275100818936,
+		"hash": "75478de0ea879ee9c72b2ed496cc7aa6a70424fe63161e6c47ff1e2ea632387c"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/quality/CONCURRENCY-AND-FINANCIAL-CORRECTNESS.md": {
+		"size": 1789,
+		"mtime_ns": 1787860274894901783,
+		"hash": "d171c4026d1de3519358820a9db8c2d537b15652c2bc48113f97a2d978433e08"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/quality/DEPLOYMENT-AND-RECOVERY-TESTING.md": {
+		"size": 980,
+		"mtime_ns": 1787891539188034496,
+		"hash": "94b75b52adaf67f7dcb2ed466365ea52268ef8d980ca6aa16cbef350a23197af"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/quality/EVIDENCE-INDEX.md": {
+		"size": 1104,
+		"mtime_ns": 1787860275406288776,
+		"hash": "70a585220ade52fec4f4916435468446383463978445bcdb5b3b96131aaf2fd3"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/quality/PERFORMANCE-RELIABILITY-AND-SLO.md": {
+		"size": 991,
+		"mtime_ns": 1787891539105819878,
+		"hash": "7cbe4bf74bf7e3a610106d9e707cb48799d91d339355324b24e0cf1b0edff345"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/quality/PHASE-ACCEPTANCE-CATALOG.md": {
+		"size": 6955,
+		"mtime_ns": 1787891712066515394,
+		"hash": "4160bff0c1528709108667adee99ab88f098c0c1dc0d3c16b4d5553f94deff9e"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/quality/PROVIDER-CONTRACT-AND-FAILURE-TESTING.md": {
+		"size": 1512,
+		"mtime_ns": 1787860274998934697,
+		"hash": "f7ff0f2d8e0a0e90f6bb764757c0f7b2aa3dc692cba11c4682a8316b5fe6fb47"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/quality/TEST-STRATEGY.md": {
+		"size": 1525,
+		"mtime_ns": 1787891392045515293,
+		"hash": "19549ec88a7c8d2eac5873699fa38584e58f28a30a482a85f0f1cf7c7c51e0dd"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/requirements/CROSS-PHASE-NONFUNCTIONAL-REQUIREMENTS.md": {
+		"size": 2069,
+		"mtime_ns": 1787891392132320156,
+		"hash": "fb28b5d508ffa88db3d4618b3047937da731adb9dcba99e960125102b9bb643c"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/requirements/PHASE-00-PLATFORM-FOUNDATION.md": {
+		"size": 3141,
+		"mtime_ns": 1787892346711094093,
+		"hash": "3312c29f3d1baa377360183bd959e3c13de429bd0ae260720e44d304e0c1a379"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/requirements/PHASE-01-VENDOR-SUPPLY-AND-DISCOVERY.md": {
+		"size": 3346,
+		"mtime_ns": 1787892081896048043,
+		"hash": "d75deccdb64a3191b3979c2b8e7c506957d753ebec1d3af6a947702ffed046b6"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/requirements/PHASE-02-GOODS-COMMERCE.md": {
+		"size": 3555,
+		"mtime_ns": 1787892081979798268,
+		"hash": "36bb0ee0b1fe14c97a699ec444ebc8d5bb49e92fb7cb58826de8a60534be0291"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/requirements/PHASE-03-SERVICES-AND-BOOKINGS.md": {
+		"size": 4198,
+		"mtime_ns": 1787892082065490718,
+		"hash": "b36862815919925e2b1d27dfbde2eb843a025a8bdb775c7004b035054f47bd45"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/requirements/PHASE-04-UNIFIED-COMMERCE-AND-FINANCE.md": {
+		"size": 3741,
+		"mtime_ns": 1787892082150326994,
+		"hash": "dd9b17ad791936f2d5a803ccc08e77f0e14d8fb196509bf5c05181abad983b74"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/requirements/PHASE-05-TRUST-OPERATIONS-AND-ENGAGEMENT.md": {
+		"size": 3591,
+		"mtime_ns": 1787892082232359413,
+		"hash": "f8155c525ad069117376ae3f7f6930ab148b713fa4693515c3db4d431db24a3e"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/requirements/PHASE-06-HARDENING-AND-PUBLIC-RELEASE.md": {
+		"size": 2973,
+		"mtime_ns": 1787892082317050521,
+		"hash": "6426517067c9c3358df637f12ef3e4a5ee7ed4e09288dcbb80fa59bf6d3bfb46"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/requirements/PHASE-AND-RELEASE-GATES.md": {
+		"size": 1401,
+		"mtime_ns": 1787891539432705917,
+		"hash": "7929b851a61b7b467d3adbeb939471dd3ce8136d7a352c59289ab165bf6fcda5"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/requirements/journeys-acceptance.md": {
+		"size": 8221,
+		"mtime_ns": 1787860234945736784,
+		"hash": "51a010cc6f6b8a29b1d86e10b862391ad937c06cecd342c853565edd32be2866"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/requirements/multiphase-requirements.md": {
+		"size": 2761,
+		"mtime_ns": 1787890477337612798,
+		"hash": "c050456ecde35d43ba3cbbdc53f9fa50af661349b0967e4023b3d13e46f4aa52"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/requirements/non-functional-requirements.md": {
+		"size": 4932,
+		"mtime_ns": 1787860234638402699,
+		"hash": "6cefb72252520a68179c82a58f4c4f28ec41e79a998b1e631127c7b6f629b9cf"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/requirements/personas-permissions.md": {
+		"size": 6497,
+		"mtime_ns": 1787860235047726106,
+		"hash": "95595eb2cc835206b6e922c2fc89689ca40a5a05d49e22a2bf5eb02600669f0e"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/requirements/scope-exclusions.md": {
+		"size": 5045,
+		"mtime_ns": 1787860235151855438,
+		"hash": "58afb025268d9674c63c693f82ced31c85428cce8c42246f3e97fa0b1b7ef94a"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/research/AUTHORITATIVE-SOURCE-REGISTER.md": {
+		"size": 2364,
+		"mtime_ns": 1787908560987805884,
+		"hash": "efad3d87a7a6c71d076932ce4e0f59cb677aedced907dfe781b7b19ec39ff1c7"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/research/PROVIDER-CAPABILITY-COST-AND-LIMITATION-REGISTER.md": {
+		"size": 2220,
+		"mtime_ns": 1787892208254932990,
+		"hash": "7cb04423e60fceba2aa0fc87b982b3bd97c1c40bec1b723adbf1f60548f9a761"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/security/ABUSE-MODERATION-AND-APPEALS.md": {
+		"size": 1384,
+		"mtime_ns": 1787860216978127864,
+		"hash": "cd92e07b548747162353736eb6dcf3a36f65724255040621824930d9163dc3a3"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/security/APPLICATION-UPLOAD-AND-PROVIDER-SECURITY.md": {
+		"size": 1905,
+		"mtime_ns": 1787860216775610493,
+		"hash": "5ab7ad91944e2b1adf3629d78049cac87b247eb619c28fbfdc1289be8be24a71"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/security/ASVS-5-LEVEL-2-MATRIX.md": {
+		"size": 2411,
+		"mtime_ns": 1787891391873745623,
+		"hash": "c10f5e0c83f30e6c009c9e4994a01db6ee48b49586c8c1dfdf2b7910e33bd05b"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/security/AUTHENTICATION-AUTHORIZATION-AND-DUAL-CONTROL.md": {
+		"size": 2682,
+		"mtime_ns": 1787860216568188205,
+		"hash": "fb1a7d079c86362d8be77a3105f773a8f93c0fa22d2da6f3bcf0cd00109d6d8f"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/security/PRIVACY-DATA-SUBJECT-RIGHTS-AND-RETENTION.md": {
+		"size": 1868,
+		"mtime_ns": 1787860216875738819,
+		"hash": "887901cf6667f6642e306be3b100d0cac242340f03fd0a58d93e2a1bb3fa7994"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/security/SECURITY-VERIFICATION-AND-RELEASE-GATES.md": {
+		"size": 1865,
+		"mtime_ns": 1787892446401447791,
+		"hash": "e0b76e7808d83e17b8c17562082b5ba5e24a7b5ffca052a7d540230df3fa52b0"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/security/THREAT-MODEL.md": {
+		"size": 3187,
+		"mtime_ns": 1787891391786228505,
+		"hash": "cd97151cbc03acba0e9e75a4e969ec7b9bdb70874872541041cc533e96fd1ec1"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/security/WORKSPACE-VENDOR-AND-LOCATION-ISOLATION.md": {
+		"size": 1427,
+		"mtime_ns": 1787860216670485087,
+		"hash": "81fcc997f9d1882047cba1a66b9f963558f916de97c46d2936ff566fefd2f73e"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/state-machines/BOOKING-MEETING-AMENDMENT-AND-ATTENDANCE.md": {
+		"size": 3573,
+		"mtime_ns": 1787908362218790939,
+		"hash": "51ed6013dad7ee9e7709a1aac4f23e27974c9229310a7d4c015af03fa9116a06"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/state-machines/EARNING-TRANSFER-AND-PAYOUT.md": {
+		"size": 1286,
+		"mtime_ns": 1787890673714054173,
+		"hash": "c4a5c870b40931c4d54155eaae654f3f8cbf95746572b9fa8e024739246ecaf9"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/state-machines/INVENTORY-HOLD-CHECKOUT-AND-PAYMENT.md": {
+		"size": 4514,
+		"mtime_ns": 1787908362146104546,
+		"hash": "b9fbdcd803b7cd4c9e78019e04eff80d4d3722af9a65cecfa4bda41c05aa79fd"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/state-machines/MODERATION-AND-DEMO-WORKSPACE.md": {
+		"size": 3082,
+		"mtime_ns": 1787908395616471645,
+		"hash": "f4e00c56664c01ac87bb2b2a66bb633ee5fa0e877bf619ae6ec6febd3d7098f2"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/state-machines/PURCHASE-ORDER-AND-FULFILLMENT.md": {
+		"size": 1847,
+		"mtime_ns": 1787892431602944415,
+		"hash": "3ed4506c56902b6cde979851e169a083571440f75f6827e44fe742cd275b7a9d"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/state-machines/RETURN-DISPUTE-AND-SUPPORT-CASE.md": {
+		"size": 4002,
+		"mtime_ns": 1787908395540687990,
+		"hash": "ef3ad2c8bcb7e8c9014df92b51765c302cdebd87628f5520ac9726697d21e8c4"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/state-machines/STATE-MACHINE-INDEX.md": {
+		"size": 1428,
+		"mtime_ns": 1787908403588700960,
+		"hash": "97b56a60d2d6173445aacc767eeefd74c4040062d3347440abb917b262cd1e22"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/state-machines/VENDOR-LISTING-AND-MEDIA.md": {
+		"size": 2775,
+		"mtime_ns": 1787908362293232327,
+		"hash": "107e0574e1ab1cdcf511ceb517a2569ca317c0ab28d7ff9ffb95a8239b32b772"
+	},
+	"/Users/abeni/Documents/MyFiles/projects/misc/project-junction/docs/ventures/verified-social-checkout-parked.md": {
+		"size": 7239,
+		"mtime_ns": 1787725218208255395,
+		"hash": "3d8bce290c8bc779bf55124e09a41e80b967788f0ed8cf320073062d246ffb0a"
+	}
+}
