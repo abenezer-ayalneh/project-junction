@@ -37,6 +37,8 @@ Back-office code is lazy-loaded and unavailable navigation is omitted, but bundl
 
 The UI uses stock shadcn/ui components and Lucide icons over Tailwind 4 and semantic OKLCH CSS-variable tokens [DEC-117–DEC-118]. The standard neutral token preset owns component appearance. Junction red (`#e23247`) is limited to the product mark and restrained brand accents; semantic state colors retain their standard meaning. Local context is expressed by truthful synthetic content and imagery, not ornamental motifs [DEC-126]. Light, dark, and system modes are supported through a browser-local preference that defaults to System.
 
+Pages and components express layout and appearance through Tailwind utilities. The global stylesheet owns Tailwind/shadcn setup and the semantic token bridge for color modes; it does not own page or component presentation. Use Tailwind variants and reusable components before introducing focused CSS for behavior utilities that cannot be represented clearly in markup.
+
 ## Accessibility, i18n, and connectivity
 
 - WCAG 2.2 AA is a release criterion.

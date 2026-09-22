@@ -24,7 +24,7 @@ Current work ends after producing and reviewing:
 Future scope:
 
 - Nx workspace, Next application, Nest API, worker, shared contracts, local dependencies, and CI;
-- design tokens, adaptive role shells, accessibility baseline, and PWA shell;
+- stock shadcn/ui neutral tokens, Light/Dark/System appearance choices, adaptive role shells, accessibility baseline, and PWA shell;
 - Better Auth, session validation, MFA/recent-auth, `AccessContext`, Vendor membership, and Platform authorization;
 - immutable audit records, outbox/inbox foundations, provider fakes, and observability baseline; and
 - isolated synthetic demo workspaces and cleanup.

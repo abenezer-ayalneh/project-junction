@@ -42,7 +42,7 @@ A Demo Workspace is an isolated, expiring synthetic dataset. A Demo Persona is w
 
 ### Storefront
 
-A structured Vendor profile with branding, Locations, policies, updates, collections, Products, and Services. It is not a page builder or arbitrary theme. `[DEC-009, DEC-130]`
+A structured Vendor profile with branding, Locations, policies, updates, collections, Products, and Services. It is not a page builder or arbitrary theme; Vendor identity comes from logo, cover, and content, without a Vendor-selected accent color. `[DEC-009, DEC-130]`
 
 ### Listing
 

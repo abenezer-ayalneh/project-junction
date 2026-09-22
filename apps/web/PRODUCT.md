@@ -27,7 +27,7 @@ The web application is one Next App Router client in an Nx workspace. The author
 - Server-derived `AccessContext`, idempotent commands, outbox/inbox primitives, and expiring demo workspaces are implemented as a Phase 00 foundation.
 - No sign-up, customer transaction, live provider, identity verification, or deployment is available.
 - Public contracts are Zod schemas and must not expose Prisma or provider types.
-- English, WCAG 2.2 AA foundations, dark/light system color preference, and low-connectivity-safe wording are required.
+- English, WCAG 2.2 AA foundations, Light, Dark, and System appearance choices, and low-connectivity-safe wording are required. System is the default; an explicit choice is browser-local and persists before sign-in.
 
 ## Evidence on Hand
 
@@ -42,4 +42,4 @@ The Phase 00 requirement and acceptance documents are in `../../docs/requirement
 
 ## Accessibility & Inclusion
 
-WCAG 2.2 AA is a release criterion. Preserve semantic landmarks, keyboard focus, a skip link, system color preference, and readable English copy.
+WCAG 2.2 AA is a release criterion. Preserve semantic landmarks, keyboard focus, a skip link, the Light/Dark/System appearance choice, and readable English copy.

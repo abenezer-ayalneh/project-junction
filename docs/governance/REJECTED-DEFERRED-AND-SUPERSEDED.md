@@ -18,9 +18,10 @@
 
 ## Superseded
 
-| Earlier decision                                           | Replacement                                                                                                                               | Reason                                                     |
-| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| `DEC-138`: first public release after a goods-pickup slice | `DEC-157`–`DEC-160`: first public release after mixed multi-Vendor goods and Bookings, both fulfillment modes, and both appointment modes | The User later chose a broader public-release proof point. |
+| Earlier decision                                                                          | Replacement                                                                                                                               | Reason                                                                                                                                                |
+| ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DEC-138`: first public release after a goods-pickup slice                                | `DEC-157`–`DEC-160`: first public release after mixed multi-Vendor goods and Bookings, both fulfillment modes, and both appointment modes | The User later chose a broader public-release proof point.                                                                                            |
+| `SRC-CHAT-0117`, `0118`, `0126`, `0130`: earlier visual and Storefront styling selections | `SRC-CHAT-0195`, normalized by `DEC-117`, `DEC-118`, `DEC-126`, and `DEC-130`                                                             | The User selected the stock shadcn/ui neutral baseline, Light/Dark/System behavior, restrained Junction-red branding, and neutral Vendor Storefronts. |
 
 ## Explicitly not inferred as User decisions
 

@@ -13,7 +13,9 @@ The complete chain is: `SRC-CHAT-*` → `DEC-*` → Decision Register link to on
 | `SRC-CHAT-0056`–`0065` / `DEC-056`–`065` | policy catalog; trust/engagement          | P04–P05                           | `POL-FIN/TRUST-*`, `INV-PAY/TRUST-*`, `STATE-RET/TRUST-*`, `API-060`–`069`       | `TST-P05-*`, `EVD-SEC/REQ-*`                       |
 | `SRC-CHAT-0066`–`0088` / `DEC-066`–`088` | access/security; payments; data           | P00, P04–P06                      | `INV-ACCESS/PAY-*`, `API-001`–`009`, `EVT-030/070`, ADR-0006/0008/0009/0010      | `TST-P00-001`, `TST-P04-002`, `EVD-SEC/PRV-*`      |
 | `SRC-CHAT-0089`–`0111` / `DEC-089`–`111` | deployment, provider, demo                | P03, P06                          | `STATE-BKG/DEMO-*`, `RUN-001`–`013`, ADR-0012/0014                               | `TST-P03-003`, `TST-P06-001/002`, `EVD-OPS/PRV-*`  |
-| `SRC-CHAT-0112`–`0130` / `DEC-112`–`130` | portfolio claims; architecture/interfaces | P00/P06                           | `API-*`, `EVT-*`, `INV-ACCESS-*`, ADR-0003/0005/0011/0016                        | `TST-P00-001`, `TST-P06-004/005`, `EVD-CLM/SEC-*`  |
+| `SRC-CHAT-0112`–`0116`, `0119`–`0125`, `0127`–`0129` / `DEC-112`–`116`, `119`–`125`, `127`–`129` | portfolio claims; architecture/interfaces | P00/P06 | `API-*`, `EVT-*`, `INV-ACCESS-*`, ADR-0003/0005/0011/0016 | `TST-P00-001`, `TST-P06-004/005`, `EVD-CLM/SEC-*` |
+| `SRC-CHAT-0117`, `0118`, `0126`, `0130` | superseded visual and Storefront selections | none (historical) | supersession record | no active requirement derives from these sources |
+| `SRC-CHAT-0195` / `DEC-117`, `118`, `126`, `130` | UX design system; frontend; Storefront catalog | P00/P06 | stock shadcn/ui, theme preference, semantic state, structured branding | component, manual accessibility, and contrast evidence |
 | `SRC-CHAT-0131`–`0137` / `DEC-131`–`137` | fulfillment; requirements/gates           | P02, P06                          | `POL-GOOD-*`, `INV-FUL-*`, `STATE-ORD-*`                                         | `TST-P02-002`, `TST-P06-003`, `EVD-PERF/REQ-*`     |
 | `SRC-CHAT-0138` / `DEC-138`              | rejected/deferred/superseded register     | none (historical)                 | supersession record                                                              | no public release permitted on this decision       |
 | `SRC-CHAT-0139`–`0152` / `DEC-139`–`152` | demo, services, finance, checkout         | P03–P06                           | `POL-BKG/FIN-*`, `INV-BOOK/CHK/PAY-*`, `STATE-BKG/CHK/EARN-*`                    | `TST-P03-*`, `TST-P04-*`, `TST-P06-*`              |
@@ -27,6 +29,7 @@ The complete chain is: `SRC-CHAT-*` → `DEC-*` → Decision Register link to on
 
 - Each `DEC-001`–`DEC-189` appears in [Decision Register](./DECISION-REGISTER.md) and has one primary normative link.
 - `DEC-138` is classified `SUPERSEDED`; no active requirement derives public release from it.
+- `SRC-CHAT-0195` is the current design grammar source for `DEC-117`, `DEC-118`, `DEC-126`, and `DEC-130`; the four earlier visual sources are `SUPERSEDED`.
 - Every `REQ-P##-*` has a phase owner and acceptance family in the phase/quality suite.
 - Every financial rule maps to `POL-FIN-*`, `INV-PAY-001`, relevant `STATE-*`, reconciliation, and a future financial correctness test.
 - Every external/time-sensitive claim must attach a dated `REF-*` and refresh trigger before use.

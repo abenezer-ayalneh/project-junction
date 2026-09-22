@@ -8,7 +8,7 @@
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------- |
 | JCT-NFR-ACC-001 | All public, Customer, Vendor, Staff, and Platform workflows MUST meet WCAG 2.2 AA.                                                                                                                                 | DEC-061          |
 | JCT-NFR-ACC-002 | Accessibility MUST include keyboard, focus, semantics, contrast, zoom/reflow, screen-reader announcements, error identification, reduced motion, captions/alternatives for media, and accessible realtime updates. | DEC-061          |
-| JCT-NFR-ACC-003 | Radix/shadcn primitives MAY support accessibility but MUST NOT replace end-to-end manual verification.                                                                                                             | DEC-117, DEC-118 |
+| JCT-NFR-ACC-003 | Stock shadcn/ui primitives and Lucide icons MAY support accessibility but MUST NOT replace end-to-end manual verification.                                                                                         | DEC-117, DEC-118 |
 
 ## Localization and time
 

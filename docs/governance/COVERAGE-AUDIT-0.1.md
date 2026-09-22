@@ -38,6 +38,10 @@ broken normative links = 0
 unlabeled implementation claims = 0
 ```
 
+## 2026-09-22 design grammar alignment
+
+The baseline counters above record the 2026-08-28 audit. The current provenance record adds `SRC-CHAT-0195` as a direct selection and classifies the four conflicting visual sources—`SRC-CHAT-0117`, `0118`, `0126`, and `0130`—as `SUPERSEDED`. The current ledger therefore contains 195 classified sources: 190 direct selections and 5 non-decision sources, with 0 unclassified sources. `SRC-CHAT-0195` is normalized through `DEC-117`, `DEC-118`, `DEC-126`, and `DEC-130`.
+
 ## Audit limits
 
 This is a static documentation audit. It does not prove application behavior, provider availability, security controls, accessibility, performance, backup recovery, legal compliance, payment capability, or commercial readiness. Those claims remain future `EVD-*` work and, for Dire Dawa commercialization, require the separately documented research and launch gates.

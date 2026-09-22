@@ -6,7 +6,7 @@
 
 ## Method
 
-This ledger preserves the complete Project Junction decision conversation as stable source IDs. Each direct selection is normalized once into the corresponding `DEC-*` entry in [Decision Register](./DECISION-REGISTER.md), where the actual decision wording and normative home live. A range means every individual four-digit source identifier in that range is present and has the stated classification; it is not a single aggregated source. Thus `SRC-CHAT-0001` through `SRC-CHAT-0189` are individually classified without duplicating 189 decision sentences.
+This ledger preserves the complete Project Junction decision conversation as stable source IDs. Each direct selection is normalized into the corresponding `DEC-*` entry in [Decision Register](./DECISION-REGISTER.md), where the actual decision wording and normative home live. A later direct selection may revise an existing decision rather than create a new `DEC-*` number. A range means every individual four-digit source identifier in that range is present and has the stated classification; it is not a single aggregated source. Thus `SRC-CHAT-0001` through `SRC-CHAT-0189`, plus later `SRC-CHAT-0195`, are individually classified without duplicating decision sentences.
 
 The [Source Ledger Appendix](./SOURCE-LEDGER-APPENDIX.md) contains the one-row-per-source chronological proof, including all direct and non-decision source entries. This file remains the readable grouped overview.
 
@@ -21,7 +21,8 @@ Assistant questions, alternatives, and recommendations are retained only when th
 | `SRC-CHAT-0056`–`0065` | receipt/tax boundary, promotions, returns/disputes, privacy, accessibility, messaging   | `USER-CONFIRMED` | `DEC-056`–`DEC-065`                        |
 | `SRC-CHAT-0066`–`0088` | Vendor verification, identity/auth, provider/security, money, persistence, media        | `USER-CONFIRMED` | `DEC-066`–`DEC-088`                        |
 | `SRC-CHAT-0089`–`0111` | VPS/deployment/recovery, maps, observability, online meetings, demo/provider boundaries | `USER-CONFIRMED` | `DEC-089`–`DEC-111`                        |
-| `SRC-CHAT-0112`–`0130` | repository/license/docs, UI/API/runtime/realtime, isolation, storefront                 | `USER-CONFIRMED` | `DEC-112`–`DEC-130`                        |
+| `SRC-CHAT-0112`–`0116`, `0119`–`0125`, `0127`–`0129` | repository/license/docs, API/runtime/realtime, isolation | `USER-CONFIRMED` | `DEC-112`–`DEC-116`, `DEC-119`–`DEC-125`, `DEC-127`–`DEC-129` |
+| `SRC-CHAT-0117`, `0118`, `0126`, `0130` | earlier visual and Storefront styling selections | `SUPERSEDED` | replaced by `SRC-CHAT-0195`; current `DEC-117`, `DEC-118`, `DEC-126`, `DEC-130` |
 | `SRC-CHAT-0131`–`0137` | fulfillment, private slice, capacity/reliability goals                                  | `USER-CONFIRMED` | `DEC-131`–`DEC-137`                        |
 | `SRC-CHAT-0138`        | earlier goods-pickup-only first-public idea                                             | `SUPERSEDED`     | `DEC-138`; replaced by `DEC-157`–`DEC-160` |
 | `SRC-CHAT-0139`–`0152` | demo/scheduling/finance/promotions/availability rules                                   | `USER-CONFIRMED` | `DEC-139`–`DEC-152`                        |
@@ -30,6 +31,7 @@ Assistant questions, alternatives, and recommendations are retained only when th
 | `SRC-CHAT-0164`–`0170` | Staff identity, waitlist, exchange, inquiry, Support Case, Platform controls            | `USER-CONFIRMED` | `DEC-164`–`DEC-170`                        |
 | `SRC-CHAT-0171`–`0178` | adult account, demo lifetime/access, suspension, opt-in personalization, public media   | `USER-CONFIRMED` | `DEC-171`–`DEC-178`                        |
 | `SRC-CHAT-0179`–`0189` | budget, seed set, substitution, five Booking limit, exact post-purchase rules           | `USER-CONFIRMED` | `DEC-179`–`DEC-189`                        |
+| `SRC-CHAT-0195`        | stock shadcn/ui neutral design grammar, icon baseline, color modes, brand use, Storefront identity | `USER-CONFIRMED` | `DEC-117`, `DEC-118`, `DEC-126`, `DEC-130` |
 
 ## Non-decision and constraint sources
 
@@ -43,9 +45,9 @@ Assistant questions, alternatives, and recommendations are retained only when th
 
 ## Completeness statement
 
-- Direct decision sources classified: `SRC-CHAT-0001`–`SRC-CHAT-0189` = 189.
+- Direct selection sources classified: `SRC-CHAT-0001`–`SRC-CHAT-0189`, plus `SRC-CHAT-0195` = 190.
 - Constraint/derived/external/future sources classified: `SRC-CHAT-0190`–`SRC-CHAT-0194` = 5.
 - Unclassified source entries: **0**.
-- The only recorded supersession is `SRC-CHAT-0138` / `DEC-138`; it remains visible rather than overwritten.
+- Superseded source selections—`SRC-CHAT-0117`, `0118`, `0126`, `0130`, and `0138`—remain visible rather than overwritten.
 
 Trace from source to future evidence through [Traceability Matrix](./TRACEABILITY-MATRIX.md). No accepted decision is permitted to exist only in this ledger or its appendix.
