@@ -1,86 +1,135 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
 
 :root {
-	--canvas: oklch(0.975 0.006 255);
-	--surface: oklch(0.995 0.003 255);
-	--ink: oklch(0.205 0.025 267);
-	--muted: oklch(0.48 0.025 267);
-	--line: oklch(0.885 0.015 265);
-	--signal: oklch(0.49 0.19 270);
-	--signal-soft: oklch(0.94 0.045 270);
-	--success: oklch(0.72 0.15 160);
+	--background: oklch(1 0 0);
+	--foreground: oklch(0.145 0 0);
+	--card: oklch(1 0 0);
+	--card-foreground: oklch(0.145 0 0);
+	--popover: oklch(1 0 0);
+	--popover-foreground: oklch(0.145 0 0);
+	--primary: oklch(0.205 0 0);
+	--primary-foreground: oklch(0.985 0 0);
+	--secondary: oklch(0.97 0 0);
+	--secondary-foreground: oklch(0.205 0 0);
+	--muted: oklch(0.97 0 0);
+	--muted-foreground: oklch(0.556 0 0);
+	--accent: oklch(0.97 0 0);
+	--accent-foreground: oklch(0.205 0 0);
+	--destructive: oklch(0.577 0.245 27.325);
+	--border: oklch(0.922 0 0);
+	--input: oklch(0.922 0 0);
+	--ring: oklch(0.708 0 0);
+	--success: oklch(0.527 0.154 150.069);
+	--warning: oklch(0.666 0.179 58.318);
+	--junction-brand: #e23247;
+	--chart-1: oklch(0.87 0 0);
+	--chart-2: oklch(0.556 0 0);
+	--chart-3: oklch(0.439 0 0);
+	--chart-4: oklch(0.371 0 0);
+	--chart-5: oklch(0.269 0 0);
+	--radius: 0.625rem;
+	--sidebar: oklch(0.985 0 0);
+	--sidebar-foreground: oklch(0.145 0 0);
+	--sidebar-primary: oklch(0.205 0 0);
+	--sidebar-primary-foreground: oklch(0.985 0 0);
+	--sidebar-accent: oklch(0.97 0 0);
+	--sidebar-accent-foreground: oklch(0.205 0 0);
+	--sidebar-border: oklch(0.922 0 0);
+	--sidebar-ring: oklch(0.708 0 0);
 }
 
-@media (prefers-color-scheme: dark) {
-	:root {
-		--canvas: oklch(0.17 0.018 267);
-		--surface: oklch(0.205 0.018 267);
-		--ink: oklch(0.955 0.01 265);
-		--muted: oklch(0.75 0.025 265);
-		--line: oklch(0.32 0.02 267);
-		--signal: oklch(0.71 0.15 270);
-		--signal-soft: oklch(0.29 0.06 270);
-		--success: oklch(0.76 0.15 160);
+.dark {
+	--background: oklch(0.145 0 0);
+	--foreground: oklch(0.985 0 0);
+	--card: oklch(0.205 0 0);
+	--card-foreground: oklch(0.985 0 0);
+	--popover: oklch(0.205 0 0);
+	--popover-foreground: oklch(0.985 0 0);
+	--primary: oklch(0.922 0 0);
+	--primary-foreground: oklch(0.205 0 0);
+	--secondary: oklch(0.269 0 0);
+	--secondary-foreground: oklch(0.985 0 0);
+	--muted: oklch(0.269 0 0);
+	--muted-foreground: oklch(0.708 0 0);
+	--accent: oklch(0.269 0 0);
+	--accent-foreground: oklch(0.985 0 0);
+	--destructive: oklch(0.704 0.191 22.216);
+	--border: oklch(1 0 0 / 10%);
+	--input: oklch(1 0 0 / 15%);
+	--ring: oklch(0.556 0 0);
+	--success: oklch(0.786 0.157 154.986);
+	--warning: oklch(0.795 0.16 82.519);
+	--sidebar: oklch(0.205 0 0);
+	--sidebar-foreground: oklch(0.985 0 0);
+	--sidebar-primary: oklch(0.922 0 0);
+	--sidebar-primary-foreground: oklch(0.205 0 0);
+	--sidebar-accent: oklch(0.269 0 0);
+	--sidebar-accent-foreground: oklch(0.985 0 0);
+	--sidebar-border: oklch(1 0 0 / 10%);
+	--sidebar-ring: oklch(0.556 0 0);
+}
+
+@theme inline {
+	--font-heading: var(--font-sans);
+	--font-sans: var(--font-sans);
+	--color-sidebar-ring: var(--sidebar-ring);
+	--color-sidebar-border: var(--sidebar-border);
+	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+	--color-sidebar-accent: var(--sidebar-accent);
+	--color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+	--color-sidebar-primary: var(--sidebar-primary);
+	--color-sidebar-foreground: var(--sidebar-foreground);
+	--color-sidebar: var(--sidebar);
+	--color-chart-5: var(--chart-5);
+	--color-chart-4: var(--chart-4);
+	--color-chart-3: var(--chart-3);
+	--color-chart-2: var(--chart-2);
+	--color-chart-1: var(--chart-1);
+	--color-junction-brand: var(--junction-brand);
+	--color-warning: var(--warning);
+	--color-success: var(--success);
+	--color-ring: var(--ring);
+	--color-input: var(--input);
+	--color-border: var(--border);
+	--color-destructive: var(--destructive);
+	--color-accent-foreground: var(--accent-foreground);
+	--color-accent: var(--accent);
+	--color-muted-foreground: var(--muted-foreground);
+	--color-muted: var(--muted);
+	--color-secondary-foreground: var(--secondary-foreground);
+	--color-secondary: var(--secondary);
+	--color-primary-foreground: var(--primary-foreground);
+	--color-primary: var(--primary);
+	--color-popover-foreground: var(--popover-foreground);
+	--color-popover: var(--popover);
+	--color-card-foreground: var(--card-foreground);
+	--color-card: var(--card);
+	--color-foreground: var(--foreground);
+	--color-background: var(--background);
+	--radius-sm: calc(var(--radius) * 0.6);
+	--radius-md: calc(var(--radius) * 0.8);
+	--radius-lg: var(--radius);
+	--radius-xl: calc(var(--radius) * 1.4);
+	--radius-2xl: calc(var(--radius) * 1.8);
+	--radius-3xl: calc(var(--radius) * 2.2);
+	--radius-4xl: calc(var(--radius) * 2.6);
+}
+
+@layer base {
+	* {
+		@apply border-border outline-ring/50;
 	}
-}
 
-* {
-	box-sizing: border-box;
-}
+	html {
+		@apply font-sans;
+	}
 
-html {
-	background: var(--canvas);
-}
-
-body {
-	margin: 0;
-	min-width: 320px;
-	background: var(--canvas);
-	color: var(--ink);
-	font-family: 'Avenir Next', Avenir, 'Segoe UI', sans-serif;
-}
-
-:focus-visible {
-	outline: 3px solid var(--signal);
-	outline-offset: 4px;
-}
-
-.section-label {
-	color: var(--signal);
-	font-size: 0.75rem;
-	font-weight: 750;
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
-}
-
-.status-badge {
-	border: 1px solid var(--line);
-	border-radius: 999px;
-	color: var(--muted);
-	font-size: 0.75rem;
-	font-weight: 650;
-	padding: 0.45rem 0.7rem;
-}
-
-.proof-panel {
-	border: 1px solid var(--line);
-	border-radius: 1rem;
-	background: color-mix(in oklch, var(--surface) 88%, var(--signal-soft));
-	box-shadow: 0 20px 45px oklch(0.2 0.02 267 / 0.11);
-	padding: 1.75rem;
-}
-
-.skip-link {
-	position: absolute;
-	left: 1rem;
-	top: -5rem;
-	z-index: 10;
-	border-radius: 0.5rem;
-	background: var(--ink);
-	color: var(--surface);
-	padding: 0.75rem 1rem;
-}
-
-.skip-link:focus {
-	top: 1rem;
+	body {
+		@apply bg-background text-foreground;
+		min-width: 320px;
+	}
 }

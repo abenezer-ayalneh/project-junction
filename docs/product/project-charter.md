@@ -45,7 +45,7 @@ The public demo and any future real Dire Dawa system are permanently separate en
 - Complete English experience with internationalization infrastructure and pseudo-locale testing. Real translations are published only after human review. `[DEC-012]`
 - WCAG 2.2 AA is a product requirement, not a late visual audit. `[DEC-061]`
 - Low-connectivity behavior is designed explicitly, while money and availability mutations continue to require a live authoritative connection. `[DEC-062]`
-- The visual language is a neutral global marketplace: cool neutrals, blue/indigo, restrained promotional color, and light/dark/system themes. Dire Dawa context comes from honest seed content and imagery, not ornamental cultural motifs. `[DEC-126]`
+- The visual language uses stock shadcn/ui neutral components and Lucide icons, a restrained Junction-red mark, semantic state colors, and Light/Dark/System themes. Dire Dawa context comes from honest seed content and imagery, not ornamental cultural motifs. `[DEC-126]`
 
 ## Product-integrity principles
 

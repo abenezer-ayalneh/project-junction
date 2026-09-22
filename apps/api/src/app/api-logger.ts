@@ -14,7 +14,7 @@ const loggerOptions: LoggerOptions = {
 				format.timestamp(),
 				format.ms(),
 				format.errors({ stack: true }),
-				nestWinstonModuleUtilities.format.nestLike('Nest Template', {
+				nestWinstonModuleUtilities.format.nestLike('project-junction', {
 					colors: true,
 					prettyPrint: true,
 				}),
@@ -31,7 +31,7 @@ const loggerOptions: LoggerOptions = {
 				format.timestamp(),
 				format.ms(),
 				format.errors({ stack: true }),
-				nestWinstonModuleUtilities.format.nestLike('Nest Template', {
+				nestWinstonModuleUtilities.format.nestLike('project-junction', {
 					prettyPrint: true,
 				}),
 			),
@@ -48,7 +48,7 @@ const loggerOptions: LoggerOptions = {
 				format.timestamp(),
 				format.ms(),
 				format.errors({ stack: true }),
-				nestWinstonModuleUtilities.format.nestLike('Nest Template', {
+				nestWinstonModuleUtilities.format.nestLike('project-junction', {
 					prettyPrint: true,
 				}),
 			),

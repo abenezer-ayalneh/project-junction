@@ -17,7 +17,7 @@ Release 1 Services are fixed-price, fixed-duration appointment offerings. A Serv
 
 A Vendor Storefront may contain Products, Services, or both. `[DEC-009]`
 
-Customization is structured rather than free-form. The intended model includes Vendor identity, logo/cover, description, restrained accent token, Locations, selected policies, curated offering collections, and moderated Vendor updates. There is no page builder, arbitrary HTML/CSS, custom theme upload, or independent Storefront application. `[DEC-130]`
+Customization is structured rather than free-form. The intended model includes Vendor identity, logo/cover, description, Locations, selected policies, curated offering collections, and moderated Vendor updates. There is no page builder, arbitrary HTML/CSS, custom theme upload, Vendor-selected accent token, or independent Storefront application. `[DEC-130]`
 
 ## Taxonomies and category policy
 

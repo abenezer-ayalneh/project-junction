@@ -96,7 +96,7 @@ _Normative owners: catalog, locations/fulfillment, and feature catalog._
   <a id="dec-123"></a>
 - `DEC-123` — Analytics is first-party typed PostgreSQL projection with minimized data, no replay, fingerprinting, or third-party behavioral analytics. [Search and analytics](../architecture/SEARCH-REALTIME-AND-ANALYTICS.md)
   <a id="dec-130"></a>
-- `DEC-130` — Storefronts use structured branding, not a page builder or theme marketplace. [Catalog](../domain/VENDOR-STOREFRONT-CATALOG-AND-DISCOVERY.md)
+- `DEC-130` — Storefronts use structured logo, cover, and content branding; no page builder, theme marketplace, or Vendor-selected accent color. [Catalog](../domain/VENDOR-STOREFRONT-CATALOG-AND-DISCOVERY.md)
   <a id="dec-131"></a>
 - `DEC-131` — Each Vendor cart group uses one fulfillment Location; no split fulfillment. [Fulfillment](../domain/LOCATIONS-INVENTORY-AND-FULFILLMENT.md)
   <a id="dec-132"></a>
@@ -368,9 +368,9 @@ _Normative owners: architecture, security, environments, deployment, and demo._
   <a id="dec-116"></a>
 - `DEC-116` — Documentation-as-code in Git is authoritative. [Documentation conventions](./DOCUMENTATION-CONVENTIONS.md)
   <a id="dec-117"></a>
-- `DEC-117` — shadcn/ui is the UI baseline. [UX](../product/UX-DESIGN-SYSTEM-AND-RESPONSIVENESS.md)
+- `DEC-117` — stock shadcn/ui and Lucide are the UI and icon baseline. [UX](../product/UX-DESIGN-SYSTEM-AND-RESPONSIVENESS.md)
   <a id="dec-118"></a>
-- `DEC-118` — Radix primitives, Tailwind 4, semantic CSS-variable/OKLCH tokens, custom Junction preset, selective components/audits. [UX](../product/UX-DESIGN-SYSTEM-AND-RESPONSIVENESS.md)
+- `DEC-118` — Tailwind 4 with stock shadcn neutral semantic CSS-variable/OKLCH tokens; no custom Junction control preset. [UX](../product/UX-DESIGN-SYSTEM-AND-RESPONSIVENESS.md)
   <a id="dec-119"></a>
 - `DEC-119` — Hybrid Next App Router: server-render public discovery, TanStack Query islands, no business Server Actions/BFF duplication. [Frontend](../architecture/FRONTEND-ARCHITECTURE.md)
   <a id="dec-120"></a>
@@ -384,7 +384,7 @@ _Normative owners: architecture, security, environments, deployment, and demo._
   <a id="dec-125"></a>
 - `DEC-125` — Checkout is all-or-nothing 15-minute hold; late provider success auto-refunds. [Cart and checkout](../domain/CART-CHECKOUT-PURCHASE-AND-ORDERS.md)
   <a id="dec-126"></a>
-- `DEC-126` — Visual direction is neutral global, cool neutral/blue-indigo, restrained promo, honest local seed context, light/dark/system. [UX](../product/UX-DESIGN-SYSTEM-AND-RESPONSIVENESS.md)
+- `DEC-126` — Visual direction is stock shadcn neutral with a restrained Junction-red mark, semantic state colors, honest local seed context, and browser-local light/dark/system choice. [UX](../product/UX-DESIGN-SYSTEM-AND-RESPONSIVENESS.md)
   <a id="dec-127"></a>
 - `DEC-127` — One adaptive Next app has role route groups/shells and lazy back office; Nest authorizes. [Frontend](../architecture/FRONTEND-ARCHITECTURE.md)
   <a id="dec-128"></a>

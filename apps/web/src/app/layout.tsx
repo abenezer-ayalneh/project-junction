@@ -1,14 +1,28 @@
 import './global.css'
 
-export const metadata = {
+import type { Metadata } from 'next'
+import { Geist } from 'next/font/google'
+
+import { ThemeProvider } from '@/components/theme-provider'
+
+const geist = Geist({
+	subsets: ['latin'],
+	variable: '--font-sans',
+})
+
+export const metadata: Metadata = {
 	title: 'Project Junction | Platform Foundation',
 	description: 'Synthetic-only platform foundation for Project Junction.',
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
 	return (
-		<html lang="en" suppressHydrationWarning>
-			<body>{children}</body>
+		<html lang="en" suppressHydrationWarning className={geist.variable}>
+			<body>
+				<ThemeProvider attribute="class" defaultTheme="system" enableSystem enableColorScheme disableTransitionOnChange storageKey="junction-theme">
+					{children}
+				</ThemeProvider>
+			</body>
 		</html>
 	)
 }

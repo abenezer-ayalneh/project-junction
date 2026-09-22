@@ -14,7 +14,7 @@ It will be deployed as a portfolio demonstration, not represented as a regulated
 
 Visitors will be able to browse without an account. The marketplace will expose separate Product and Service verticals within unified search, typed taxonomies, filters, location relevance, and explainable rule-based recommendations. A Customer account becomes mandatory at checkout. `[DEC-042–DEC-044, DEC-053]`
 
-Vendor Storefronts will have structured branding and content—identity, cover, description, accent, policies, Locations, updates, offerings, and collections—but no page builder or arbitrary theme engine. Products may be simple or variant-based. Services will have fixed-price, fixed-duration Options and add-ons with declared price and duration effects. `[DEC-021, DEC-102, DEC-130]`
+Vendor Storefronts will have structured branding and content—identity, cover, description, policies, Locations, updates, offerings, and collections—but no page builder, arbitrary theme engine, or Vendor-selected accent color. Products may be simple or variant-based. Services will have fixed-price, fixed-duration Options and add-ons with declared price and duration effects. `[DEC-021, DEC-102, DEC-130]`
 
 The initial category policy admits only low-risk goods and appointments. Controlled goods, medical, financial and legal services, adult content, weapons, alcohol, regulated categories, and digital goods are excluded. Publication risk rules may hold Listings and media for human review and appeal. `[DEC-046, DEC-047, DEC-063]`
 
