@@ -22,6 +22,18 @@ describe('Page', () => {
 		expect(screen.getByRole('status').textContent).toContain('Synthetic runtime only')
 		expect(screen.getByRole('heading', { name: /build the boundaries/i })).toBeTruthy()
 	})
+
+	it('preserves the Phase 00 accessibility baseline', () => {
+		render(<Page />)
+
+		expect(screen.getByRole('main')).toBeTruthy()
+		expect(screen.getByRole('banner')).toBeTruthy()
+		const skipLink = screen.getByRole('link', { name: /skip to platform foundation/i })
+		expect(skipLink.getAttribute('href')).toBe('#foundation')
+		skipLink.focus()
+		expect(globalThis.document.activeElement).toBe(skipLink)
+		expect(screen.getByRole('button', { name: /choose color theme/i })).toBeTruthy()
+	})
 })
 
 describe('ThemeToggle', () => {

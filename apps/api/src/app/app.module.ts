@@ -2,10 +2,12 @@ import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { APP_GUARD } from '@nestjs/core'
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
+import { FakePaymentWebhookAdapter, PROVIDER_WEBHOOK_ADAPTER } from 'platform-core'
 
 import { getApiRuntimeConfig } from './api-runtime.config'
 import { AppController } from './app.controller'
 import { FoundationService } from './foundation.service'
+import { RealtimeGateway } from './realtime.gateway'
 
 @Module({
 	imports: [
@@ -22,6 +24,12 @@ import { FoundationService } from './foundation.service'
 	controllers: [AppController],
 	providers: [
 		FoundationService,
+		{
+			provide: PROVIDER_WEBHOOK_ADAPTER,
+			inject: [ConfigService],
+			useFactory: (configService: ConfigService) => new FakePaymentWebhookAdapter(configService.get<string>('SYNTHETIC_WEBHOOK_SECRET') ?? ''),
+		},
+		RealtimeGateway,
 		{
 			provide: APP_GUARD,
 			useClass: ThrottlerGuard,

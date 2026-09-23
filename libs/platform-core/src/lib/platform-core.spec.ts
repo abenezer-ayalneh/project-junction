@@ -1,6 +1,6 @@
 import type { AccessContext, DomainEvent } from 'contracts'
 
-import { AccessDeniedError, assertScope, SessionRegistry } from './access.js'
+import { AccessDeniedError, assertElevatedSession, assertScope, SessionRegistry } from './access.js'
 import { DemoWorkspaceService } from './demo-workspaces.js'
 import { IdempotencyConflictError, IdempotencyStore } from './idempotency.js'
 import { InMemoryOutbox, ProviderInbox } from './outbox.js'
@@ -42,6 +42,18 @@ describe('platform foundation guards', () => {
 		expect(() => assertScope(context, { workspaceId: ids.otherWorkspace })).toThrow(AccessDeniedError)
 		sessions.revoke(ids.session, new Date('2029-06-01T00:00:00.000Z'))
 		expect(() => sessions.derive(ids.session, new Date('2029-06-01T00:00:01.000Z'))).toThrow(AccessDeniedError)
+	})
+
+	it('requires Vendor Owner MFA and recent authentication for elevated work', () => {
+		const context = accessContext()
+		context.session.mfaVerifiedAt = null
+		context.session.recentAuthAt = null
+		expect(() => assertElevatedSession(context, new Date('2029-01-01T00:10:00.000Z'))).toThrow(AccessDeniedError)
+		context.session.mfaVerifiedAt = '2029-01-01T00:00:00.000Z'
+		context.session.recentAuthAt = '2029-01-01T00:00:00.000Z'
+		expect(() => assertElevatedSession(context, new Date('2029-01-01T00:10:00.000Z'))).not.toThrow()
+		context.session.recentAuthAt = '2028-12-31T23:54:59.999Z'
+		expect(() => assertElevatedSession(context, new Date('2029-01-01T00:10:00.000Z'))).toThrow(AccessDeniedError)
 	})
 
 	it('returns the original outcome on an idempotent replay and rejects a mismatch', () => {

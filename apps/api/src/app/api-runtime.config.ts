@@ -7,6 +7,8 @@ export interface ApiRuntimeConfig {
 	corsAllowedOrigins: string[]
 	logLevel: string
 	port: number
+	realtimeRedisFanout: boolean
+	redisUrl: string | undefined
 	throttleLimit: number
 	throttleTtlMs: number
 }
@@ -20,9 +22,19 @@ export function getApiRuntimeConfig(configService: ConfigReader): ApiRuntimeConf
 		corsAllowedOrigins: parseCorsAllowedOrigins(configService.get<string>('CORS_ALLOWED_ORIGINS')),
 		logLevel: configService.get<string>('LOG_LEVEL') ?? 'info',
 		port: parsePort(configService.get<string>('API_PORT') ?? configService.get<string>('PORT')),
+		...parseRealtimeRedisFanout(configService.get<string>('REALTIME_REDIS_FANOUT'), configService.get<string>('REDIS_URL')),
 		throttleLimit: parsePositiveInteger(configService.get<string>('THROTTLE_LIMIT'), DEFAULT_THROTTLE_LIMIT, 'THROTTLE_LIMIT'),
 		throttleTtlMs: parsePositiveInteger(configService.get<string>('THROTTLE_TTL_MS'), DEFAULT_THROTTLE_TTL_MS, 'THROTTLE_TTL_MS'),
 	}
+}
+
+function parseRealtimeRedisFanout(value: string | undefined, redisUrl: string | undefined) {
+	if (value === undefined || value === 'disabled') return { realtimeRedisFanout: false, redisUrl: undefined }
+	if (value !== 'enabled') throw new Error('REALTIME_REDIS_FANOUT must be enabled or disabled.')
+	if (!redisUrl) throw new Error('REDIS_URL is required when REALTIME_REDIS_FANOUT is enabled.')
+	const parsed = new URL(redisUrl)
+	if (!['redis:', 'rediss:'].includes(parsed.protocol)) throw new Error('REDIS_URL must use redis or rediss.')
+	return { realtimeRedisFanout: true, redisUrl }
 }
 
 export function parseCorsAllowedOrigins(value?: string): string[] {

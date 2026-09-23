@@ -1,6 +1,6 @@
 # Phase 00 — Platform Foundation
 
-**Status:** Partially implemented — local synthetic durability evidence; full acceptance open  
+**Target status:** Specified — Not Executed — Not Verified. **Local status:** Partially implemented synthetic foundation; full acceptance open.
 **Objective:** establish the future system’s safe, traceable foundation before any market capability.  
 **Owner:** platform foundation / architecture  
 **Entry:** documentation baseline accepted. **Exit:** `TST-P00-001` and release-gate evidence ready.  

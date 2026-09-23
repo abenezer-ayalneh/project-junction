@@ -1,0 +1,3 @@
+ALTER TABLE "DemoPersona"
+  ADD COLUMN "commandEventsUsed" INTEGER NOT NULL DEFAULT 0,
+  ADD COLUMN "commandEventsLimit" INTEGER NOT NULL DEFAULT 25;

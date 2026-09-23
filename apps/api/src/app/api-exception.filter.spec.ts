@@ -6,6 +6,7 @@ import { ApiExceptionFilter } from './api-exception.filter'
 function createHost() {
 	let statusCode: number | undefined
 	let body: unknown
+	const request = { headers: {}, requestId: 'd1f6c321-b78e-4ac5-8649-4dd14e9aa3d2' }
 	const response = {
 		status: jest.fn((status: number) => {
 			statusCode = status
@@ -19,7 +20,7 @@ function createHost() {
 
 	return {
 		host: {
-			switchToHttp: () => ({ getResponse: () => response }),
+			switchToHttp: () => ({ getRequest: () => request, getResponse: () => response }),
 		} as ArgumentsHost,
 		response,
 		result: () => ({ statusCode, body }),
@@ -43,20 +44,22 @@ describe('ApiExceptionFilter', () => {
 		expect(fixture.result().body).toMatchObject({
 			code: 'RATE_LIMITED',
 			message: 'Too many requests',
+			requestId: 'd1f6c321-b78e-4ac5-8649-4dd14e9aa3d2',
 			retryable: false,
 		})
 		expect(logger.warn).toHaveBeenCalledTimes(1)
 	})
 
-	it('hides unexpected errors and records them at error level', () => {
+	it('hides unexpected errors and records only a request-correlated safe summary', () => {
 		const fixture = createHost()
-		new ApiExceptionFilter(logger).catch(new Error('database password'), fixture.host)
+		new ApiExceptionFilter(logger).catch(new Error('database password and webhook secret'), fixture.host)
 
 		expect(fixture.result().statusCode).toBe(HttpStatus.INTERNAL_SERVER_ERROR)
 		expect(fixture.result().body).toMatchObject({
 			code: 'UNAVAILABLE',
 			message: 'The service is temporarily unavailable.',
 		})
-		expect(logger.error).toHaveBeenCalledTimes(1)
+		expect(logger.error).toHaveBeenCalledWith('Request failed with status 500 (requestId: d1f6c321-b78e-4ac5-8649-4dd14e9aa3d2)')
+		expect(logger.error.mock.calls.flat().join(' ')).not.toMatch(/database password|webhook secret/i)
 	})
 })

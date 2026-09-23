@@ -1,0 +1,94 @@
+import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
+import { randomUUID } from 'node:crypto'
+import { createRequire } from 'node:module'
+import { spawnSync } from 'node:child_process'
+
+const require = createRequire(new URL('../libs/platform-core/package.json', import.meta.url))
+const { Pool } = require('pg')
+
+if (!process.env.DATABASE_URL) throw new Error('Set DATABASE_URL to a local synthetic PostgreSQL database.')
+
+const databaseUrl = new URL(process.env.DATABASE_URL)
+if (!['localhost', '127.0.0.1'].includes(databaseUrl.hostname)) throw new Error('Populated upgrade checks require a loopback database.')
+
+const schema = `phase00_upgrade_${randomUUID().replaceAll('-', '')}`
+databaseUrl.searchParams.set('schema', schema)
+const pool = new Pool({ connectionString: databaseUrl.toString() })
+let client
+
+const migrations = [
+	'prisma/migrations/20260831120000_platform_foundation/migration.sql',
+	'prisma/migrations/20260921000000_durable_foundation/migration.sql',
+	'prisma/migrations/20260922000000_demo_persona_access/migration.sql',
+	'prisma/migrations/20260922010000_provider_timeout_reconciliation/migration.sql',
+	'prisma/migrations/20260922020000_adult_verification_lifecycle/migration.sql',
+	'prisma/migrations/20260922030000_demo_provider_quota/migration.sql',
+	'prisma/migrations/20260922040000_staff_user_linkage/migration.sql',
+	'prisma/migrations/20260922050000_public_vendor_browse/migration.sql',
+	'prisma/migrations/20260922060000_adult_verification_mixed_version_compatibility/migration.sql',
+	'prisma/migrations/20260922070000_demo_persona_command_quota/migration.sql',
+]
+
+try {
+	client = await pool.connect()
+	await client.query(`CREATE SCHEMA "${schema}"`)
+	await client.query(`SET search_path TO "${schema}", public`)
+	await client.query(await readFile(migrations[0], 'utf8'))
+
+	const ids = {
+		user: randomUUID(),
+		workspace: randomUUID(),
+		vendor: randomUUID(),
+		location: randomUUID(),
+		session: randomUUID(),
+		inbox: randomUUID(),
+	}
+	await client.query('INSERT INTO "User" (id, email, "verifiedAt") VALUES ($1::uuid, $2, now())', [ids.user, `${ids.user}@example.invalid`])
+	await client.query('INSERT INTO "Workspace" (id, kind) VALUES ($1::uuid, $2)', [ids.workspace, 'synthetic'])
+	await client.query('INSERT INTO "Vendor" (id, "workspaceId") VALUES ($1::uuid, $2::uuid)', [ids.vendor, ids.workspace])
+	await client.query('INSERT INTO "Location" (id, "vendorId") VALUES ($1::uuid, $2::uuid)', [ids.location, ids.vendor])
+	await client.query(
+		'INSERT INTO "Session" (id, "userId", "workspaceId", "expiresAt") VALUES ($1::uuid, $2::uuid, $3::uuid, now() + interval \'1 hour\')',
+		[ids.session, ids.user, ids.workspace],
+	)
+	await client.query(
+		'INSERT INTO "ProviderInboxEvent" (id, provider, "providerEventId", "payloadHash", payload) VALUES ($1::uuid, $2, $3, $4, $5::jsonb)',
+		[ids.inbox, 'fake-payment', `legacy-${ids.inbox}`, 'legacy-hash', JSON.stringify({ legacy: true })],
+	)
+
+	for (const migration of migrations.slice(1)) await client.query(await readFile(migration, 'utf8'))
+
+	const session = await client.query('SELECT "userId", "workspaceId", "activeVendorId", "activeRole" FROM "Session" WHERE id = $1::uuid', [ids.session])
+	assert.deepEqual(session.rows, [{ userId: ids.user, workspaceId: ids.workspace, activeVendorId: null, activeRole: null }])
+	assert.deepEqual((await client.query('SELECT "adultVerificationState" FROM "User" WHERE id = $1::uuid', [ids.user])).rows, [
+		{ adultVerificationState: 'verified' },
+	])
+	const oldWriterUser = randomUUID()
+	await client.query('INSERT INTO "User" (id, email, "verifiedAt") VALUES ($1::uuid, $2, now())', [oldWriterUser, `${oldWriterUser}@example.invalid`])
+	assert.deepEqual((await client.query('SELECT "adultVerificationState" FROM "User" WHERE id = $1::uuid', [oldWriterUser])).rows, [
+		{ adultVerificationState: 'legacy_verified_compat' },
+	])
+	const inbox = await client.query(
+		'SELECT "workspaceId", "providerReference", "reconciliationState", "reconciledAt", payload FROM "ProviderInboxEvent" WHERE id = $1::uuid',
+		[ids.inbox],
+	)
+	assert.deepEqual(inbox.rows, [
+		{ workspaceId: null, providerReference: null, reconciliationState: 'reconciled', reconciledAt: null, payload: { legacy: true } },
+	])
+	assert.equal((await client.query('SELECT count(*)::int AS count FROM "DemoPersona"')).rows[0].count, 0)
+
+	const result = spawnSync('pnpm', ['exec', 'prisma', 'migrate', 'diff', '--exit-code', '--from-config-datasource', '--to-schema', 'prisma/schema.prisma'], {
+		env: { ...process.env, DATABASE_URL: databaseUrl.toString() },
+		stdio: 'inherit',
+	})
+	if (result.status !== 0) throw new Error('Upgraded populated schema does not match the Prisma schema.')
+	process.stdout.write('Populated supported-foundation upgrade check passed.\n')
+} finally {
+	if (client) {
+		await client.query('RESET search_path')
+		client.release()
+	}
+	await pool.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`)
+	await pool.end()
+}

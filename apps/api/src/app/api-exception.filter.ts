@@ -3,6 +3,8 @@ import { randomUUID } from 'node:crypto'
 import { type ArgumentsHost, Catch, type ExceptionFilter, HttpException, HttpStatus, Logger, type LoggerService } from '@nestjs/common'
 import { AccessDeniedError, IdempotencyConflictError } from 'platform-core'
 
+import type { RequestWithContext } from './request-context'
+
 interface ErrorResponse {
 	headersSent?: boolean
 	status(code: number): { json(body: unknown): void }
@@ -13,14 +15,15 @@ export class ApiExceptionFilter implements ExceptionFilter {
 	constructor(private readonly logger: LoggerService = new Logger(ApiExceptionFilter.name)) {}
 
 	catch(exception: unknown, host: ArgumentsHost): void {
-		const response = host.switchToHttp().getResponse<ErrorResponse>()
+		const http = host.switchToHttp()
+		const response = http.getResponse<ErrorResponse>()
 		if (response.headersSent) {
 			return
 		}
 
 		const error = this.toPublicError(exception)
-		const requestId = randomUUID()
-		this.logException(exception, error.status, requestId)
+		const requestId = http.getRequest<RequestWithContext | undefined>()?.requestId ?? randomUUID()
+		this.logException(error.status, requestId)
 
 		response.status(error.status).json({
 			code: error.code,
@@ -73,11 +76,12 @@ export class ApiExceptionFilter implements ExceptionFilter {
 		return exception.message
 	}
 
-	private logException(exception: unknown, status: number, requestId: string): void {
+	private logException(status: number, requestId: string): void {
 		const message = `Request failed with status ${status} (requestId: ${requestId})`
 		if (status >= 500) {
-			const stack = exception instanceof Error ? exception.stack : undefined
-			this.logger.error(message, stack)
+			// Exception messages/stacks can contain database, provider, or request values.
+			// The request ID is the safe correlation handle for protected diagnostics.
+			this.logger.error(message)
 			return
 		}
 

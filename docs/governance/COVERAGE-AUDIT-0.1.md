@@ -42,6 +42,10 @@ unlabeled implementation claims = 0
 
 The baseline counters above record the 2026-08-28 audit. The current provenance record adds `SRC-CHAT-0195` as a direct selection and classifies the four conflicting visual sources—`SRC-CHAT-0117`, `0118`, `0126`, and `0130`—as `SUPERSEDED`. The current ledger therefore contains 195 classified sources: 190 direct selections and 5 non-decision sources, with 0 unclassified sources. `SRC-CHAT-0195` is normalized through `DEC-117`, `DEC-118`, `DEC-126`, and `DEC-130`.
 
+## 2026-09-22 Phase 00 implementation-claim follow-up
+
+`pnpm docs:check` now validates the current manifest instead of relying only on the documentation-only baseline: all 169 listed document paths exist; all 128 `S/NE/NV` target documents carry the explicit `Specified — Not Executed — Not Verified` label; all 16 Phase 00 functional and cross-phase nonfunctional requirements appear in the acceptance mapping; and all five `TST-P00-*` scenarios are present in both the Phase 00 requirement and acceptance catalog. This static result confirms claim labeling and traceability only. It does not validate ASVS, WCAG, runtime behavior, provider availability, or release readiness.
+
 ## Audit limits
 
 This is a static documentation audit. It does not prove application behavior, provider availability, security controls, accessibility, performance, backup recovery, legal compliance, payment capability, or commercial readiness. Those claims remain future `EVD-*` work and, for Dire Dawa commercialization, require the separately documented research and launch gates.

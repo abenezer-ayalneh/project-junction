@@ -57,3 +57,24 @@ export function assertScope(context: AccessContext, scope: OwnershipScope): void
 		throw new AccessDeniedError()
 	}
 }
+
+/** High-risk mutations require an actual Vendor Owner session with current MFA and recent authentication. */
+export function assertElevatedSession(context: AccessContext, now = new Date()): void {
+	if (
+		context.actor.kind !== 'user' ||
+		!context.activeVendorId ||
+		!context.memberships.some((membership) => membership.active && membership.role === 'vendor_owner')
+	)
+		throw new AccessDeniedError()
+	const mfaVerifiedAt = context.session.mfaVerifiedAt && new Date(context.session.mfaVerifiedAt)
+	const recentAuthAt = context.session.recentAuthAt && new Date(context.session.recentAuthAt)
+	const oldestAllowed = now.getTime() - 15 * 60 * 1000
+	if (
+		!mfaVerifiedAt ||
+		!recentAuthAt ||
+		mfaVerifiedAt.getTime() > now.getTime() ||
+		recentAuthAt.getTime() > now.getTime() ||
+		recentAuthAt.getTime() < oldestAllowed
+	)
+		throw new AccessDeniedError('Recent multi-factor authentication is required.')
+}

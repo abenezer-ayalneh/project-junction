@@ -22,6 +22,11 @@ function run(args) {
 try {
 	run(['exec', 'prisma', 'migrate', 'deploy'])
 	run(['exec', 'prisma', 'migrate', 'deploy']) // restart/replay must be a no-op
+	run(['db:compat:check'])
+	run(['db:upgrade:check'])
+	run(['db:restore:check'])
+	run(['db:lock:measure'])
+	run(['db:rollback:check'])
 	run(['exec', 'jest', '--config', 'libs/platform-core/jest.config.cts', '--testMatch', '**/*.integration.ts', '--runInBand'])
 	run(['exec', 'node', 'tools/runtime-smoke.mjs'])
 } finally {

@@ -1,0 +1,1261 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`OpenAPI v1 contract publishes a stable, persistence-free public contract 1`] = `
+{
+  "components": {
+    "schemas": {
+      "AccessContextResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "activeVendorId": {
+            "format": "uuid",
+            "nullable": true,
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "actor": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "user",
+                    ],
+                    "type": "string",
+                  },
+                  "userId": {
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "kind",
+                  "userId",
+                ],
+                "type": "object",
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "demo_persona",
+                    ],
+                    "type": "string",
+                  },
+                  "personaId": {
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "kind",
+                  "personaId",
+                ],
+                "type": "object",
+              },
+            ],
+          },
+          "capabilities": {
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "locationIds": {
+            "items": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "workspaceId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "actor",
+          "workspaceId",
+          "activeVendorId",
+          "locationIds",
+          "capabilities",
+        ],
+        "type": "object",
+      },
+      "ApiError": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "enum": [
+              "AUTH_REQUIRED",
+              "ACCESS_DENIED",
+              "IDEMPOTENCY_CONFLICT",
+              "INVALID_REQUEST",
+              "NOT_FOUND",
+              "RATE_LIMITED",
+              "UNAVAILABLE",
+            ],
+            "type": "string",
+          },
+          "fieldIssues": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "message": {
+                  "type": "string",
+                },
+                "path": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "path",
+                "message",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "message": {
+            "minLength": 1,
+            "type": "string",
+          },
+          "requestId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "retryable": {
+            "type": "boolean",
+          },
+        },
+        "required": [
+          "code",
+          "message",
+          "requestId",
+          "retryable",
+        ],
+        "type": "object",
+      },
+      "AuditMarkerCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "marker": {
+            "maxLength": 120,
+            "minLength": 1,
+            "type": "string",
+          },
+          "scope": {
+            "additionalProperties": false,
+            "properties": {
+              "locationId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "vendorId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "workspaceId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+            },
+            "required": [
+              "workspaceId",
+            ],
+            "type": "object",
+          },
+        },
+        "required": [
+          "marker",
+        ],
+        "type": "object",
+      },
+      "CommandOutcome": {
+        "additionalProperties": false,
+        "properties": {
+          "commandId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "marker": {
+            "type": "string",
+          },
+          "replayed": {
+            "type": "boolean",
+          },
+          "status": {
+            "enum": [
+              "accepted",
+            ],
+            "type": "string",
+          },
+        },
+        "required": [
+          "commandId",
+          "status",
+          "marker",
+          "replayed",
+        ],
+        "type": "object",
+      },
+      "DemoSession": {
+        "additionalProperties": false,
+        "properties": {
+          "expiresAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "id": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "personaKey": {
+            "enum": [
+              "customer",
+              "vendor_owner",
+              "service_staff",
+              "support",
+              "trust",
+              "finance",
+              "platform_owner",
+            ],
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+          "personaKey",
+          "expiresAt",
+        ],
+        "type": "object",
+      },
+      "DemoWorkspace": {
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "id": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "personas": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "key": {
+                  "enum": [
+                    "customer",
+                    "vendor_owner",
+                    "service_staff",
+                    "support",
+                    "trust",
+                    "finance",
+                    "platform_owner",
+                  ],
+                  "type": "string",
+                },
+                "role": {
+                  "minLength": 1,
+                  "type": "string",
+                },
+              },
+              "required": [
+                "key",
+                "role",
+              ],
+              "type": "object",
+            },
+            "minItems": 1,
+            "type": "array",
+          },
+          "session": {
+            "additionalProperties": false,
+            "properties": {
+              "expiresAt": {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                "type": "string",
+              },
+              "id": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "personaKey": {
+                "enum": [
+                  "customer",
+                  "vendor_owner",
+                  "service_staff",
+                  "support",
+                  "trust",
+                  "finance",
+                  "platform_owner",
+                ],
+                "type": "string",
+              },
+            },
+            "required": [
+              "id",
+              "personaKey",
+              "expiresAt",
+            ],
+            "type": "object",
+          },
+          "state": {
+            "enum": [
+              "active",
+              "purged",
+            ],
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "expiresAt",
+          "state",
+          "personas",
+          "session",
+        ],
+        "type": "object",
+      },
+      "HealthResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "requestId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "runtimeMode": {
+            "enum": [
+              "synthetic",
+            ],
+            "type": "string",
+          },
+          "service": {
+            "enum": [
+              "api",
+            ],
+            "type": "string",
+          },
+          "status": {
+            "enum": [
+              "ok",
+            ],
+            "type": "string",
+          },
+          "storage": {
+            "enum": [
+              "in-memory-test-double",
+              "postgresql",
+            ],
+            "type": "string",
+          },
+        },
+        "required": [
+          "status",
+          "service",
+          "runtimeMode",
+          "storage",
+          "requestId",
+        ],
+        "type": "object",
+      },
+      "LocationRead": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "vendorId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "workspaceId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+          "vendorId",
+          "workspaceId",
+        ],
+        "type": "object",
+      },
+      "ProviderWebhookReceipt": {
+        "additionalProperties": false,
+        "properties": {
+          "accepted": {
+            "enum": [
+              true,
+            ],
+            "type": "boolean",
+          },
+          "duplicate": {
+            "type": "boolean",
+          },
+        },
+        "required": [
+          "accepted",
+          "duplicate",
+        ],
+        "type": "object",
+      },
+      "PublicVendorPage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "id": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "slug": {
+                  "maxLength": 120,
+                  "minLength": 1,
+                  "type": "string",
+                },
+              },
+              "required": [
+                "id",
+                "slug",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "nextCursor": {
+            "format": "uuid",
+            "nullable": true,
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "items",
+          "nextCursor",
+        ],
+        "type": "object",
+      },
+      "SyntheticAccount": {
+        "additionalProperties": false,
+        "properties": {
+          "adultVerificationState": {
+            "enum": [
+              "verified",
+              "pending",
+              "rejected",
+            ],
+            "type": "string",
+          },
+          "email": {
+            "format": "email",
+            "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+            "type": "string",
+          },
+          "id": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+          "email",
+          "adultVerificationState",
+        ],
+        "type": "object",
+      },
+      "SyntheticAccountProvision": {
+        "additionalProperties": false,
+        "properties": {
+          "adultVerificationState": {
+            "enum": [
+              "verified",
+              "pending",
+              "rejected",
+            ],
+            "type": "string",
+          },
+          "email": {
+            "allOf": [
+              {
+                "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+                "type": "string",
+              },
+              {
+                "pattern": ".*@example\\.invalid$",
+                "type": "string",
+              },
+            ],
+            "format": "email",
+            "type": "string",
+          },
+        },
+        "required": [
+          "email",
+          "adultVerificationState",
+        ],
+        "type": "object",
+      },
+      "SyntheticProviderCallback": {
+        "additionalProperties": false,
+        "properties": {
+          "outcome": {
+            "enum": [
+              "confirmed",
+              "timed_out",
+            ],
+            "type": "string",
+          },
+          "providerReference": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string",
+          },
+        },
+        "required": [
+          "providerReference",
+          "outcome",
+        ],
+        "type": "object",
+      },
+      "SyntheticStaffGrant": {
+        "additionalProperties": false,
+        "properties": {
+          "locationIds": {
+            "items": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "type": "array",
+          },
+          "userId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "userId",
+          "locationIds",
+        ],
+        "type": "object",
+      },
+      "SyntheticStaffGrantResult": {
+        "additionalProperties": false,
+        "properties": {
+          "expiresAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "sessionId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "staffId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "userId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "staffId",
+          "userId",
+          "sessionId",
+          "expiresAt",
+        ],
+        "type": "object",
+      },
+      "SyntheticStaffRevokeResult": {
+        "additionalProperties": false,
+        "properties": {
+          "revoked": {
+            "enum": [
+              true,
+            ],
+            "type": "boolean",
+          },
+        },
+        "required": [
+          "revoked",
+        ],
+        "type": "object",
+      },
+    },
+    "securitySchemes": {
+      "junction-session": {
+        "description": "Synthetic session identifier used by the current foundation endpoints.",
+        "in": "header",
+        "name": "x-junction-session",
+        "type": "apiKey",
+      },
+    },
+  },
+  "info": {
+    "contact": {},
+    "description": "Synthetic-runtime API for the Project Junction platform foundation. Every response declares X-API-Version: v1 and X-API-Lifecycle: active.",
+    "title": "Project Junction API",
+    "version": "v1",
+  },
+  "openapi": "3.0.0",
+  "paths": {
+    "/v1/access-context": {
+      "get": {
+        "operationId": "AppController_accessContext",
+        "parameters": [
+          {
+            "description": "Synthetic session identifier.",
+            "in": "header",
+            "name": "x-junction-session",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessContextResponse",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-session": [],
+          },
+        ],
+        "summary": "Derive the current scoped access context.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/demo/workspaces": {
+      "post": {
+        "operationId": "AppController_createDemoWorkspace",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoWorkspace",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "summary": "Create an isolated synthetic workspace that expires after 24 hours.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/demo/workspaces/{workspaceId}/personas/{personaKey}/sessions": {
+      "post": {
+        "operationId": "AppController_switchDemoPersona",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+          {
+            "in": "path",
+            "name": "personaKey",
+            "required": true,
+            "schema": {
+              "enum": [
+                "customer",
+                "vendor_owner",
+                "service_staff",
+                "support",
+                "trust",
+                "finance",
+                "platform_owner",
+              ],
+              "type": "string",
+            },
+          },
+          {
+            "description": "The current demo session identifier. It is revoked after switching.",
+            "in": "header",
+            "name": "x-junction-session",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoSession",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-session": [],
+          },
+        ],
+        "summary": "Switch the active synthetic demo persona and issue a fresh scoped session.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/foundation/audit-markers": {
+      "post": {
+        "operationId": "AppController_auditMarker",
+        "parameters": [
+          {
+            "description": "A 16-200 character URL-safe request key.",
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "description": "Synthetic session identifier.",
+            "in": "header",
+            "name": "x-junction-session",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuditMarkerCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandOutcome",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-session": [],
+          },
+        ],
+        "summary": "Record an idempotent synthetic foundation audit marker.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/foundation/elevated-audit-markers": {
+      "post": {
+        "operationId": "AppController_elevatedAuditMarker",
+        "parameters": [
+          {
+            "description": "A 16-200 character URL-safe request key.",
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "description": "A current Vendor Owner session with MFA and recent authentication.",
+            "in": "header",
+            "name": "x-junction-session",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuditMarkerCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandOutcome",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-session": [],
+          },
+        ],
+        "summary": "Record an elevated synthetic audit marker with Vendor Owner MFA and recent authentication.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/foundation/locations/{locationId}": {
+      "get": {
+        "operationId": "AppController_location",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "locationId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+          {
+            "description": "Synthetic session identifier.",
+            "in": "header",
+            "name": "x-junction-session",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationRead",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-session": [],
+          },
+        ],
+        "summary": "Read an active Vendor Location within the derived access scope.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/foundation/staff": {
+      "post": {
+        "operationId": "AppController_grantSyntheticStaff",
+        "parameters": [
+          {
+            "description": "Current synthetic Vendor Owner session.",
+            "in": "header",
+            "name": "x-junction-session",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyntheticStaffGrant",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyntheticStaffGrantResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-session": [],
+          },
+        ],
+        "summary": "Grant a verified synthetic account a scoped Vendor Staff session.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/foundation/staff/{staffId}": {
+      "delete": {
+        "operationId": "AppController_revokeSyntheticStaff",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "staffId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+          {
+            "description": "Current synthetic Vendor Owner session.",
+            "in": "header",
+            "name": "x-junction-session",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyntheticStaffRevokeResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-session": [],
+          },
+        ],
+        "summary": "Revoke a synthetic Vendor Staff binding and its active scoped sessions.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/health": {
+      "get": {
+        "operationId": "AppController_health",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "summary": "Read synthetic API health.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/public/vendors": {
+      "get": {
+        "operationId": "AppController_browsePublicVendors",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer",
+            },
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicVendorPage",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "summary": "Browse explicitly published synthetic Vendor summaries without a session.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/synthetic/accounts": {
+      "post": {
+        "operationId": "AppController_createSyntheticAccount",
+        "parameters": [
+          {
+            "description": "Local-only synthetic provisioning secret.",
+            "in": "header",
+            "name": "x-synthetic-provisioning-secret",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyntheticAccountProvision",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyntheticAccount",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "summary": "Provision a local synthetic account for foundation verification.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/webhooks/{provider}": {
+      "post": {
+        "operationId": "AppController_providerWebhook",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "required": true,
+            "schema": {
+              "enum": [
+                "fake-payment",
+              ],
+              "type": "string",
+            },
+          },
+          {
+            "description": "HMAC-SHA256 of the raw request body, prefixed with sha256=.",
+            "in": "header",
+            "name": "x-provider-signature",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "description": "Provider event identifier.",
+            "in": "header",
+            "name": "x-provider-event-id",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyntheticProviderCallback",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderWebhookReceipt",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "summary": "Accept a synthetic provider callback into the durable inbox.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+  },
+  "servers": [],
+  "tags": [],
+}
+`;

@@ -8,71 +8,97 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  email     String   @unique
-  verifiedAt DateTime?
-  createdAt DateTime @default(now())
-  sessions  Session[]
-  memberships VendorMembership[]
+  id                     String             @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  email                  String             @unique
+  adultVerificationState String             @default("legacy_verified_compat")
+  verifiedAt             DateTime?          @db.Timestamptz(6)
+  createdAt              DateTime           @default(now()) @db.Timestamptz(6)
+  sessions               Session[]
+  memberships            VendorMembership[]
+  staffProfiles          Staff[]
 }
 
 model Workspace {
-  id        String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  kind      String
-  createdAt DateTime @default(now())
-  vendors   Vendor[]
-  sessions  Session[]
-  demos     DemoWorkspace[]
+	id           String          @id @default(dbgenerated("uuidv7()")) @db.Uuid
+	kind         String
+	createdAt    DateTime        @default(now()) @db.Timestamptz(6)
+	vendors      Vendor[]
+	sessions     Session[]
+	demos        DemoWorkspace[]
+	demoPersonas DemoPersona[]
 }
 
 model Session {
-  id            String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  userId        String?  @db.Uuid
-  workspaceId   String   @db.Uuid
-  expiresAt     DateTime
-  revokedAt     DateTime?
-  mfaVerifiedAt DateTime?
-  recentAuthAt  DateTime?
-  activeVendorId String? @db.Uuid
-  activeRole String?
-  createdAt     DateTime @default(now())
-  user          User?    @relation(fields: [userId], references: [id])
-  workspace     Workspace @relation(fields: [workspaceId], references: [id])
+	id             String       @id @default(dbgenerated("uuidv7()")) @db.Uuid
+	userId         String?      @db.Uuid
+	demoPersonaId  String?      @db.Uuid
+	workspaceId    String       @db.Uuid
+	expiresAt      DateTime     @db.Timestamptz(6)
+	revokedAt      DateTime?    @db.Timestamptz(6)
+	mfaVerifiedAt  DateTime?    @db.Timestamptz(6)
+	recentAuthAt   DateTime?    @db.Timestamptz(6)
+	activeVendorId String?      @db.Uuid
+	activeRole     String?
+	createdAt      DateTime     @default(now()) @db.Timestamptz(6)
+	user           User?        @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+	demoPersona    DemoPersona? @relation(fields: [demoPersonaId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+	workspace      Workspace    @relation(fields: [workspaceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+	activeVendor   Vendor?      @relation("SessionActiveVendor", fields: [activeVendorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([workspaceId, expiresAt])
 }
 
 model Vendor {
-  id          String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  workspaceId String   @db.Uuid
-  createdAt   DateTime @default(now())
-  workspace   Workspace @relation(fields: [workspaceId], references: [id])
-  locations   Location[]
-  memberships VendorMembership[]
+  id             String             @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  workspaceId    String             @db.Uuid
+  publicSlug     String?            @unique
+  publishedAt    DateTime?          @db.Timestamptz(6)
+  createdAt      DateTime           @default(now()) @db.Timestamptz(6)
+  workspace      Workspace          @relation(fields: [workspaceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  locations      Location[]
+  memberships    VendorMembership[]
+  staff          Staff[]
+  activeSessions Session[]          @relation("SessionActiveVendor")
 
   @@index([workspaceId])
+  @@index([publishedAt, id])
 }
 
 model Location {
   id       String @id @default(dbgenerated("uuidv7()")) @db.Uuid
   vendorId String @db.Uuid
-  vendor   Vendor @relation(fields: [vendorId], references: [id])
+  vendor   Vendor @relation(fields: [vendorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([vendorId])
 }
 
 model VendorMembership {
-  id          String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  userId      String   @db.Uuid
-  vendorId    String   @db.Uuid
+  id          String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  userId      String    @db.Uuid
+  vendorId    String    @db.Uuid
   role        String
-  locationIds String[] @db.Uuid
-  revokedAt   DateTime?
-  user        User     @relation(fields: [userId], references: [id])
-  vendor      Vendor   @relation(fields: [vendorId], references: [id])
+  staffId     String?   @unique @db.Uuid
+  locationIds String[]  @db.Uuid
+  revokedAt   DateTime? @db.Timestamptz(6)
+  user        User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  vendor      Vendor    @relation(fields: [vendorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  staff       Staff?    @relation(fields: [staffId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@unique([userId, vendorId])
   @@index([vendorId, revokedAt])
+}
+
+model Staff {
+  id          String            @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  vendorId    String            @db.Uuid
+  userId      String?           @db.Uuid
+  createdAt   DateTime          @default(now()) @db.Timestamptz(6)
+  vendor      Vendor            @relation(fields: [vendorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user        User?             @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  membership  VendorMembership?
+
+  @@unique([vendorId, userId])
+  @@index([userId])
 }
 
 model IdempotencyRecord {
@@ -80,73 +106,97 @@ model IdempotencyRecord {
   key         String
   scopeHash   String
   method      String
-  workspaceId String? @db.Uuid
+  workspaceId String?  @db.Uuid
   requestHash String
   outcome     Json
-  createdAt   DateTime @default(now())
-  expiresAt   DateTime
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  expiresAt   DateTime @db.Timestamptz(6)
 
   @@unique([key, scopeHash, method])
   @@index([expiresAt])
 }
 
 model OutboxEvent {
-  id          String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  eventId     String   @unique @db.Uuid
-  workspaceId String   @db.Uuid
+  id          String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  eventId     String    @unique @db.Uuid
+  workspaceId String    @db.Uuid
   type        String
   payload     Json
-  state       String   @default("pending")
-  attempts    Int      @default(0)
+  state       String    @default("pending")
+  attempts    Int       @default(0)
   claimedBy   String?
-  claimedAt   DateTime?
-  claimToken String? @db.Uuid
-  availableAt DateTime @default(now())
-  occurredAt  DateTime
-  createdAt   DateTime @default(now())
+  claimedAt   DateTime? @db.Timestamptz(6)
+  claimToken  String?   @db.Uuid
+  availableAt DateTime  @default(now()) @db.Timestamptz(6)
+  occurredAt  DateTime  @db.Timestamptz(6)
+  createdAt   DateTime  @default(now()) @db.Timestamptz(6)
 
   @@index([state, occurredAt])
   @@index([workspaceId, occurredAt])
+  @@index([state, availableAt, claimedAt], map: "OutboxEvent_claim_idx")
 }
 
 model ProviderInboxEvent {
-  id              String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  workspaceId String? @db.Uuid
-  provider        String
-  providerEventId String
-  payloadHash     String
-  payload         Json
-  receivedAt      DateTime @default(now())
-  processedAt     DateTime?
+  id                  String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  workspaceId         String?   @db.Uuid
+  provider            String
+  providerEventId     String
+  providerReference   String?
+  payloadHash         String
+  payload             Json
+  reconciliationState String    @default("reconciled")
+  reconciledAt        DateTime? @db.Timestamptz(6)
+  receivedAt          DateTime  @default(now()) @db.Timestamptz(6)
+  processedAt         DateTime? @db.Timestamptz(6)
 
   @@unique([provider, providerEventId])
+  @@index([workspaceId, provider, providerReference, reconciliationState], map: "ProviderInboxEvent_reconciliation_idx")
 }
 
 model DemoWorkspace {
-  id          String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  workspaceId String   @db.Uuid
-  expiresAt   DateTime
-  purgedAt    DateTime?
-  createdAt   DateTime @default(now())
-  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  id                  String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  workspaceId         String    @db.Uuid
+  providerEventsUsed  Int       @default(0)
+  providerEventsLimit Int       @default(25)
+  expiresAt           DateTime  @db.Timestamptz(6)
+  purgedAt            DateTime? @db.Timestamptz(6)
+  createdAt           DateTime  @default(now()) @db.Timestamptz(6)
+  workspace           Workspace @relation(fields: [workspaceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([expiresAt, purgedAt])
 }
 
+model DemoPersona {
+	id                 String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+	workspaceId        String    @db.Uuid
+	key                String
+	role               String
+	vendorId           String?   @db.Uuid
+	locationIds        String[]  @db.Uuid
+	commandEventsUsed  Int       @default(0)
+	commandEventsLimit Int       @default(25)
+	createdAt          DateTime  @default(now()) @db.Timestamptz(6)
+	workspace          Workspace @relation(fields: [workspaceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+	sessions           Session[]
+
+	@@unique([workspaceId, key])
+	@@index([workspaceId, role])
+}
+
 model AuditLog {
-  id          String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  workspaceId String?  @db.Uuid
-  actorId     String?  @db.Uuid
-  action      String
-  correlationId String @db.Uuid
-  metadata    Json
-  createdAt   DateTime @default(now())
+  id            String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  workspaceId   String?  @db.Uuid
+  actorId       String?  @db.Uuid
+  action        String
+  correlationId String   @db.Uuid
+  metadata      Json
+  createdAt     DateTime @default(now()) @db.Timestamptz(6)
 
   @@index([workspaceId, createdAt])
 }
 
 model OutboxReceipt {
-  eventId String @id @db.Uuid
-  workspaceId String @db.Uuid
-  processedAt DateTime @default(now())
+  eventId     String   @id @db.Uuid
+  workspaceId String   @db.Uuid
+  processedAt DateTime @default(now()) @db.Timestamptz(6)
 }
