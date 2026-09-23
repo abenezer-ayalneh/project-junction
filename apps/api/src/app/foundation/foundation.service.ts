@@ -7,13 +7,24 @@ import {
 	AccessContextSchema,
 	AuditMarkerCommandSchema,
 	type CommandOutcome,
+	DiscoveryPreferenceUpdateSchema,
 	type DomainEvent,
+	EngagementMutationSchema,
 	HealthResponseSchema,
 	IdempotencyKeySchema,
+	ListingDraftSchema,
+	ListingReviewCommandSchema,
+	ListingRevisionCommandSchema,
 	LocationReadSchema,
+	MediaProcessingCommandSchema,
+	PublicListingBrowseQuerySchema,
 	PublicVendorBrowseQuerySchema,
 	PublicVendorPageSchema,
+	StorefrontUpdateSchema,
 	SyntheticAccountProvisionSchema,
+	VendorApplicationCommandSchema,
+	VendorApplicationReviewSchema,
+	VendorFollowMutationSchema,
 } from 'contracts'
 import {
 	AccessDeniedError,
@@ -127,6 +138,90 @@ export class FoundationService {
 		if (this.durable) return this.durable.browsePublicVendors(query)
 		PublicVendorBrowseQuerySchema.parse(query)
 		return PublicVendorPageSchema.parse({ items: [{ id: SYNTHETIC_IDS.vendor, slug: 'synthetic-foundation' }], nextCursor: null })
+	}
+
+	private requireDurableCatalog() {
+		if (!this.durable) throw new AccessDeniedError('Catalog operations require the PostgreSQL synthetic runtime.')
+		return this.durable
+	}
+
+	browsePublicListings(query: unknown) {
+		PublicListingBrowseQuerySchema.parse(query)
+		return this.requireDurableCatalog().browsePublicListings(query)
+	}
+
+	readPublicStorefront(slug: string) {
+		return this.requireDurableCatalog().readPublicStorefront(slug)
+	}
+
+	recommendPublicListings(sessionId: string | undefined) {
+		return this.requireDurableCatalog().recommendPublicListings(sessionId)
+	}
+
+	setDiscoveryPreference(sessionId: string | undefined, body: unknown) {
+		DiscoveryPreferenceUpdateSchema.parse(body)
+		return this.requireDurableCatalog().setDiscoveryPreference(sessionId, body)
+	}
+
+	saveListing(sessionId: string | undefined, listingId: string, saved: boolean) {
+		EngagementMutationSchema.parse({ saved })
+		return this.requireDurableCatalog().saveListing(sessionId, listingId, saved)
+	}
+
+	followVendor(sessionId: string | undefined, vendorId: string, following: boolean) {
+		VendorFollowMutationSchema.parse({ following })
+		return this.requireDurableCatalog().followVendor(sessionId, vendorId, following)
+	}
+
+	createListing(sessionId: string | undefined, idempotencyKey: string | undefined, body: unknown) {
+		ListingDraftSchema.parse(body)
+		return this.requireDurableCatalog().createListing(sessionId, idempotencyKey, body)
+	}
+
+	updateStorefront(sessionId: string | undefined, idempotencyKey: string | undefined, body: unknown) {
+		StorefrontUpdateSchema.parse(body)
+		return this.requireDurableCatalog().updateStorefront(sessionId, idempotencyKey, body)
+	}
+
+	reviseListing(sessionId: string | undefined, idempotencyKey: string | undefined, listingId: string, body: unknown) {
+		ListingRevisionCommandSchema.parse(body)
+		return this.requireDurableCatalog().reviseListing(sessionId, idempotencyKey, listingId, body)
+	}
+
+	submitListingForReview(sessionId: string | undefined, idempotencyKey: string | undefined, listingId: string) {
+		return this.requireDurableCatalog().submitListingForReview(sessionId, idempotencyKey, listingId)
+	}
+
+	reviewListing(sessionId: string | undefined, idempotencyKey: string | undefined, listingId: string, body: unknown) {
+		ListingReviewCommandSchema.parse(body)
+		return this.requireDurableCatalog().reviewListing(sessionId, idempotencyKey, listingId, body)
+	}
+
+	unpublishListing(sessionId: string | undefined, idempotencyKey: string | undefined, listingId: string) {
+		return this.requireDurableCatalog().unpublishListing(sessionId, idempotencyKey, listingId)
+	}
+
+	processShortVideo(sessionId: string | undefined, listingId: string, body: unknown) {
+		MediaProcessingCommandSchema.parse(body)
+		return this.requireDurableCatalog().processShortVideo(sessionId, listingId, body)
+	}
+
+	importCatalogCsv(sessionId: string | undefined, idempotencyKey: string | undefined, body: unknown) {
+		return this.requireDurableCatalog().importCatalogCsv(sessionId, idempotencyKey, body)
+	}
+
+	exportCatalogCsv(sessionId: string | undefined) {
+		return this.requireDurableCatalog().exportCatalogCsv(sessionId)
+	}
+
+	reviewVendorApplication(sessionId: string | undefined, idempotencyKey: string | undefined, vendorId: string, body: unknown) {
+		VendorApplicationReviewSchema.parse(body)
+		return this.requireDurableCatalog().reviewVendorApplication(sessionId, idempotencyKey, vendorId, body)
+	}
+
+	createVendorApplication(sessionId: string | undefined, idempotencyKey: string | undefined, body: unknown) {
+		VendorApplicationCommandSchema.parse(body)
+		return this.requireDurableCatalog().createVendorApplication(sessionId, idempotencyKey, body)
 	}
 
 	async createSyntheticAccount(provisioningSecret: string | undefined, input: unknown) {

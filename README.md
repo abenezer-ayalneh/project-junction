@@ -1,10 +1,10 @@
 # Project Junction
 
-Project Junction is a documentation-first specification for a portfolio-grade marketplace that combines physical goods with fixed-duration appointments. It is intended to demonstrate production-minded product design and engineering decisions; it now includes a local synthetic Phase 00 foundation. It is not a live marketplace or an Ethiopian payment operation.
+Project Junction is a documentation-first specification for a portfolio-grade marketplace that combines physical goods with fixed-duration appointments. It is intended to demonstrate production-minded product design and engineering decisions; it now includes a local synthetic Phase 00 foundation and Phase 01 Vendor supply/discovery slice. It is not a live marketplace or an Ethiopian payment operation.
 
 ## Current status
 
-**Phase 00 is partially implemented.** The Nx web/API/worker workspace has synthetic in-memory and PostgreSQL paths. Local durability evidence and remaining acceptance gaps are recorded in [Phase 00 evidence](./docs/quality/PHASE-00-DURABILITY-EVIDENCE.md). No public deployment, real provider integration, live money movement or real identity verification exists.
+**Phase 00 is partially implemented and Phase 01 is locally implemented in the synthetic PostgreSQL runtime.** The Nx web/API/worker workspace has synthetic in-memory and PostgreSQL paths. Local durability evidence and remaining acceptance gaps are recorded in [Phase 00 evidence](./docs/quality/PHASE-00-DURABILITY-EVIDENCE.md) and the [Phase 01 requirements](./docs/requirements/PHASE-01-VENDOR-SUPPLY-AND-DISCOVERY.md). No public deployment, real provider integration, live money movement or real identity verification exists.
 
 The intended system is Ethiopia-first and globally adaptable: it uses synthetic Dire Dawa context, ETB, Ethiopian address/phone conventions, and `Africa/Addis_Ababa` as its initial configuration. It makes no claim of cross-border support, lawful Ethiopian payment operations, tax compliance, or commercial readiness.
 
@@ -21,7 +21,7 @@ The intended system is Ethiopia-first and globally adaptable: it uses synthetic 
 
 ## Scope boundary
 
-The documentation describes a future portfolio system. Phase 00 implementation was authorized; later market capabilities remain outside this work. Operational procedures use the label **Specified — Not Executed — Not Verified** until a future implementation and evidence pass prove them.
+The documentation describes a future portfolio system. Phase 00 and the local synthetic Phase 01 supply/discovery slice are implemented; later market capabilities remain outside this work. Operational procedures use the label **Specified — Not Executed — Not Verified** until a future implementation and evidence pass prove them.
 
 ## API local tooling
 

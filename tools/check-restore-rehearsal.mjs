@@ -37,14 +37,14 @@ function composePort() {
 async function fixtureCounts() {
 	const result = await pool.query(`
 		SELECT
-			(SELECT count(*)::int FROM "Workspace") AS "workspaceCount",
-			(SELECT count(*)::int FROM "Session") AS "sessionCount",
-			(SELECT count(*)::int FROM "DemoPersona") AS "personaCount",
-			(SELECT count(*)::int FROM "ProviderInboxEvent") AS "inboxCount",
-			(SELECT count(*)::int FROM "OutboxEvent") AS "outboxCount",
-			(SELECT count(*)::int FROM "AuditLog") AS "auditCount",
-			(SELECT "commandEventsUsed" FROM "DemoPersona" LIMIT 1) AS "commandEventsUsed",
-			(SELECT "commandEventsLimit" FROM "DemoPersona" LIMIT 1) AS "commandEventsLimit"
+			(SELECT count(*)::int FROM "workspaces") AS "workspaceCount",
+			(SELECT count(*)::int FROM "sessions") AS "sessionCount",
+			(SELECT count(*)::int FROM "demo_personas") AS "personaCount",
+			(SELECT count(*)::int FROM "provider_inbox_events") AS "inboxCount",
+			(SELECT count(*)::int FROM "outbox_events") AS "outboxCount",
+			(SELECT count(*)::int FROM "audit_logs") AS "auditCount",
+			(SELECT "command_events_used" FROM "demo_personas" LIMIT 1) AS "commandEventsUsed",
+			(SELECT "command_events_limit" FROM "demo_personas" LIMIT 1) AS "commandEventsLimit"
 	`)
 	return result.rows[0]
 }
@@ -63,35 +63,35 @@ try {
 		vendor: randomUUID(),
 		workspace: randomUUID(),
 	}
-	await pool.query('INSERT INTO "Workspace" (id, kind) VALUES ($1::uuid, $2)', [ids.workspace, 'demo'])
-	await pool.query('INSERT INTO "DemoWorkspace" (id, "workspaceId", "expiresAt") VALUES ($1::uuid, $2::uuid, now() + interval \'1 hour\')', [
+	await pool.query('INSERT INTO "workspaces" (id, kind) VALUES ($1::uuid, $2)', [ids.workspace, 'demo'])
+	await pool.query('INSERT INTO "demo_workspaces" (id, "workspace_id", "expires_at") VALUES ($1::uuid, $2::uuid, now() + interval \'1 hour\')', [
 		ids.demo,
 		ids.workspace,
 	])
-	await pool.query('INSERT INTO "User" (id, email, "adultVerificationState", "verifiedAt") VALUES ($1::uuid, $2, $3, now())', [
+	await pool.query('INSERT INTO "users" (id, email, "adult_verification_state", "verified_at") VALUES ($1::uuid, $2, $3, now())', [
 		ids.user,
 		`${ids.user}@example.invalid`,
 		'verified',
 	])
-	await pool.query('INSERT INTO "Vendor" (id, "workspaceId") VALUES ($1::uuid, $2::uuid)', [ids.vendor, ids.workspace])
-	await pool.query('INSERT INTO "Location" (id, "vendorId") VALUES ($1::uuid, $2::uuid)', [ids.location, ids.vendor])
+	await pool.query('INSERT INTO "vendors" (id, "workspace_id") VALUES ($1::uuid, $2::uuid)', [ids.vendor, ids.workspace])
+	await pool.query('INSERT INTO "locations" (id, "vendor_id") VALUES ($1::uuid, $2::uuid)', [ids.location, ids.vendor])
 	await pool.query(
-		'INSERT INTO "DemoPersona" (id, "workspaceId", key, role, "vendorId", "locationIds", "commandEventsUsed", "commandEventsLimit") VALUES ($1::uuid, $2::uuid, $3, $4, $5::uuid, ARRAY[$6::uuid], 7, 9)',
+		'INSERT INTO "demo_personas" (id, "workspace_id", key, role, "vendor_id", "location_ids", "command_events_used", "command_events_limit") VALUES ($1::uuid, $2::uuid, $3, $4, $5::uuid, ARRAY[$6::uuid], 7, 9)',
 		[ids.persona, ids.workspace, 'vendor_owner', 'vendor_owner', ids.vendor, ids.location],
 	)
 	await pool.query(
-		'INSERT INTO "Session" (id, "userId", "workspaceId", "expiresAt", "activeVendorId", "activeRole") VALUES ($1::uuid, $2::uuid, $3::uuid, now() + interval \'1 hour\', $4::uuid, $5)',
+		'INSERT INTO "sessions" (id, "user_id", "workspace_id", "expires_at", "active_vendor_id", "active_role") VALUES ($1::uuid, $2::uuid, $3::uuid, now() + interval \'1 hour\', $4::uuid, $5)',
 		[ids.session, ids.user, ids.workspace, ids.vendor, 'vendor_owner'],
 	)
 	await pool.query(
-		'INSERT INTO "ProviderInboxEvent" ("workspaceId", provider, "providerEventId", "payloadHash", payload) VALUES ($1::uuid, $2, $3, $4, $5::jsonb)',
+		'INSERT INTO "provider_inbox_events" ("workspace_id", provider, "provider_event_id", "payload_hash", payload) VALUES ($1::uuid, $2, $3, $4, $5::jsonb)',
 		[ids.workspace, 'fake-payment', `restore-${ids.event}`, 'fixture-hash', JSON.stringify({ fixture: true })],
 	)
 	await pool.query(
-		'INSERT INTO "OutboxEvent" ("eventId", "workspaceId", type, payload, "occurredAt") VALUES ($1::uuid, $2::uuid, $3, $4::jsonb, now())',
+		'INSERT INTO "outbox_events" ("event_id", "workspace_id", type, payload, "occurred_at") VALUES ($1::uuid, $2::uuid, $3, $4::jsonb, now())',
 		[ids.event, ids.workspace, 'FoundationCommandAccepted', JSON.stringify({ fixture: true })],
 	)
-	await pool.query('INSERT INTO "AuditLog" ("workspaceId", "actorId", action, "correlationId", metadata) VALUES ($1::uuid, $2::uuid, $3, $4::uuid, $5::jsonb)', [
+	await pool.query('INSERT INTO "audit_logs" ("workspace_id", "actor_id", action, "correlation_id", metadata) VALUES ($1::uuid, $2::uuid, $3, $4::uuid, $5::jsonb)', [
 		ids.workspace,
 		ids.user,
 		'restore.fixture',

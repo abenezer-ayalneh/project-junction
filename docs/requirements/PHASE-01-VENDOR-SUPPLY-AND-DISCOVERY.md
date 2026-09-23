@@ -1,6 +1,6 @@
 # Phase 01 — Vendor Supply and Discovery
 
-**Status:** Specified — Not Executed — Not Verified  
+**Target status:** Specified — Not Executed — Not Verified. **Local status:** Implemented and locally verified in the synthetic PostgreSQL runtime; production, provider, accessibility, and commercial acceptance remain open.
 **Objective:** demonstrate safe business Vendor supply and discoverability without buyer commitment.  
 **Owner:** Vendor supply and catalog/discovery contexts  
 **Entry:** Phase 00 access/API/event boundaries. **Exit:** reviewed catalog/discovery acceptance.  
@@ -30,3 +30,7 @@ Applies `POL-CAT-001` category/publication rules and `INV-CAT-001` Vendor owners
 ## Failure/quality/acceptance
 
 Malformed CSV/media, prohibited category, duplicate import, stale approval, search projection lag, opt-out personalization, and offline draft handling must be explicit; no publish inference occurs. Test `TST-P01-001` approved/publish/search/unpublish, `TST-P01-002` prohibited/risk case, `TST-P01-003` import replay, and `TST-P01-004` video quarantine/caption validation. Security validates isolation/quarantine; accessibility verifies catalog/video; observability records review/import/projection lag. Payments, checkout, booking allocation, and commercial Vendor recruitment are deferred.
+
+## Local implementation evidence
+
+The synthetic PostgreSQL integration suite verifies private pre-approval setup, reviewed publication, rejection/revision/resubmission, public projection and unpublish reversal, versioned CSV preview/commit replay, video quarantine, scoped saved/follow actions, explicit opt-in recommendations, migration replay, populated upgrade, restore rehearsal, and legacy rollback compatibility. It is local evidence only and does not close the target-system, external accessibility, or commercial acceptance gates.

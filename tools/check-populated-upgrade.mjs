@@ -28,6 +28,7 @@ const migrations = [
 	'prisma/migrations/20260922050000_public_vendor_browse/migration.sql',
 	'prisma/migrations/20260922060000_adult_verification_mixed_version_compatibility/migration.sql',
 	'prisma/migrations/20260922070000_demo_persona_command_quota/migration.sql',
+	'prisma/migrations/20260923000000_phase_01_vendor_catalog/migration.sql',
 ]
 
 try {
@@ -44,39 +45,48 @@ try {
 		session: randomUUID(),
 		inbox: randomUUID(),
 	}
+	// This fixture targets the pre-snake-case schema so the populated upgrade verifies the rename migration.
 	await client.query('INSERT INTO "User" (id, email, "verifiedAt") VALUES ($1::uuid, $2, now())', [ids.user, `${ids.user}@example.invalid`])
 	await client.query('INSERT INTO "Workspace" (id, kind) VALUES ($1::uuid, $2)', [ids.workspace, 'synthetic'])
 	await client.query('INSERT INTO "Vendor" (id, "workspaceId") VALUES ($1::uuid, $2::uuid)', [ids.vendor, ids.workspace])
 	await client.query('INSERT INTO "Location" (id, "vendorId") VALUES ($1::uuid, $2::uuid)', [ids.location, ids.vendor])
-	await client.query(
-		'INSERT INTO "Session" (id, "userId", "workspaceId", "expiresAt") VALUES ($1::uuid, $2::uuid, $3::uuid, now() + interval \'1 hour\')',
-		[ids.session, ids.user, ids.workspace],
-	)
-	await client.query(
-		'INSERT INTO "ProviderInboxEvent" (id, provider, "providerEventId", "payloadHash", payload) VALUES ($1::uuid, $2, $3, $4, $5::jsonb)',
-		[ids.inbox, 'fake-payment', `legacy-${ids.inbox}`, 'legacy-hash', JSON.stringify({ legacy: true })],
-	)
+	await client.query('INSERT INTO "Session" (id, "userId", "workspaceId", "expiresAt") VALUES ($1::uuid, $2::uuid, $3::uuid, now() + interval \'1 hour\')', [
+		ids.session,
+		ids.user,
+		ids.workspace,
+	])
+	await client.query('INSERT INTO "ProviderInboxEvent" (id, provider, "providerEventId", "payloadHash", payload) VALUES ($1::uuid, $2, $3, $4, $5::jsonb)', [
+		ids.inbox,
+		'fake-payment',
+		`legacy-${ids.inbox}`,
+		'legacy-hash',
+		JSON.stringify({ legacy: true }),
+	])
 
 	for (const migration of migrations.slice(1)) await client.query(await readFile(migration, 'utf8'))
 
-	const session = await client.query('SELECT "userId", "workspaceId", "activeVendorId", "activeRole" FROM "Session" WHERE id = $1::uuid', [ids.session])
+	const session = await client.query(
+		'SELECT "user_id" AS "userId", "workspace_id" AS "workspaceId", "active_vendor_id" AS "activeVendorId", "active_role" AS "activeRole" FROM "sessions" WHERE id = $1::uuid',
+		[ids.session],
+	)
 	assert.deepEqual(session.rows, [{ userId: ids.user, workspaceId: ids.workspace, activeVendorId: null, activeRole: null }])
-	assert.deepEqual((await client.query('SELECT "adultVerificationState" FROM "User" WHERE id = $1::uuid', [ids.user])).rows, [
+	assert.deepEqual((await client.query('SELECT "adult_verification_state" AS "adultVerificationState" FROM "users" WHERE id = $1::uuid', [ids.user])).rows, [
 		{ adultVerificationState: 'verified' },
 	])
 	const oldWriterUser = randomUUID()
-	await client.query('INSERT INTO "User" (id, email, "verifiedAt") VALUES ($1::uuid, $2, now())', [oldWriterUser, `${oldWriterUser}@example.invalid`])
-	assert.deepEqual((await client.query('SELECT "adultVerificationState" FROM "User" WHERE id = $1::uuid', [oldWriterUser])).rows, [
-		{ adultVerificationState: 'legacy_verified_compat' },
-	])
+	await client.query('INSERT INTO "users" (id, email, "verified_at") VALUES ($1::uuid, $2, now())', [oldWriterUser, `${oldWriterUser}@example.invalid`])
+	assert.deepEqual(
+		(await client.query('SELECT "adult_verification_state" AS "adultVerificationState" FROM "users" WHERE id = $1::uuid', [oldWriterUser])).rows,
+		[{ adultVerificationState: 'legacy_verified_compat' }],
+	)
 	const inbox = await client.query(
-		'SELECT "workspaceId", "providerReference", "reconciliationState", "reconciledAt", payload FROM "ProviderInboxEvent" WHERE id = $1::uuid',
+		'SELECT "workspace_id" AS "workspaceId", "provider_reference" AS "providerReference", "reconciliation_state" AS "reconciliationState", "reconciled_at" AS "reconciledAt", payload FROM "provider_inbox_events" WHERE id = $1::uuid',
 		[ids.inbox],
 	)
 	assert.deepEqual(inbox.rows, [
 		{ workspaceId: null, providerReference: null, reconciliationState: 'reconciled', reconciledAt: null, payload: { legacy: true } },
 	])
-	assert.equal((await client.query('SELECT count(*)::int AS count FROM "DemoPersona"')).rows[0].count, 0)
+	assert.equal((await client.query('SELECT count(*)::int AS count FROM "demo_personas"')).rows[0].count, 0)
 
 	const result = spawnSync('pnpm', ['exec', 'prisma', 'migrate', 'diff', '--exit-code', '--from-config-datasource', '--to-schema', 'prisma/schema.prisma'], {
 		env: { ...process.env, DATABASE_URL: databaseUrl.toString() },

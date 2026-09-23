@@ -2,7 +2,7 @@
 
 ## Current reality
 
-Project Junction has a local synthetic Phase 00 foundation: Nx Next/Nest/worker applications, public contracts, Prisma migrations, Compose PostgreSQL/PostGIS, and durable repositories. Phase 00 is not complete. See [durability evidence and remaining gates](./quality/PHASE-00-DURABILITY-EVIDENCE.md). No real provider integration, identity topology, VPS deployment, commerce or public service is claimed.
+Project Junction has a local synthetic Phase 00 foundation and Phase 01 Vendor supply/discovery slice: Nx Next/Nest/worker applications, public contracts, Prisma migrations, Compose PostgreSQL/PostGIS, and durable repositories. Phase 00 is not complete; Phase 01 is locally verified only. See [Phase 00 durability evidence and remaining gates](./quality/PHASE-00-DURABILITY-EVIDENCE.md) and [Phase 01 local evidence](./requirements/PHASE-01-VENDOR-SUPPLY-AND-DISCOVERY.md#local-implementation-evidence). No real provider integration, identity topology, VPS deployment, commerce or public service is claimed.
 
 ## Claim labels
 

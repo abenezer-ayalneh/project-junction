@@ -2,7 +2,21 @@ import { z } from 'zod'
 
 export const DomainEventSchema = z.object({
 	eventId: z.string().uuid(),
-	type: z.enum(['FoundationCommandAccepted', 'ProviderCallbackReceived', 'ProviderTimeoutReconciled', 'DemoWorkspaceExpired']),
+	type: z.enum([
+		'FoundationCommandAccepted',
+		'ProviderCallbackReceived',
+		'ProviderTimeoutReconciled',
+		'DemoWorkspaceExpired',
+		'VendorApplicationSubmitted',
+		'VendorApplicationReviewed',
+		'ListingSubmittedForReview',
+		'ListingRevised',
+		'ListingPublished',
+		'ListingUnpublished',
+		'StorefrontUpdated',
+		'MediaProcessed',
+		'CatalogImportCommitted',
+	]),
 	aggregateId: z.string().uuid(),
 	aggregateVersion: z.number().int().positive(),
 	workspaceId: z.string().uuid(),

@@ -6,8 +6,8 @@ import { RealtimeJoinRequestSchema, type RealtimeJoinResult, RealtimeJoinResultS
 import { createClient } from 'redis'
 import type { DefaultEventsMap, Server, Socket } from 'socket.io'
 
-import { getApiRuntimeConfig } from './api-runtime.config'
-import { FoundationService } from './foundation.service'
+import { FoundationService } from '../foundation/foundation.service'
+import { getApiRuntimeConfig } from '../runtime/api-runtime.config'
 
 const denied = (): RealtimeJoinResult => RealtimeJoinResultSchema.parse({ joined: false })
 interface RealtimeSocketData {

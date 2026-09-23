@@ -8,195 +8,395 @@ datasource db {
 }
 
 model User {
-  id                     String             @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  email                  String             @unique
-  adultVerificationState String             @default("legacy_verified_compat")
-  verifiedAt             DateTime?          @db.Timestamptz(6)
-  createdAt              DateTime           @default(now()) @db.Timestamptz(6)
+  id                     String               @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  email                  String               @unique
+  adultVerificationState String               @default("legacy_verified_compat") @map("adult_verification_state")
+  verifiedAt             DateTime?            @map("verified_at") @db.Timestamptz(6)
+  createdAt              DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
   sessions               Session[]
   memberships            VendorMembership[]
   staffProfiles          Staff[]
+  savedListings          SavedListing[]
+  followedVendors        VendorFollow[]
+  savedSearches          SavedSearch[]
+  discoveryPreference    DiscoveryPreference?
+
+  @@map("users")
 }
 
 model Workspace {
-	id           String          @id @default(dbgenerated("uuidv7()")) @db.Uuid
-	kind         String
-	createdAt    DateTime        @default(now()) @db.Timestamptz(6)
-	vendors      Vendor[]
-	sessions     Session[]
-	demos        DemoWorkspace[]
-	demoPersonas DemoPersona[]
+  id           String          @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  kind         String
+  createdAt    DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  vendors      Vendor[]
+  sessions     Session[]
+  demos        DemoWorkspace[]
+  demoPersonas DemoPersona[]
+
+  @@map("workspaces")
 }
 
 model Session {
-	id             String       @id @default(dbgenerated("uuidv7()")) @db.Uuid
-	userId         String?      @db.Uuid
-	demoPersonaId  String?      @db.Uuid
-	workspaceId    String       @db.Uuid
-	expiresAt      DateTime     @db.Timestamptz(6)
-	revokedAt      DateTime?    @db.Timestamptz(6)
-	mfaVerifiedAt  DateTime?    @db.Timestamptz(6)
-	recentAuthAt   DateTime?    @db.Timestamptz(6)
-	activeVendorId String?      @db.Uuid
-	activeRole     String?
-	createdAt      DateTime     @default(now()) @db.Timestamptz(6)
-	user           User?        @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-	demoPersona    DemoPersona? @relation(fields: [demoPersonaId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-	workspace      Workspace    @relation(fields: [workspaceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-	activeVendor   Vendor?      @relation("SessionActiveVendor", fields: [activeVendorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id             String       @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  userId         String?      @map("user_id") @db.Uuid
+  demoPersonaId  String?      @map("demo_persona_id") @db.Uuid
+  workspaceId    String       @map("workspace_id") @db.Uuid
+  expiresAt      DateTime     @map("expires_at") @db.Timestamptz(6)
+  revokedAt      DateTime?    @map("revoked_at") @db.Timestamptz(6)
+  mfaVerifiedAt  DateTime?    @map("mfa_verified_at") @db.Timestamptz(6)
+  recentAuthAt   DateTime?    @map("recent_auth_at") @db.Timestamptz(6)
+  activeVendorId String?      @map("active_vendor_id") @db.Uuid
+  activeRole     String?      @map("active_role")
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  user           User?        @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  demoPersona    DemoPersona? @relation(fields: [demoPersonaId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  workspace      Workspace    @relation(fields: [workspaceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  activeVendor   Vendor?      @relation("SessionActiveVendor", fields: [activeVendorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([workspaceId, expiresAt])
+  @@map("sessions")
 }
 
 model Vendor {
-  id             String             @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  workspaceId    String             @db.Uuid
-  publicSlug     String?            @unique
-  publishedAt    DateTime?          @db.Timestamptz(6)
-  createdAt      DateTime           @default(now()) @db.Timestamptz(6)
-  workspace      Workspace          @relation(fields: [workspaceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  locations      Location[]
-  memberships    VendorMembership[]
-  staff          Staff[]
-  activeSessions Session[]          @relation("SessionActiveVendor")
+  id                    String             @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  workspaceId           String             @map("workspace_id") @db.Uuid
+  publicSlug            String?            @unique @map("public_slug")
+  publishedAt           DateTime?          @map("published_at") @db.Timestamptz(6)
+  applicationState      String             @default("pending") @map("application_state")
+  applicationReviewedAt DateTime?          @map("application_reviewed_at") @db.Timestamptz(6)
+  displayName           String?            @map("display_name")
+  description           String?
+  createdAt             DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  workspace             Workspace          @relation(fields: [workspaceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  locations             Location[]
+  memberships           VendorMembership[]
+  staff                 Staff[]
+  activeSessions        Session[]          @relation("SessionActiveVendor")
+  listings              Listing[]
+  importJobs            CatalogImportJob[]
+  followers             VendorFollow[]
 
   @@index([workspaceId])
   @@index([publishedAt, id])
+  @@map("vendors")
+}
+
+model VendorFollow {
+  userId    String   @map("user_id") @db.Uuid
+  vendorId  String   @map("vendor_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  vendor    Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([userId, vendorId])
+  @@index([vendorId, createdAt])
+  @@map("vendor_follows")
+}
+
+model SavedListing {
+  userId    String   @map("user_id") @db.Uuid
+  listingId String   @map("listing_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([userId, listingId])
+  @@map("saved_listings")
+}
+
+model SavedSearch {
+  id          String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  workspaceId String   @map("workspace_id") @db.Uuid
+  kind        String?
+  category    String?
+  query       String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([userId, workspaceId])
+  @@map("saved_searches")
+}
+
+model DiscoveryPreference {
+  userId               String   @id @map("user_id") @db.Uuid
+  workspaceId          String   @map("workspace_id") @db.Uuid
+  personalizationOptIn Boolean  @default(false) @map("personalization_opt_in")
+  updatedAt            DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@map("discovery_preferences")
+}
+
+model Listing {
+  id              String            @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  vendorId        String            @map("vendor_id") @db.Uuid
+  kind            String
+  category        String
+  title           String
+  description     String
+  priceCents      Int?              @map("price_cents")
+  durationMinutes Int?              @map("duration_minutes")
+  state           String            @default("draft")
+  version         Int               @default(1)
+  publishedAt     DateTime?         @map("published_at") @db.Timestamptz(6)
+  unpublishedAt   DateTime?         @map("unpublished_at") @db.Timestamptz(6)
+  createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+  vendor          Vendor            @relation(fields: [vendorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  revisions       ListingRevision[]
+  media           MediaAsset[]
+  searchDocument  SearchDocument?
+  savedBy         SavedListing[]
+  variants        ListingVariant[]
+
+  @@index([vendorId, state])
+  @@index([kind, state, publishedAt])
+  @@map("listings")
+}
+
+model ListingVariant {
+  id         String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  listingId  String   @map("listing_id") @db.Uuid
+  sku        String
+  label      String
+  priceCents Int      @map("price_cents")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  listing    Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([listingId, sku])
+  @@index([listingId])
+  @@map("listing_variants")
+}
+
+model ListingRevision {
+  id         String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  listingId  String   @map("listing_id") @db.Uuid
+  version    Int
+  state      String
+  risk       String
+  snapshot   Json
+  reviewedBy String?  @map("reviewed_by") @db.Uuid
+  reviewNote String?  @map("review_note")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  listing    Listing  @relation(fields: [listingId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([listingId, version])
+  @@index([state, createdAt])
+  @@map("listing_revisions")
+}
+
+model MediaAsset {
+  id               String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  listingId        String    @map("listing_id") @db.Uuid
+  kind             String
+  state            String    @default("quarantined")
+  captionText      String?   @map("caption_text")
+  noSpeechDeclared Boolean   @default(false) @map("no_speech_declared")
+  description      String?
+  quarantineReason String?   @map("quarantine_reason")
+  processedAt      DateTime? @map("processed_at") @db.Timestamptz(6)
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  listing          Listing   @relation(fields: [listingId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([listingId, state])
+  @@map("media_assets")
+}
+
+model CatalogImportJob {
+  id              String             @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  vendorId        String             @map("vendor_id") @db.Uuid
+  templateVersion String             @map("template_version")
+  sourceHash      String             @map("source_hash")
+  mode            String
+  state           String
+  rowCount        Int                @map("row_count")
+  validRowCount   Int                @map("valid_row_count")
+  createdAt       DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  committedAt     DateTime?          @map("committed_at") @db.Timestamptz(6)
+  vendor          Vendor             @relation(fields: [vendorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  rows            CatalogImportRow[]
+
+  @@unique([vendorId, sourceHash, mode])
+  @@map("catalog_import_jobs")
+}
+
+model CatalogImportRow {
+  id          String           @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  importJobId String           @map("import_job_id") @db.Uuid
+  rowNumber   Int              @map("row_number")
+  status      String
+  errors      Json
+  preview     Json?
+  createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  importJob   CatalogImportJob @relation(fields: [importJobId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([importJobId, rowNumber])
+  @@map("catalog_import_rows")
+}
+
+model SearchDocument {
+  listingId   String   @id @map("listing_id") @db.Uuid
+  kind        String
+  title       String
+  category    String
+  version     Int
+  projectedAt DateTime @default(now()) @map("projected_at") @db.Timestamptz(6)
+  listing     Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([kind, category, title])
+  @@map("search_documents")
 }
 
 model Location {
-  id       String @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  vendorId String @db.Uuid
-  vendor   Vendor @relation(fields: [vendorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id        String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  vendorId  String   @map("vendor_id") @db.Uuid
+  label     String?
+  city      String?
+  address   String?
+  latitude  Decimal? @db.Decimal(9, 6)
+  longitude Decimal? @db.Decimal(9, 6)
+  vendor    Vendor   @relation(fields: [vendorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([vendorId])
+  @@map("locations")
 }
 
 model VendorMembership {
   id          String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  userId      String    @db.Uuid
-  vendorId    String    @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  vendorId    String    @map("vendor_id") @db.Uuid
   role        String
-  staffId     String?   @unique @db.Uuid
-  locationIds String[]  @db.Uuid
-  revokedAt   DateTime? @db.Timestamptz(6)
+  staffId     String?   @unique @map("staff_id") @db.Uuid
+  locationIds String[]  @map("location_ids") @db.Uuid
+  revokedAt   DateTime? @map("revoked_at") @db.Timestamptz(6)
   user        User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   vendor      Vendor    @relation(fields: [vendorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   staff       Staff?    @relation(fields: [staffId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@unique([userId, vendorId])
   @@index([vendorId, revokedAt])
+  @@map("vendor_memberships")
 }
 
 model Staff {
-  id          String            @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  vendorId    String            @db.Uuid
-  userId      String?           @db.Uuid
-  createdAt   DateTime          @default(now()) @db.Timestamptz(6)
-  vendor      Vendor            @relation(fields: [vendorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  user        User?             @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  membership  VendorMembership?
+  id         String            @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  vendorId   String            @map("vendor_id") @db.Uuid
+  userId     String?           @map("user_id") @db.Uuid
+  createdAt  DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  vendor     Vendor            @relation(fields: [vendorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user       User?             @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  membership VendorMembership?
 
   @@unique([vendorId, userId])
   @@index([userId])
+  @@map("staff_members")
 }
 
 model IdempotencyRecord {
   id          String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
   key         String
-  scopeHash   String
+  scopeHash   String   @map("scope_hash")
   method      String
-  workspaceId String?  @db.Uuid
-  requestHash String
+  workspaceId String?  @map("workspace_id") @db.Uuid
+  requestHash String   @map("request_hash")
   outcome     Json
-  createdAt   DateTime @default(now()) @db.Timestamptz(6)
-  expiresAt   DateTime @db.Timestamptz(6)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  expiresAt   DateTime @map("expires_at") @db.Timestamptz(6)
 
   @@unique([key, scopeHash, method])
   @@index([expiresAt])
+  @@map("idempotency_records")
 }
 
 model OutboxEvent {
   id          String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  eventId     String    @unique @db.Uuid
-  workspaceId String    @db.Uuid
+  eventId     String    @unique @map("event_id") @db.Uuid
+  workspaceId String    @map("workspace_id") @db.Uuid
   type        String
   payload     Json
   state       String    @default("pending")
   attempts    Int       @default(0)
-  claimedBy   String?
-  claimedAt   DateTime? @db.Timestamptz(6)
-  claimToken  String?   @db.Uuid
-  availableAt DateTime  @default(now()) @db.Timestamptz(6)
-  occurredAt  DateTime  @db.Timestamptz(6)
-  createdAt   DateTime  @default(now()) @db.Timestamptz(6)
+  claimedBy   String?   @map("claimed_by")
+  claimedAt   DateTime? @map("claimed_at") @db.Timestamptz(6)
+  claimToken  String?   @map("claim_token") @db.Uuid
+  availableAt DateTime  @default(now()) @map("available_at") @db.Timestamptz(6)
+  occurredAt  DateTime  @map("occurred_at") @db.Timestamptz(6)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
 
   @@index([state, occurredAt])
   @@index([workspaceId, occurredAt])
-  @@index([state, availableAt, claimedAt], map: "OutboxEvent_claim_idx")
+  @@index([state, availableAt, claimedAt], map: "outbox_events_claim_idx")
+  @@map("outbox_events")
 }
 
 model ProviderInboxEvent {
   id                  String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  workspaceId         String?   @db.Uuid
+  workspaceId         String?   @map("workspace_id") @db.Uuid
   provider            String
-  providerEventId     String
-  providerReference   String?
-  payloadHash         String
+  providerEventId     String    @map("provider_event_id")
+  providerReference   String?   @map("provider_reference")
+  payloadHash         String    @map("payload_hash")
   payload             Json
-  reconciliationState String    @default("reconciled")
-  reconciledAt        DateTime? @db.Timestamptz(6)
-  receivedAt          DateTime  @default(now()) @db.Timestamptz(6)
-  processedAt         DateTime? @db.Timestamptz(6)
+  reconciliationState String    @default("reconciled") @map("reconciliation_state")
+  reconciledAt        DateTime? @map("reconciled_at") @db.Timestamptz(6)
+  receivedAt          DateTime  @default(now()) @map("received_at") @db.Timestamptz(6)
+  processedAt         DateTime? @map("processed_at") @db.Timestamptz(6)
 
   @@unique([provider, providerEventId])
-  @@index([workspaceId, provider, providerReference, reconciliationState], map: "ProviderInboxEvent_reconciliation_idx")
+  @@index([workspaceId, provider, providerReference, reconciliationState], map: "provider_inbox_events_reconciliation_idx")
+  @@map("provider_inbox_events")
 }
 
 model DemoWorkspace {
   id                  String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  workspaceId         String    @db.Uuid
-  providerEventsUsed  Int       @default(0)
-  providerEventsLimit Int       @default(25)
-  expiresAt           DateTime  @db.Timestamptz(6)
-  purgedAt            DateTime? @db.Timestamptz(6)
-  createdAt           DateTime  @default(now()) @db.Timestamptz(6)
+  workspaceId         String    @map("workspace_id") @db.Uuid
+  providerEventsUsed  Int       @default(0) @map("provider_events_used")
+  providerEventsLimit Int       @default(25) @map("provider_events_limit")
+  expiresAt           DateTime  @map("expires_at") @db.Timestamptz(6)
+  purgedAt            DateTime? @map("purged_at") @db.Timestamptz(6)
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   workspace           Workspace @relation(fields: [workspaceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([expiresAt, purgedAt])
+  @@map("demo_workspaces")
 }
 
 model DemoPersona {
-	id                 String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
-	workspaceId        String    @db.Uuid
-	key                String
-	role               String
-	vendorId           String?   @db.Uuid
-	locationIds        String[]  @db.Uuid
-	commandEventsUsed  Int       @default(0)
-	commandEventsLimit Int       @default(25)
-	createdAt          DateTime  @default(now()) @db.Timestamptz(6)
-	workspace          Workspace @relation(fields: [workspaceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-	sessions           Session[]
+  id                 String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  workspaceId        String    @map("workspace_id") @db.Uuid
+  key                String
+  role               String
+  vendorId           String?   @map("vendor_id") @db.Uuid
+  locationIds        String[]  @map("location_ids") @db.Uuid
+  commandEventsUsed  Int       @default(0) @map("command_events_used")
+  commandEventsLimit Int       @default(25) @map("command_events_limit")
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  workspace          Workspace @relation(fields: [workspaceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sessions           Session[]
 
-	@@unique([workspaceId, key])
-	@@index([workspaceId, role])
+  @@unique([workspaceId, key])
+  @@index([workspaceId, role])
+  @@map("demo_personas")
 }
 
 model AuditLog {
   id            String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  workspaceId   String?  @db.Uuid
-  actorId       String?  @db.Uuid
+  workspaceId   String?  @map("workspace_id") @db.Uuid
+  actorId       String?  @map("actor_id") @db.Uuid
   action        String
-  correlationId String   @db.Uuid
+  correlationId String   @map("correlation_id") @db.Uuid
   metadata      Json
-  createdAt     DateTime @default(now()) @db.Timestamptz(6)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   @@index([workspaceId, createdAt])
+  @@map("audit_logs")
 }
 
 model OutboxReceipt {
-  eventId     String   @id @db.Uuid
-  workspaceId String   @db.Uuid
-  processedAt DateTime @default(now()) @db.Timestamptz(6)
+  eventId     String   @id @map("event_id") @db.Uuid
+  workspaceId String   @map("workspace_id") @db.Uuid
+  processedAt DateTime @default(now()) @map("processed_at") @db.Timestamptz(6)
+
+  @@map("outbox_receipts")
 }

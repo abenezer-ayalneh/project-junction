@@ -4,10 +4,10 @@ import { APP_GUARD } from '@nestjs/core'
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
 import { FakePaymentWebhookAdapter, PROVIDER_WEBHOOK_ADAPTER } from 'platform-core'
 
-import { getApiRuntimeConfig } from './api-runtime.config'
-import { AppController } from './app.controller'
-import { FoundationService } from './foundation.service'
-import { RealtimeGateway } from './realtime.gateway'
+import { FoundationService } from './foundation/foundation.service'
+import { AppController } from './http/app.controller'
+import { RealtimeGateway } from './realtime/realtime.gateway'
+import { getApiRuntimeConfig } from './runtime/api-runtime.config'
 
 @Module({
 	imports: [

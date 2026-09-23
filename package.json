@@ -11,7 +11,7 @@
 		"build": "nx run-many -t build --projects=web,api,worker --parallel=3",
 		"format": "prettier --check .",
 		"format:write": "prettier --write .",
-		"lint": "nx run-many -t lint --projects=contracts,platform-core,api,worker,web --parallel=3",
+		"lint": "nx run-many -t lint --projects=contracts,platform-core,api,worker,web --parallel=3 --fix",
 		"typecheck": "nx run-many -t typecheck --projects=contracts,platform-core,api,worker,web --parallel=3",
 		"prepare": "husky",
 		"check": "pnpm docs:check && pnpm contracts:check && nx run-many -t lint,typecheck,test --projects=contracts,platform-core,api,worker,web --parallel=3",

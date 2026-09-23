@@ -2,12 +2,12 @@ import { ConfigService } from '@nestjs/config'
 import { NestFactory } from '@nestjs/core'
 import helmet from 'helmet'
 
-import { ApiExceptionFilter } from './app/api-exception.filter'
-import { createApiLogger } from './app/api-logger'
-import { getApiRuntimeConfig } from './app/api-runtime.config'
 import { AppModule } from './app/app.module'
-import { requestContextMiddleware, type RequestWithContext, type ResponseWithContext } from './app/request-context'
-import { configureSwagger } from './app/swagger'
+import { ApiExceptionFilter } from './app/http/api-exception.filter'
+import { createApiLogger } from './app/http/api-logger'
+import { requestContextMiddleware, type RequestWithContext, type ResponseWithContext } from './app/http/request-context'
+import { configureSwagger } from './app/http/swagger'
+import { getApiRuntimeConfig } from './app/runtime/api-runtime.config'
 
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule, { rawBody: true })

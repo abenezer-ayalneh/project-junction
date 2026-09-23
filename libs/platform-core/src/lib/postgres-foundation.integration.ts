@@ -6,7 +6,7 @@ import { IdempotencyConflictError } from './idempotency.js'
 import { PostgresFoundation } from './postgres-foundation.js'
 
 const suite = process.env['FOUNDATION_INTEGRATION'] === '1' ? describe : describe.skip
-suite('Phase 00 real PostgreSQL', () => {
+suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 	let repository: PostgresFoundation
 	let other: PostgresFoundation
 	let sessionId: string
@@ -138,6 +138,160 @@ suite('Phase 00 real PostgreSQL', () => {
 		})
 		expect(unpublished.publicSlug).toBeNull()
 	})
+	it('keeps catalog private through application approval and maintains the public projection through publish and unpublish', async () => {
+		const listing = await repository.createListing(sessionId, randomUUID(), {
+			kind: 'product',
+			category: 'goods',
+			title: 'Handwoven basket',
+			description: 'A handwoven storage basket for a dry home.',
+			priceCents: 12500,
+		})
+		const submitted = await repository.submitListingForReview(sessionId, randomUUID(), listing.id)
+		expect(submitted.state).toBe('pending_review')
+		const reviewer = await repository.db.demoPersona.create({
+			data: { workspaceId, key: `reviewer-${randomUUID()}`, role: 'platform_owner', locationIds: [] },
+		})
+		const reviewerSession = await repository.db.session.create({
+			data: { demoPersonaId: reviewer.id, workspaceId, activeRole: 'platform_owner', expiresAt: new Date(Date.now() + 3600000) },
+		})
+		await expect(repository.reviewListing(reviewerSession.id, randomUUID(), listing.id, { decision: 'approve', note: 'low-risk listing' })).rejects.toThrow(
+			AccessDeniedError,
+		)
+		await expect(
+			repository.reviewVendorApplication(reviewerSession.id, randomUUID(), vendorId, { decision: 'approve', note: 'approved vendor application' }),
+		).resolves.toMatchObject({ state: 'approved' })
+		const rejected = await repository.reviewListing(reviewerSession.id, randomUUID(), listing.id, {
+			decision: 'reject',
+			note: 'request a clearer product description',
+		})
+		expect(rejected.state).toBe('rejected')
+		const revised = await repository.reviseListing(sessionId, randomUUID(), listing.id, {
+			kind: 'product',
+			category: 'goods',
+			title: 'Handwoven basket',
+			description: 'A handwoven storage basket with a clear fixed price for a dry home.',
+			priceCents: 12500,
+		})
+		expect(revised).toMatchObject({ state: 'draft', version: 3 })
+		await repository.submitListingForReview(sessionId, randomUUID(), listing.id)
+		const published = await repository.reviewListing(reviewerSession.id, randomUUID(), listing.id, { decision: 'approve', note: 'revision is low risk' })
+		expect(published.state).toBe('published')
+		await repository.db.vendor.update({ where: { id: vendorId }, data: { publishedAt: new Date() } })
+		await expect(
+			repository.updateStorefront(sessionId, randomUUID(), {
+				slug: 'published-foundation',
+				displayName: 'Foundation Vendor',
+				description: 'A verified synthetic Vendor storefront for catalog acceptance.',
+			}),
+		).resolves.toMatchObject({ vendorId, replayed: false })
+		await repository.db.location.update({ where: { id: locationId }, data: { label: 'Foundation location', city: 'Addis Ababa' } })
+		await expect(repository.browsePublicListings({ kind: 'product' })).resolves.toMatchObject({
+			items: [expect.objectContaining({ id: listing.id, state: 'published' })],
+		})
+		await expect(repository.readPublicStorefront('published-foundation')).resolves.toMatchObject({
+			id: vendorId,
+			locations: [expect.objectContaining({ id: locationId })],
+			listings: [expect.objectContaining({ id: listing.id })],
+		})
+		const removed = await repository.unpublishListing(sessionId, randomUUID(), listing.id)
+		expect(removed.state).toBe('unpublished')
+		expect((await repository.browsePublicListings({ kind: 'product' })).items.find((item) => item.id === listing.id)).toBeUndefined()
+	})
+	it('creates a private Vendor application with a scoped owner session before Platform approval', async () => {
+		const applicant = await repository.db.user.create({
+			data: { email: `${randomUUID()}@example.invalid`, adultVerificationState: 'verified', verifiedAt: new Date() },
+		})
+		const applicantSession = await repository.db.session.create({ data: { userId: applicant.id, workspaceId, expiresAt: new Date(Date.now() + 3600000) } })
+		const key = randomUUID()
+		const application = {
+			displayName: 'Aster Workshop',
+			slug: `aster-${randomUUID().slice(0, 8)}`,
+			description: 'A small local workshop creating practical household goods.',
+			location: { label: 'Main studio', city: 'Addis Ababa', address: 'Bole, Addis Ababa, Ethiopia', latitude: 8.9806, longitude: 38.7578 },
+		}
+		const created = await repository.createVendorApplication(applicantSession.id, key, application)
+		expect(created).toMatchObject({ state: 'pending', replayed: false })
+		await expect(repository.createVendorApplication(applicantSession.id, key, application)).resolves.toEqual({ ...created, replayed: true })
+		const privateListing = await repository.createListing(created.sessionId, randomUUID(), {
+			kind: 'product',
+			category: 'home',
+			title: 'Aster tray',
+			description: 'A practical handcrafted tray for organized home storage.',
+			priceCents: 5000,
+		})
+		const variantListing = await repository.createListing(created.sessionId, randomUUID(), {
+			kind: 'product',
+			category: 'home',
+			title: 'Aster tote',
+			description: 'A durable reusable tote available in two clearly priced sizes.',
+			variants: [
+				{ sku: 'aster-tote-small', label: 'Small', priceCents: 4500 },
+				{ sku: 'aster-tote-large', label: 'Large', priceCents: 6000 },
+			],
+		})
+		expect(await repository.db.listingVariant.count({ where: { listingId: variantListing.id } })).toBe(2)
+		await repository.submitListingForReview(created.sessionId, randomUUID(), privateListing.id)
+		expect((await repository.browsePublicListings({ q: 'Aster tray' })).items).toHaveLength(0)
+		await expect(repository.exportCatalogCsv(created.sessionId)).resolves.toContain('Aster tray')
+		await expect(repository.exportCatalogCsv(sessionId)).resolves.not.toContain('Aster tray')
+	})
+	it('retains unsafe video in quarantine and produces replay-safe CSV preview and commit evidence', async () => {
+		await repository.db.vendor.update({ where: { id: vendorId }, data: { applicationState: 'approved' } })
+		const listing = await repository.createListing(sessionId, randomUUID(), {
+			kind: 'service',
+			category: 'repair',
+			title: 'Phone screen repair',
+			description: 'Fixed-duration screen repair at a published price.',
+			priceCents: 30000,
+			durationMinutes: 60,
+		})
+		const video = await repository.processShortVideo(sessionId, listing.id, { noSpeechDeclared: false })
+		expect(video.state).toBe('quarantined')
+		await repository.submitListingForReview(sessionId, randomUUID(), listing.id)
+		const reviewer = await repository.db.demoPersona.create({ data: { workspaceId, key: `trust-${randomUUID()}`, role: 'trust', locationIds: [] } })
+		const reviewerSession = await repository.db.session.create({
+			data: { demoPersonaId: reviewer.id, workspaceId, activeRole: 'trust', expiresAt: new Date(Date.now() + 3600000) },
+		})
+		await expect(
+			repository.reviewListing(reviewerSession.id, randomUUID(), listing.id, { decision: 'approve', note: 'review video safety' }),
+		).rejects.toThrow(AccessDeniedError)
+		const csv = 'kind,category,title,description,priceCents,durationMinutes\nproduct,goods,Local coffee,Fresh locally roasted coffee beans,9000,'
+		const dryRun = await repository.importCatalogCsv(sessionId, randomUUID(), { templateVersion: 'v1', mode: 'dry_run', csv })
+		expect(dryRun).toMatchObject({ state: 'dry_run', validRowCount: 1, rowErrors: [] })
+		const key = randomUUID()
+		const first = await repository.importCatalogCsv(sessionId, key, { templateVersion: 'v1', mode: 'commit', csv })
+		const replay = await repository.importCatalogCsv(sessionId, key, { templateVersion: 'v1', mode: 'commit', csv })
+		expect(first).toMatchObject({ state: 'committed', replayed: false })
+		expect(replay).toEqual({ ...first, replayed: true })
+	})
+	it('scopes saves and follows to the current user/workspace and makes recommendation personalization explicit', async () => {
+		await repository.db.vendor.update({ where: { id: vendorId }, data: { applicationState: 'approved' } })
+		const listing = await repository.db.listing.create({
+			data: {
+				vendorId,
+				kind: 'product',
+				category: 'home',
+				title: 'Woven storage tray',
+				description: 'A durable woven tray for organized household storage.',
+				priceCents: 8500,
+				state: 'published',
+				publishedAt: new Date(),
+			},
+		})
+		await expect(repository.saveListing(sessionId, listing.id, true)).resolves.toEqual({ saved: true })
+		await expect(repository.followVendor(sessionId, vendorId, true)).resolves.toEqual({ following: true })
+		await repository.setDiscoveryPreference(sessionId, { personalizationOptIn: true })
+		expect((await repository.recommendPublicListings(sessionId)).items).toContainEqual(
+			expect.objectContaining({ id: listing.id, reason: 'From a Vendor you follow.' }),
+		)
+		await repository.setDiscoveryPreference(sessionId, { personalizationOptIn: false })
+		expect((await repository.recommendPublicListings(sessionId)).items.find((item) => item.id === listing.id)?.reason).toBe(
+			'Recently published in public discovery.',
+		)
+		const otherWorkspace = await repository.db.workspace.create({ data: { kind: 'synthetic' } })
+		const otherVendor = await repository.db.vendor.create({ data: { workspaceId: otherWorkspace.id, applicationState: 'approved' } })
+		await expect(repository.followVendor(sessionId, otherVendor.id, true)).rejects.toThrow(AccessDeniedError)
+	})
 	it('requires an optional linked Staff record to agree with the active User and Vendor membership', async () => {
 		const staff = await repository.db.staff.create({ data: { vendorId, userId } })
 		await repository.db.vendorMembership.update({ where: { userId_vendorId: { userId, vendorId } }, data: { staffId: staff.id } })
@@ -155,11 +309,11 @@ suite('Phase 00 real PostgreSQL', () => {
 		await repository.db.$executeRawUnsafe(
 			`CREATE FUNCTION reject_outbox() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'injected failure'; END $$`,
 		)
-		await repository.db.$executeRawUnsafe(`CREATE TRIGGER reject_outbox BEFORE INSERT ON "OutboxEvent" FOR EACH ROW EXECUTE FUNCTION reject_outbox()`)
+		await repository.db.$executeRawUnsafe(`CREATE TRIGGER reject_outbox BEFORE INSERT ON "outbox_events" FOR EACH ROW EXECUTE FUNCTION reject_outbox()`)
 		try {
 			await expect(repository.acceptAuditMarker(sessionId, randomUUID(), { marker: 'rollback' })).rejects.toThrow()
 		} finally {
-			await repository.db.$executeRawUnsafe('DROP TRIGGER reject_outbox ON "OutboxEvent"')
+			await repository.db.$executeRawUnsafe('DROP TRIGGER reject_outbox ON "outbox_events"')
 		}
 		expect(await repository.db.auditLog.count()).toBe(before)
 		expect(await repository.db.idempotencyRecord.count({ where: { outcome: { path: ['marker'], equals: 'rollback' } } })).toBe(0)
