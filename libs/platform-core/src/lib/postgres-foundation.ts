@@ -15,6 +15,10 @@ import {
 	type DomainEvent,
 	DomainEventSchema,
 	EngagementMutationSchema,
+	InventoryAvailabilityQuerySchema,
+	InventoryAvailabilitySchema,
+	InventoryMovementCommandSchema,
+	InventoryMovementResultSchema,
 	IdempotencyKeySchema,
 	ListingCommandResultSchema,
 	ListingDraftSchema,
@@ -110,6 +114,115 @@ export class PostgresFoundation {
 			if (!location) throw new AccessDeniedError()
 			assertScope(context, { workspaceId: location.vendor.workspaceId, vendorId: location.vendorId, locationId: location.id })
 			return LocationReadSchema.parse({ id: location.id, vendorId: location.vendorId, workspaceId: location.vendor.workspaceId })
+		})
+	}
+
+	async readInventoryAvailability(sessionId: string | undefined, listingId: string, queryInput: unknown) {
+		this.requireResourceId(listingId)
+		const query = InventoryAvailabilityQuerySchema.parse(queryInput)
+		this.requireResourceId(query.locationId)
+		return this.db.$transaction(async (tx) => {
+			const context = await this.derive(tx, sessionId)
+			const item = await this.requireInventoryItem(tx, context, query.locationId, listingId, query.sku)
+			if (!context.memberships.some((membership) => membership.active && ['vendor_owner', 'vendor_staff'].includes(membership.role)))
+				throw new AccessDeniedError()
+			const balance = await tx.inventoryMovement.aggregate({
+				where: { locationId: item.location.id, listingId: item.listing.id, sku: item.variant?.sku ?? null },
+				_sum: { onHandDelta: true, reservedDelta: true },
+			})
+			const onHand = balance._sum.onHandDelta ?? 0
+			const reserved = balance._sum.reservedDelta ?? 0
+			return InventoryAvailabilitySchema.parse({
+				locationId: item.location.id,
+				listingId: item.listing.id,
+				sku: item.variant?.sku ?? null,
+				onHand,
+				reserved,
+				available: onHand - reserved,
+			})
+		})
+	}
+
+	async createInventoryMovement(sessionId: string | undefined, keyInput: string | undefined, input: unknown) {
+		const key = IdempotencyKeySchema.parse(keyInput)
+		const command = InventoryMovementCommandSchema.parse(input)
+		this.requireResourceId(command.locationId)
+		this.requireResourceId(command.listingId)
+		return this.db.$transaction(async (tx) => {
+			const context = await this.derive(tx, sessionId)
+			const vendor = await this.vendorForWrite(tx, context)
+			const item = await this.requireInventoryItem(tx, context, command.locationId, command.listingId, command.sku)
+			if (item.location.vendorId !== vendor.id) throw new AccessDeniedError()
+			const result = await this.replayOrCreate(tx, context, key, 'POST /v1/inventory/movements', command, async () => {
+				const balance = await tx.inventoryMovement.aggregate({
+					where: {
+						locationId: item.location.id,
+						listingId: item.listing.id,
+						sku: item.variant?.sku ?? null,
+					},
+					_sum: { onHandDelta: true, reservedDelta: true },
+				})
+				const onHand = (balance._sum.onHandDelta ?? 0) + command.quantityDelta
+				const reserved = balance._sum.reservedDelta ?? 0
+				if (onHand < 0 || onHand - reserved < 0) throw new AccessDeniedError('The movement would make available stock negative.')
+				const actor = this.actorId(context)
+				const movement = await tx.inventoryMovement.create({
+					data: {
+						locationId: item.location.id,
+						listingId: item.listing.id,
+						sku: item.variant?.sku ?? null,
+						reason: command.reason,
+						onHandDelta: command.quantityDelta,
+						reservedDelta: 0,
+						note: command.note ?? null,
+						actorKind: context.actor.kind,
+						actorId: actor,
+					},
+					select: { id: true },
+				})
+				const aggregateVersion = await tx.inventoryMovement.count({ where: { listingId: item.listing.id } })
+				const outcome = InventoryMovementResultSchema.parse({
+					movementId: movement.id,
+					locationId: item.location.id,
+					listingId: item.listing.id,
+					sku: item.variant?.sku ?? null,
+					reason: command.reason,
+					quantityDelta: command.quantityDelta,
+					onHand,
+					reserved,
+					available: onHand - reserved,
+					replayed: false,
+				})
+				await tx.auditLog.create({
+					data: {
+						workspaceId: context.workspaceId,
+						actorId: actor,
+						action: 'inventory.stock-moved',
+						correlationId: randomUUID(),
+						metadata: json({
+							movementId: movement.id,
+							locationId: item.location.id,
+							listingId: item.listing.id,
+							sku: item.variant?.sku ?? null,
+							reason: command.reason,
+							quantityDelta: command.quantityDelta,
+						}),
+					},
+				})
+				await this.enqueue(
+					tx,
+					this.catalogEvent(context, 'StockMoved', item.listing.id, aggregateVersion, key, {
+						movementId: movement.id,
+						locationId: item.location.id,
+						listingId: item.listing.id,
+						sku: item.variant?.sku ?? null,
+						reason: command.reason,
+						quantityDelta: command.quantityDelta,
+					}),
+				)
+				return outcome
+			})
+			return InventoryMovementResultSchema.parse({ ...result.outcome, replayed: result.replayed })
 		})
 	}
 
@@ -299,6 +412,7 @@ export class PostgresFoundation {
 			const context = await this.derive(tx, sessionId)
 			const vendor = await this.vendorForWrite(tx, context)
 			await this.requireOwnedListing(tx, listingId, vendor.id)
+			await this.requireInventorySkuBalancePreserved(tx, listingId, draft.variants?.map(({ sku }) => sku) ?? [])
 			const result = await this.replayOrCreate(tx, context, key, 'POST /v1/listings/:listingId/revise', { listingId, draft }, async () => {
 				const listing = await tx.listing.findFirst({ where: { id: listingId, vendorId: vendor.id } })
 				if (!listing || !['draft', 'rejected', 'unpublished'].includes(listing.state)) throw new AccessDeniedError()
@@ -1001,6 +1115,7 @@ export class PostgresFoundation {
 				await tx.session.deleteMany({ where: { workspaceId: id } })
 				await tx.demoPersona.deleteMany({ where: { workspaceId: id } })
 				await tx.vendorMembership.deleteMany({ where: { vendor: { workspaceId: id } } })
+				await tx.inventoryMovement.deleteMany({ where: { location: { vendor: { workspaceId: id } } } })
 				await tx.location.deleteMany({ where: { vendor: { workspaceId: id } } })
 				await tx.vendor.deleteMany({ where: { workspaceId: id } })
 				await tx.idempotencyRecord.deleteMany({ where: { workspaceId: id } })
@@ -1227,6 +1342,39 @@ export class PostgresFoundation {
 		if (!listing) throw new AccessDeniedError()
 	}
 
+	private async requireInventoryItem(tx: Transaction, context: AccessContext, locationId: string, listingId: string, sku?: string) {
+		if (!context.activeVendorId) throw new AccessDeniedError()
+		const location = await tx.location.findFirst({
+			where: { id: locationId, vendorId: context.activeVendorId, vendor: { workspaceId: context.workspaceId } },
+			select: { id: true, vendorId: true, vendor: { select: { workspaceId: true } } },
+		})
+		if (!location) throw new AccessDeniedError()
+		assertScope(context, { workspaceId: location.vendor.workspaceId, vendorId: location.vendorId, locationId: location.id })
+		const listing = await tx.listing.findFirst({
+			where: { id: listingId, vendorId: location.vendorId, kind: 'product' },
+			include: { variants: { select: { id: true, sku: true } } },
+		})
+		if (!listing) throw new AccessDeniedError()
+		const variant = sku ? listing.variants.find((candidate) => candidate.sku === sku) : undefined
+		if (listing.variants.length ? !variant : Boolean(sku)) throw new AccessDeniedError()
+		return { location, listing, variant }
+	}
+
+	private async requireInventorySkuBalancePreserved(tx: Transaction, listingId: string, nextSkus: string[]) {
+		const balances = await tx.inventoryMovement.groupBy({
+			by: ['sku'],
+			where: { listingId },
+			_sum: { onHandDelta: true, reservedDelta: true },
+		})
+		const nextSkuSet = new Set(nextSkus)
+		for (const balance of balances) {
+			const onHand = balance._sum.onHandDelta ?? 0
+			const reserved = balance._sum.reservedDelta ?? 0
+			if ((onHand !== 0 || reserved !== 0) && (balance.sku === null ? nextSkuSet.size > 0 : !nextSkuSet.has(balance.sku)))
+				throw new AccessDeniedError('Product variants with remaining stock cannot be removed or converted.')
+		}
+	}
+
 	private listingResult(listing: {
 		id: string
 		kind: string
@@ -1269,6 +1417,7 @@ export class PostgresFoundation {
 			| 'StorefrontUpdated'
 			| 'MediaProcessed'
 			| 'CatalogImportCommitted'
+			| 'StockMoved'
 		>,
 		aggregateId: string,
 		version: number,

@@ -1,6 +1,6 @@
 # Project Junction — Documentation and Future Release Roadmap
 
-> **Status:** Planned sequencing. The current authorized outcome is the documentation baseline only; application work has not started.
+> **Status:** Planned sequencing. Local implementation status and evidence are tracked in [Documentation Status](../STATUS.md) and the phase-specific evidence records.
 
 ## Sequencing rule
 

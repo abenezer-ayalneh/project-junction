@@ -129,26 +129,27 @@ model DiscoveryPreference {
 }
 
 model Listing {
-  id              String            @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  vendorId        String            @map("vendor_id") @db.Uuid
-  kind            String
-  category        String
-  title           String
-  description     String
-  priceCents      Int?              @map("price_cents")
-  durationMinutes Int?              @map("duration_minutes")
-  state           String            @default("draft")
-  version         Int               @default(1)
-  publishedAt     DateTime?         @map("published_at") @db.Timestamptz(6)
-  unpublishedAt   DateTime?         @map("unpublished_at") @db.Timestamptz(6)
-  createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt       DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
-  vendor          Vendor            @relation(fields: [vendorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  revisions       ListingRevision[]
-  media           MediaAsset[]
-  searchDocument  SearchDocument?
-  savedBy         SavedListing[]
-  variants        ListingVariant[]
+  id                 String              @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  vendorId           String              @map("vendor_id") @db.Uuid
+  kind               String
+  category           String
+  title              String
+  description        String
+  priceCents         Int?                @map("price_cents")
+  durationMinutes    Int?                @map("duration_minutes")
+  state              String              @default("draft")
+  version            Int                 @default(1)
+  publishedAt        DateTime?           @map("published_at") @db.Timestamptz(6)
+  unpublishedAt      DateTime?           @map("unpublished_at") @db.Timestamptz(6)
+  createdAt          DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+  vendor             Vendor              @relation(fields: [vendorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  revisions          ListingRevision[]
+  media              MediaAsset[]
+  searchDocument     SearchDocument?
+  savedBy            SavedListing[]
+  variants           ListingVariant[]
+  inventoryMovements InventoryMovement[]
 
   @@index([vendorId, state])
   @@index([kind, state, publishedAt])
@@ -249,17 +250,38 @@ model SearchDocument {
 }
 
 model Location {
-  id        String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  vendorId  String   @map("vendor_id") @db.Uuid
-  label     String?
-  city      String?
-  address   String?
-  latitude  Decimal? @db.Decimal(9, 6)
-  longitude Decimal? @db.Decimal(9, 6)
-  vendor    Vendor   @relation(fields: [vendorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                 String              @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  vendorId           String              @map("vendor_id") @db.Uuid
+  label              String?
+  city               String?
+  address            String?
+  latitude           Decimal?            @db.Decimal(9, 6)
+  longitude          Decimal?            @db.Decimal(9, 6)
+  vendor             Vendor              @relation(fields: [vendorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  inventoryMovements InventoryMovement[]
 
   @@index([vendorId])
   @@map("locations")
+}
+
+model InventoryMovement {
+  id            String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  locationId    String   @map("location_id") @db.Uuid
+  listingId     String   @map("listing_id") @db.Uuid
+  sku           String?
+  reason        String
+  onHandDelta   Int      @map("on_hand_delta")
+  reservedDelta Int      @default(0) @map("reserved_delta")
+  note          String?
+  actorKind     String   @map("actor_kind")
+  actorId       String   @map("actor_id") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  location      Location @relation(fields: [locationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  listing       Listing  @relation(fields: [listingId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([locationId, listingId, sku, createdAt], map: "inventory_movements_location_item_created_idx")
+  @@index([listingId, sku, createdAt], map: "inventory_movements_listing_item_created_idx")
+  @@map("inventory_movements")
 }
 
 model VendorMembership {

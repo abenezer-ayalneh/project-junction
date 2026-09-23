@@ -31,3 +31,7 @@ Uses `POL-GOOD-001`–`POL-GOOD-004`, `INV-INV-001`, `INV-FUL-001`, `INV-ORD-001
 ## Failure/quality/acceptance
 
 Expiry/payment race refunds late success; retry is idempotent; failed delivery/pickup expiration preserves evidence; provider/outbox failure reconciles. Stock/fulfillment mutation requires live authority; safe drafts may survive offline. Tests prove concurrency, price/zones, handoff fallback, partial cancellation, 7/14/30 eligibility, pickup grace, failed-delivery retry, and product earning release after its 7/14 window (`TST-P02-001`, `TST-P02-002`, `TST-P02-003`). Booking and atomic mixed payment remain Phase 03–04.
+
+## Local implementation notes
+
+The first Phase 02 chunk adds an append-only PostgreSQL inventory-movement table and private API operations to record received, adjusted, and damaged stock for simple or variant Products at an assigned Vendor Location, then read on-hand, reserved, and derived available quantities. Variant movements are keyed by SKU; revisions cannot remove or convert an item while it has nonzero stock. The command checks that availability stays non-negative and writes audit, outbox, and idempotency records in the same transaction. Expired demo-workspace purge removes its inventory rows. This code and migration have not yet been applied or runtime-verified. Checkout holds, sales, returns, stock transfers, customer availability, and the `TST-P02-*` evidence remain unimplemented.

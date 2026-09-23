@@ -64,6 +64,52 @@ export const LocationReadSchema = z.object({
 
 export type LocationRead = z.infer<typeof LocationReadSchema>
 
+export const InventoryMovementCommandSchema = z
+	.object({
+		locationId: z.string().uuid(),
+		listingId: z.string().uuid(),
+		sku: z.string().trim().min(1).max(80).optional(),
+		reason: z.enum(['received', 'adjusted', 'damaged']),
+		quantityDelta: z
+			.number()
+			.int()
+			.min(-2_147_483_648)
+			.max(2_147_483_647)
+			.refine((value) => value !== 0, 'must not be zero'),
+		note: z.string().trim().min(5).max(500).optional(),
+	})
+	.superRefine((value, ctx) => {
+		if (value.reason === 'received' && value.quantityDelta < 1)
+			ctx.addIssue({ code: 'custom', path: ['quantityDelta'], message: 'received stock must be positive' })
+		if (value.reason === 'damaged' && value.quantityDelta > -1)
+			ctx.addIssue({ code: 'custom', path: ['quantityDelta'], message: 'damaged stock must be negative' })
+		if (value.reason !== 'received' && !value.note)
+			ctx.addIssue({ code: 'custom', path: ['note'], message: 'a reason note is required for adjustments and damage' })
+	})
+
+export type InventoryMovementCommand = z.infer<typeof InventoryMovementCommandSchema>
+
+export const InventoryAvailabilityQuerySchema = z.object({
+	locationId: z.string().uuid(),
+	sku: z.string().trim().min(1).max(80).optional(),
+})
+
+export const InventoryAvailabilitySchema = z.object({
+	locationId: z.string().uuid(),
+	listingId: z.string().uuid(),
+	sku: z.string().nullable(),
+	onHand: z.number().int().nonnegative(),
+	reserved: z.number().int().nonnegative(),
+	available: z.number().int().nonnegative(),
+})
+
+export const InventoryMovementResultSchema = InventoryAvailabilitySchema.extend({
+	movementId: z.string().uuid(),
+	reason: z.enum(['received', 'adjusted', 'damaged']),
+	quantityDelta: z.number().int(),
+	replayed: z.boolean(),
+})
+
 export const PublicVendorBrowseQuerySchema = z.object({
 	cursor: z.string().uuid().optional(),
 	limit: z.coerce.number().int().min(1).max(100).default(20),

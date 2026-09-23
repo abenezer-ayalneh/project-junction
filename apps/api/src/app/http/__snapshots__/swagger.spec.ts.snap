@@ -479,6 +479,154 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
         "type": "object",
       },
+      "InventoryAvailability": {
+        "additionalProperties": false,
+        "properties": {
+          "available": {
+            "minimum": 0,
+            "type": "integer",
+          },
+          "listingId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "locationId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "onHand": {
+            "minimum": 0,
+            "type": "integer",
+          },
+          "reserved": {
+            "minimum": 0,
+            "type": "integer",
+          },
+          "sku": {
+            "nullable": true,
+            "type": "string",
+          },
+        },
+        "required": [
+          "locationId",
+          "listingId",
+          "sku",
+          "onHand",
+          "reserved",
+          "available",
+        ],
+        "type": "object",
+      },
+      "InventoryMovementCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "listingId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "locationId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "note": {
+            "maxLength": 500,
+            "minLength": 5,
+            "type": "string",
+          },
+          "quantityDelta": {
+            "maximum": 2147483647,
+            "minimum": -2147483648,
+            "type": "integer",
+          },
+          "reason": {
+            "enum": [
+              "received",
+              "adjusted",
+              "damaged",
+            ],
+            "type": "string",
+          },
+          "sku": {
+            "maxLength": 80,
+            "minLength": 1,
+            "type": "string",
+          },
+        },
+        "required": [
+          "locationId",
+          "listingId",
+          "reason",
+          "quantityDelta",
+        ],
+        "type": "object",
+      },
+      "InventoryMovementResult": {
+        "additionalProperties": false,
+        "properties": {
+          "available": {
+            "minimum": 0,
+            "type": "integer",
+          },
+          "listingId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "locationId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "movementId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "onHand": {
+            "minimum": 0,
+            "type": "integer",
+          },
+          "quantityDelta": {
+            "type": "integer",
+          },
+          "reason": {
+            "enum": [
+              "received",
+              "adjusted",
+              "damaged",
+            ],
+            "type": "string",
+          },
+          "replayed": {
+            "type": "boolean",
+          },
+          "reserved": {
+            "minimum": 0,
+            "type": "integer",
+          },
+          "sku": {
+            "nullable": true,
+            "type": "string",
+          },
+        },
+        "required": [
+          "locationId",
+          "listingId",
+          "sku",
+          "onHand",
+          "reserved",
+          "available",
+          "movementId",
+          "reason",
+          "quantityDelta",
+          "replayed",
+        ],
+        "type": "object",
+      },
       "ListingCommandResult": {
         "additionalProperties": false,
         "properties": {
@@ -2134,6 +2282,122 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
         },
         "summary": "Read synthetic API health.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/inventory/listings/{listingId}/availability": {
+      "get": {
+        "operationId": "AppController_readInventoryAvailability",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "listingId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "x-junction-session",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "in": "query",
+            "name": "sku",
+            "required": false,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "in": "query",
+            "name": "locationId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryAvailability",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-session": [],
+          },
+        ],
+        "summary": "Read derived stock availability for a Product at an assigned Vendor Location.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/inventory/movements": {
+      "post": {
+        "operationId": "AppController_createInventoryMovement",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "x-junction-session",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InventoryMovementCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryMovementResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-session": [],
+          },
+        ],
+        "summary": "Append an idempotent received, adjustment, or damage movement for a Vendor Product.",
         "tags": [
           "foundation",
         ],

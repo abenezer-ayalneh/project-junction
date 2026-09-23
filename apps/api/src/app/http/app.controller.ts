@@ -117,6 +117,39 @@ export class AppController {
 		return this.foundation.followVendor(this.foundation.resolveSessionId(sessionId, cookie), vendorId, body.following === true)
 	}
 
+	@Get('inventory/listings/:listingId/availability')
+	@ApiOperation({ summary: 'Read derived stock availability for a Product at an assigned Vendor Location.' })
+	@ApiSecurity('junction-session')
+	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiParam({ name: 'listingId', schema: { type: 'string', format: 'uuid' } })
+	@ApiQuery({ name: 'locationId', required: true, schema: { type: 'string', format: 'uuid' } })
+	@ApiQuery({ name: 'sku', required: false, schema: { type: 'string' } })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.inventoryAvailability })
+	readInventoryAvailability(
+		@Headers('x-junction-session') sessionId: string | undefined,
+		@Headers('cookie') cookie: string | undefined,
+		@Param('listingId') listingId: string,
+		@Query() query: unknown,
+	) {
+		return this.foundation.readInventoryAvailability(this.foundation.resolveSessionId(sessionId, cookie), listingId, query)
+	}
+
+	@Post('inventory/movements')
+	@ApiOperation({ summary: 'Append an idempotent received, adjustment, or damage movement for a Vendor Product.' })
+	@ApiSecurity('junction-session')
+	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.inventoryMovementCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.inventoryMovementResult })
+	createInventoryMovement(
+		@Headers('x-junction-session') sessionId: string | undefined,
+		@Headers('cookie') cookie: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Body() body: unknown,
+	) {
+		return this.foundation.createInventoryMovement(this.foundation.resolveSessionId(sessionId, cookie), key, body)
+	}
+
 	@Post('listings')
 	@ApiOperation({ summary: 'Create a private Vendor-owned fixed-price listing.' })
 	@ApiSecurity('junction-session')

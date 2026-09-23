@@ -16,6 +16,7 @@ export const DomainEventSchema = z.object({
 		'StorefrontUpdated',
 		'MediaProcessed',
 		'CatalogImportCommitted',
+		'StockMoved',
 	]),
 	aggregateId: z.string().uuid(),
 	aggregateVersion: z.number().int().positive(),

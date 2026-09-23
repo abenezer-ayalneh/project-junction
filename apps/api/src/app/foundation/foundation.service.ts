@@ -11,6 +11,8 @@ import {
 	type DomainEvent,
 	EngagementMutationSchema,
 	HealthResponseSchema,
+	InventoryAvailabilityQuerySchema,
+	InventoryMovementCommandSchema,
 	IdempotencyKeySchema,
 	ListingDraftSchema,
 	ListingReviewCommandSchema,
@@ -171,6 +173,17 @@ export class FoundationService {
 	followVendor(sessionId: string | undefined, vendorId: string, following: boolean) {
 		VendorFollowMutationSchema.parse({ following })
 		return this.requireDurableCatalog().followVendor(sessionId, vendorId, following)
+	}
+
+	readInventoryAvailability(sessionId: string | undefined, listingId: string, query: unknown) {
+		InventoryAvailabilityQuerySchema.parse(query)
+		return this.requireDurableCatalog().readInventoryAvailability(sessionId, listingId, query)
+	}
+
+	createInventoryMovement(sessionId: string | undefined, idempotencyKey: string | undefined, body: unknown) {
+		InventoryMovementCommandSchema.parse(body)
+		IdempotencyKeySchema.parse(idempotencyKey)
+		return this.requireDurableCatalog().createInventoryMovement(sessionId, idempotencyKey, body)
 	}
 
 	createListing(sessionId: string | undefined, idempotencyKey: string | undefined, body: unknown) {
