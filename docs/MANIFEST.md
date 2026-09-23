@@ -152,6 +152,7 @@ This is the authoritative inventory. `Owner` means normative owner, not a person
 | `docs/security/ASVS-5-LEVEL-2-MATRIX.md`                         | S/NE/NV  | ASVS mapping             | security   | source/evidence     |
 | `docs/security/AUTHENTICATION-AUTHORIZATION-AND-DUAL-CONTROL.md` | S/NE/NV  | access/approval control  | security   | role model          |
 | `docs/security/WORKSPACE-VENDOR-AND-LOCATION-ISOLATION.md`       | S/NE/NV  | scope isolation          | security   | AccessContext/data  |
+| `docs/security/PHASE-00-RESOURCE-ID-INVENTORY.md`                | Evidence | implemented ID scope map | security   | Phase 00 evidence   |
 | `docs/security/APPLICATION-UPLOAD-AND-PROVIDER-SECURITY.md`      | S/NE/NV  | provider/upload controls | security   | media/adapters      |
 | `docs/security/PRIVACY-DATA-SUBJECT-RIGHTS-AND-RETENTION.md`     | S/NE/NV  | privacy control          | security   | data/future law     |
 | `docs/security/ABUSE-MODERATION-AND-APPEALS.md`                  | S/NE/NV  | abuse/enforcement        | security   | trust policy        |

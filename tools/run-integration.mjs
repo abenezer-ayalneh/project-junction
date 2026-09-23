@@ -15,6 +15,7 @@ const env = {
 	FOUNDATION_INTEGRATION: '1',
 	TS_NODE_COMPILER_OPTIONS: '{"moduleResolution":"node10","module":"commonjs","customConditions":null}',
 }
+const focusedTestName = process.env.FOUNDATION_TEST_NAME
 function run(args) {
 	const result = spawnSync('pnpm', args, { env, stdio: 'inherit' })
 	if (result.status !== 0) throw new Error('Integration command failed.')
@@ -22,13 +23,24 @@ function run(args) {
 try {
 	run(['exec', 'prisma', 'migrate', 'deploy'])
 	run(['exec', 'prisma', 'migrate', 'deploy']) // restart/replay must be a no-op
-	run(['db:compat:check'])
-	run(['db:upgrade:check'])
-	run(['db:restore:check'])
-	run(['db:lock:measure'])
-	run(['db:rollback:check'])
-	run(['exec', 'jest', '--config', 'libs/platform-core/jest.config.cts', '--testMatch', '**/*.integration.ts', '--runInBand'])
-	run(['exec', 'node', 'tools/runtime-smoke.mjs'])
+	if (!focusedTestName) {
+		run(['db:compat:check'])
+		run(['db:upgrade:check'])
+		run(['db:restore:check'])
+		run(['db:lock:measure'])
+		run(['db:rollback:check'])
+	}
+	run([
+		'exec',
+		'jest',
+		'--config',
+		'libs/platform-core/jest.config.cts',
+		'--testMatch',
+		'**/*.integration.ts',
+		'--runInBand',
+		...(focusedTestName ? ['--testNamePattern', focusedTestName] : []),
+	])
+	if (!focusedTestName) run(['exec', 'node', 'tools/runtime-smoke.mjs'])
 } finally {
 	await pool.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`)
 	await pool.end()

@@ -206,6 +206,8 @@ export class PostgresFoundation {
 		return this.db.$transaction(async (tx) => {
 			const context = await this.derive(tx, sessionId)
 			if (!context.capabilities.includes('platform:vendor:review')) throw new AccessDeniedError()
+			const target = await tx.vendor.findFirst({ where: { id: vendorId, workspaceId: context.workspaceId } })
+			if (!target) throw new AccessDeniedError()
 			const result = await this.replayOrCreate(tx, context, key, 'POST /v1/vendor-applications/:vendorId/review', { vendorId, review }, async () => {
 				const vendor = await tx.vendor.findUnique({ where: { id: vendorId } })
 				if (!vendor || vendor.workspaceId !== context.workspaceId) throw new AccessDeniedError()
@@ -296,6 +298,7 @@ export class PostgresFoundation {
 		return this.db.$transaction(async (tx) => {
 			const context = await this.derive(tx, sessionId)
 			const vendor = await this.vendorForWrite(tx, context)
+			await this.requireOwnedListing(tx, listingId, vendor.id)
 			const result = await this.replayOrCreate(tx, context, key, 'POST /v1/listings/:listingId/revise', { listingId, draft }, async () => {
 				const listing = await tx.listing.findFirst({ where: { id: listingId, vendorId: vendor.id } })
 				if (!listing || !['draft', 'rejected', 'unpublished'].includes(listing.state)) throw new AccessDeniedError()
@@ -347,6 +350,7 @@ export class PostgresFoundation {
 		return this.db.$transaction(async (tx) => {
 			const context = await this.derive(tx, sessionId)
 			const vendor = await this.vendorForWrite(tx, context)
+			await this.requireOwnedListing(tx, listingId, vendor.id)
 			const result = await this.replayOrCreate(tx, context, key, 'POST /v1/listings/:listingId/submit', { listingId }, async () => {
 				const listing = await tx.listing.findFirst({ where: { id: listingId, vendorId: vendor.id } })
 				if (!listing || !['draft', 'rejected', 'unpublished'].includes(listing.state)) throw new AccessDeniedError()
@@ -379,6 +383,10 @@ export class PostgresFoundation {
 		return this.db.$transaction(async (tx) => {
 			const context = await this.derive(tx, sessionId)
 			if (!context.capabilities.includes('platform:vendor:review')) throw new AccessDeniedError()
+			const target = await tx.listing.findFirst({
+				where: { id: listingId, vendor: { workspaceId: context.workspaceId, applicationState: 'approved' } },
+			})
+			if (!target) throw new AccessDeniedError()
 			const result = await this.replayOrCreate(tx, context, key, 'POST /v1/listings/:listingId/review', { listingId, review }, async () => {
 				const listing = await tx.listing.findUnique({ where: { id: listingId } })
 				if (!listing || listing.state !== 'pending_review') throw new AccessDeniedError()
@@ -430,6 +438,7 @@ export class PostgresFoundation {
 		return this.db.$transaction(async (tx) => {
 			const context = await this.derive(tx, sessionId)
 			const vendor = await this.vendorForWrite(tx, context)
+			await this.requireOwnedListing(tx, listingId, vendor.id)
 			const result = await this.replayOrCreate(tx, context, key, 'POST /v1/listings/:listingId/unpublish', { listingId }, async () => {
 				const listing = await tx.listing.findFirst({ where: { id: listingId, vendorId: vendor.id, state: 'published' } })
 				if (!listing) throw new AccessDeniedError()
@@ -1120,6 +1129,7 @@ export class PostgresFoundation {
 				if (
 					!vendor ||
 					vendor.workspaceId !== session.workspaceId ||
+					['rejected', 'restricted'].includes(vendor.applicationState) ||
 					!['vendor_owner', 'vendor_staff'].includes(persona.role) ||
 					persona.locationIds.some((id) => !vendor.locations.some((location) => location.id === id))
 				)
@@ -1169,6 +1179,7 @@ export class PostgresFoundation {
 				membership.revokedAt ||
 				membership.role !== session.activeRole ||
 				membership.vendor.workspaceId !== session.workspaceId ||
+				['rejected', 'restricted'].includes(membership.vendor.applicationState) ||
 				!['vendor_owner', 'vendor_staff'].includes(membership.role)
 			)
 				throw new AccessDeniedError()
@@ -1203,12 +1214,17 @@ export class PostgresFoundation {
 	private async vendorForWrite(tx: Transaction, context: AccessContext) {
 		if (
 			!context.activeVendorId ||
-			!context.memberships.some((membership) => membership.active && ['vendor_owner', 'vendor_staff'].includes(membership.role))
+			!context.memberships.some((membership) => membership.active && membership.vendorId === context.activeVendorId && membership.role === 'vendor_owner')
 		)
 			throw new AccessDeniedError()
 		const vendor = await tx.vendor.findUnique({ where: { id: context.activeVendorId } })
-		if (!vendor || vendor.workspaceId !== context.workspaceId) throw new AccessDeniedError()
+		if (!vendor || vendor.workspaceId !== context.workspaceId || ['rejected', 'restricted'].includes(vendor.applicationState)) throw new AccessDeniedError()
 		return vendor
+	}
+
+	private async requireOwnedListing(tx: Transaction, listingId: string, vendorId: string) {
+		const listing = await tx.listing.findFirst({ where: { id: listingId, vendorId }, select: { id: true } })
+		if (!listing) throw new AccessDeniedError()
 	}
 
 	private listingResult(listing: {

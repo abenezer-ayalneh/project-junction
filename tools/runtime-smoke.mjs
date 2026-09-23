@@ -143,6 +143,49 @@ try {
 		true,
 	)
 	const headers = { 'content-type': 'application/json', 'x-junction-session': session.id, 'idempotency-key': randomUUID() }
+	const otherWorkspace = await repository.db.workspace.create({ data: { kind: 'synthetic' } })
+	const otherVendor = await repository.db.vendor.create({ data: { workspaceId: otherWorkspace.id, applicationState: 'approved' } })
+	const otherLocation = await repository.db.location.create({ data: { vendorId: otherVendor.id } })
+	const otherListing = await repository.db.listing.create({
+		data: {
+			vendorId: otherVendor.id,
+			kind: 'product',
+			category: 'goods',
+			title: 'Foreign item',
+			description: 'A synthetic foreign item.',
+			priceCents: 1000,
+		},
+	})
+	const foreignDraft = { kind: 'product', category: 'goods', title: 'Changed item', description: 'A synthetic changed item.', priceCents: 1000 }
+	const deniedWritesBefore = {
+		audit: await repository.db.auditLog.count(),
+		outbox: await repository.db.outboxEvent.count(),
+		media: await repository.db.mediaAsset.count(),
+	}
+	for (const [path, body] of [
+		[`listings/${otherListing.id}/revise`, foreignDraft],
+		[`listings/${otherListing.id}/submit`, {}],
+		[`listings/${otherListing.id}/unpublish`, {}],
+		[`listings/${otherListing.id}/short-video`, { noSpeechDeclared: false }],
+		[`vendor-applications/${otherVendor.id}/review`, { decision: 'restrict', note: 'foreign' }],
+	]) {
+		const response = await fetch(`${base}/${path}`, {
+			method: 'POST',
+			headers: { ...headers, 'idempotency-key': randomUUID() },
+			body: JSON.stringify(body),
+		})
+		assert.equal(response.status, 403, path)
+		assert.equal((await response.json()).code, 'ACCESS_DENIED')
+	}
+	assert.equal((await fetch(`${base}/foundation/locations/${otherLocation.id}`, { headers })).status, 403)
+	assert.deepEqual(
+		{
+			audit: await repository.db.auditLog.count(),
+			outbox: await repository.db.outboxEvent.count(),
+			media: await repository.db.mediaAsset.count(),
+		},
+		deniedWritesBefore,
+	)
 	assert.equal(
 		(
 			await fetch(`${base}/synthetic/accounts`, {
@@ -168,6 +211,7 @@ try {
 	assert.equal(staffGrant.status, 201)
 	const staff = await staffGrant.json()
 	assert.equal((await fetch(`${base}/foundation/locations/${location.id}`, { headers: { 'x-junction-session': staff.sessionId } })).status, 200)
+	assert.equal((await fetch(`${base}/catalog-exports/v1`, { headers: { 'x-junction-session': staff.sessionId } })).status, 403)
 	const staffRealtime = await connectRealtime(`http://127.0.0.1:${port}`, staff.sessionId)
 	assert.equal((await joinRealtime(staffRealtime, { kind: 'workspace', workspaceId: workspace.id })).joined, true)
 	const staffDisconnected = waitForRealtimeDisconnect(staffRealtime)
@@ -275,6 +319,11 @@ try {
 		true,
 	)
 	assert.deepEqual(await joinRealtime(realtime, { kind: 'workspace', workspaceId: randomUUID() }), { joined: false })
+	assert.deepEqual(await joinRealtime(realtime, { kind: 'workspace', workspaceId: otherWorkspace.id }), { joined: false })
+	assert.deepEqual(
+		await joinRealtime(realtime, { kind: 'location', workspaceId: otherWorkspace.id, vendorId: otherVendor.id, locationId: otherLocation.id }),
+		{ joined: false },
+	)
 	await repository.db.vendorMembership.update({ where: { userId_vendorId: { userId: user.id, vendorId: vendor.id } }, data: { revokedAt: new Date() } })
 	assert.deepEqual(await joinRealtime(realtime, { kind: 'location', workspaceId: workspace.id, vendorId: vendor.id, locationId: location.id }), {
 		joined: false,

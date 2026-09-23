@@ -118,9 +118,20 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 			activeVendorId: vendorId,
 		})
 		await expect(repository.readLocation(grant.sessionId, locationId)).resolves.toEqual({ id: locationId, vendorId, workspaceId })
+		await expect(repository.exportCatalogCsv(grant.sessionId)).rejects.toThrow(AccessDeniedError)
+		await expect(
+			repository.createListing(grant.sessionId, randomUUID(), {
+				kind: 'product',
+				category: 'goods',
+				title: 'Staff denied item',
+				description: 'A listing requiring Vendor Owner authority.',
+				priceCents: 1000,
+			}),
+		).rejects.toThrow(AccessDeniedError)
 		const revoked = await repository.revokeSyntheticStaff(sessionId, grant.staffId)
 		expect(revoked.result).toEqual({ revoked: true })
 		expect(revoked.revokedSessionIds).toEqual([grant.sessionId])
+		await expect(repository.revokeSyntheticStaff(sessionId, grant.staffId)).rejects.toThrow(AccessDeniedError)
 		const revokeAudit = await repository.db.auditLog.findFirstOrThrow({ where: { action: 'synthetic.staff-revoked' } })
 		expect(revokeAudit.workspaceId).toBe(workspaceId)
 		expect(revokeAudit.actorId).toBe(userId)
@@ -562,5 +573,122 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		await expect(repository.acceptAuditMarker(demo.session.id, key, { marker: 'first demo command' })).resolves.toMatchObject({ replayed: true })
 		await expect(repository.acceptAuditMarker(demo.session.id, randomUUID(), { marker: 'quota exceeded' })).rejects.toThrow(AccessDeniedError)
 		expect((await repository.db.demoPersona.findUniqueOrThrow({ where: { id: persona.id } })).commandEventsUsed).toBe(1)
+	})
+	it('denies real foreign resource IDs across Vendor and workspace command boundaries without writes', async () => {
+		const secondWorkspace = await repository.db.workspace.create({ data: { kind: 'synthetic' } })
+		const sameWorkspaceVendor = await repository.db.vendor.create({ data: { workspaceId, applicationState: 'approved' } })
+		const foreignVendor = await repository.db.vendor.create({
+			data: { workspaceId: secondWorkspace.id, applicationState: 'approved', publishedAt: new Date() },
+		})
+		const sameLocation = await repository.db.location.create({ data: { vendorId: sameWorkspaceVendor.id } })
+		const foreignLocation = await repository.db.location.create({ data: { vendorId: foreignVendor.id } })
+		const foreignOwner = await repository.db.user.create({
+			data: { email: `${randomUUID()}@example.invalid`, adultVerificationState: 'verified', verifiedAt: new Date() },
+		})
+		await repository.db.vendorMembership.create({
+			data: { userId: foreignOwner.id, vendorId: foreignVendor.id, role: 'vendor_owner', locationIds: [foreignLocation.id] },
+		})
+		const foreignSession = await repository.db.session.create({
+			data: {
+				userId: foreignOwner.id,
+				workspaceId: secondWorkspace.id,
+				activeVendorId: foreignVendor.id,
+				activeRole: 'vendor_owner',
+				expiresAt: new Date(Date.now() + 3600000),
+			},
+		})
+		const reviewer = await repository.db.demoPersona.create({ data: { workspaceId, key: `isolation-${randomUUID()}`, role: 'trust', locationIds: [] } })
+		const reviewerSession = await repository.db.session.create({
+			data: { demoPersonaId: reviewer.id, workspaceId, activeRole: 'trust', expiresAt: new Date(Date.now() + 3600000) },
+		})
+		const draft = {
+			kind: 'product',
+			category: 'goods',
+			title: 'Foreign basket',
+			description: 'A handwoven basket with a fixed price.',
+			priceCents: 1200,
+		} as const
+		const sameListing = await repository.db.listing.create({ data: { vendorId: sameWorkspaceVendor.id, ...draft } })
+		const foreignListing = await repository.createListing(foreignSession.id, randomUUID(), draft)
+		const foreignCommand = await repository.acceptAuditMarker(foreignSession.id, randomUUID(), { marker: 'foreign command cursor' })
+		const foreignPending = await repository.createListing(foreignSession.id, randomUUID(), { ...draft, title: 'Pending foreign basket' })
+		await repository.submitListingForReview(foreignSession.id, randomUUID(), foreignPending.id)
+		const foreignPublished = await repository.db.listing.create({
+			data: { vendorId: foreignVendor.id, ...draft, title: 'Published foreign basket', state: 'published' },
+		})
+		const foreignStaff = await repository.db.staff.create({ data: { vendorId: foreignVendor.id, userId: foreignOwner.id } })
+		const counts = async () => ({
+			audit: await repository.db.auditLog.count(),
+			outbox: await repository.db.outboxEvent.count(),
+			effects: await repository.db.syntheticExternalEffect.count(),
+			media: await repository.db.mediaAsset.count(),
+			idempotency: await repository.db.idempotencyRecord.count(),
+			revisions: await repository.db.listingRevision.count(),
+			saves: await repository.db.savedListing.count(),
+			follows: await repository.db.vendorFollow.count(),
+		})
+		const before = await counts()
+		for (const id of [sameLocation.id, foreignLocation.id]) await expect(repository.readLocation(sessionId, id)).rejects.toThrow(AccessDeniedError)
+		for (const id of [sameListing.id, foreignListing.id]) {
+			await expect(repository.reviseListing(sessionId, randomUUID(), id, draft)).rejects.toThrow(AccessDeniedError)
+			await expect(repository.submitListingForReview(sessionId, randomUUID(), id)).rejects.toThrow(AccessDeniedError)
+			await expect(repository.processShortVideo(sessionId, id, { noSpeechDeclared: false })).rejects.toThrow(AccessDeniedError)
+		}
+		await expect(repository.unpublishListing(sessionId, randomUUID(), foreignPublished.id)).rejects.toThrow(AccessDeniedError)
+		await expect(repository.reviewListing(reviewerSession.id, randomUUID(), foreignPending.id, { decision: 'reject', note: 'foreign' })).rejects.toThrow(
+			AccessDeniedError,
+		)
+		await expect(
+			repository.reviewVendorApplication(reviewerSession.id, randomUUID(), foreignVendor.id, { decision: 'restrict', note: 'foreign' }),
+		).rejects.toThrow(AccessDeniedError)
+		await expect(repository.revokeSyntheticStaff(sessionId, foreignStaff.id)).rejects.toThrow(AccessDeniedError)
+		await expect(repository.saveListing(sessionId, foreignPublished.id, true)).rejects.toThrow(AccessDeniedError)
+		await expect(repository.followVendor(sessionId, foreignVendor.id, true)).rejects.toThrow(AccessDeniedError)
+		await expect(repository.realtimeReplay(sessionId, (await repository.realtimeHighWaterCursor(foreignSession.id)) ?? undefined)).resolves.toMatchObject({
+			events: [],
+			restRefetchRequired: true,
+		})
+		await expect(repository.realtimeFoundationEventForCommand(sessionId, foreignCommand.commandId)).resolves.toBeNull()
+		expect(await counts()).toEqual(before)
+		expect(await repository.db.listing.findUniqueOrThrow({ where: { id: foreignPending.id } })).toMatchObject({ state: 'pending_review' })
+		expect(await repository.db.vendor.findUniqueOrThrow({ where: { id: foreignVendor.id } })).toMatchObject({ applicationState: 'approved' })
+		expect(await repository.db.staff.findUnique({ where: { id: foreignStaff.id } })).not.toBeNull()
+		expect(await repository.exportCatalogCsv(sessionId)).not.toContain('Foreign basket')
+	})
+	it('rechecks current membership, Vendor restriction, and resource ownership before idempotent replay', async () => {
+		const draft = {
+			kind: 'product',
+			category: 'goods',
+			title: 'Scoped item',
+			description: 'A scoped product with a fixed price.',
+			priceCents: 1300,
+		} as const
+		const listing = await repository.createListing(sessionId, randomUUID(), draft)
+		const key = randomUUID()
+		await repository.submitListingForReview(sessionId, key, listing.id)
+		const before = {
+			audit: await repository.db.auditLog.count(),
+			outbox: await repository.db.outboxEvent.count(),
+			effects: await repository.db.syntheticExternalEffect.count(),
+			revisions: await repository.db.listingRevision.count(),
+		}
+		await repository.db.vendor.update({ where: { id: vendorId }, data: { applicationState: 'restricted' } })
+		await expect(repository.submitListingForReview(sessionId, key, listing.id)).rejects.toThrow(AccessDeniedError)
+		await expect(repository.exportCatalogCsv(sessionId)).rejects.toThrow(AccessDeniedError)
+		await expect(repository.readLocation(sessionId, locationId)).rejects.toThrow(AccessDeniedError)
+		await repository.db.vendor.update({ where: { id: vendorId }, data: { applicationState: 'approved' } })
+		await repository.db.vendorMembership.update({ where: { userId_vendorId: { userId, vendorId } }, data: { role: 'vendor_staff' } })
+		await expect(repository.submitListingForReview(sessionId, key, listing.id)).rejects.toThrow(AccessDeniedError)
+		await repository.db.vendorMembership.update({ where: { userId_vendorId: { userId, vendorId } }, data: { role: 'vendor_owner', revokedAt: new Date() } })
+		await expect(repository.exportCatalogCsv(sessionId)).rejects.toThrow(AccessDeniedError)
+		await repository.db.vendorMembership.update({ where: { userId_vendorId: { userId, vendorId } }, data: { revokedAt: null } })
+		await repository.db.listing.update({ where: { id: listing.id }, data: { vendorId: (await repository.db.vendor.create({ data: { workspaceId } })).id } })
+		await expect(repository.submitListingForReview(sessionId, key, listing.id)).rejects.toThrow(AccessDeniedError)
+		expect({
+			audit: await repository.db.auditLog.count(),
+			outbox: await repository.db.outboxEvent.count(),
+			effects: await repository.db.syntheticExternalEffect.count(),
+			revisions: await repository.db.listingRevision.count(),
+		}).toEqual(before)
 	})
 })
