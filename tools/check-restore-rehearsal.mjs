@@ -91,13 +91,10 @@ try {
 		'INSERT INTO "outbox_events" ("event_id", "workspace_id", type, payload, "occurred_at") VALUES ($1::uuid, $2::uuid, $3, $4::jsonb, now())',
 		[ids.event, ids.workspace, 'FoundationCommandAccepted', JSON.stringify({ fixture: true })],
 	)
-	await pool.query('INSERT INTO "audit_logs" ("workspace_id", "actor_id", action, "correlation_id", metadata) VALUES ($1::uuid, $2::uuid, $3, $4::uuid, $5::jsonb)', [
-		ids.workspace,
-		ids.user,
-		'restore.fixture',
-		ids.event,
-		JSON.stringify({ fixture: true }),
-	])
+	await pool.query(
+		'INSERT INTO "audit_logs" ("workspace_id", "actor_id", action, "correlation_id", metadata) VALUES ($1::uuid, $2::uuid, $3, $4::uuid, $5::jsonb)',
+		[ids.workspace, ids.user, 'restore.fixture', ids.event, JSON.stringify({ fixture: true })],
+	)
 
 	const expected = await fixtureCounts()
 	run('docker', [

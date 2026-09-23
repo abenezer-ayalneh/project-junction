@@ -14,24 +14,24 @@ Assistant questions, alternatives, and recommendations are retained only when th
 
 ## Direct-selection source map
 
-| Source ID(s)           | Conversation subject                                                                    | Classification   | Normalized result                          |
-| ---------------------- | --------------------------------------------------------------------------------------- | ---------------- | ------------------------------------------ |
-| `SRC-CHAT-0001`–`0015` | vision, audience, scope, geography, PWA, AI, staged portfolio posture                   | `USER-CONFIRMED` | `DEC-001`–`DEC-015`                        |
-| `SRC-CHAT-0016`–`0055` | storefront/catalog, locations/stock, goods/service shape, fulfillment, discovery        | `USER-CONFIRMED` | `DEC-016`–`DEC-055`                        |
-| `SRC-CHAT-0056`–`0065` | receipt/tax boundary, promotions, returns/disputes, privacy, accessibility, messaging   | `USER-CONFIRMED` | `DEC-056`–`DEC-065`                        |
-| `SRC-CHAT-0066`–`0088` | Vendor verification, identity/auth, provider/security, money, persistence, media        | `USER-CONFIRMED` | `DEC-066`–`DEC-088`                        |
-| `SRC-CHAT-0089`–`0111` | VPS/deployment/recovery, maps, observability, online meetings, demo/provider boundaries | `USER-CONFIRMED` | `DEC-089`–`DEC-111`                        |
-| `SRC-CHAT-0112`–`0116`, `0119`–`0125`, `0127`–`0129` | repository/license/docs, API/runtime/realtime, isolation | `USER-CONFIRMED` | `DEC-112`–`DEC-116`, `DEC-119`–`DEC-125`, `DEC-127`–`DEC-129` |
-| `SRC-CHAT-0117`, `0118`, `0126`, `0130` | earlier visual and Storefront styling selections | `SUPERSEDED` | replaced by `SRC-CHAT-0195`; current `DEC-117`, `DEC-118`, `DEC-126`, `DEC-130` |
-| `SRC-CHAT-0131`–`0137` | fulfillment, private slice, capacity/reliability goals                                  | `USER-CONFIRMED` | `DEC-131`–`DEC-137`                        |
-| `SRC-CHAT-0138`        | earlier goods-pickup-only first-public idea                                             | `SUPERSEDED`     | `DEC-138`; replaced by `DEC-157`–`DEC-160` |
-| `SRC-CHAT-0139`–`0152` | demo/scheduling/finance/promotions/availability rules                                   | `USER-CONFIRMED` | `DEC-139`–`DEC-152`                        |
-| `SRC-CHAT-0153`–`0155` | ASVS Level 2 and contractual seller/payment-merchant clarification                      | `USER-CONFIRMED` | `DEC-153`–`DEC-155`                        |
-| `SRC-CHAT-0156`–`0163` | staff-only capacity, broad first-public release, onboarding, delivery, fee policy       | `USER-CONFIRMED` | `DEC-156`–`DEC-163`                        |
-| `SRC-CHAT-0164`–`0170` | Staff identity, waitlist, exchange, inquiry, Support Case, Platform controls            | `USER-CONFIRMED` | `DEC-164`–`DEC-170`                        |
-| `SRC-CHAT-0171`–`0178` | adult account, demo lifetime/access, suspension, opt-in personalization, public media   | `USER-CONFIRMED` | `DEC-171`–`DEC-178`                        |
-| `SRC-CHAT-0179`–`0189` | budget, seed set, substitution, five Booking limit, exact post-purchase rules           | `USER-CONFIRMED` | `DEC-179`–`DEC-189`                        |
-| `SRC-CHAT-0195`        | stock shadcn/ui neutral design grammar, icon baseline, color modes, brand use, Storefront identity | `USER-CONFIRMED` | `DEC-117`, `DEC-118`, `DEC-126`, `DEC-130` |
+| Source ID(s)                                         | Conversation subject                                                                               | Classification   | Normalized result                                                               |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------- |
+| `SRC-CHAT-0001`–`0015`                               | vision, audience, scope, geography, PWA, AI, staged portfolio posture                              | `USER-CONFIRMED` | `DEC-001`–`DEC-015`                                                             |
+| `SRC-CHAT-0016`–`0055`                               | storefront/catalog, locations/stock, goods/service shape, fulfillment, discovery                   | `USER-CONFIRMED` | `DEC-016`–`DEC-055`                                                             |
+| `SRC-CHAT-0056`–`0065`                               | receipt/tax boundary, promotions, returns/disputes, privacy, accessibility, messaging              | `USER-CONFIRMED` | `DEC-056`–`DEC-065`                                                             |
+| `SRC-CHAT-0066`–`0088`                               | Vendor verification, identity/auth, provider/security, money, persistence, media                   | `USER-CONFIRMED` | `DEC-066`–`DEC-088`                                                             |
+| `SRC-CHAT-0089`–`0111`                               | VPS/deployment/recovery, maps, observability, online meetings, demo/provider boundaries            | `USER-CONFIRMED` | `DEC-089`–`DEC-111`                                                             |
+| `SRC-CHAT-0112`–`0116`, `0119`–`0125`, `0127`–`0129` | repository/license/docs, API/runtime/realtime, isolation                                           | `USER-CONFIRMED` | `DEC-112`–`DEC-116`, `DEC-119`–`DEC-125`, `DEC-127`–`DEC-129`                   |
+| `SRC-CHAT-0117`, `0118`, `0126`, `0130`              | earlier visual and Storefront styling selections                                                   | `SUPERSEDED`     | replaced by `SRC-CHAT-0195`; current `DEC-117`, `DEC-118`, `DEC-126`, `DEC-130` |
+| `SRC-CHAT-0131`–`0137`                               | fulfillment, private slice, capacity/reliability goals                                             | `USER-CONFIRMED` | `DEC-131`–`DEC-137`                                                             |
+| `SRC-CHAT-0138`                                      | earlier goods-pickup-only first-public idea                                                        | `SUPERSEDED`     | `DEC-138`; replaced by `DEC-157`–`DEC-160`                                      |
+| `SRC-CHAT-0139`–`0152`                               | demo/scheduling/finance/promotions/availability rules                                              | `USER-CONFIRMED` | `DEC-139`–`DEC-152`                                                             |
+| `SRC-CHAT-0153`–`0155`                               | ASVS Level 2 and contractual seller/payment-merchant clarification                                 | `USER-CONFIRMED` | `DEC-153`–`DEC-155`                                                             |
+| `SRC-CHAT-0156`–`0163`                               | staff-only capacity, broad first-public release, onboarding, delivery, fee policy                  | `USER-CONFIRMED` | `DEC-156`–`DEC-163`                                                             |
+| `SRC-CHAT-0164`–`0170`                               | Staff identity, waitlist, exchange, inquiry, Support Case, Platform controls                       | `USER-CONFIRMED` | `DEC-164`–`DEC-170`                                                             |
+| `SRC-CHAT-0171`–`0178`                               | adult account, demo lifetime/access, suspension, opt-in personalization, public media              | `USER-CONFIRMED` | `DEC-171`–`DEC-178`                                                             |
+| `SRC-CHAT-0179`–`0189`                               | budget, seed set, substitution, five Booking limit, exact post-purchase rules                      | `USER-CONFIRMED` | `DEC-179`–`DEC-189`                                                             |
+| `SRC-CHAT-0195`                                      | stock shadcn/ui neutral design grammar, icon baseline, color modes, brand use, Storefront identity | `USER-CONFIRMED` | `DEC-117`, `DEC-118`, `DEC-126`, `DEC-130`                                      |
 
 ## Non-decision and constraint sources
 

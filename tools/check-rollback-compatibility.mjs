@@ -51,7 +51,13 @@ try {
 		const location = await current.db.location.create({ data: { vendorId: vendor.id } })
 		await current.db.vendorMembership.create({ data: { userId: user.id, vendorId: vendor.id, role: 'vendor_owner', locationIds: [location.id] } })
 		const session = await current.db.session.create({
-			data: { userId: user.id, workspaceId: workspace.id, activeVendorId: vendor.id, activeRole: 'vendor_owner', expiresAt: new Date(Date.now() + 3600000) },
+			data: {
+				userId: user.id,
+				workspaceId: workspace.id,
+				activeVendorId: vendor.id,
+				activeRole: 'vendor_owner',
+				expiresAt: new Date(Date.now() + 3600000),
+			},
 		})
 		fixture = { userId: user.id, workspaceId: workspace.id }
 
