@@ -483,6 +483,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         "additionalProperties": false,
         "properties": {
           "available": {
+            "maximum": 9007199254740991,
             "minimum": 0,
             "type": "integer",
           },
@@ -497,10 +498,12 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             "type": "string",
           },
           "onHand": {
+            "maximum": 9007199254740991,
             "minimum": 0,
             "type": "integer",
           },
           "reserved": {
+            "maximum": 9007199254740991,
             "minimum": 0,
             "type": "integer",
           },
@@ -568,6 +571,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         "additionalProperties": false,
         "properties": {
           "available": {
+            "maximum": 9007199254740991,
             "minimum": 0,
             "type": "integer",
           },
@@ -587,10 +591,13 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             "type": "string",
           },
           "onHand": {
+            "maximum": 9007199254740991,
             "minimum": 0,
             "type": "integer",
           },
           "quantityDelta": {
+            "maximum": 9007199254740991,
+            "minimum": -9007199254740991,
             "type": "integer",
           },
           "reason": {
@@ -605,6 +612,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             "type": "boolean",
           },
           "reserved": {
+            "maximum": 9007199254740991,
             "minimum": 0,
             "type": "integer",
           },
@@ -2301,14 +2309,6 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             },
           },
           {
-            "in": "header",
-            "name": "x-junction-session",
-            "required": true,
-            "schema": {
-              "type": "string",
-            },
-          },
-          {
             "in": "query",
             "name": "sku",
             "required": false,
@@ -2322,6 +2322,14 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             "required": true,
             "schema": {
               "format": "uuid",
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "x-junction-session",
+            "required": true,
+            "schema": {
               "type": "string",
             },
           },

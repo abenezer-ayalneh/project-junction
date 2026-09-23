@@ -1,7 +1,7 @@
 # Evidence Index
 
-**Status:** Local synthetic Phase 00 evidence recorded.  
-**System claim:** Partial local implementation; release gates remain open.
+**Status:** Local synthetic Phase 00 acceptance evidence recorded.
+**System claim:** Phase 00 is accepted for its local synthetic scope; public-release gates remain open.
 
 This future index records proof rather than treating specifications as proof.
 
@@ -14,4 +14,4 @@ This future index records proof rather than treating specifications as proof.
 | Recovery/runbook drill        | `EVD-OPS-###`  | runbook, RPO/RTO result, operator, incident-safe artifact                      |
 | Portfolio claim               | `EVD-CLM-###`  | public claim, supporting evidence, date, expiry/revalidation trigger           |
 
-`EVD-REQ-P00-20260921`: [local durability checks and limitations](./PHASE-00-DURABILITY-EVIDENCE.md). Future evidence must never contain real secrets, raw payment data, identity documents, or unredacted personal data.
+`EVD-REQ-P00-20260923`: [local Phase 00 acceptance checks and boundaries](./PHASE-00-DURABILITY-EVIDENCE.md). Future evidence must never contain real secrets, raw payment data, identity documents, or unredacted personal data.

@@ -32,6 +32,7 @@ const migrations = [
 	'prisma/migrations/20260923010000_snake_case_identifiers/migration.sql',
 	'prisma/migrations/20260923020000_legacy_identifier_compatibility/migration.sql',
 	'prisma/migrations/20260923030000_synthetic_external_effect_idempotency/migration.sql',
+	'prisma/migrations/20260923040000_inventory_movements/migration.sql',
 ]
 
 try {
