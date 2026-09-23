@@ -29,6 +29,9 @@ const migrations = [
 	'prisma/migrations/20260922060000_adult_verification_mixed_version_compatibility/migration.sql',
 	'prisma/migrations/20260922070000_demo_persona_command_quota/migration.sql',
 	'prisma/migrations/20260923000000_phase_01_vendor_catalog/migration.sql',
+	'prisma/migrations/20260923010000_snake_case_identifiers/migration.sql',
+	'prisma/migrations/20260923020000_legacy_identifier_compatibility/migration.sql',
+	'prisma/migrations/20260923030000_synthetic_external_effect_idempotency/migration.sql',
 ]
 
 try {

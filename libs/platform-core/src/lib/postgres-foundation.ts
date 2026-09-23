@@ -46,6 +46,7 @@ import {
 
 import { Prisma, PrismaClient } from '../../generated/prisma/index.js'
 import { AccessDeniedError, assertElevatedSession, assertScope } from './access.js'
+import { type ExternalEffectAdapter, FakeExternalEffectAdapter } from './external-effects.js'
 import { IdempotencyConflictError, stableHash } from './idempotency.js'
 
 type Transaction = Prisma.TransactionClient
@@ -78,10 +79,12 @@ function isVerifiedAdult(user: { adultVerificationState: string; verifiedAt: Dat
 /** Prisma owns CRUD; parameterized SQL below is restricted to concurrency locks/claims. */
 export class PostgresFoundation {
 	readonly db: PrismaClient
-	constructor(url: string) {
+	private readonly externalEffects: ExternalEffectAdapter
+	constructor(url: string, externalEffects?: ExternalEffectAdapter) {
 		const schema = new URL(url).searchParams.get('schema') ?? 'public'
 		if (!/^[a-z_][a-z0-9_]*$/.test(schema)) throw new Error('Unsupported database schema name.')
 		this.db = new PrismaClient({ adapter: new PrismaPg({ connectionString: url, options: `-c search_path=${schema},public` }, { schema }) })
+		this.externalEffects = externalEffects ?? new FakeExternalEffectAdapter(this.db)
 	}
 	close() {
 		return this.db.$disconnect()
@@ -113,7 +116,7 @@ export class PostgresFoundation {
 	async browsePublicVendors(queryInput: unknown) {
 		const query = PublicVendorBrowseQuerySchema.parse(queryInput)
 		const vendors = await this.db.vendor.findMany({
-			where: { publicSlug: { not: null }, publishedAt: { not: null }, workspace: { kind: 'synthetic' } },
+			where: { publicSlug: { not: null }, publishedAt: { not: null }, applicationState: 'approved', workspace: { kind: 'synthetic' } },
 			orderBy: { id: 'asc' },
 			take: query.limit + 1,
 			...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
@@ -598,7 +601,10 @@ export class PostgresFoundation {
 				kind: query.kind,
 				category: query.category,
 				...(query.q ? { title: { contains: query.q, mode: 'insensitive' } } : {}),
-				listing: { state: 'published', vendor: { workspace: { kind: 'synthetic' } } },
+				listing: {
+					state: 'published',
+					vendor: { applicationState: 'approved', publishedAt: { not: null }, workspace: { kind: 'synthetic' } },
+				},
 			},
 			orderBy: { listingId: 'asc' },
 			take: query.limit + 1,
@@ -628,7 +634,13 @@ export class PostgresFoundation {
 		return this.db.$transaction(async (tx) => {
 			const context = await this.derive(tx, sessionId)
 			const userId = this.customerId(context)
-			const listing = await tx.listing.findFirst({ where: { id: listingId, state: 'published', vendor: { workspaceId: context.workspaceId } } })
+			const listing = await tx.listing.findFirst({
+				where: {
+					id: listingId,
+					state: 'published',
+					vendor: { workspaceId: context.workspaceId, applicationState: 'approved', publishedAt: { not: null } },
+				},
+			})
 			if (!listing) throw new AccessDeniedError()
 			if (saved) await tx.savedListing.upsert({ where: { userId_listingId: { userId, listingId } }, create: { userId, listingId }, update: {} })
 			else await tx.savedListing.deleteMany({ where: { userId, listingId } })
@@ -641,7 +653,9 @@ export class PostgresFoundation {
 		return this.db.$transaction(async (tx) => {
 			const context = await this.derive(tx, sessionId)
 			const userId = this.customerId(context)
-			const vendor = await tx.vendor.findFirst({ where: { id: vendorId, workspaceId: context.workspaceId, applicationState: 'approved' } })
+			const vendor = await tx.vendor.findFirst({
+				where: { id: vendorId, workspaceId: context.workspaceId, applicationState: 'approved', publishedAt: { not: null } },
+			})
 			if (!vendor) throw new AccessDeniedError()
 			if (following) await tx.vendorFollow.upsert({ where: { userId_vendorId: { userId, vendorId } }, create: { userId, vendorId }, update: {} })
 			else await tx.vendorFollow.deleteMany({ where: { userId, vendorId } })
@@ -666,7 +680,10 @@ export class PostgresFoundation {
 			}
 		}
 		const listings = await this.db.listing.findMany({
-			where: { state: 'published', vendor: { workspace: { kind: 'synthetic' } } },
+			where: {
+				state: 'published',
+				vendor: { applicationState: 'approved', publishedAt: { not: null }, workspace: { kind: 'synthetic' } },
+			},
 			orderBy: { publishedAt: 'desc' },
 			take: 20,
 			include: { variants: true },
@@ -981,6 +998,7 @@ export class PostgresFoundation {
 				await tx.providerInboxEvent.deleteMany({ where: { workspaceId: id } })
 				await tx.outboxEvent.deleteMany({ where: { workspaceId: id } })
 				await tx.outboxReceipt.deleteMany({ where: { workspaceId: id } })
+				await tx.syntheticExternalEffect.deleteMany({ where: { workspaceId: id } })
 				await tx.auditLog.deleteMany({ where: { workspaceId: id } })
 				await tx.demoWorkspace.update({ where: { id: demo.id }, data: { purgedAt: now } })
 				purged.push(id)
@@ -1033,6 +1051,8 @@ export class PostgresFoundation {
 		const claim = await this.claim(workerId)
 		if (!claim) return { processed: false }
 		try {
+			const event = DomainEventSchema.parse(claim.payload)
+			if (event.type === 'FoundationCommandAccepted') await this.externalEffects.deliver(event)
 			await this.complete(claim)
 			return { processed: true }
 		} catch {

@@ -400,3 +400,16 @@ model OutboxReceipt {
 
   @@map("outbox_receipts")
 }
+
+// Local substitute for an external receiver's durable idempotency record.
+// Its commit is separate from the outbox acknowledgement transaction.
+model SyntheticExternalEffect {
+  idempotencyKey String   @id @map("idempotency_key")
+  eventId        String   @unique @map("event_id") @db.Uuid
+  workspaceId    String   @map("workspace_id") @db.Uuid
+  payloadHash    String   @map("payload_hash")
+  deliveredAt    DateTime @default(now()) @map("delivered_at") @db.Timestamptz(6)
+
+  @@index([workspaceId, deliveredAt])
+  @@map("synthetic_external_effects")
+}

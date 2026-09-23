@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing'
 
-import { AppModule } from './app.module'
+import { AppModule } from '../app.module'
 import { createSwaggerDocument } from './swagger'
 
 describe('OpenAPI v1 contract', () => {

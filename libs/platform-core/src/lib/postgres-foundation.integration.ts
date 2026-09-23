@@ -1,7 +1,10 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion -- assertions below establish fixture/claim presence */
 import { randomUUID } from 'node:crypto'
 
+import { DomainEventSchema } from 'contracts'
+
 import { AccessDeniedError } from './access.js'
+import { FakeExternalEffectAdapter } from './external-effects.js'
 import { IdempotencyConflictError } from './idempotency.js'
 import { PostgresFoundation } from './postgres-foundation.js'
 
@@ -127,7 +130,10 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		await expect(repository.grantSyntheticStaff(sessionId, { userId: pending.id, locationIds: [locationId] })).rejects.toThrow(AccessDeniedError)
 	})
 	it('lists only explicitly published non-demo Vendor summaries without leaking scope data', async () => {
-		await repository.db.vendor.update({ where: { id: vendorId }, data: { publicSlug: 'published-foundation', publishedAt: new Date() } })
+		await repository.db.vendor.update({
+			where: { id: vendorId },
+			data: { publicSlug: 'published-foundation', publishedAt: new Date(), applicationState: 'approved' },
+		})
 		const unpublished = await repository.db.vendor.create({ data: { workspaceId } })
 		const demo = await repository.createDemoWorkspace()
 		const demoVendor = await repository.db.vendor.findFirstOrThrow({ where: { workspaceId: demo.id } })
@@ -139,6 +145,7 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		expect(unpublished.publicSlug).toBeNull()
 	})
 	it('keeps catalog private through application approval and maintains the public projection through publish and unpublish', async () => {
+		await repository.db.vendor.update({ where: { id: vendorId }, data: { applicationState: 'pending' } })
 		const listing = await repository.createListing(sessionId, randomUUID(), {
 			kind: 'product',
 			category: 'goods',
@@ -236,7 +243,7 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		await expect(repository.exportCatalogCsv(sessionId)).resolves.not.toContain('Aster tray')
 	})
 	it('retains unsafe video in quarantine and produces replay-safe CSV preview and commit evidence', async () => {
-		await repository.db.vendor.update({ where: { id: vendorId }, data: { applicationState: 'approved' } })
+		await repository.db.vendor.update({ where: { id: vendorId }, data: { applicationState: 'approved', publishedAt: new Date() } })
 		const listing = await repository.createListing(sessionId, randomUUID(), {
 			kind: 'service',
 			category: 'repair',
@@ -265,7 +272,7 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		expect(replay).toEqual({ ...first, replayed: true })
 	})
 	it('scopes saves and follows to the current user/workspace and makes recommendation personalization explicit', async () => {
-		await repository.db.vendor.update({ where: { id: vendorId }, data: { applicationState: 'approved' } })
+		await repository.db.vendor.update({ where: { id: vendorId }, data: { applicationState: 'approved', publishedAt: new Date() } })
 		const listing = await repository.db.listing.create({
 			data: {
 				vendorId,
@@ -291,6 +298,46 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		const otherWorkspace = await repository.db.workspace.create({ data: { kind: 'synthetic' } })
 		const otherVendor = await repository.db.vendor.create({ data: { workspaceId: otherWorkspace.id, applicationState: 'approved' } })
 		await expect(repository.followVendor(sessionId, otherVendor.id, true)).rejects.toThrow(AccessDeniedError)
+	})
+	it('removes restricted Vendors from every public discovery path without trusting a stale search projection', async () => {
+		const slug = `restricted-${randomUUID().slice(0, 8)}`
+		const vendor = await repository.db.vendor.create({
+			data: {
+				workspaceId,
+				applicationState: 'approved',
+				publishedAt: new Date(),
+				publicSlug: slug,
+				displayName: 'Restricted test Vendor',
+				description: 'A synthetic Vendor for visibility checks.',
+			},
+		})
+		const listing = await repository.db.listing.create({
+			data: {
+				vendorId: vendor.id,
+				kind: 'product',
+				category: 'home',
+				title: 'Restricted test tray',
+				description: 'A synthetic published listing for visibility checks.',
+				priceCents: 8500,
+				state: 'published',
+				publishedAt: new Date(),
+			},
+		})
+		await repository.db.searchDocument.create({
+			data: { listingId: listing.id, kind: listing.kind, category: listing.category, title: listing.title, version: listing.version },
+		})
+		expect((await repository.browsePublicVendors({})).items).toContainEqual({ id: vendor.id, slug })
+		expect((await repository.browsePublicListings({ q: listing.title })).items).toContainEqual(expect.objectContaining({ id: listing.id }))
+		expect((await repository.recommendPublicListings(undefined)).items).toContainEqual(expect.objectContaining({ id: listing.id }))
+		await expect(repository.readPublicStorefront(slug)).resolves.toMatchObject({ id: vendor.id })
+		await repository.db.vendor.update({ where: { id: vendor.id }, data: { applicationState: 'restricted' } })
+		expect((await repository.browsePublicVendors({})).items).not.toContainEqual(expect.objectContaining({ id: vendor.id }))
+		expect((await repository.browsePublicListings({ q: listing.title })).items).toHaveLength(0)
+		expect((await repository.recommendPublicListings(undefined)).items).not.toContainEqual(expect.objectContaining({ id: listing.id }))
+		await expect(repository.readPublicStorefront(slug)).rejects.toThrow(AccessDeniedError)
+		await expect(repository.saveListing(sessionId, listing.id, true)).rejects.toThrow(AccessDeniedError)
+		await expect(repository.followVendor(sessionId, vendor.id, true)).rejects.toThrow(AccessDeniedError)
+		expect(await repository.db.searchDocument.count({ where: { listingId: listing.id } })).toBe(1)
 	})
 	it('requires an optional linked Staff record to agree with the active User and Vendor membership', async () => {
 		const staff = await repository.db.staff.create({ data: { vendorId, userId } })
@@ -384,6 +431,28 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		await repository.complete((await repository.claim('replay'))!)
 		expect(await repository.db.outboxReceipt.count({ where: { workspaceId } })).toBe(2)
 	})
+	it('applies a synthetic external effect once when the worker crashes before acknowledgement', async () => {
+		await repository.db.outboxEvent.updateMany({
+			where: { workspaceId, state: { in: ['pending', 'in_flight'] } },
+			data: { state: 'delivered', claimedBy: null, claimedAt: null, claimToken: null },
+		})
+		await repository.acceptAuditMarker(sessionId, randomUUID(), { marker: 'external effect crash window' })
+		const originalClaim = (await repository.claim('crashed-after-effect'))!
+		const event = DomainEventSchema.parse(originalClaim.payload)
+		const receiver = new FakeExternalEffectAdapter(other.db)
+		const deliveries = await Promise.all([receiver.deliver(event), new FakeExternalEffectAdapter(repository.db).deliver(event)])
+		expect(deliveries).toContainEqual({ duplicate: false })
+		expect(deliveries).toContainEqual({ duplicate: true })
+		expect(await repository.db.outboxReceipt.count({ where: { eventId: event.eventId } })).toBe(0)
+		await repository.db.outboxEvent.update({ where: { id: originalClaim.id }, data: { claimedAt: new Date(0) } })
+		await expect(other.processOne('recovered-after-effect')).resolves.toEqual({ processed: true })
+		await expect(repository.complete(originalClaim)).rejects.toThrow('Stale outbox claim')
+		await expect(receiver.deliver(event)).resolves.toEqual({ duplicate: true })
+		await expect(receiver.deliver({ ...event, payload: { marker: 'substituted' } })).rejects.toThrow('different content')
+		expect(await repository.db.syntheticExternalEffect.count({ where: { eventId: event.eventId, workspaceId } })).toBe(1)
+		expect(await repository.db.outboxReceipt.count({ where: { eventId: event.eventId, workspaceId } })).toBe(1)
+		expect((await repository.db.outboxEvent.findUniqueOrThrow({ where: { id: originalClaim.id } })).state).toBe('delivered')
+	})
 	it('derives a workspace-only realtime high-water cursor from the current session', async () => {
 		const cursor = await repository.realtimeHighWaterCursor(sessionId)
 		const accepted = await repository.acceptAuditMarker(sessionId, randomUUID(), { marker: 'realtime high-water' })
@@ -444,6 +513,9 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		expect(owner.actor.kind).toBe('demo_persona')
 		expect(owner.activeVendorId).not.toBeNull()
 		await repository.acceptAuditMarker(demo.session.id, randomUUID(), { marker: 'demo data' })
+		const demoEvent = await repository.db.outboxEvent.findFirstOrThrow({ where: { workspaceId: demo.id, type: 'FoundationCommandAccepted' } })
+		await new FakeExternalEffectAdapter(other.db).deliver(DomainEventSchema.parse(demoEvent.payload))
+		expect(await repository.db.syntheticExternalEffect.count({ where: { workspaceId: demo.id } })).toBe(1)
 		const customer = await repository.switchDemoPersona(demo.session.id, demo.id, 'customer')
 		await expect(repository.accessContext(demo.session.id)).rejects.toThrow(AccessDeniedError)
 		expect((await repository.accessContext(customer.id)).activeVendorId).toBeNull()
@@ -453,6 +525,7 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		expect(await repository.purgeExpiredDemoWorkspaces()).toEqual([demo.id])
 		expect(await repository.db.auditLog.count({ where: { workspaceId: demo.id } })).toBe(0)
 		expect(await repository.db.outboxEvent.count({ where: { workspaceId: demo.id } })).toBe(0)
+		expect(await repository.db.syntheticExternalEffect.count({ where: { workspaceId: demo.id } })).toBe(0)
 		expect(await repository.db.session.count({ where: { workspaceId: demo.id } })).toBe(0)
 		expect(await repository.db.demoPersona.count({ where: { workspaceId: demo.id } })).toBe(0)
 		expect(await repository.db.idempotencyRecord.count({ where: { workspaceId: demo.id } })).toBe(0)

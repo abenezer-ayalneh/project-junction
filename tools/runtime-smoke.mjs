@@ -90,7 +90,9 @@ try {
 	const user = await repository.db.user.create({
 		data: { email: `${randomUUID()}@example.invalid`, adultVerificationState: 'verified', verifiedAt: new Date() },
 	})
-	const vendor = await repository.db.vendor.create({ data: { workspaceId: workspace.id, publicSlug: 'runtime-public-vendor', publishedAt: new Date() } })
+	const vendor = await repository.db.vendor.create({
+		data: { workspaceId: workspace.id, publicSlug: 'runtime-public-vendor', publishedAt: new Date(), applicationState: 'approved' },
+	})
 	const location = await repository.db.location.create({ data: { vendorId: vendor.id } })
 	await repository.db.vendorMembership.create({ data: { userId: user.id, vendorId: vendor.id, role: 'vendor_owner', locationIds: [location.id] } })
 	const session = await repository.db.session.create({
@@ -316,17 +318,21 @@ try {
 	demoRealtime.close()
 	const checkWorker = start('apps/worker/dist/main.js')
 	let delivered = false
-	for (let i = 0; i < 100; i++) {
+	for (let i = 0; i < 150; i++) {
 		checkWorker()
-		if ((await repository.db.outboxReceipt.count({ where: { workspaceId: workspace.id } })) >= 1) {
+		const [receipts, effects] = await Promise.all([
+			repository.db.outboxReceipt.count({ where: { workspaceId: workspace.id } }),
+			repository.db.syntheticExternalEffect.count({ where: { workspaceId: workspace.id } }),
+		])
+		if (receipts >= 1 && effects >= 1) {
 			delivered = true
 			break
 		}
 		await sleep(100)
 	}
-	assert(delivered, 'Separate worker must consume the API-created durable event')
+	assert(delivered, 'Separate worker must consume the API-created event and commit the synthetic external effect')
 	process.stdout.write(
-		'Built API/worker smoke passed: health/request correlation, public Vendor browse, local-only synthetic account provisioning and Staff session grant/revocation, denial, replay, conflict, MFA/recent-auth elevation, injected fake-provider callback reconciliation, Redis fanout with per-socket scope revalidation, scoped realtime cursor reconciliation, signed demo cookie transport, cross-process revoked-session disconnect, scoped demo switching, cross-process delivery.\n',
+		'Built API/worker smoke passed: health/request correlation, public Vendor browse, local-only synthetic account provisioning and Staff session grant/revocation, denial, replay, conflict, MFA/recent-auth elevation, injected fake-provider callback reconciliation, Redis fanout with per-socket scope revalidation, scoped realtime cursor reconciliation, signed demo cookie transport, cross-process revoked-session disconnect, scoped demo switching, cross-process delivery and synthetic external effect.\n',
 	)
 } finally {
 	await Promise.all(

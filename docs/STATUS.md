@@ -16,7 +16,7 @@ Project Junction has a local synthetic Phase 00 foundation and Phase 01 Vendor s
 
 | Environment                           | Status                                     | Permitted reality                                                                     |
 | ------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------- |
-| Local development                     | Partially implemented and locally verified | Synthetic applications and PostgreSQL integration tests; no Git repository yet.       |
+| Local development                     | Partially implemented and locally verified | Synthetic applications, PostgreSQL integration tests, and Git history.                |
 | Private staging                       | Specified only                             | No Project Junction provider configuration, infrastructure, or deployment exists yet. |
 | Portfolio production/demo             | Specified only                             | No public demo or deployment exists yet.                                              |
 | Future Dire Dawa commercial operation | Unapproved                                 | Requires the gates in `docs/future/`.                                                 |
