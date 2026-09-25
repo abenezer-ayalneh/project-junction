@@ -125,6 +125,7 @@ This is the authoritative inventory. `Owner` means normative owner, not a person
 | `docs/architecture/SEARCH-REALTIME-AND-ANALYTICS.md`             | S/NE/NV | projections design           | architecture | events/privacy        |
 | `docs/architecture/PROVIDER-INTEGRATION-CONTRACTS.md`            | S/NE/NV | adapter boundaries           | architecture | research/interfaces   |
 | `docs/architecture/MEDIA-STORAGE-AND-PROCESSING.md`              | S/NE/NV | media design                 | architecture | security/interfaces   |
+| `docs/architecture/MEDIA-LIMIT-REGISTRY.md`                      | S/NE/NV | proposed short-video limits  | architecture | media/accessibility   |
 | `docs/architecture/MAPS-ADDRESSES-AND-POSTGIS.md`                | S/NE/NV | map/spatial design           | architecture | location model        |
 | `docs/architecture/DEMO-ISOLATION-ARCHITECTURE.md`               | S/NE/NV | demo boundary design         | architecture | demo/security         |
 | `docs/environments/ENVIRONMENT-MATRIX.md`                        | S/NE/NV | environment purpose matrix   | environments | deployment/demo       |
@@ -165,6 +166,7 @@ This is the authoritative inventory. `Owner` means normative owner, not a person
 | `docs/quality/PERFORMANCE-RELIABILITY-AND-SLO.md`                | S/NE/NV  | performance/SLO target   | quality    | deployment          |
 | `docs/quality/DEPLOYMENT-AND-RECOVERY-TESTING.md`                | S/NE/NV  | recovery proof           | quality    | runbooks            |
 | `docs/quality/EVIDENCE-INDEX.md`                                 | Baseline | evidence schema/index    | quality    | all `EVD-*`         |
+| `docs/quality/PHASE-01-ACCEPTANCE-EVIDENCE.md`                   | Evidence | Phase 01 gate assessment | quality    | Phase 01 scenarios  |
 | `docs/operations/PRODUCTION-OPERATING-MODEL.md`                  | S/NE/NV  | human operations         | operations | roles/runbooks      |
 | `docs/operations/MONITORING-ALERTING-AND-STATUS-PAGE.md`         | S/NE/NV  | observability/status     | operations | deployment/runbooks |
 | `docs/operations/RECONCILIATION-AND-FINANCIAL-OPERATIONS.md`     | S/NE/NV  | finance operations       | operations | ledger/policy       |

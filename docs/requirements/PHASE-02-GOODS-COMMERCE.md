@@ -1,6 +1,6 @@
 # Phase 02 — Goods Commerce
 
-**Status:** Specified — Not Executed — Not Verified  
+**Target status:** Specified — Not Executed — Not Verified. **Local status:** First inventory-ledger seam verified in the synthetic PostgreSQL and built API runtime; the Phase 02 exit remains open.
 **Objective:** prove correct single/multi-Vendor goods behavior privately before unifying with Booking.  
 **Owner:** inventory, ordering, and fulfillment contexts  
 **Entry:** Phase 00–01. **Exit:** no-oversell goods, fulfillment, return, and policy proof.  
@@ -34,4 +34,4 @@ Expiry/payment race refunds late success; retry is idempotent; failed delivery/p
 
 ## Local implementation notes
 
-The first Phase 02 chunk adds an append-only PostgreSQL inventory-movement table and private API operations to record received, adjusted, and damaged stock for simple or variant Products at an assigned Vendor Location, then read on-hand, reserved, and derived available quantities. Variant movements are keyed by SKU; revisions cannot remove or convert an item while it has nonzero stock. The command checks that availability stays non-negative and writes audit, outbox, and idempotency records in the same transaction. Expired demo-workspace purge removes its inventory rows. This code and migration have not yet been applied or runtime-verified. Checkout holds, sales, returns, stock transfers, customer availability, and the `TST-P02-*` evidence remain unimplemented.
+The first Phase 02 chunk adds an append-only PostgreSQL inventory-movement table and private API operations to record received, adjusted, and damaged stock for simple or variant Products at an assigned Vendor Location, then read on-hand, reserved, and derived available quantities. Variant movements are keyed by SKU; revisions cannot remove or convert an item while it has nonzero stock. The command checks that availability stays non-negative and writes audit, outbox, and idempotency records in the same transaction. Expired demo-workspace purge removes its inventory rows. A fresh local PostgreSQL integration run verifies idempotent receive, concurrent damage denial before negative availability, SKU-preserving revisions, and cross-workspace denial; the built API smoke verifies the same private HTTP receive/replay/read/negative/foreign-resource paths. This is local evidence for the inventory seam only: checkout holds, sales, returns, stock transfers, customer availability, and the `TST-P02-*` evidence remain unimplemented.
