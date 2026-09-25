@@ -12,9 +12,15 @@ const repository = durable && databaseUrl ? new PostgresFoundation(databaseUrl) 
 const runner = new WorkerRunner(workerId)
 let stopping = false
 let timer: ReturnType<typeof setTimeout>
+let lastMediaSweep = 0
 async function tick() {
 	try {
 		await repository?.purgeExpiredDemoWorkspaces()
+		await repository?.expirePendingVideoUploads()
+		if (repository && Date.now() - lastMediaSweep >= 10 * 60 * 1000) {
+			await repository.reconcileOrphanMediaObjects()
+			lastMediaSweep = Date.now()
+		}
 		const result = repository ? await repository.processOne(workerId) : runner.processOne()
 		process.stdout.write(`${JSON.stringify({ type: 'worker.heartbeat', ...result })}\n`)
 	} catch {

@@ -190,8 +190,27 @@ model ListingRevision {
 model MediaAsset {
   id               String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
   listingId        String    @map("listing_id") @db.Uuid
+  uploaderId       String?   @map("uploader_id") @db.Uuid
   kind             String
   state            String    @default("quarantined")
+  uploadKey        String?   @unique @map("upload_key")
+  sealedKey        String?   @unique @map("sealed_key")
+  uploadSha256     String?   @map("upload_sha256")
+  uploadBytes      Int?      @map("upload_bytes")
+  uploadExpiresAt  DateTime? @map("upload_expires_at") @db.Timestamptz(6)
+  uploadedAt       DateTime? @map("uploaded_at") @db.Timestamptz(6)
+  renditionKey     String?   @unique @map("rendition_key")
+  posterKey        String?   @unique @map("poster_key")
+  scanVerdict      String?   @map("scan_verdict")
+  durationSeconds  Float?    @map("duration_seconds")
+  sourceWidth      Int?      @map("source_width")
+  sourceHeight     Int?      @map("source_height")
+  outputWidth      Int?      @map("output_width")
+  outputHeight     Int?      @map("output_height")
+  moderatedBy      String?   @map("moderated_by") @db.Uuid
+  moderatedAt      DateTime? @map("moderated_at") @db.Timestamptz(6)
+  moderationNote   String?   @map("moderation_note")
+  version          Int       @default(1)
   captionText      String?   @map("caption_text")
   noSpeechDeclared Boolean   @default(false) @map("no_speech_declared")
   description      String?

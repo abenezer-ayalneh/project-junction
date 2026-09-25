@@ -166,13 +166,14 @@ export const ListingDraftSchema = ListingDraftObjectSchema.superRefine((value, c
 
 export type ListingDraft = z.infer<typeof ListingDraftSchema>
 
-export const ListingRevisionCommandSchema = ListingDraftSchema
+export const ListingRevisionCommandSchema = ListingDraftSchema.and(z.object({ expectedVersion: z.number().int().positive() }))
 export type ListingRevisionCommand = z.infer<typeof ListingRevisionCommandSchema>
 
 export const ListingSummarySchema = ListingDraftObjectSchema.extend({
 	id: z.string().uuid(),
 	state: z.enum(['draft', 'pending_review', 'published', 'rejected', 'unpublished']),
 	version: z.number().int().positive(),
+	shortVideo: z.object({ id: z.string().uuid(), description: z.string().nullable(), hasCaptions: z.boolean() }).optional(),
 })
 export type ListingSummary = z.infer<typeof ListingSummarySchema>
 
@@ -188,7 +189,67 @@ export const PublicStorefrontSchema = z.object({
 	listings: z.array(ListingSummarySchema),
 })
 
-export const ListingReviewCommandSchema = z.object({ decision: z.enum(['approve', 'reject']), note: z.string().trim().min(3).max(1000) })
+export const VendorCatalogSchema = z.object({
+	id: z.string().uuid(),
+	applicationState: z.enum(['pending', 'approved', 'rejected', 'restricted']),
+	slug: z.string().nullable(),
+	displayName: z.string().nullable(),
+	description: z.string().nullable(),
+	locations: z.array(z.object({ id: z.string().uuid(), label: z.string().nullable(), city: z.string().nullable(), address: z.string().nullable() })),
+	listings: z.array(ListingSummarySchema),
+})
+export type VendorCatalog = z.infer<typeof VendorCatalogSchema>
+
+export const PlatformReviewQueueQuerySchema = z.object({
+	applicationCursor: z.string().uuid().optional(),
+	listingCursor: z.string().uuid().optional(),
+	limit: z.coerce.number().int().min(1).max(100).default(20),
+})
+
+export const PlatformReviewQueueSchema = z.object({
+	applications: z.array(
+		z.object({
+			id: z.string().uuid(),
+			slug: z.string().nullable(),
+			displayName: z.string().nullable(),
+			description: z.string().nullable(),
+			locations: z.array(z.object({ label: z.string().nullable(), city: z.string().nullable(), address: z.string().nullable() })),
+		}),
+	),
+	listings: z.array(
+		z.object({
+			vendorId: z.string().uuid(),
+			vendorName: z.string().nullable(),
+			listing: ListingSummarySchema,
+		}),
+	),
+	applicationsNextCursor: z.string().uuid().nullable(),
+	listingsNextCursor: z.string().uuid().nullable(),
+})
+export type PlatformReviewQueue = z.infer<typeof PlatformReviewQueueSchema>
+
+export const CatalogHealthSchema = z.object({
+	publishedListings: z.number().int().nonnegative(),
+	projectedListings: z.number().int().nonnegative(),
+	laggingListings: z.number().int().nonnegative(),
+	oldestLagSeconds: z.number().nonnegative(),
+	reviewEvents: z.number().int().nonnegative(),
+	pendingReviews: z.number().int().nonnegative(),
+	oldestReviewLagSeconds: z.number().nonnegative(),
+	importJobs: z.number().int().nonnegative(),
+	importDryRuns: z.number().int().nonnegative(),
+	oldestImportDryRunSeconds: z.number().nonnegative(),
+	mediaPending: z.number().int().nonnegative(),
+	mediaDeadLetters: z.number().int().nonnegative(),
+	checkedAt: z.string().datetime(),
+})
+export type CatalogHealth = z.infer<typeof CatalogHealthSchema>
+
+export const ListingReviewCommandSchema = z.object({
+	decision: z.enum(['approve', 'reject']),
+	expectedVersion: z.number().int().positive(),
+	note: z.string().trim().min(3).max(1000),
+})
 export const VendorApplicationReviewSchema = z.object({ decision: z.enum(['approve', 'reject', 'restrict']), note: z.string().trim().min(3).max(1000) })
 export const VendorApplicationReviewResultSchema = z.object({ vendorId: z.string().uuid(), state: z.enum(['approved', 'rejected', 'restricted']) })
 const StorefrontFieldsSchema = z.object({
@@ -235,12 +296,90 @@ export const PublicListingBrowseQuerySchema = z.object({
 export const PublicListingPageSchema = z.object({ items: z.array(ListingSummarySchema), nextCursor: z.string().uuid().nullable() })
 export type PublicListingPage = z.infer<typeof PublicListingPageSchema>
 
+export const Phase01MediaLimits = {
+	maxUploadBytes: 25 * 1024 * 1024,
+	maxDurationSeconds: 30,
+	maxSourceWidth: 1920,
+	maxSourceHeight: 1080,
+	maxProcessedLongEdge: 1280,
+	maxProcessedShortEdge: 720,
+	maxCaptionBytes: 100 * 1024,
+	uploadIntentSeconds: 10 * 60,
+} as const
+
 export const MediaProcessingCommandSchema = z.object({
-	captionText: z.string().trim().min(1).max(20_000).optional(),
+	captionText: z
+		.string()
+		.refine((value) => new TextEncoder().encode(value).length <= Phase01MediaLimits.maxCaptionBytes, 'WebVTT exceeds 100 KiB')
+		.refine((value) => /^WEBVTT(?:\s|$)/.test(value) && /\d{2}:\d{2}:\d{2}\.\d{3}\s+-->\s+\d{2}:\d{2}:\d{2}\.\d{3}/.test(value), 'A WebVTT cue is required')
+		.optional(),
 	noSpeechDeclared: z.boolean().default(false),
 	description: z.string().trim().min(10).max(1000).optional(),
 })
-export const MediaAssetSchema = z.object({ id: z.string().uuid(), state: z.enum(['quarantined', 'ready', 'rejected']) })
+export const MediaAssetSchema = z.object({ id: z.string().uuid(), state: z.enum(['pending_upload', 'quarantined', 'needs_moderation', 'ready', 'rejected']) })
+
+export const MediaReviewQueueQuerySchema = z.object({ cursor: z.string().uuid().optional(), limit: z.coerce.number().int().min(1).max(100).default(20) })
+export const MediaReviewQueueSchema = z.object({
+	items: z.array(
+		z.object({
+			id: z.string().uuid(),
+			listingId: z.string().uuid(),
+			listingTitle: z.string(),
+			vendorName: z.string().nullable(),
+			version: z.number().int().positive(),
+			durationSeconds: z.number().positive(),
+			outputWidth: z.number().int().positive(),
+			outputHeight: z.number().int().positive(),
+			captioned: z.boolean(),
+			noSpeechDeclared: z.boolean(),
+			description: z.string().nullable(),
+		}),
+	),
+	nextCursor: z.string().uuid().nullable(),
+})
+export type MediaReviewQueue = z.infer<typeof MediaReviewQueueSchema>
+
+export const MediaReviewCommandSchema = z.object({
+	decision: z.enum(['approve', 'reject']),
+	expectedVersion: z.number().int().positive(),
+	note: z.string().trim().min(3).max(1000),
+})
+export const MediaReviewResultSchema = z.object({
+	id: z.string().uuid(),
+	state: z.enum(['ready', 'rejected']),
+	version: z.number().int().positive(),
+	replayed: z.boolean(),
+})
+
+export const MediaPreviewSchema = z.object({
+	mediaId: z.string().uuid(),
+	videoUrl: z.string().url(),
+	posterUrl: z.string().url(),
+	captionText: z.string().nullable(),
+	noSpeechDeclared: z.boolean(),
+	description: z.string().nullable(),
+	expiresAt: z.string().datetime(),
+})
+
+export const MediaUploadIntentCommandSchema = MediaProcessingCommandSchema.extend({
+	bytes: z.number().int().min(1).max(Phase01MediaLimits.maxUploadBytes),
+	sha256: z.string().regex(/^[0-9a-f]{64}$/),
+}).superRefine((value, ctx) => {
+	if (!value.captionText && !(value.noSpeechDeclared && value.description))
+		ctx.addIssue({ code: 'custom', path: ['captionText'], message: 'WebVTT captions or a no-speech description are required' })
+})
+
+export const MediaUploadIntentSchema = z.object({
+	mediaId: z.string().uuid(),
+	state: z.literal('pending_upload'),
+	url: z.string().url(),
+	method: z.literal('PUT'),
+	headers: z.record(z.string(), z.string()),
+	expiresAt: z.string().datetime(),
+	replayed: z.boolean(),
+})
+
+export const MediaUploadCompleteCommandSchema = z.object({ sha256: z.string().regex(/^[0-9a-f]{64}$/) })
 
 export const CatalogImportCommandSchema = z.object({
 	templateVersion: z.literal('v1'),
@@ -253,16 +392,31 @@ export const CatalogImportResultSchema = z.object({
 	rowCount: z.number().int().nonnegative(),
 	validRowCount: z.number().int().nonnegative(),
 	rowErrors: z.array(z.object({ rowNumber: z.number().int().positive(), errors: z.array(z.string()) })),
+	rows: z.array(
+		z.object({
+			rowNumber: z.number().int().positive(),
+			status: z.enum(['valid', 'error', 'committed']),
+			preview: z.record(z.string(), z.unknown()),
+			errors: z.array(z.string()),
+		}),
+	),
 	replayed: z.boolean(),
 })
 export type CatalogImportResult = z.infer<typeof CatalogImportResultSchema>
 
 export const DiscoveryPreferenceUpdateSchema = z.object({ personalizationOptIn: z.boolean() })
 export const DiscoveryPreferenceSchema = z.object({ personalizationOptIn: z.boolean() })
+export const CustomerDiscoveryStateSchema = z.object({
+	personalizationOptIn: z.boolean(),
+	savedListingIds: z.array(z.string().uuid()),
+	followedVendorIds: z.array(z.string().uuid()),
+})
+export type CustomerDiscoveryState = z.infer<typeof CustomerDiscoveryStateSchema>
 export const EngagementMutationSchema = z.object({ saved: z.boolean() })
 export const VendorFollowMutationSchema = z.object({ following: z.boolean() })
 export const RecommendationSchema = ListingSummarySchema.extend({ reason: z.string().min(1).max(200) })
 export const RecommendationPageSchema = z.object({ items: z.array(RecommendationSchema) })
+export type RecommendationPage = z.infer<typeof RecommendationPageSchema>
 
 export const ProviderWebhookReceiptSchema = z.object({
 	accepted: z.literal(true),

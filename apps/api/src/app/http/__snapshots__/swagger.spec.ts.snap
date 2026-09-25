@@ -181,6 +181,89 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
         "type": "object",
       },
+      "CatalogHealth": {
+        "additionalProperties": false,
+        "properties": {
+          "checkedAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "importDryRuns": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "importJobs": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "laggingListings": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "mediaDeadLetters": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "mediaPending": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "oldestImportDryRunSeconds": {
+            "minimum": 0,
+            "type": "number",
+          },
+          "oldestLagSeconds": {
+            "minimum": 0,
+            "type": "number",
+          },
+          "oldestReviewLagSeconds": {
+            "minimum": 0,
+            "type": "number",
+          },
+          "pendingReviews": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "projectedListings": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "publishedListings": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "reviewEvents": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "publishedListings",
+          "projectedListings",
+          "laggingListings",
+          "oldestLagSeconds",
+          "reviewEvents",
+          "pendingReviews",
+          "oldestReviewLagSeconds",
+          "importJobs",
+          "importDryRuns",
+          "oldestImportDryRunSeconds",
+          "mediaPending",
+          "mediaDeadLetters",
+          "checkedAt",
+        ],
+        "type": "object",
+      },
       "CatalogImportCommand": {
         "additionalProperties": false,
         "properties": {
@@ -251,6 +334,45 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             },
             "type": "array",
           },
+          "rows": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "errors": {
+                  "items": {
+                    "type": "string",
+                  },
+                  "type": "array",
+                },
+                "preview": {
+                  "additionalProperties": {},
+                  "type": "object",
+                },
+                "rowNumber": {
+                  "exclusiveMinimum": true,
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+                "status": {
+                  "enum": [
+                    "valid",
+                    "error",
+                    "committed",
+                  ],
+                  "type": "string",
+                },
+              },
+              "required": [
+                "rowNumber",
+                "status",
+                "preview",
+                "errors",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
           "state": {
             "enum": [
               "dry_run",
@@ -271,6 +393,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           "rowCount",
           "validRowCount",
           "rowErrors",
+          "rows",
           "replayed",
         ],
         "type": "object",
@@ -301,6 +424,36 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           "status",
           "marker",
           "replayed",
+        ],
+        "type": "object",
+      },
+      "CustomerDiscoveryState": {
+        "additionalProperties": false,
+        "properties": {
+          "followedVendorIds": {
+            "items": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "personalizationOptIn": {
+            "type": "boolean",
+          },
+          "savedListingIds": {
+            "items": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            "type": "array",
+          },
+        },
+        "required": [
+          "personalizationOptIn",
+          "savedListingIds",
+          "followedVendorIds",
         ],
         "type": "object",
       },
@@ -681,6 +834,29 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           "replayed": {
             "type": "boolean",
           },
+          "shortVideo": {
+            "additionalProperties": false,
+            "properties": {
+              "description": {
+                "nullable": true,
+                "type": "string",
+              },
+              "hasCaptions": {
+                "type": "boolean",
+              },
+              "id": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+            },
+            "required": [
+              "id",
+              "description",
+              "hasCaptions",
+            ],
+            "type": "object",
+          },
           "state": {
             "enum": [
               "draft",
@@ -841,6 +1017,12 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             ],
             "type": "string",
           },
+          "expectedVersion": {
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
           "note": {
             "maxLength": 1000,
             "minLength": 3,
@@ -849,6 +1031,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         },
         "required": [
           "decision",
+          "expectedVersion",
           "note",
         ],
         "type": "object",
@@ -876,6 +1059,12 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           "durationMinutes": {
             "maximum": 480,
             "minimum": 15,
+            "type": "integer",
+          },
+          "expectedVersion": {
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0,
             "type": "integer",
           },
           "kind": {
@@ -934,6 +1123,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           "category",
           "title",
           "description",
+          "expectedVersion",
         ],
         "type": "object",
       },
@@ -973,7 +1163,9 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
           "state": {
             "enum": [
+              "pending_upload",
               "quarantined",
+              "needs_moderation",
               "ready",
               "rejected",
             ],
@@ -986,12 +1178,54 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
         "type": "object",
       },
+      "MediaPreview": {
+        "additionalProperties": false,
+        "properties": {
+          "captionText": {
+            "nullable": true,
+            "type": "string",
+          },
+          "description": {
+            "nullable": true,
+            "type": "string",
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "mediaId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "noSpeechDeclared": {
+            "type": "boolean",
+          },
+          "posterUrl": {
+            "format": "uri",
+            "type": "string",
+          },
+          "videoUrl": {
+            "format": "uri",
+            "type": "string",
+          },
+        },
+        "required": [
+          "mediaId",
+          "videoUrl",
+          "posterUrl",
+          "captionText",
+          "noSpeechDeclared",
+          "description",
+          "expiresAt",
+        ],
+        "type": "object",
+      },
       "MediaProcessingCommand": {
         "additionalProperties": false,
         "properties": {
           "captionText": {
-            "maxLength": 20000,
-            "minLength": 1,
             "type": "string",
           },
           "description": {
@@ -1006,6 +1240,488 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         },
         "required": [
           "noSpeechDeclared",
+        ],
+        "type": "object",
+      },
+      "MediaReviewCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "decision": {
+            "enum": [
+              "approve",
+              "reject",
+            ],
+            "type": "string",
+          },
+          "expectedVersion": {
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "note": {
+            "maxLength": 1000,
+            "minLength": 3,
+            "type": "string",
+          },
+        },
+        "required": [
+          "decision",
+          "expectedVersion",
+          "note",
+        ],
+        "type": "object",
+      },
+      "MediaReviewQueue": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "captioned": {
+                  "type": "boolean",
+                },
+                "description": {
+                  "nullable": true,
+                  "type": "string",
+                },
+                "durationSeconds": {
+                  "exclusiveMinimum": true,
+                  "minimum": 0,
+                  "type": "number",
+                },
+                "id": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "listingId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "listingTitle": {
+                  "type": "string",
+                },
+                "noSpeechDeclared": {
+                  "type": "boolean",
+                },
+                "outputHeight": {
+                  "exclusiveMinimum": true,
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+                "outputWidth": {
+                  "exclusiveMinimum": true,
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+                "vendorName": {
+                  "nullable": true,
+                  "type": "string",
+                },
+                "version": {
+                  "exclusiveMinimum": true,
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+              },
+              "required": [
+                "id",
+                "listingId",
+                "listingTitle",
+                "vendorName",
+                "version",
+                "durationSeconds",
+                "outputWidth",
+                "outputHeight",
+                "captioned",
+                "noSpeechDeclared",
+                "description",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "nextCursor": {
+            "format": "uuid",
+            "nullable": true,
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "items",
+          "nextCursor",
+        ],
+        "type": "object",
+      },
+      "MediaReviewResult": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "replayed": {
+            "type": "boolean",
+          },
+          "state": {
+            "enum": [
+              "ready",
+              "rejected",
+            ],
+            "type": "string",
+          },
+          "version": {
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "id",
+          "state",
+          "version",
+          "replayed",
+        ],
+        "type": "object",
+      },
+      "MediaUploadCompleteCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "sha256",
+        ],
+        "type": "object",
+      },
+      "MediaUploadIntent": {
+        "additionalProperties": false,
+        "properties": {
+          "expiresAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "headers": {
+            "additionalProperties": {
+              "type": "string",
+            },
+            "type": "object",
+          },
+          "mediaId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "method": {
+            "enum": [
+              "PUT",
+            ],
+            "type": "string",
+          },
+          "replayed": {
+            "type": "boolean",
+          },
+          "state": {
+            "enum": [
+              "pending_upload",
+            ],
+            "type": "string",
+          },
+          "url": {
+            "format": "uri",
+            "type": "string",
+          },
+        },
+        "required": [
+          "mediaId",
+          "state",
+          "url",
+          "method",
+          "headers",
+          "expiresAt",
+          "replayed",
+        ],
+        "type": "object",
+      },
+      "MediaUploadIntentCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "bytes": {
+            "maximum": 26214400,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "captionText": {
+            "type": "string",
+          },
+          "description": {
+            "maxLength": 1000,
+            "minLength": 10,
+            "type": "string",
+          },
+          "noSpeechDeclared": {
+            "default": false,
+            "type": "boolean",
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "noSpeechDeclared",
+          "bytes",
+          "sha256",
+        ],
+        "type": "object",
+      },
+      "PlatformReviewQueue": {
+        "additionalProperties": false,
+        "properties": {
+          "applications": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "description": {
+                  "nullable": true,
+                  "type": "string",
+                },
+                "displayName": {
+                  "nullable": true,
+                  "type": "string",
+                },
+                "id": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "locations": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "address": {
+                        "nullable": true,
+                        "type": "string",
+                      },
+                      "city": {
+                        "nullable": true,
+                        "type": "string",
+                      },
+                      "label": {
+                        "nullable": true,
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "label",
+                      "city",
+                      "address",
+                    ],
+                    "type": "object",
+                  },
+                  "type": "array",
+                },
+                "slug": {
+                  "nullable": true,
+                  "type": "string",
+                },
+              },
+              "required": [
+                "id",
+                "slug",
+                "displayName",
+                "description",
+                "locations",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "applicationsNextCursor": {
+            "format": "uuid",
+            "nullable": true,
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "listings": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "listing": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "category": {
+                      "enum": [
+                        "goods",
+                        "home",
+                        "fashion",
+                        "beauty",
+                        "appointment",
+                        "education",
+                        "repair",
+                      ],
+                      "type": "string",
+                    },
+                    "description": {
+                      "maxLength": 4000,
+                      "minLength": 10,
+                      "type": "string",
+                    },
+                    "durationMinutes": {
+                      "maximum": 480,
+                      "minimum": 15,
+                      "type": "integer",
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "kind": {
+                      "enum": [
+                        "product",
+                        "service",
+                      ],
+                      "type": "string",
+                    },
+                    "priceCents": {
+                      "exclusiveMinimum": true,
+                      "maximum": 100000000,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "shortVideo": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "description": {
+                          "nullable": true,
+                          "type": "string",
+                        },
+                        "hasCaptions": {
+                          "type": "boolean",
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string",
+                        },
+                      },
+                      "required": [
+                        "id",
+                        "description",
+                        "hasCaptions",
+                      ],
+                      "type": "object",
+                    },
+                    "state": {
+                      "enum": [
+                        "draft",
+                        "pending_review",
+                        "published",
+                        "rejected",
+                        "unpublished",
+                      ],
+                      "type": "string",
+                    },
+                    "title": {
+                      "maxLength": 160,
+                      "minLength": 3,
+                      "type": "string",
+                    },
+                    "variants": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "label": {
+                            "maxLength": 120,
+                            "minLength": 1,
+                            "type": "string",
+                          },
+                          "priceCents": {
+                            "exclusiveMinimum": true,
+                            "maximum": 100000000,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                          "sku": {
+                            "maxLength": 80,
+                            "minLength": 1,
+                            "type": "string",
+                          },
+                        },
+                        "required": [
+                          "sku",
+                          "label",
+                          "priceCents",
+                        ],
+                        "type": "object",
+                      },
+                      "maxItems": 100,
+                      "minItems": 2,
+                      "type": "array",
+                    },
+                    "version": {
+                      "exclusiveMinimum": true,
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                  },
+                  "required": [
+                    "kind",
+                    "category",
+                    "title",
+                    "description",
+                    "id",
+                    "state",
+                    "version",
+                  ],
+                  "type": "object",
+                },
+                "vendorId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "vendorName": {
+                  "nullable": true,
+                  "type": "string",
+                },
+              },
+              "required": [
+                "vendorId",
+                "vendorName",
+                "listing",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "listingsNextCursor": {
+            "format": "uuid",
+            "nullable": true,
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "applications",
+          "listings",
+          "applicationsNextCursor",
+          "listingsNextCursor",
         ],
         "type": "object",
       },
@@ -1074,6 +1790,29 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
                   "maximum": 100000000,
                   "minimum": 0,
                   "type": "integer",
+                },
+                "shortVideo": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "description": {
+                      "nullable": true,
+                      "type": "string",
+                    },
+                    "hasCaptions": {
+                      "type": "boolean",
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "id",
+                    "description",
+                    "hasCaptions",
+                  ],
+                  "type": "object",
                 },
                 "state": {
                   "enum": [
@@ -1216,6 +1955,29 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
                   "maximum": 100000000,
                   "minimum": 0,
                   "type": "integer",
+                },
+                "shortVideo": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "description": {
+                      "nullable": true,
+                      "type": "string",
+                    },
+                    "hasCaptions": {
+                      "type": "boolean",
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "id",
+                    "description",
+                    "hasCaptions",
+                  ],
+                  "type": "object",
                 },
                 "state": {
                   "enum": [
@@ -1710,6 +2472,213 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
         "type": "object",
       },
+      "VendorCatalog": {
+        "additionalProperties": false,
+        "properties": {
+          "applicationState": {
+            "enum": [
+              "pending",
+              "approved",
+              "rejected",
+              "restricted",
+            ],
+            "type": "string",
+          },
+          "description": {
+            "nullable": true,
+            "type": "string",
+          },
+          "displayName": {
+            "nullable": true,
+            "type": "string",
+          },
+          "id": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "listings": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "category": {
+                  "enum": [
+                    "goods",
+                    "home",
+                    "fashion",
+                    "beauty",
+                    "appointment",
+                    "education",
+                    "repair",
+                  ],
+                  "type": "string",
+                },
+                "description": {
+                  "maxLength": 4000,
+                  "minLength": 10,
+                  "type": "string",
+                },
+                "durationMinutes": {
+                  "maximum": 480,
+                  "minimum": 15,
+                  "type": "integer",
+                },
+                "id": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "kind": {
+                  "enum": [
+                    "product",
+                    "service",
+                  ],
+                  "type": "string",
+                },
+                "priceCents": {
+                  "exclusiveMinimum": true,
+                  "maximum": 100000000,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+                "shortVideo": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "description": {
+                      "nullable": true,
+                      "type": "string",
+                    },
+                    "hasCaptions": {
+                      "type": "boolean",
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "id",
+                    "description",
+                    "hasCaptions",
+                  ],
+                  "type": "object",
+                },
+                "state": {
+                  "enum": [
+                    "draft",
+                    "pending_review",
+                    "published",
+                    "rejected",
+                    "unpublished",
+                  ],
+                  "type": "string",
+                },
+                "title": {
+                  "maxLength": 160,
+                  "minLength": 3,
+                  "type": "string",
+                },
+                "variants": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "label": {
+                        "maxLength": 120,
+                        "minLength": 1,
+                        "type": "string",
+                      },
+                      "priceCents": {
+                        "exclusiveMinimum": true,
+                        "maximum": 100000000,
+                        "minimum": 0,
+                        "type": "integer",
+                      },
+                      "sku": {
+                        "maxLength": 80,
+                        "minLength": 1,
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "sku",
+                      "label",
+                      "priceCents",
+                    ],
+                    "type": "object",
+                  },
+                  "maxItems": 100,
+                  "minItems": 2,
+                  "type": "array",
+                },
+                "version": {
+                  "exclusiveMinimum": true,
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+              },
+              "required": [
+                "kind",
+                "category",
+                "title",
+                "description",
+                "id",
+                "state",
+                "version",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "locations": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "address": {
+                  "nullable": true,
+                  "type": "string",
+                },
+                "city": {
+                  "nullable": true,
+                  "type": "string",
+                },
+                "id": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "label": {
+                  "nullable": true,
+                  "type": "string",
+                },
+              },
+              "required": [
+                "id",
+                "label",
+                "city",
+                "address",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "slug": {
+            "nullable": true,
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+          "applicationState",
+          "slug",
+          "displayName",
+          "description",
+          "locations",
+          "listings",
+        ],
+        "type": "object",
+      },
     },
     "securitySchemes": {
       "junction-session": {
@@ -1853,6 +2822,42 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
         ],
         "summary": "Dry-run or idempotently commit the versioned Vendor catalog CSV template.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/customer/discovery": {
+      "get": {
+        "operationId": "AppController_readCustomerDiscoveryState",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-junction-session",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerDiscoveryState",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-session": [],
+          },
+        ],
+        "summary": "Read the current Customer saved listings, followed Vendors, and personalization preference.",
         "tags": [
           "foundation",
         ],
@@ -2674,7 +3679,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             "junction-session": [],
           },
         ],
-        "summary": "Process a quarantined short video; captioning or an explicit no-speech description is required before it is ready.",
+        "summary": "Create quarantined short-video metadata; upload, scanning, and processing are required before publication.",
         "tags": [
           "foundation",
         ],
@@ -2784,6 +3789,385 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
       },
     },
+    "/v1/listings/{listingId}/video-upload-intents": {
+      "post": {
+        "operationId": "AppController_createVideoUploadIntent",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "listingId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "x-junction-session",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaUploadIntentCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaUploadIntent",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-session": [],
+          },
+        ],
+        "summary": "Create a scoped, ten-minute signed PUT grant for a private quarantine object.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/media/{mediaId}/complete-upload": {
+      "post": {
+        "operationId": "AppController_completeVideoUpload",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mediaId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "x-junction-session",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaUploadCompleteCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaAsset",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-session": [],
+          },
+        ],
+        "summary": "Verify and seal an uploaded MP4 in private quarantine; safe processing is still required.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/platform/catalog-health": {
+      "get": {
+        "operationId": "AppController_readPlatformCatalogHealth",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-junction-session",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogHealth",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-session": [],
+          },
+        ],
+        "summary": "Read scoped catalog review, import, media, and search projection health.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/platform/media-review-queue": {
+      "get": {
+        "operationId": "AppController_readPlatformMediaQueue",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer",
+            },
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "x-junction-session",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaReviewQueue",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-session": [],
+          },
+        ],
+        "summary": "Read processed, private videos awaiting scoped Platform media moderation.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/platform/media/{mediaId}/preview": {
+      "get": {
+        "operationId": "AppController_previewMediaForReview",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mediaId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "x-junction-session",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaPreview",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-session": [],
+          },
+        ],
+        "summary": "Issue short-lived private processed-video and poster preview grants to a scoped reviewer.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/platform/media/{mediaId}/review": {
+      "post": {
+        "operationId": "AppController_reviewMedia",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mediaId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "x-junction-session",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaReviewCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaReviewResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-session": [],
+          },
+        ],
+        "summary": "Approve or reject a scanned, processed media version after Platform moderation.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/platform/review-queue": {
+      "get": {
+        "operationId": "AppController_readPlatformReviewQueue",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer",
+            },
+          },
+          {
+            "in": "query",
+            "name": "listingCursor",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+          {
+            "in": "query",
+            "name": "applicationCursor",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "x-junction-session",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformReviewQueue",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-session": [],
+          },
+        ],
+        "summary": "Read scoped pending Vendor applications and approved-Vendor listings awaiting Platform review.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
     "/v1/public/listings": {
       "get": {
         "operationId": "AppController_browsePublicListings",
@@ -2801,6 +4185,79 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
         },
         "summary": "Browse approved, published Product and Service listings from the rebuildable search projection.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/public/media/{mediaId}/captions.vtt": {
+      "get": {
+        "operationId": "AppController_publicCaptions",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mediaId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+          },
+        },
+        "summary": "Read reviewed WebVTT captions for a currently published video.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/public/media/{mediaId}/poster": {
+      "get": {
+        "operationId": "AppController_publicPoster",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mediaId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+          },
+        },
+        "summary": "Read a moderated poster only while its listing and Vendor remain published.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/public/media/{mediaId}/video": {
+      "get": {
+        "operationId": "AppController_publicVideo",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mediaId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+          },
+        },
+        "summary": "Stream a moderated video only while its listing and Vendor remain published.",
         "tags": [
           "foundation",
         ],
@@ -3102,6 +4559,42 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
         ],
         "summary": "Update the active Vendor structured storefront before or after approval.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/vendor/catalog": {
+      "get": {
+        "operationId": "AppController_readVendorCatalog",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-junction-session",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorCatalog",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-session": [],
+          },
+        ],
+        "summary": "Read the active Vendor private storefront, locations, and listings across all publication states.",
         "tags": [
           "foundation",
         ],

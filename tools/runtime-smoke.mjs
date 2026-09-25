@@ -143,6 +143,52 @@ try {
 		true,
 	)
 	const headers = { 'content-type': 'application/json', 'x-junction-session': session.id, 'idempotency-key': randomUUID() }
+	const inventoryListing = await repository.db.listing.create({
+		data: {
+			vendorId: vendor.id,
+			kind: 'product',
+			category: 'goods',
+			title: 'Runtime inventory item',
+			description: 'A synthetic product used to verify the private inventory API path.',
+			priceCents: 1000,
+		},
+	})
+	const inventoryKey = randomUUID()
+	const inventoryBody = { locationId: location.id, listingId: inventoryListing.id, reason: 'received', quantityDelta: 3 }
+	const inventoryMovement = await fetch(`${base}/inventory/movements`, {
+		method: 'POST',
+		headers: { ...headers, 'idempotency-key': inventoryKey },
+		body: JSON.stringify(inventoryBody),
+	})
+	assert.equal(inventoryMovement.status, 201)
+	const inventoryResult = await inventoryMovement.json()
+	assert.deepEqual(
+		{ onHand: inventoryResult.onHand, reserved: inventoryResult.reserved, available: inventoryResult.available, replayed: inventoryResult.replayed },
+		{ onHand: 3, reserved: 0, available: 3, replayed: false },
+	)
+	const inventoryReplay = await fetch(`${base}/inventory/movements`, {
+		method: 'POST',
+		headers: { ...headers, 'idempotency-key': inventoryKey },
+		body: JSON.stringify(inventoryBody),
+	})
+	assert.equal(inventoryReplay.status, 201)
+	assert.deepEqual(await inventoryReplay.json(), { ...inventoryResult, replayed: true })
+	const inventoryAvailability = await fetch(`${base}/inventory/listings/${inventoryListing.id}/availability?locationId=${location.id}`, { headers })
+	assert.equal(inventoryAvailability.status, 200)
+	assert.deepEqual(await inventoryAvailability.json(), {
+		locationId: location.id,
+		listingId: inventoryListing.id,
+		sku: null,
+		onHand: 3,
+		reserved: 0,
+		available: 3,
+	})
+	const negativeInventory = await fetch(`${base}/inventory/movements`, {
+		method: 'POST',
+		headers: { ...headers, 'idempotency-key': randomUUID() },
+		body: JSON.stringify({ ...inventoryBody, reason: 'damaged', quantityDelta: -4, note: 'runtime damage check' }),
+	})
+	assert.equal(negativeInventory.status, 403)
 	const otherWorkspace = await repository.db.workspace.create({ data: { kind: 'synthetic' } })
 	const otherVendor = await repository.db.vendor.create({ data: { workspaceId: otherWorkspace.id, applicationState: 'approved' } })
 	const otherLocation = await repository.db.location.create({ data: { vendorId: otherVendor.id } })
@@ -161,9 +207,10 @@ try {
 		audit: await repository.db.auditLog.count(),
 		outbox: await repository.db.outboxEvent.count(),
 		media: await repository.db.mediaAsset.count(),
+		inventory: await repository.db.inventoryMovement.count(),
 	}
 	for (const [path, body] of [
-		[`listings/${otherListing.id}/revise`, foreignDraft],
+		[`listings/${otherListing.id}/revise`, { ...foreignDraft, expectedVersion: otherListing.version }],
 		[`listings/${otherListing.id}/submit`, {}],
 		[`listings/${otherListing.id}/unpublish`, {}],
 		[`listings/${otherListing.id}/short-video`, { noSpeechDeclared: false }],
@@ -177,12 +224,20 @@ try {
 		assert.equal(response.status, 403, path)
 		assert.equal((await response.json()).code, 'ACCESS_DENIED')
 	}
+	const foreignInventory = await fetch(`${base}/inventory/movements`, {
+		method: 'POST',
+		headers: { ...headers, 'idempotency-key': randomUUID() },
+		body: JSON.stringify({ locationId: otherLocation.id, listingId: otherListing.id, reason: 'received', quantityDelta: 1 }),
+	})
+	assert.equal(foreignInventory.status, 403)
+	assert.equal((await foreignInventory.json()).code, 'ACCESS_DENIED')
 	assert.equal((await fetch(`${base}/foundation/locations/${otherLocation.id}`, { headers })).status, 403)
 	assert.deepEqual(
 		{
 			audit: await repository.db.auditLog.count(),
 			outbox: await repository.db.outboxEvent.count(),
 			media: await repository.db.mediaAsset.count(),
+			inventory: await repository.db.inventoryMovement.count(),
 		},
 		deniedWritesBefore,
 	)

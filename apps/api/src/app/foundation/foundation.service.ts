@@ -19,6 +19,10 @@ import {
 	ListingRevisionCommandSchema,
 	LocationReadSchema,
 	MediaProcessingCommandSchema,
+	MediaReviewCommandSchema,
+	MediaReviewQueueQuerySchema,
+	MediaUploadCompleteCommandSchema,
+	MediaUploadIntentCommandSchema,
 	PublicListingBrowseQuerySchema,
 	PublicVendorBrowseQuerySchema,
 	PublicVendorPageSchema,
@@ -156,6 +160,26 @@ export class FoundationService {
 		return this.requireDurableCatalog().readPublicStorefront(slug)
 	}
 
+	readPublicMedia(mediaId: string, kind: 'video' | 'poster' | 'captions') {
+		return this.requireDurableCatalog().readPublicMedia(mediaId, kind)
+	}
+
+	readVendorCatalog(sessionId: string | undefined) {
+		return this.requireDurableCatalog().readVendorCatalog(sessionId)
+	}
+
+	readCustomerDiscoveryState(sessionId: string | undefined) {
+		return this.requireDurableCatalog().readCustomerDiscoveryState(sessionId)
+	}
+
+	readPlatformReviewQueue(sessionId: string | undefined, query: unknown) {
+		return this.requireDurableCatalog().readPlatformReviewQueue(sessionId, query)
+	}
+
+	readPlatformCatalogHealth(sessionId: string | undefined) {
+		return this.requireDurableCatalog().readPlatformCatalogHealth(sessionId)
+	}
+
 	recommendPublicListings(sessionId: string | undefined) {
 		return this.requireDurableCatalog().recommendPublicListings(sessionId)
 	}
@@ -217,6 +241,30 @@ export class FoundationService {
 	processShortVideo(sessionId: string | undefined, listingId: string, body: unknown) {
 		MediaProcessingCommandSchema.parse(body)
 		return this.requireDurableCatalog().processShortVideo(sessionId, listingId, body)
+	}
+
+	createVideoUploadIntent(sessionId: string | undefined, idempotencyKey: string | undefined, listingId: string, body: unknown) {
+		MediaUploadIntentCommandSchema.parse(body)
+		return this.requireDurableCatalog().createVideoUploadIntent(sessionId, idempotencyKey, listingId, body)
+	}
+
+	completeVideoUpload(sessionId: string | undefined, mediaId: string, body: unknown) {
+		MediaUploadCompleteCommandSchema.parse(body)
+		return this.requireDurableCatalog().completeVideoUpload(sessionId, mediaId, body)
+	}
+
+	readPlatformMediaQueue(sessionId: string | undefined, query: unknown) {
+		MediaReviewQueueQuerySchema.parse(query)
+		return this.requireDurableCatalog().readPlatformMediaQueue(sessionId, query)
+	}
+
+	previewMediaForReview(sessionId: string | undefined, mediaId: string) {
+		return this.requireDurableCatalog().previewMediaForReview(sessionId, mediaId)
+	}
+
+	reviewMedia(sessionId: string | undefined, idempotencyKey: string | undefined, mediaId: string, body: unknown) {
+		MediaReviewCommandSchema.parse(body)
+		return this.requireDurableCatalog().reviewMedia(sessionId, idempotencyKey, mediaId, body)
 	}
 
 	importCatalogCsv(sessionId: string | undefined, idempotencyKey: string | undefined, body: unknown) {

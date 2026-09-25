@@ -11,8 +11,8 @@ const geist = Geist({
 })
 
 export const metadata: Metadata = {
-	title: 'Project Junction | Platform Foundation',
-	description: 'Synthetic-only platform foundation for Project Junction.',
+	title: 'Junction | Local discovery preview',
+	description: 'Browse approved local Vendor offerings in a synthetic discovery preview.',
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

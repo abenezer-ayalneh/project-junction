@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Headers, Param, Post, Query, Req } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Headers, Param, Post, Query, Req, Res } from '@nestjs/common'
 import {
 	ApiBody,
 	ApiCreatedResponse,
@@ -20,6 +20,12 @@ import { OpenApiSchemaRefs } from './swagger'
 
 interface CookieResponse {
 	cookie(name: string, value: string, options: { httpOnly: boolean; sameSite: 'lax'; secure: boolean; path: string; expires: Date }): void
+}
+
+interface MediaResponse {
+	status(code: number): this
+	setHeader(name: string, value: string | number): this
+	end(body?: Buffer): void
 }
 
 @ApiTags('foundation')
@@ -54,6 +60,59 @@ export class AppController {
 		return this.foundation.readPublicStorefront(slug)
 	}
 
+	@Get('public/media/:mediaId/video')
+	@ApiOperation({ summary: 'Stream a moderated video only while its listing and Vendor remain published.' })
+	@ApiParam({ name: 'mediaId', schema: { type: 'string', format: 'uuid' } })
+	async publicVideo(@Param('mediaId') mediaId: string, @Headers('range') range: string | undefined, @Res() response: MediaResponse) {
+		const { body, contentType } = await this.foundation.readPublicMedia(mediaId, 'video')
+		response
+			.setHeader('Content-Type', contentType)
+			.setHeader('Cache-Control', 'no-store')
+			.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
+			.setHeader('Accept-Ranges', 'bytes')
+		if (range) {
+			const match = /^bytes=(\d*)-(\d*)$/.exec(range)
+			const start = match?.[1] ? Number(match[1]) : match?.[2] ? Math.max(0, body.length - Number(match[2])) : NaN
+			const end = match?.[1] ? (match[2] ? Number(match[2]) : body.length - 1) : body.length - 1
+			if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start >= body.length || end < start) {
+				response.status(416).setHeader('Content-Range', `bytes */${body.length}`).end()
+				return
+			}
+			const slice = body.subarray(start, Math.min(end, body.length - 1) + 1)
+			response
+				.status(206)
+				.setHeader('Content-Range', `bytes ${start}-${start + slice.length - 1}/${body.length}`)
+				.setHeader('Content-Length', slice.length)
+				.end(slice)
+			return
+		}
+		response.setHeader('Content-Length', body.length).end(body)
+	}
+
+	@Get('public/media/:mediaId/poster')
+	@ApiOperation({ summary: 'Read a moderated poster only while its listing and Vendor remain published.' })
+	async publicPoster(@Param('mediaId') mediaId: string, @Res() response: MediaResponse) {
+		const { body, contentType } = await this.foundation.readPublicMedia(mediaId, 'poster')
+		response
+			.setHeader('Content-Type', contentType)
+			.setHeader('Cache-Control', 'no-store')
+			.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
+			.setHeader('Content-Length', body.length)
+			.end(body)
+	}
+
+	@Get('public/media/:mediaId/captions.vtt')
+	@ApiOperation({ summary: 'Read reviewed WebVTT captions for a currently published video.' })
+	async publicCaptions(@Param('mediaId') mediaId: string, @Res() response: MediaResponse) {
+		const { body, contentType } = await this.foundation.readPublicMedia(mediaId, 'captions')
+		response
+			.setHeader('Content-Type', contentType)
+			.setHeader('Cache-Control', 'no-store')
+			.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
+			.setHeader('Content-Length', body.length)
+			.end(body)
+	}
+
 	@Post('vendor-applications')
 	@ApiOperation({ summary: 'Create a private Vendor application, structured storefront, basic Location, and scoped Owner session.' })
 	@ApiSecurity('junction-session')
@@ -70,6 +129,40 @@ export class AppController {
 		return this.foundation.createVendorApplication(this.foundation.resolveSessionId(sessionId, cookie), key, body)
 	}
 
+	@Get('vendor/catalog')
+	@ApiOperation({ summary: 'Read the active Vendor private storefront, locations, and listings across all publication states.' })
+	@ApiSecurity('junction-session')
+	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.vendorCatalog })
+	readVendorCatalog(@Headers('x-junction-session') sessionId: string | undefined, @Headers('cookie') cookie: string | undefined) {
+		return this.foundation.readVendorCatalog(this.foundation.resolveSessionId(sessionId, cookie))
+	}
+
+	@Get('platform/review-queue')
+	@ApiOperation({ summary: 'Read scoped pending Vendor applications and approved-Vendor listings awaiting Platform review.' })
+	@ApiSecurity('junction-session')
+	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiQuery({ name: 'applicationCursor', required: false, schema: { type: 'string', format: 'uuid' } })
+	@ApiQuery({ name: 'listingCursor', required: false, schema: { type: 'string', format: 'uuid' } })
+	@ApiQuery({ name: 'limit', required: false, schema: { type: 'integer', minimum: 1, maximum: 100, default: 20 } })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.platformReviewQueue })
+	readPlatformReviewQueue(
+		@Headers('x-junction-session') sessionId: string | undefined,
+		@Headers('cookie') cookie: string | undefined,
+		@Query() query: unknown,
+	) {
+		return this.foundation.readPlatformReviewQueue(this.foundation.resolveSessionId(sessionId, cookie), query)
+	}
+
+	@Get('platform/catalog-health')
+	@ApiOperation({ summary: 'Read scoped catalog review, import, media, and search projection health.' })
+	@ApiSecurity('junction-session')
+	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.catalogHealth })
+	readPlatformCatalogHealth(@Headers('x-junction-session') sessionId: string | undefined, @Headers('cookie') cookie: string | undefined) {
+		return this.foundation.readPlatformCatalogHealth(this.foundation.resolveSessionId(sessionId, cookie))
+	}
+
 	@Get('public/listings')
 	@ApiOperation({ summary: 'Browse approved, published Product and Service listings from the rebuildable search projection.' })
 	@ApiOkResponse({ schema: OpenApiSchemaRefs.publicListingPage })
@@ -81,6 +174,15 @@ export class AppController {
 	@ApiOperation({ summary: 'Return deterministic public discovery recommendations with an explainable reason.' })
 	recommendations(@Headers('x-junction-session') sessionId: string | undefined, @Headers('cookie') cookie: string | undefined) {
 		return this.foundation.recommendPublicListings(this.foundation.resolveSessionId(sessionId, cookie))
+	}
+
+	@Get('customer/discovery')
+	@ApiOperation({ summary: 'Read the current Customer saved listings, followed Vendors, and personalization preference.' })
+	@ApiSecurity('junction-session')
+	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.customerDiscoveryState })
+	readCustomerDiscoveryState(@Headers('x-junction-session') sessionId: string | undefined, @Headers('cookie') cookie: string | undefined) {
+		return this.foundation.readCustomerDiscoveryState(this.foundation.resolveSessionId(sessionId, cookie))
 	}
 
 	@Post('discovery/preference')
@@ -247,7 +349,7 @@ export class AppController {
 	}
 
 	@Post('listings/:listingId/short-video')
-	@ApiOperation({ summary: 'Process a quarantined short video; captioning or an explicit no-speech description is required before it is ready.' })
+	@ApiOperation({ summary: 'Create quarantined short-video metadata; upload, scanning, and processing are required before publication.' })
 	@ApiSecurity('junction-session')
 	@ApiHeader({ name: 'x-junction-session', required: true })
 	@ApiBody({ schema: OpenApiSchemaRefs.mediaProcessingCommand })
@@ -259,6 +361,83 @@ export class AppController {
 		@Body() body: unknown,
 	) {
 		return this.foundation.processShortVideo(this.foundation.resolveSessionId(sessionId, cookie), listingId, body)
+	}
+
+	@Post('listings/:listingId/video-upload-intents')
+	@ApiOperation({ summary: 'Create a scoped, ten-minute signed PUT grant for a private quarantine object.' })
+	@ApiSecurity('junction-session')
+	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.mediaUploadIntentCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.mediaUploadIntent })
+	createVideoUploadIntent(
+		@Headers('x-junction-session') sessionId: string | undefined,
+		@Headers('cookie') cookie: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('listingId') listingId: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.createVideoUploadIntent(this.foundation.resolveSessionId(sessionId, cookie), key, listingId, body)
+	}
+
+	@Post('media/:mediaId/complete-upload')
+	@ApiOperation({ summary: 'Verify and seal an uploaded MP4 in private quarantine; safe processing is still required.' })
+	@ApiSecurity('junction-session')
+	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.mediaUploadCompleteCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.mediaAsset })
+	completeVideoUpload(
+		@Headers('x-junction-session') sessionId: string | undefined,
+		@Headers('cookie') cookie: string | undefined,
+		@Param('mediaId') mediaId: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.completeVideoUpload(this.foundation.resolveSessionId(sessionId, cookie), mediaId, body)
+	}
+
+	@Get('platform/media-review-queue')
+	@ApiOperation({ summary: 'Read processed, private videos awaiting scoped Platform media moderation.' })
+	@ApiSecurity('junction-session')
+	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiQuery({ name: 'cursor', required: false, schema: { type: 'string', format: 'uuid' } })
+	@ApiQuery({ name: 'limit', required: false, schema: { type: 'integer', minimum: 1, maximum: 100, default: 20 } })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.mediaReviewQueue })
+	readPlatformMediaQueue(
+		@Headers('x-junction-session') sessionId: string | undefined,
+		@Headers('cookie') cookie: string | undefined,
+		@Query() query: unknown,
+	) {
+		return this.foundation.readPlatformMediaQueue(this.foundation.resolveSessionId(sessionId, cookie), query)
+	}
+
+	@Get('platform/media/:mediaId/preview')
+	@ApiOperation({ summary: 'Issue short-lived private processed-video and poster preview grants to a scoped reviewer.' })
+	@ApiSecurity('junction-session')
+	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.mediaPreview })
+	previewMediaForReview(
+		@Headers('x-junction-session') sessionId: string | undefined,
+		@Headers('cookie') cookie: string | undefined,
+		@Param('mediaId') mediaId: string,
+	) {
+		return this.foundation.previewMediaForReview(this.foundation.resolveSessionId(sessionId, cookie), mediaId)
+	}
+
+	@Post('platform/media/:mediaId/review')
+	@ApiOperation({ summary: 'Approve or reject a scanned, processed media version after Platform moderation.' })
+	@ApiSecurity('junction-session')
+	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.mediaReviewCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.mediaReviewResult })
+	reviewMedia(
+		@Headers('x-junction-session') sessionId: string | undefined,
+		@Headers('cookie') cookie: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('mediaId') mediaId: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.reviewMedia(this.foundation.resolveSessionId(sessionId, cookie), key, mediaId, body)
 	}
 
 	@Post('catalog-imports')
