@@ -2,6 +2,8 @@ import type { INestApplication } from '@nestjs/common'
 import { DocumentBuilder, type OpenAPIObject, type SchemaObject, SwaggerModule } from '@nestjs/swagger'
 import {
 	AccessContextResponseSchema,
+	ActiveVendorSelectionResultSchema,
+	ActiveVendorSelectionSchema,
 	ApiErrorSchema,
 	AuditMarkerCommandSchema,
 	CatalogHealthSchema,
@@ -12,6 +14,7 @@ import {
 	DemoSessionSchema,
 	DemoWorkspaceSchema,
 	HealthResponseSchema,
+	IdentityVerificationSessionSchema,
 	InventoryAvailabilitySchema,
 	InventoryMovementCommandSchema,
 	InventoryMovementResultSchema,
@@ -47,6 +50,7 @@ import {
 	VendorApplicationReviewResultSchema,
 	VendorApplicationReviewSchema,
 	VendorCatalogSchema,
+	VendorMembershipsSchema,
 } from 'contracts'
 import { z } from 'zod'
 
@@ -58,6 +62,8 @@ function schemaFor(schema: z.ZodType): SchemaObject {
 
 export const OpenApiSchemaRefs = {
 	accessContext: { $ref: '#/components/schemas/AccessContextResponse' },
+	activeVendorSelection: { $ref: '#/components/schemas/ActiveVendorSelection' },
+	activeVendorSelectionResult: { $ref: '#/components/schemas/ActiveVendorSelectionResult' },
 	apiError: { $ref: '#/components/schemas/ApiError' },
 	auditMarkerCommand: { $ref: '#/components/schemas/AuditMarkerCommand' },
 	catalogImportCommand: { $ref: '#/components/schemas/CatalogImportCommand' },
@@ -73,6 +79,7 @@ export const OpenApiSchemaRefs = {
 	syntheticStaffRevokeResult: { $ref: '#/components/schemas/SyntheticStaffRevokeResult' },
 	demoSession: { $ref: '#/components/schemas/DemoSession' },
 	healthResponse: { $ref: '#/components/schemas/HealthResponse' },
+	identityVerificationSession: { $ref: '#/components/schemas/IdentityVerificationSession' },
 	inventoryAvailability: { $ref: '#/components/schemas/InventoryAvailability' },
 	inventoryMovementCommand: { $ref: '#/components/schemas/InventoryMovementCommand' },
 	inventoryMovementResult: { $ref: '#/components/schemas/InventoryMovementResult' },
@@ -100,6 +107,7 @@ export const OpenApiSchemaRefs = {
 	syntheticProviderCallback: { $ref: '#/components/schemas/SyntheticProviderCallback' },
 	vendorApplicationReview: { $ref: '#/components/schemas/VendorApplicationReview' },
 	vendorCatalog: { $ref: '#/components/schemas/VendorCatalog' },
+	vendorMemberships: { $ref: '#/components/schemas/VendorMemberships' },
 	vendorApplicationCommand: { $ref: '#/components/schemas/VendorApplicationCommand' },
 	vendorApplicationResult: { $ref: '#/components/schemas/VendorApplicationResult' },
 	vendorApplicationReviewResult: { $ref: '#/components/schemas/VendorApplicationReviewResult' },
@@ -108,6 +116,8 @@ export const OpenApiSchemaRefs = {
 function publicSchemas(): Record<string, SchemaObject> {
 	return {
 		AccessContextResponse: schemaFor(AccessContextResponseSchema),
+		ActiveVendorSelection: schemaFor(ActiveVendorSelectionSchema),
+		ActiveVendorSelectionResult: schemaFor(ActiveVendorSelectionResultSchema),
 		ApiError: schemaFor(ApiErrorSchema),
 		AuditMarkerCommand: schemaFor(AuditMarkerCommandSchema),
 		CatalogImportCommand: schemaFor(CatalogImportCommandSchema),
@@ -123,6 +133,7 @@ function publicSchemas(): Record<string, SchemaObject> {
 		SyntheticStaffRevokeResult: schemaFor(SyntheticStaffRevokeResultSchema),
 		DemoSession: schemaFor(DemoSessionSchema),
 		HealthResponse: schemaFor(HealthResponseSchema),
+		IdentityVerificationSession: schemaFor(IdentityVerificationSessionSchema),
 		InventoryAvailability: schemaFor(InventoryAvailabilitySchema),
 		InventoryMovementCommand: schemaFor(InventoryMovementCommandSchema),
 		InventoryMovementResult: schemaFor(InventoryMovementResultSchema),
@@ -150,6 +161,7 @@ function publicSchemas(): Record<string, SchemaObject> {
 		SyntheticProviderCallback: schemaFor(SyntheticProviderCallbackSchema),
 		VendorApplicationReview: schemaFor(VendorApplicationReviewSchema),
 		VendorCatalog: schemaFor(VendorCatalogSchema),
+		VendorMemberships: schemaFor(VendorMembershipsSchema),
 		VendorApplicationCommand: schemaFor(VendorApplicationCommandSchema),
 		VendorApplicationResult: schemaFor(VendorApplicationResultSchema),
 		VendorApplicationReviewResult: schemaFor(VendorApplicationReviewResultSchema),
@@ -171,6 +183,15 @@ export function createSwaggerDocument(app: INestApplication): OpenAPIObject {
 				description: 'Synthetic session identifier used by the current foundation endpoints.',
 			},
 			'junction-session',
+		)
+		.addApiKey(
+			{
+				type: 'apiKey',
+				in: 'cookie',
+				name: '__Secure-junction-auth.session_token',
+				description: 'Better Auth session cookie for private staging identity.',
+			},
+			'junction-auth-cookie',
 		)
 		.build()
 	const document = SwaggerModule.createDocument(app, config)

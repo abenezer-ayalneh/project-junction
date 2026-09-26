@@ -54,6 +54,9 @@ describe('platform foundation guards', () => {
 		expect(() => assertElevatedSession(context, new Date('2029-01-01T00:10:00.000Z'))).not.toThrow()
 		context.session.recentAuthAt = '2028-12-31T23:54:59.999Z'
 		expect(() => assertElevatedSession(context, new Date('2029-01-01T00:10:00.000Z'))).toThrow(AccessDeniedError)
+		context.session.recentAuthAt = '2029-01-01T00:09:00.000Z'
+		context.session.mfaVerifiedAt = '2028-12-31T23:54:59.999Z'
+		expect(() => assertElevatedSession(context, new Date('2029-01-01T00:10:00.000Z'))).toThrow(AccessDeniedError)
 	})
 
 	it('returns the original outcome on an idempotent replay and rejects a mismatch', () => {

@@ -56,6 +56,19 @@ export const AccessContextResponseSchema = z.object({
 
 export type AccessContextResponse = z.infer<typeof AccessContextResponseSchema>
 
+export const VendorMembershipsSchema = z.object({
+	activeVendorId: z.string().uuid().nullable(),
+	items: z.array(z.object({ vendorId: z.string().uuid(), displayName: z.string().min(1), active: z.boolean() })),
+})
+
+export const ActiveVendorSelectionSchema = z.object({ vendorId: z.string().uuid().nullable() })
+export const ActiveVendorSelectionResultSchema = z.object({ activeVendorId: z.string().uuid().nullable() })
+
+export const IdentityVerificationSessionSchema = z.object({
+	token: z.string().min(1).max(1024),
+	expiresInSeconds: z.literal(600),
+})
+
 export const LocationReadSchema = z.object({
 	id: z.string().uuid(),
 	vendorId: z.string().uuid(),
@@ -281,7 +294,7 @@ export const VendorApplicationCommandSchema = z.object({
 export const VendorApplicationResultSchema = z.object({
 	vendorId: z.string().uuid(),
 	locationId: z.string().uuid(),
-	sessionId: z.string().uuid(),
+	sessionId: z.string().uuid().optional(),
 	state: z.literal('pending'),
 	replayed: z.boolean(),
 })
@@ -532,7 +545,7 @@ export type RealtimeJoinResult = z.infer<typeof RealtimeJoinResultSchema>
 export const HealthResponseSchema = z.object({
 	status: z.literal('ok'),
 	service: z.literal('api'),
-	runtimeMode: z.literal('synthetic'),
+	runtimeMode: z.enum(['synthetic', 'staging']),
 	storage: z.enum(['in-memory-test-double', 'postgresql']),
 	requestId: z.string().uuid(),
 })

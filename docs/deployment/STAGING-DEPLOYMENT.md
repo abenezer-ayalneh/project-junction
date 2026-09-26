@@ -7,17 +7,21 @@
 
 ## Purpose and boundary
 
-Staging is a private, production-shaped, resource-limited Compose project on the same VPS as portfolio production [DEC-093]. It verifies deployment, migrations, provider contracts, MFA/privileged workflows, media, monitoring, and recovery with synthetic data. It is not a second public demo and never accepts real Customer/Vendor/KYB/payment data.
+Staging is a private, production-shaped, resource-limited deployment on the existing VPS [DEC-093]. Phase 00 now requires real sign-up, email delivery, MFA, and identity-provider sandbox exchanges with invited test users. The previous synthetic-only acceptance is historical regression evidence; it cannot satisfy this gate. Staging must not accept live payments or public onboarding.
 
 Staging has separate database, Redis, Meilisearch, R2 bucket/namespace, domains, networks, secrets, cookie names, provider credentials/webhooks, OAuth client, and Sentry/Better Stack projects.
 
-Private ingress must require the selected operator/reviewer access control. A staging hostname/routing rule, provider webhook, object key, cookie, telemetry event, or backup is never reused as a portfolio-production substitute; only an accepted immutable release artifact may be promoted.
+Private ingress uses the [staging Caddy site block](../../ops/staging/Caddyfile): HTTPS and HTTP Basic authentication protect the web app, API, and realtime endpoint. The exact `POST /v1/identity/sumsub-webhook` route bypasses Basic authentication so Sumsub can deliver callbacks; the API must verify the signed digest and reconcile the applicant before changing state. Set `STAGING_HOSTNAME`, `STAGING_BASIC_AUTH_USER`, `STAGING_BASIC_AUTH_HASH`, `STAGING_API_UPSTREAM`, and `STAGING_WEB_UPSTREAM` in the host's protected Caddy environment. Generate the password hash with `caddy hash-password`; never store the plaintext password or hash in the repository. Bind the upstreams to loopback and keep their ports closed externally. The hostname and real host configuration are pending.
+
+The API and worker refuse staging startup without PostgreSQL, Better Auth, Resend, Sumsub, HTTPS object storage, and a configured ClamAV scanner. Give staging a separate object-store bucket and credentials; the local MinIO fixture endpoint is rejected. The scanner may run on the VPS loopback interface, but it must be a running service before media processing is exercised. During Sumsub sandbox rehearsal, leave `SUMSUB_AGE_18_LEVEL_CONFIRMED` unset: adult grants stay disabled and the API health endpoint stays unready. Set it to `true` only after verifying that the configured level enforces age 18 or older and its signed callback and reconciliation path work.
+
+A staging hostname/routing rule, provider webhook, object key, cookie, telemetry event, or backup is never reused as a portfolio-production substitute; only an accepted immutable release artifact may be promoted.
 
 ## Provider mode
 
 - Stripe sandbox/Connect and synthetic connected accounts.
 - Google Meet test accounts connected by assigned synthetic Staff; no Calendar write/sync [DEC-099–DEC-101].
-- Sumsub private sandbox only, without real documents [DEC-066].
+- Sumsub private sandbox with a configured age-18 level and invited test users [DEC-066]. Do not grant adult capabilities until the provider's level rule and signed callback/reconciliation path are proven.
 - Resend test/staging route and allowlisted one-way AfroMessage transactional templates [DEC-073–DEC-074].
 - Restricted staging MapTiler key and separate R2 objects.
 
@@ -31,7 +35,7 @@ Private ingress must require the selected operator/reviewer access control. A st
 4. Acquire the staging migration lock and apply expand-compatible migrations.
 5. Start PostgreSQL/Redis/search readiness, then API/worker/web in controlled order.
 6. Verify public denial/private access policy, TLS, cookie separation, and no production secret/domain/object reference.
-7. Run synthetic smoke suites: auth/MFA, Vendor roles, mixed checkout, payment/webhook, pickup/delivery, Location/online Booking, outbox/search/realtime, media, refund/reconciliation, demo expiry.
+7. Run real Phase 00 smoke flows with invited accounts: Resend delivery, Better Auth verification/recovery/MFA, authenticated API and realtime, and Sumsub sandbox approval, rejection, reset, and replay. Exercise later-phase provider sandbox flows as their real adapters become available; synthetic suites remain regression checks only.
 8. Confirm Sentry release association, uptime checks, worker/backup heartbeats, and alert routing.
 9. Record evidence and either approve the exact digest for production or roll staging back.
 
@@ -49,7 +53,7 @@ These are **DERIVED-PLAN-DEFAULT** command names, not scripts that exist or have
 
 ## Acceptance
 
-Staging is healthy only when every service reports expected build/schema/environment identity, callbacks map to staging objects, no synthetic email/SMS escapes allowlists, Google Meet tokens remain server encrypted, resource limits do not threaten production, and all release gates pass.
+Staging is healthy only when every service reports expected build/schema/environment identity, callbacks map to staging objects, real staging email reaches invited mailboxes, Google Meet tokens remain server encrypted, resource limits do not threaten production, and all release gates pass.
 
 The evidence packet must also prove negative boundaries: direct public access is denied, portfolio cookies/origins/secrets are absent, provider events are labeled staging, and a failed sandbox scenario does not move an authoritative state transition without verified reconciliation.
 

@@ -11,8 +11,11 @@ const geist = Geist({
 })
 
 export const metadata: Metadata = {
-	title: 'Junction | Local discovery preview',
-	description: 'Browse approved local Vendor offerings in a synthetic discovery preview.',
+	title: process.env.NEXT_PUBLIC_JUNCTION_RUNTIME_MODE === 'staging' ? 'Junction | Private staging' : 'Junction | Local discovery preview',
+	description:
+		process.env.NEXT_PUBLIC_JUNCTION_RUNTIME_MODE === 'staging'
+			? 'Browse approved Vendor offerings in the private staging environment.'
+			: 'Browse approved local Vendor offerings in a synthetic discovery preview.',
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

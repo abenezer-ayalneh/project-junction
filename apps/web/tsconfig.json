@@ -49,6 +49,9 @@
 	],
 	"references": [
 		{
+			"path": "../../libs/platform-core"
+		},
+		{
 			"path": "../../libs/contracts"
 		}
 	]

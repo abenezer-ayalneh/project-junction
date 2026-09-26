@@ -14,13 +14,14 @@ import { type FormEvent, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 
-const apiBase = process.env.NEXT_PUBLIC_JUNCTION_API_URL ?? 'http://127.0.0.1:3001/v1'
+const apiBase = process.env.NEXT_PUBLIC_JUNCTION_RUNTIME_MODE === 'staging' ? '/v1' : (process.env.NEXT_PUBLIC_JUNCTION_API_URL ?? 'http://127.0.0.1:3001/v1')
+const isStaging = process.env.NEXT_PUBLIC_JUNCTION_RUNTIME_MODE === 'staging'
 
 async function apiRequest(path: string, sessionId: string, body?: unknown) {
 	const response = await fetch(`${apiBase}${path}`, {
 		method: body === undefined ? 'GET' : 'POST',
 		headers: {
-			'x-junction-session': sessionId,
+			...(isStaging ? {} : { 'x-junction-session': sessionId }),
 			...(body === undefined ? {} : { 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() }),
 		},
 		...(body === undefined ? {} : { body: JSON.stringify(body) }),
@@ -100,7 +101,7 @@ export default function PlatformReview() {
 				<Link href="/" className="text-sm font-semibold">
 					Junction
 				</Link>
-				<Badge variant="outline">Synthetic Platform review</Badge>
+				<Badge variant="outline">{isStaging ? 'Private staging review' : 'Synthetic Platform review'}</Badge>
 			</header>
 			<div className="py-10">
 				<h1 className="text-4xl font-semibold tracking-tight">Review queue</h1>
@@ -114,28 +115,34 @@ export default function PlatformReview() {
 					void run(() => loadQueue())
 				}}
 				className="flex flex-col gap-3 rounded-xl border p-5 sm:flex-row sm:items-end">
-				<label className="grid flex-1 gap-1.5 text-sm font-medium">
-					Platform review session ID
-					<input
-						type="password"
-						required
-						value={sessionId}
-						onChange={(event) => {
-							setSessionId(event.target.value)
-							setQueue(null)
-							setMediaQueue(null)
-							setCatalogHealth(null)
-							setMediaPreview(null)
-						}}
-						className="h-10 rounded-lg border bg-background px-3 font-normal"
-						placeholder="Current Trust or Platform Owner session"
-					/>
-				</label>
+				{!isStaging && (
+					<label className="grid flex-1 gap-1.5 text-sm font-medium">
+						Platform review session ID
+						<input
+							type="password"
+							required
+							value={sessionId}
+							onChange={(event) => {
+								setSessionId(event.target.value)
+								setQueue(null)
+								setMediaQueue(null)
+								setCatalogHealth(null)
+								setMediaPreview(null)
+							}}
+							className="h-10 rounded-lg border bg-background px-3 font-normal"
+							placeholder="Current Trust or Platform Owner session"
+						/>
+					</label>
+				)}
 				<Button type="submit" disabled={busy}>
 					Load queue
 				</Button>
 			</form>
-			<p className="mt-2 text-xs text-muted-foreground">The session stays in this page only and is cleared when you reload it.</p>
+			{isStaging ? (
+				<p className="mt-2 text-xs text-muted-foreground">Sign in with a verified, MFA-protected reviewer account before loading the queue.</p>
+			) : (
+				<p className="mt-2 text-xs text-muted-foreground">The session stays in this page only and is cleared when you reload it.</p>
+			)}
 			{message && (
 				<p className="mt-5 rounded-lg border px-4 py-3 text-sm" role="status">
 					{message}

@@ -15,7 +15,10 @@ const secondaryPort = secondaryServer.address().port
 await new Promise((resolve) => secondaryServer.close(resolve))
 const children = []
 function start(file, extra = {}) {
-	const child = spawn(process.execPath, [file], { env: { ...process.env, FOUNDATION_STORAGE: 'postgresql', ...extra }, stdio: ['ignore', 'pipe', 'pipe'] })
+	const child = spawn(process.execPath, [file], {
+		env: { ...process.env, NODE_ENV: 'test', JUNCTION_RUNTIME_MODE: 'synthetic', FOUNDATION_STORAGE: 'postgresql', ...extra },
+		stdio: ['ignore', 'pipe', 'pipe'],
+	})
 	let diagnostics = ''
 	child.stdout.on('data', (data) => {
 		diagnostics += data

@@ -20,6 +20,7 @@ model User {
   followedVendors        VendorFollow[]
   savedSearches          SavedSearch[]
   discoveryPreference    DiscoveryPreference?
+  platformReviewerGrant  PlatformReviewerGrant?
 
   @@map("users")
 }
@@ -34,6 +35,16 @@ model Workspace {
   demoPersonas DemoPersona[]
 
   @@map("workspaces")
+}
+
+model PlatformReviewerGrant {
+  userId     String    @id @map("user_id") @db.Uuid
+  grantedAt  DateTime  @default(now()) @map("granted_at") @db.Timestamptz(6)
+  revokedAt  DateTime? @map("revoked_at") @db.Timestamptz(6)
+  grantedBy  String    @map("granted_by")
+  user       User      @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+
+  @@map("platform_reviewer_grants")
 }
 
 model Session {

@@ -8,11 +8,13 @@ import {
 	type RecommendationPage,
 	RecommendationPageSchema,
 } from 'contracts'
+import Link from 'next/link'
 import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 
-const apiBase = process.env.NEXT_PUBLIC_JUNCTION_API_URL ?? 'http://127.0.0.1:3001/v1'
+const apiBase = process.env.NEXT_PUBLIC_JUNCTION_RUNTIME_MODE === 'staging' ? '/v1' : (process.env.NEXT_PUBLIC_JUNCTION_API_URL ?? 'http://127.0.0.1:3001/v1')
+const isStaging = process.env.NEXT_PUBLIC_JUNCTION_RUNTIME_MODE === 'staging'
 
 async function request(path: string, sessionId: string, body?: unknown): Promise<unknown> {
 	const response = await fetch(`${apiBase}${path}`, {
@@ -94,28 +96,40 @@ export function CustomerDiscovery({ listings, vendors }: { listings: PublicListi
 				Save what interests you
 			</h2>
 			<p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-				Use a current synthetic Customer session to save offerings, follow Vendors, and choose whether recommendations use those signals.
+				{isStaging ? (
+					<>
+						Sign in from your{' '}
+						<Link href="/account" className="underline">
+							account
+						</Link>{' '}
+						to save offerings, follow Vendors, and choose whether recommendations use those signals.
+					</>
+				) : (
+					'Use a current synthetic Customer session to save offerings, follow Vendors, and choose whether recommendations use those signals.'
+				)}
 			</p>
 			<div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
-				<label className="grid flex-1 gap-1.5 text-sm font-medium">
-					Synthetic Customer session
-					<input
-						type="password"
-						value={sessionId}
-						onChange={(event) => {
-							setSessionId(event.target.value)
-							setState(null)
-							setRecommendations(null)
-						}}
-						className="h-10 rounded-lg border bg-background px-3 font-normal"
-						autoComplete="off"
-					/>
-				</label>
-				<Button type="button" variant="outline" disabled={busy || !sessionId} onClick={loadState}>
+				{!isStaging && (
+					<label className="grid flex-1 gap-1.5 text-sm font-medium">
+						Synthetic Customer session
+						<input
+							type="password"
+							value={sessionId}
+							onChange={(event) => {
+								setSessionId(event.target.value)
+								setState(null)
+								setRecommendations(null)
+							}}
+							className="h-10 rounded-lg border bg-background px-3 font-normal"
+							autoComplete="off"
+						/>
+					</label>
+				)}
+				<Button type="button" variant="outline" disabled={busy || (!isStaging && !sessionId)} onClick={loadState}>
 					Load saved state
 				</Button>
 			</div>
-			<p className="mt-2 text-xs text-muted-foreground">This session stays in the page and clears on reload.</p>
+			{!isStaging && <p className="mt-2 text-xs text-muted-foreground">This session stays in the page and clears on reload.</p>}
 			{message && (
 				<p className="mt-4 rounded-lg border p-3 text-sm" role="status">
 					{message}

@@ -8,6 +8,12 @@
 	"types": "./dist/index.d.ts",
 	"exports": {
 		"./package.json": "./package.json",
+		"./auth": {
+			"project-junction": "./src/lib/auth.ts",
+			"types": "./dist/lib/auth.d.ts",
+			"import": "./dist/lib/auth.js",
+			"default": "./dist/lib/auth.js"
+		},
 		".": {
 			"project-junction": "./src/index.ts",
 			"types": "./dist/index.d.ts",
@@ -20,8 +26,11 @@
 		"@aws-sdk/s3-request-presigner": "^3.1139.0",
 		"@prisma/adapter-pg": "7.10.0",
 		"@prisma/client": "7.10.0",
+		"better-auth": "^1.7.6",
 		"contracts": "workspace:*",
+		"kysely": "^0.29.6",
 		"pg": "^8.23.0",
+		"resend": "^6.29.0",
 		"tslib": "^2.3.0"
 	},
 	"devDependencies": {

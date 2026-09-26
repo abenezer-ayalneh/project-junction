@@ -147,31 +147,32 @@ This is the authoritative inventory. `Owner` means normative owner, not a person
 
 ## Security, quality, and operations
 
-| Document                                                         | Status   | Purpose                  | Owner      | Deps                |
-| ---------------------------------------------------------------- | -------- | ------------------------ | ---------- | ------------------- |
-| `docs/security/THREAT-MODEL.md`                                  | S/NE/NV  | threat/control intent    | security   | architecture/data   |
-| `docs/security/ASVS-5-LEVEL-2-MATRIX.md`                         | S/NE/NV  | ASVS mapping             | security   | source/evidence     |
-| `docs/security/AUTHENTICATION-AUTHORIZATION-AND-DUAL-CONTROL.md` | S/NE/NV  | access/approval control  | security   | role model          |
-| `docs/security/WORKSPACE-VENDOR-AND-LOCATION-ISOLATION.md`       | S/NE/NV  | scope isolation          | security   | AccessContext/data  |
-| `docs/security/PHASE-00-RESOURCE-ID-INVENTORY.md`                | Evidence | implemented ID scope map | security   | Phase 00 evidence   |
-| `docs/security/APPLICATION-UPLOAD-AND-PROVIDER-SECURITY.md`      | S/NE/NV  | provider/upload controls | security   | media/adapters      |
-| `docs/security/PRIVACY-DATA-SUBJECT-RIGHTS-AND-RETENTION.md`     | S/NE/NV  | privacy control          | security   | data/future law     |
-| `docs/security/ABUSE-MODERATION-AND-APPEALS.md`                  | S/NE/NV  | abuse/enforcement        | security   | trust policy        |
-| `docs/security/SECURITY-VERIFICATION-AND-RELEASE-GATES.md`       | S/NE/NV  | security release proof   | security   | quality/gates       |
-| `docs/quality/TEST-STRATEGY.md`                                  | S/NE/NV  | verification strategy    | quality    | requirements        |
-| `docs/quality/PHASE-ACCEPTANCE-CATALOG.md`                       | S/NE/NV  | scenario index           | quality    | phase requirements  |
-| `docs/quality/CONCURRENCY-AND-FINANCIAL-CORRECTNESS.md`          | S/NE/NV  | correctness test intent  | quality    | states/ledger       |
-| `docs/quality/PROVIDER-CONTRACT-AND-FAILURE-TESTING.md`          | S/NE/NV  | provider test plan       | quality    | provider contracts  |
-| `docs/quality/ACCESSIBILITY-I18N-AND-LOW-CONNECTIVITY.md`        | S/NE/NV  | inclusive quality proof  | quality    | product UX          |
-| `docs/quality/PERFORMANCE-RELIABILITY-AND-SLO.md`                | S/NE/NV  | performance/SLO target   | quality    | deployment          |
-| `docs/quality/DEPLOYMENT-AND-RECOVERY-TESTING.md`                | S/NE/NV  | recovery proof           | quality    | runbooks            |
-| `docs/quality/EVIDENCE-INDEX.md`                                 | Baseline | evidence schema/index    | quality    | all `EVD-*`         |
-| `docs/quality/PHASE-01-ACCEPTANCE-EVIDENCE.md`                   | Evidence | Phase 01 gate assessment | quality    | Phase 01 scenarios  |
-| `docs/operations/PRODUCTION-OPERATING-MODEL.md`                  | S/NE/NV  | human operations         | operations | roles/runbooks      |
-| `docs/operations/MONITORING-ALERTING-AND-STATUS-PAGE.md`         | S/NE/NV  | observability/status     | operations | deployment/runbooks |
-| `docs/operations/RECONCILIATION-AND-FINANCIAL-OPERATIONS.md`     | S/NE/NV  | finance operations       | operations | ledger/policy       |
-| `docs/operations/SUPPORT-TRUST-FINANCE-AND-VENDOR-OPERATIONS.md` | S/NE/NV  | operating lanes          | operations | cases/policy        |
-| `docs/operations/RUNBOOK-INDEX.md`                               | S/NE/NV  | runbook index            | operations | runbooks            |
+| Document                                                         | Status      | Purpose                    | Owner      | Deps                |
+| ---------------------------------------------------------------- | ----------- | -------------------------- | ---------- | ------------------- |
+| `docs/security/THREAT-MODEL.md`                                  | S/NE/NV     | threat/control intent      | security   | architecture/data   |
+| `docs/security/ASVS-5-LEVEL-2-MATRIX.md`                         | S/NE/NV     | ASVS mapping               | security   | source/evidence     |
+| `docs/security/AUTHENTICATION-AUTHORIZATION-AND-DUAL-CONTROL.md` | S/NE/NV     | access/approval control    | security   | role model          |
+| `docs/security/WORKSPACE-VENDOR-AND-LOCATION-ISOLATION.md`       | S/NE/NV     | scope isolation            | security   | AccessContext/data  |
+| `docs/security/PHASE-00-RESOURCE-ID-INVENTORY.md`                | Evidence    | implemented ID scope map   | security   | Phase 00 evidence   |
+| `docs/security/APPLICATION-UPLOAD-AND-PROVIDER-SECURITY.md`      | S/NE/NV     | provider/upload controls   | security   | media/adapters      |
+| `docs/security/PRIVACY-DATA-SUBJECT-RIGHTS-AND-RETENTION.md`     | S/NE/NV     | privacy control            | security   | data/future law     |
+| `docs/security/ABUSE-MODERATION-AND-APPEALS.md`                  | S/NE/NV     | abuse/enforcement          | security   | trust policy        |
+| `docs/security/SECURITY-VERIFICATION-AND-RELEASE-GATES.md`       | S/NE/NV     | security release proof     | security   | quality/gates       |
+| `docs/quality/TEST-STRATEGY.md`                                  | S/NE/NV     | verification strategy      | quality    | requirements        |
+| `docs/quality/PHASE-ACCEPTANCE-CATALOG.md`                       | S/NE/NV     | scenario index             | quality    | phase requirements  |
+| `docs/quality/CONCURRENCY-AND-FINANCIAL-CORRECTNESS.md`          | S/NE/NV     | correctness test intent    | quality    | states/ledger       |
+| `docs/quality/PROVIDER-CONTRACT-AND-FAILURE-TESTING.md`          | S/NE/NV     | provider test plan         | quality    | provider contracts  |
+| `docs/quality/ACCESSIBILITY-I18N-AND-LOW-CONNECTIVITY.md`        | S/NE/NV     | inclusive quality proof    | quality    | product UX          |
+| `docs/quality/PERFORMANCE-RELIABILITY-AND-SLO.md`                | S/NE/NV     | performance/SLO target     | quality    | deployment          |
+| `docs/quality/DEPLOYMENT-AND-RECOVERY-TESTING.md`                | S/NE/NV     | recovery proof             | quality    | runbooks            |
+| `docs/quality/EVIDENCE-INDEX.md`                                 | Baseline    | evidence schema/index      | quality    | all `EVD-*`         |
+| `docs/quality/PHASE-01-ACCEPTANCE-EVIDENCE.md`                   | Evidence    | Phase 01 gate assessment   | quality    | Phase 01 scenarios  |
+| `docs/quality/PHASE-00-REAL-TRANSITION.md`                       | In progress | real-service staging gates | quality    | Phase 00 transition |
+| `docs/operations/PRODUCTION-OPERATING-MODEL.md`                  | S/NE/NV     | human operations           | operations | roles/runbooks      |
+| `docs/operations/MONITORING-ALERTING-AND-STATUS-PAGE.md`         | S/NE/NV     | observability/status       | operations | deployment/runbooks |
+| `docs/operations/RECONCILIATION-AND-FINANCIAL-OPERATIONS.md`     | S/NE/NV     | finance operations         | operations | ledger/policy       |
+| `docs/operations/SUPPORT-TRUST-FINANCE-AND-VENDOR-OPERATIONS.md` | S/NE/NV     | operating lanes            | operations | cases/policy        |
+| `docs/operations/RUNBOOK-INDEX.md`                               | S/NE/NV     | runbook index              | operations | runbooks            |
 
 ## Runbooks
 

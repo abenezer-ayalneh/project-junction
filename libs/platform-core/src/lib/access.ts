@@ -66,6 +66,11 @@ export function assertElevatedSession(context: AccessContext, now = new Date()):
 		!context.memberships.some((membership) => membership.active && membership.role === 'vendor_owner')
 	)
 		throw new AccessDeniedError()
+	assertRecentMfa(context, now)
+}
+
+export function assertRecentMfa(context: AccessContext, now = new Date()): void {
+	if (context.actor.kind !== 'user') throw new AccessDeniedError()
 	const mfaVerifiedAt = context.session.mfaVerifiedAt && new Date(context.session.mfaVerifiedAt)
 	const recentAuthAt = context.session.recentAuthAt && new Date(context.session.recentAuthAt)
 	const oldestAllowed = now.getTime() - 15 * 60 * 1000
@@ -73,6 +78,7 @@ export function assertElevatedSession(context: AccessContext, now = new Date()):
 		!mfaVerifiedAt ||
 		!recentAuthAt ||
 		mfaVerifiedAt.getTime() > now.getTime() ||
+		mfaVerifiedAt.getTime() < oldestAllowed ||
 		recentAuthAt.getTime() > now.getTime() ||
 		recentAuthAt.getTime() < oldestAllowed
 	)

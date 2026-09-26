@@ -138,6 +138,32 @@ export class AppController {
 		return this.foundation.readVendorCatalog(this.foundation.resolveSessionId(sessionId, cookie))
 	}
 
+	@Get('account/vendor-memberships')
+	@ApiOperation({ summary: 'List the signed-in adult account’s eligible Vendor Owner memberships.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.vendorMemberships })
+	@ApiForbiddenResponse({ schema: OpenApiSchemaRefs.apiError })
+	listOwnerMemberships(@Headers('x-junction-session') sessionId: string | undefined, @Headers('cookie') cookie: string | undefined) {
+		return this.foundation.listOwnerMemberships(this.foundation.resolveSessionId(sessionId, cookie))
+	}
+
+	@Post('account/active-vendor')
+	@ApiOperation({ summary: 'Select an eligible Vendor Owner membership after recent MFA, or return to the Customer scope.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiBody({ schema: OpenApiSchemaRefs.activeVendorSelection })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.activeVendorSelectionResult })
+	@ApiForbiddenResponse({ schema: OpenApiSchemaRefs.apiError })
+	async selectActiveVendor(
+		@Headers('x-junction-session') sessionId: string | undefined,
+		@Headers('cookie') cookie: string | undefined,
+		@Body() body: unknown,
+	) {
+		const resolvedSessionId = this.foundation.resolveSessionId(sessionId, cookie)
+		const result = await this.foundation.selectActiveVendor(resolvedSessionId, body)
+		await this.realtime.revokeSession(resolvedSessionId)
+		return result
+	}
+
 	@Get('platform/review-queue')
 	@ApiOperation({ summary: 'Read scoped pending Vendor applications and approved-Vendor listings awaiting Platform review.' })
 	@ApiSecurity('junction-session')
@@ -498,6 +524,28 @@ export class AppController {
 	@ApiForbiddenResponse({ schema: OpenApiSchemaRefs.apiError })
 	accessContext(@Headers('x-junction-session') sessionId: string | undefined, @Headers('cookie') cookie: string | undefined) {
 		return this.foundation.accessContext(this.foundation.resolveSessionId(sessionId, cookie))
+	}
+
+	@Post('identity/verification-session')
+	@ApiOperation({ summary: 'Issue a short-lived Sumsub sandbox SDK token for the authenticated account.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.identityVerificationSession })
+	@ApiForbiddenResponse({ schema: OpenApiSchemaRefs.apiError })
+	identityVerificationSession(@Headers('x-junction-session') sessionId: string | undefined, @Headers('cookie') cookie: string | undefined) {
+		return this.foundation.issueIdentityVerificationSession(this.foundation.resolveSessionId(sessionId, cookie))
+	}
+
+	@Post('identity/sumsub-webhook')
+	@ApiOperation({ summary: 'Record a signed Sumsub sandbox review for later age-level reconciliation.' })
+	@ApiHeader({ name: 'x-payload-digest', required: true })
+	@ApiHeader({ name: 'x-payload-digest-alg', required: true })
+	@ApiForbiddenResponse({ schema: OpenApiSchemaRefs.apiError })
+	sumsubWebhook(
+		@Headers('x-payload-digest') digest: string | undefined,
+		@Headers('x-payload-digest-alg') algorithm: string | undefined,
+		@Req() request: { rawBody?: Buffer },
+	) {
+		return this.foundation.receiveSumsubReview(request.rawBody, digest, algorithm)
 	}
 
 	@Get('foundation/locations/:locationId')

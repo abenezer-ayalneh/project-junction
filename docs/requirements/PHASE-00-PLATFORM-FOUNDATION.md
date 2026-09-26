@@ -1,18 +1,18 @@
 # Phase 00 — Platform Foundation
 
-**Target status:** Specified — Not Executed — Not Verified. **Local status:** Accepted synthetic foundation on 2026-09-23; public-release and commercial gates remain deferred.
+**Target status:** Specified — Not Executed — Not Verified. **Local status:** Accepted synthetic foundation on 2026-09-23; real private-staging transition in progress and not accepted.
 **Objective:** establish the future system’s safe, traceable foundation before any market capability.  
 **Owner:** platform foundation / architecture  
-**Entry:** documentation baseline accepted. **Exit:** `TST-P00-001`–`TST-P00-005` synthetic-scope evidence recorded; Phase 06 retains the public-release gates.
+**Entry:** documentation baseline accepted. **Exit:** `TST-P00-001`–`TST-P00-005` regression evidence plus a verified private-staging run of real account, email, MFA, adult-identity, reviewer, webhook, outbox, and revocation paths. Phase 06 retains the public-release gates.
 **Decision coverage:** `DEC-067`–`DEC-073`, `DEC-107`, `DEC-117`–`DEC-125`, `DEC-129`, `DEC-153`
 
 ## Included / excluded
 
-Includes target Nx modular-monolith boundaries, Next/Nest/worker contracts, identity/access context, provider abstraction, API/event conventions, database ownership, auth/session topology, outbox/inbox, test/demonstration isolation, observability baseline, and design system foundation. Excludes publicly usable commerce, real provider accounts, real identities, deployments, and public release.
+Includes target Nx modular-monolith boundaries, Next/Nest/worker contracts, identity/access context, API/event conventions, database ownership, auth/session topology, outbox/inbox, observability baseline, and design system foundation. The current exit also includes Better Auth accounts, Resend delivery, Sumsub sandbox age checks, real reviewer grants, and deployment to a private staging origin with invited test users. Public onboarding, live payments, and commercial release remain outside this phase.
 
 ## Actors and journey
 
-Future developer/operator creates a strictly scoped synthetic actor, performs an authorized command with an idempotency key, receives typed outcome/error, and can trace it through audit/event/reconciliation boundaries. No Customer transaction exists yet.
+An invited user signs up through Better Auth, verifies email through Resend, completes MFA and the Sumsub sandbox age check, and gains only the capabilities justified by current provider state and a revocable membership or operator grant. A separate invited reviewer can approve or reject a Vendor application after recent MFA. Every accepted command remains traceable through audit, outbox, and reconciliation records. No Customer transaction exists yet.
 
 ## Functional requirements
 
@@ -21,7 +21,7 @@ Future developer/operator creates a strictly scoped synthetic actor, performs an
 - `REQ-P00-API-001`: define versioned REST/OpenAPI/Zod public contracts and canonical errors/idempotency conventions.
 - `REQ-P00-DATA-001`: establish context ownership, transactional PostgreSQL truth, audited SQL lane for locks, and migration compatibility strategy.
 - `REQ-P00-EVT-001`: define transactional outbox, provider webhook inbox, worker retry/dead-letter/reconciliation behavior.
-- `REQ-P00-DEMO-001`: require synthetic workspace boundary, no-signup role switching model, quotas, 24-hour expiry, and no data promotion.
+- `REQ-P00-DEMO-001`: keep the legacy synthetic workspace boundary available only for isolated regression tests; staging must deny synthetic account creation, no-signup persona switching, fake callbacks, and promotion of demo records.
 
 ## Affected definitions
 
@@ -33,8 +33,10 @@ Expired/revoked/mismatched scope denies safely; duplicate command resolves to or
 
 ## Acceptance and deferrals
 
-`TST-P00-001`: stale role, cross-Vendor/Location/workspace ID substitution, replayed command, and WebSocket room attempt all fail without leakage. `TST-P00-002`: synthetic demo boundary is independently purged. `TST-P00-003`: public contracts and compatible migration paths stay isolated from persistence types. `TST-P00-004`: outbox/webhook replay and retry create no duplicate business effect. `TST-P00-005`: a documentation/status review finds no unlabeled target claim or unlinked requirement. Native apps, live providers, and commercial access are deferred.
+`TST-P00-001`: stale role, cross-Vendor/Location/workspace ID substitution, replayed command, and WebSocket room attempt all fail without leakage. `TST-P00-002`: the historical synthetic demo boundary is independently purged and cannot be entered in staging. `TST-P00-003`: public contracts and compatible migration paths stay isolated from persistence types. `TST-P00-004`: outbox/webhook replay and retry create no duplicate business effect or false delivery receipt. `TST-P00-005`: a documentation/status review finds no unlabeled target claim or unlinked requirement. Phase 00 exit additionally requires private HTTPS staging evidence for real mailbox delivery, Better Auth login and recovery, recent MFA, Sumsub signed approval/rejection/reset/replay, reviewer grant and revocation, and safe denial with unchanged resource, audit, and outbox state. Native apps, live payments, and commercial access are deferred.
 
 ## Implementation evidence
 
-See [Phase 00 durability evidence](../quality/PHASE-00-DURABILITY-EVIDENCE.md) for the dated, requirement-linked acceptance record. The requirement list above remains authoritative; this local acceptance neither creates a public service nor closes Phase 06 release gates.
+See [Phase 00 durability evidence](../quality/PHASE-00-DURABILITY-EVIDENCE.md) for the dated, requirement-linked local regression record. That evidence does not prove the new private-staging exit or close Phase 06 release gates.
+
+The [real-service transition tracker](../quality/PHASE-00-REAL-TRANSITION.md) records the subsequent private-staging work and its open acceptance gates. The local synthetic acceptance does not satisfy those gates.

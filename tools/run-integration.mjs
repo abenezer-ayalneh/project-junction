@@ -23,6 +23,7 @@ function run(args) {
 try {
 	run(['exec', 'prisma', 'migrate', 'deploy'])
 	run(['exec', 'prisma', 'migrate', 'deploy']) // restart/replay must be a no-op
+	run(['db:auth:migrate'])
 	if (!focusedTestName) {
 		run(['db:compat:check'])
 		run(['db:upgrade:check'])

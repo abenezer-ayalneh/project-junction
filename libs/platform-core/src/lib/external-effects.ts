@@ -7,6 +7,13 @@ export interface ExternalEffectAdapter {
 	deliver(event: DomainEvent): Promise<{ duplicate: boolean }>
 }
 
+/** Prevent staging deliveries from being acknowledged by the local test receiver. */
+export class UnconfiguredExternalEffectAdapter implements ExternalEffectAdapter {
+	deliver(): Promise<{ duplicate: boolean }> {
+		return Promise.reject(new Error('A real external effect provider must be configured before this event can be delivered.'))
+	}
+}
+
 /** Local receiver substitute: its write commits before, and apart from, outbox acknowledgement. */
 export class FakeExternalEffectAdapter implements ExternalEffectAdapter {
 	constructor(private readonly db: PrismaClient) {}

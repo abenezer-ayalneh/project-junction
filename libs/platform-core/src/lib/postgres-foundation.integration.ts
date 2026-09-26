@@ -8,6 +8,7 @@ import { FakeExternalEffectAdapter } from './external-effects.js'
 import { IdempotencyConflictError } from './idempotency.js'
 import type { MediaStore } from './media-store.js'
 import { PostgresFoundation } from './postgres-foundation.js'
+import { SumsubSandboxAdapter } from './sumsub.js'
 
 async function* noMediaObjects(): AsyncGenerator<{ key: string; lastModified: Date }> {
 	await Promise.resolve()
@@ -47,6 +48,315 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		await other?.close()
 	})
 
+	it('bridges an authenticated session without treating verified email as adult verification', async () => {
+		const authSession = { sessionId: randomUUID(), userId: randomUUID(), email: `${randomUUID()}@example.com`, expiresAt: new Date(Date.now() + 3600000) }
+		await Promise.all([repository.ensureAuthenticatedSession(authSession), other.ensureAuthenticatedSession(authSession)])
+		expect(await repository.db.session.count({ where: { id: authSession.sessionId } })).toBe(1)
+		const user = await repository.db.user.findUniqueOrThrow({ where: { id: authSession.userId } })
+		expect(user.adultVerificationState).toBe('unverified')
+		expect((await repository.db.session.findUniqueOrThrow({ where: { id: authSession.sessionId } })).activeRole).toBeNull()
+		await repository.db.session.update({ where: { id: authSession.sessionId }, data: { activeRole: 'customer' } })
+		await repository.ensureAuthenticatedSession(authSession)
+		expect((await repository.db.session.findUniqueOrThrow({ where: { id: authSession.sessionId } })).activeRole).toBeNull()
+		await expect(repository.authenticatedIdentity(authSession.sessionId)).resolves.toEqual({ userId: authSession.userId, email: authSession.email })
+		await expect(repository.accessContext(authSession.sessionId)).rejects.toThrow(AccessDeniedError)
+	})
+	it('places separate authenticated accounts in one real review workspace', async () => {
+		const accounts = [0, 1].map(() => ({
+			sessionId: randomUUID(),
+			userId: randomUUID(),
+			email: `${randomUUID()}@example.com`,
+			expiresAt: new Date(Date.now() + 3600000),
+		}))
+		await Promise.all(accounts.map((account, index) => (index ? other : repository).ensureAuthenticatedSession(account)))
+		const sessions = await repository.db.session.findMany({
+			where: { id: { in: accounts.map((account) => account.sessionId) } },
+			include: { workspace: true },
+		})
+		expect(sessions).toHaveLength(2)
+		expect(sessions.map((session) => session.workspaceId)).toEqual([sessions[0].workspaceId, sessions[0].workspaceId])
+		expect(sessions.every((session) => session.workspace.kind === 'real')).toBe(true)
+		expect(sessions[0].workspaceId).not.toBe(workspaceId)
+	})
+	it('keeps a real Vendor Owner on the Better Auth session and restores the role on a new sign-in', async () => {
+		const userId = randomUUID()
+		const email = `${randomUUID()}@example.com`
+		const sessionId = randomUUID()
+		const expiresAt = new Date(Date.now() + 3600000)
+		await repository.ensureAuthenticatedSession({ sessionId, userId, email, expiresAt })
+		await repository.db.user.update({ where: { id: userId }, data: { adultVerificationState: 'verified', verifiedAt: new Date() } })
+		const key = randomUUID()
+		const application = {
+			displayName: 'Real Vendor Workspace',
+			slug: `real-owner-${randomUUID().slice(0, 8)}`,
+			description: 'A private staging Vendor application.',
+			location: { label: 'Main location', city: 'Addis Ababa', address: 'Bole, Addis Ababa, Ethiopia' },
+		}
+		const created = await repository.createVendorApplication(sessionId, key, application)
+		expect(created.sessionId).toBe(sessionId)
+		await expect(repository.createVendorApplication(sessionId, key, application)).resolves.toEqual({ ...created, replayed: true })
+		await repository.ensureAuthenticatedSession({ sessionId, userId, email, expiresAt })
+		await expect(repository.accessContext(sessionId)).resolves.toMatchObject({ activeVendorId: created.vendorId })
+		const nextSessionId = randomUUID()
+		await repository.ensureAuthenticatedSession({ sessionId: nextSessionId, userId, email, expiresAt })
+		await expect(repository.accessContext(nextSessionId)).resolves.toMatchObject({ activeVendorId: created.vendorId })
+	})
+	it('switches only among the real account’s current Owner memberships after recent MFA', async () => {
+		const userId = randomUUID()
+		const sessionId = randomUUID()
+		await repository.ensureAuthenticatedSession({
+			sessionId,
+			userId,
+			email: `${randomUUID()}@example.com`,
+			expiresAt: new Date(Date.now() + 3600000),
+		})
+		await repository.db.user.update({ where: { id: userId }, data: { adultVerificationState: 'verified', verifiedAt: new Date() } })
+		const session = await repository.db.session.findUniqueOrThrow({ where: { id: sessionId } })
+		const first = await repository.db.vendor.create({ data: { workspaceId: session.workspaceId, displayName: 'First workshop' } })
+		const second = await repository.db.vendor.create({ data: { workspaceId: session.workspaceId, displayName: 'Second workshop' } })
+		await repository.db.vendorMembership.createMany({
+			data: [
+				{ userId, vendorId: first.id, role: 'vendor_owner', locationIds: [] },
+				{ userId, vendorId: second.id, role: 'vendor_owner', locationIds: [] },
+			],
+		})
+		expect((await repository.listOwnerMemberships(sessionId)).items).toHaveLength(2)
+		await expect(repository.selectActiveVendor(sessionId, { vendorId: first.id })).rejects.toThrow(AccessDeniedError)
+		await repository.markVerifiedSecondFactor(sessionId, userId, new Date())
+		await expect(repository.selectActiveVendor(sessionId, { vendorId: first.id })).resolves.toEqual({ activeVendorId: first.id })
+		await expect(repository.accessContext(sessionId)).resolves.toMatchObject({ activeVendorId: first.id })
+		const beforeAudit = await repository.db.auditLog.count({ where: { action: 'session.active-vendor-selected', actorId: userId } })
+		await expect(repository.selectActiveVendor(sessionId, { vendorId: randomUUID() })).rejects.toThrow(AccessDeniedError)
+		expect(await repository.db.auditLog.count({ where: { action: 'session.active-vendor-selected', actorId: userId } })).toBe(beforeAudit)
+		await expect(repository.selectActiveVendor(sessionId, { vendorId: second.id })).resolves.toEqual({ activeVendorId: second.id })
+		await expect(repository.accessContext(sessionId)).resolves.toMatchObject({ activeVendorId: second.id })
+		await expect(repository.selectActiveVendor(sessionId, { vendorId: null })).resolves.toEqual({ activeVendorId: null })
+		await expect(repository.accessContext(sessionId)).resolves.toMatchObject({ activeVendorId: null })
+	})
+	it('denies a staging session immediately after Better Auth sign-out', async () => {
+		const sessionId = randomUUID()
+		const userId = randomUUID()
+		const email = `${randomUUID()}@example.com`
+		const expiresAt = new Date(Date.now() + 3600000)
+		await repository.ensureAuthenticatedSession({ sessionId, userId, email, expiresAt })
+		await repository.db.user.update({ where: { id: userId }, data: { adultVerificationState: 'verified', verifiedAt: new Date() } })
+		await repository.db
+			.$executeRaw`INSERT INTO junction_auth."user" (id, name, email, "emailVerified") VALUES (${userId}, ${'Staging reviewer'}, ${email}, true)`
+		await repository.db
+			.$executeRaw`INSERT INTO junction_auth.session (id, "expiresAt", token, "updatedAt", "userId") VALUES (${sessionId}, ${expiresAt}, ${randomUUID()}, now(), ${userId})`
+		const previous = process.env['JUNCTION_RUNTIME_MODE']
+		process.env['JUNCTION_RUNTIME_MODE'] = 'staging'
+		try {
+			await expect(repository.accessContext(sessionId)).resolves.toMatchObject({ actor: { kind: 'user', userId } })
+			await repository.db.$executeRaw`DELETE FROM junction_auth.session WHERE id = ${sessionId}`
+			await expect(repository.accessContext(sessionId)).rejects.toThrow(AccessDeniedError)
+			const before = {
+				vendors: await repository.db.vendor.count(),
+				audits: await repository.db.auditLog.count(),
+				outbox: await repository.db.outboxEvent.count(),
+				effects: await repository.db.syntheticExternalEffect.count(),
+			}
+			await expect(
+				repository.createVendorApplication(sessionId, randomUUID(), {
+					displayName: 'Expired Auth Vendor',
+					slug: `expired-auth-${randomUUID().slice(0, 8)}`,
+					description: 'This application must not be created after sign-out.',
+					location: { label: 'Main location', city: 'Addis Ababa', address: 'Bole, Addis Ababa, Ethiopia' },
+				}),
+			).rejects.toThrow(AccessDeniedError)
+			expect(await repository.db.vendor.count()).toBe(before.vendors)
+			expect(await repository.db.auditLog.count()).toBe(before.audits)
+			expect(await repository.db.outboxEvent.count()).toBe(before.outbox)
+			expect(await repository.db.syntheticExternalEffect.count()).toBe(before.effects)
+		} finally {
+			await repository.db.$executeRaw`DELETE FROM junction_auth.session WHERE id = ${sessionId}`
+			await repository.db.$executeRaw`DELETE FROM junction_auth."user" WHERE id = ${userId}`
+			if (previous === undefined) delete process.env['JUNCTION_RUNTIME_MODE']
+			else process.env['JUNCTION_RUNTIME_MODE'] = previous
+		}
+	})
+	it('grants real reviewer access only with current MFA and removes it on revocation', async () => {
+		const accounts = [0, 1].map(() => ({
+			sessionId: randomUUID(),
+			userId: randomUUID(),
+			email: `${randomUUID()}@example.com`,
+			expiresAt: new Date(Date.now() + 3600000),
+		}))
+		await Promise.all(accounts.map((account) => repository.ensureAuthenticatedSession(account)))
+		const [reviewer, applicant] = accounts
+		const applicantSession = await repository.db.session.findUniqueOrThrow({ where: { id: applicant.sessionId } })
+		await repository.db.user.updateMany({
+			where: { id: { in: accounts.map((account) => account.userId) } },
+			data: { adultVerificationState: 'verified', verifiedAt: new Date() },
+		})
+		const vendor = await repository.db.vendor.create({ data: { workspaceId: applicantSession.workspaceId } })
+		await expect(repository.readPlatformReviewQueue(reviewer.sessionId, { limit: 10 })).rejects.toThrow(AccessDeniedError)
+		await repository.db.platformReviewerGrant.create({ data: { userId: reviewer.userId, grantedBy: 'integration-operator' } })
+		const queue = await repository.readPlatformReviewQueue(reviewer.sessionId, { limit: 100 })
+		expect(queue.applications.some((item) => item.id === vendor.id)).toBe(true)
+		const before = {
+			audit: await repository.db.auditLog.count({ where: { workspaceId: applicantSession.workspaceId } }),
+			outbox: await repository.db.outboxEvent.count({ where: { workspaceId: applicantSession.workspaceId } }),
+		}
+		await expect(
+			repository.reviewVendorApplication(reviewer.sessionId, randomUUID(), vendor.id, { decision: 'approve', note: 'requires MFA' }),
+		).rejects.toThrow(AccessDeniedError)
+		expect(await repository.db.vendor.findUniqueOrThrow({ where: { id: vendor.id } })).toMatchObject({ applicationState: 'pending' })
+		expect(await repository.db.auditLog.count({ where: { workspaceId: applicantSession.workspaceId } })).toBe(before.audit)
+		expect(await repository.db.outboxEvent.count({ where: { workspaceId: applicantSession.workspaceId } })).toBe(before.outbox)
+		await repository.markVerifiedSecondFactor(reviewer.sessionId, reviewer.userId, new Date())
+		await repository.reviewVendorApplication(reviewer.sessionId, randomUUID(), vendor.id, { decision: 'approve', note: 'reviewed by real user' })
+		expect(await repository.db.vendor.findUniqueOrThrow({ where: { id: vendor.id } })).toMatchObject({ applicationState: 'approved' })
+		await repository.db.platformReviewerGrant.update({ where: { userId: reviewer.userId }, data: { revokedAt: new Date() } })
+		const nextVendor = await repository.db.vendor.create({ data: { workspaceId: applicantSession.workspaceId } })
+		const after = {
+			audit: await repository.db.auditLog.count({ where: { workspaceId: applicantSession.workspaceId } }),
+			outbox: await repository.db.outboxEvent.count({ where: { workspaceId: applicantSession.workspaceId } }),
+		}
+		await expect(
+			repository.reviewVendorApplication(reviewer.sessionId, randomUUID(), nextVendor.id, { decision: 'approve', note: 'revoked' }),
+		).rejects.toThrow(AccessDeniedError)
+		expect(await repository.db.vendor.findUniqueOrThrow({ where: { id: nextVendor.id } })).toMatchObject({ applicationState: 'pending' })
+		expect(await repository.db.auditLog.count({ where: { workspaceId: applicantSession.workspaceId } })).toBe(after.audit)
+		expect(await repository.db.outboxEvent.count({ where: { workspaceId: applicantSession.workspaceId } })).toBe(after.outbox)
+	})
+
+	it('records a Sumsub review once without granting adult access', async () => {
+		const authSession = { sessionId: randomUUID(), userId: randomUUID(), email: `${randomUUID()}@example.com`, expiresAt: new Date(Date.now() + 3600000) }
+		await repository.ensureAuthenticatedSession(authSession)
+		const applicantId = randomUUID().replaceAll('-', '').slice(0, 24)
+		const review = {
+			eventId: randomUUID(),
+			applicantId,
+			userId: authSession.userId,
+			levelName: 'age-18',
+			eventType: 'applicantReviewed',
+			answer: 'GREEN',
+			status: 'completed',
+			observedAt: '2026-09-25 06:00:00.000',
+			sandboxMode: true,
+		}
+		const results = await Promise.all([repository.recordSumsubReview(review), other.recordSumsubReview(review)])
+		expect(results.filter((result) => !result.duplicate)).toHaveLength(1)
+		expect(await repository.db.providerInboxEvent.count({ where: { provider: 'sumsub-sandbox', providerEventId: review.eventId } })).toBe(1)
+		await expect(repository.accessContext(authSession.sessionId)).rejects.toThrow(AccessDeniedError)
+		await expect(repository.recordSumsubReview({ ...review, eventId: randomUUID(), userId: randomUUID() })).rejects.toThrow(AccessDeniedError)
+		let currentStatus = 'completed'
+		let currentAnswer: 'GREEN' | 'RED' | null = 'GREEN'
+		let currentLevel = 'age-18'
+		const request = jest.fn((url: string) =>
+			Promise.resolve(
+				new Response(
+					JSON.stringify(
+						url.endsWith('/status')
+							? {
+									levelName: currentLevel,
+									reviewStatus: currentStatus,
+									reviewResult: currentAnswer ? { reviewAnswer: currentAnswer } : undefined,
+								}
+							: { id: applicantId, externalUserId: authSession.userId },
+					),
+					{ status: 200 },
+				),
+			),
+		)
+		const adapter = new SumsubSandboxAdapter('app-token', 'app-secret', 'webhook-secret', request as typeof fetch)
+		await expect(repository.reconcileOneSumsubReview(adapter, 'age-18')).resolves.toEqual({ processed: true, state: 'verified' })
+		let user = await repository.db.user.findUniqueOrThrow({ where: { id: authSession.userId } })
+		expect(user.adultVerificationState).toBe('verified')
+		expect(user.verifiedAt).not.toBeNull()
+		await expect(repository.accessContext(authSession.sessionId)).resolves.toMatchObject({ actor: { kind: 'user', userId: authSession.userId } })
+		const deactivatedEventId = randomUUID()
+		await repository.recordSumsubReview({
+			...review,
+			eventId: deactivatedEventId,
+			eventType: 'applicantDeactivated',
+			observedAt: '2026-09-25 06:01:00.000',
+		})
+		expect(
+			(
+				await repository.db.providerInboxEvent.findUniqueOrThrow({
+					where: { provider_providerEventId: { provider: 'sumsub-sandbox', providerEventId: deactivatedEventId } },
+				})
+			).reconciliationState,
+		).toBe('reconciled')
+		user = await repository.db.user.findUniqueOrThrow({ where: { id: authSession.userId } })
+		expect(user.adultVerificationState).toBe('unverified')
+		expect(user.verifiedAt).toBeNull()
+		await expect(repository.accessContext(authSession.sessionId)).rejects.toThrow(AccessDeniedError)
+		await repository.recordSumsubReview({ ...review, eventId: randomUUID() })
+		await expect(repository.reconcileOneSumsubReview(adapter, 'age-18')).resolves.toEqual({ processed: true, state: 'unverified' })
+		await expect(repository.accessContext(authSession.sessionId)).rejects.toThrow(AccessDeniedError)
+		await repository.recordSumsubReview({
+			...review,
+			eventId: randomUUID(),
+			eventType: 'applicantActivated',
+			observedAt: '2026-09-25 06:02:00.000',
+		})
+		await expect(repository.reconcileOneSumsubReview(adapter, 'age-18')).resolves.toEqual({ processed: true, state: 'verified' })
+		await expect(repository.accessContext(authSession.sessionId)).resolves.toMatchObject({ actor: { kind: 'user', userId: authSession.userId } })
+		await repository.recordSumsubReview({ ...review, eventId: randomUUID(), eventType: 'applicantReset', answer: null, status: 'init' })
+		currentStatus = 'init'
+		currentAnswer = null
+		await expect(repository.reconcileOneSumsubReview(adapter, 'age-18')).resolves.toEqual({ processed: true, state: 'unverified' })
+		user = await repository.db.user.findUniqueOrThrow({ where: { id: authSession.userId } })
+		expect(user.adultVerificationState).toBe('unverified')
+		expect(user.verifiedAt).toBeNull()
+		await expect(repository.accessContext(authSession.sessionId)).rejects.toThrow(AccessDeniedError)
+		await repository.recordSumsubReview({ ...review, eventId: randomUUID(), answer: 'RED' })
+		currentStatus = 'completed'
+		currentAnswer = 'RED'
+		await expect(repository.reconcileOneSumsubReview(adapter, 'age-18')).resolves.toEqual({ processed: true, state: 'rejected' })
+		user = await repository.db.user.findUniqueOrThrow({ where: { id: authSession.userId } })
+		expect(user.adultVerificationState).toBe('rejected')
+		expect(user.verifiedAt).toBeNull()
+		await repository.recordSumsubReview({ ...review, eventId: randomUUID() })
+		currentAnswer = 'GREEN'
+		currentLevel = 'different-level'
+		await expect(repository.reconcileOneSumsubReview(adapter, 'age-18')).resolves.toEqual({ processed: true, state: 'unverified' })
+		user = await repository.db.user.findUniqueOrThrow({ where: { id: authSession.userId } })
+		expect(user.verifiedAt).toBeNull()
+	})
+
+	it('binds a verified second factor only to its matching real session', async () => {
+		const authSession = { sessionId: randomUUID(), userId: randomUUID(), email: `${randomUUID()}@example.com`, expiresAt: new Date(Date.now() + 3600000) }
+		await repository.ensureAuthenticatedSession(authSession)
+		const verifiedAt = new Date()
+		await expect(repository.markVerifiedSecondFactor(authSession.sessionId, randomUUID(), verifiedAt)).rejects.toThrow(AccessDeniedError)
+		let session = await repository.db.session.findUniqueOrThrow({ where: { id: authSession.sessionId } })
+		expect(session.mfaVerifiedAt).toBeNull()
+		expect(session.recentAuthAt).toBeNull()
+		await repository.markVerifiedSecondFactor(authSession.sessionId, authSession.userId, verifiedAt)
+		session = await repository.db.session.findUniqueOrThrow({ where: { id: authSession.sessionId } })
+		expect(session.mfaVerifiedAt).toEqual(verifiedAt)
+		expect(session.recentAuthAt).toEqual(verifiedAt)
+	})
+
+	it('publishes real workspaces instead of synthetic fixtures in staging', async () => {
+		const real = await repository.db.workspace.create({ data: { kind: 'real' } })
+		const slug = `real-${randomUUID()}`
+		const realVendor = await repository.db.vendor.create({
+			data: { workspaceId: real.id, publicSlug: slug, publishedAt: new Date(), applicationState: 'approved' },
+		})
+		const syntheticSlug = `synthetic-${randomUUID()}`
+		const syntheticVendor = await repository.db.vendor.create({
+			data: { workspaceId, publicSlug: syntheticSlug, publishedAt: new Date(), applicationState: 'approved' },
+		})
+		const previous = process.env['JUNCTION_RUNTIME_MODE']
+		process.env['JUNCTION_RUNTIME_MODE'] = 'staging'
+		const staging = new PostgresFoundation(process.env['DATABASE_URL']!)
+		try {
+			const page = await staging.browsePublicVendors({ limit: 100 })
+			expect(page.items.some((item) => item.slug === slug)).toBe(true)
+			expect(page.items.some((item) => item.slug === syntheticSlug)).toBe(false)
+		} finally {
+			await staging.close()
+			await repository.db.vendor.deleteMany({ where: { id: { in: [realVendor.id, syntheticVendor.id] } } })
+			if (previous === undefined) delete process.env['JUNCTION_RUNTIME_MODE']
+			else process.env['JUNCTION_RUNTIME_MODE'] = previous
+		}
+	})
+
 	it('commits one audit/event/outcome under concurrent replay and across connections', async () => {
 		const key = randomUUID()
 		const results = await Promise.all(
@@ -57,6 +367,22 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		expect(await repository.db.auditLog.count({ where: { correlationId: results[0].commandId } })).toBe(1)
 		expect(await repository.db.outboxEvent.count({ where: { workspaceId } })).toBe(1)
 		await expect(other.acceptAuditMarker(sessionId, key, { marker: 'mismatch' })).rejects.toThrow(IdempotencyConflictError)
+	})
+	it('does not acknowledge synthetic outbox effects through the staging worker', async () => {
+		const command = await repository.acceptAuditMarker(sessionId, randomUUID(), { marker: 'staging delivery boundary' })
+		const event = await repository.db.outboxEvent.findFirstOrThrow({
+			where: { workspaceId, type: 'FoundationCommandAccepted', payload: { path: ['aggregateId'], equals: command.commandId } },
+		})
+		const previous = process.env['JUNCTION_RUNTIME_MODE']
+		process.env['JUNCTION_RUNTIME_MODE'] = 'staging'
+		try {
+			const claim = await repository.claim(randomUUID())
+			if (claim) expect(DomainEventSchema.parse(claim.payload).type).toBe('MediaQuarantined')
+			expect((await repository.db.outboxEvent.findUniqueOrThrow({ where: { id: event.id } })).state).toBe('pending')
+		} finally {
+			if (previous === undefined) delete process.env['JUNCTION_RUNTIME_MODE']
+			else process.env['JUNCTION_RUNTIME_MODE'] = previous
+		}
 	})
 	it('denies stale roles, revoked/expired sessions and substituted scope', async () => {
 		for (const scope of [{ workspaceId: randomUUID() }, { workspaceId, vendorId: randomUUID() }, { workspaceId, vendorId, locationId: randomUUID() }]) {
@@ -317,6 +643,7 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		}
 		const created = await repository.createVendorApplication(applicantSession.id, key, application)
 		expect(created).toMatchObject({ state: 'pending', replayed: false })
+		expect(created.sessionId).toBe(applicantSession.id)
 		await expect(repository.createVendorApplication(applicantSession.id, key, application)).resolves.toEqual({ ...created, replayed: true })
 		const privateListing = await repository.createListing(created.sessionId, randomUUID(), {
 			kind: 'product',
@@ -795,10 +1122,24 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		expect(await repository.db.outboxEvent.count({ where: { workspaceId, type: 'ProviderTimeoutReconciled' } })).toBe(1)
 	})
 	it('claims distinct work, fences stale workers, and deduplicates consumer replay', async () => {
+		const markerIds = await Promise.all(
+			['first', 'second'].map(
+				async (label) => (await repository.acceptAuditMarker(sessionId, randomUUID(), { marker: `claim fence ${label}` })).commandId,
+			),
+		)
+		const markerEvents = (await repository.db.outboxEvent.findMany({ where: { workspaceId, state: 'pending' }, select: { id: true, payload: true } }))
+			.filter(({ payload }) => markerIds.includes(DomainEventSchema.parse(payload).aggregateId))
+			.map(({ id }) => id)
+		expect(markerEvents).toHaveLength(2)
+		await repository.db.outboxEvent.updateMany({
+			where: { id: { in: markerEvents } },
+			data: { occurredAt: new Date('2000-01-01T00:00:00.000Z') },
+		})
 		const [first, second] = await Promise.all([repository.claim('one'), other.claim('two')])
 		expect(first).toBeDefined()
 		expect(second).toBeDefined()
 		expect(first!.id).not.toBe(second!.id)
+		expect([first!.id, second!.id].sort()).toEqual(markerEvents.sort())
 		await repository.complete(second!)
 		await repository.db.outboxEvent.update({ where: { id: first!.id }, data: { claimedAt: new Date(0) } })
 		const recovered = await other.claim('one') // even reusing worker name must fence old token
@@ -807,9 +1148,19 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		await other.complete(recovered!)
 		await repository.db.outboxEvent.update({ where: { id: recovered!.id }, data: { state: 'pending' } })
 		await repository.complete((await repository.claim('replay'))!)
-		expect(await repository.db.outboxReceipt.count({ where: { workspaceId } })).toBe(2)
+		expect(
+			await repository.db.outboxReceipt.count({
+				where: { eventId: { in: [DomainEventSchema.parse(first!.payload).eventId, DomainEventSchema.parse(second!.payload).eventId] } },
+			}),
+		).toBe(2)
 	})
 	it('applies a synthetic external effect once when the worker crashes before acknowledgement', async () => {
+		// Earlier real-account fixtures share this integration database but are not
+		// part of the synthetic receiver's delivery queue under test.
+		await repository.db.outboxEvent.updateMany({
+			where: { workspaceId: { not: workspaceId }, state: { in: ['pending', 'in_flight'] } },
+			data: { state: 'delivered', claimedBy: null, claimedAt: null, claimToken: null },
+		})
 		await repository.db.outboxEvent.updateMany({
 			where: { workspaceId, state: { in: ['pending', 'in_flight'] } },
 			data: { state: 'delivered', claimedBy: null, claimedAt: null, claimToken: null },

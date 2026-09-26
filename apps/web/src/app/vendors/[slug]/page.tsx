@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { formatPrice, getPublicStorefront } from '@/lib/marketplace'
 
-const publicMediaBase = process.env.NEXT_PUBLIC_JUNCTION_API_URL ?? 'http://127.0.0.1:3001/v1'
+const publicMediaBase =
+	process.env.NEXT_PUBLIC_JUNCTION_RUNTIME_MODE === 'staging' ? '/v1' : (process.env.NEXT_PUBLIC_JUNCTION_API_URL ?? 'http://127.0.0.1:3001/v1')
 
 export default async function VendorStorefront({ params }: { params: Promise<{ slug: string }> }) {
 	const { slug } = await params
@@ -39,7 +40,7 @@ export default async function VendorStorefront({ params }: { params: Promise<{ s
 					<span className="text-sm font-semibold tracking-tight">Junction</span>
 				</Link>
 				<div className="flex items-center gap-3">
-					<Badge variant="outline">Synthetic preview</Badge>
+					<Badge variant="outline">{process.env.NEXT_PUBLIC_JUNCTION_RUNTIME_MODE === 'staging' ? 'Private staging' : 'Synthetic preview'}</Badge>
 					<ThemeToggle />
 				</div>
 			</header>

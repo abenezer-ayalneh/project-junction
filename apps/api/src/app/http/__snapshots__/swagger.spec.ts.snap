@@ -88,6 +88,36 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
         "type": "object",
       },
+      "ActiveVendorSelection": {
+        "additionalProperties": false,
+        "properties": {
+          "vendorId": {
+            "format": "uuid",
+            "nullable": true,
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "vendorId",
+        ],
+        "type": "object",
+      },
+      "ActiveVendorSelectionResult": {
+        "additionalProperties": false,
+        "properties": {
+          "activeVendorId": {
+            "format": "uuid",
+            "nullable": true,
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "activeVendorId",
+        ],
+        "type": "object",
+      },
       "ApiError": {
         "additionalProperties": false,
         "properties": {
@@ -600,6 +630,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           "runtimeMode": {
             "enum": [
               "synthetic",
+              "staging",
             ],
             "type": "string",
           },
@@ -629,6 +660,27 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           "runtimeMode",
           "storage",
           "requestId",
+        ],
+        "type": "object",
+      },
+      "IdentityVerificationSession": {
+        "additionalProperties": false,
+        "properties": {
+          "expiresInSeconds": {
+            "enum": [
+              600,
+            ],
+            "type": "number",
+          },
+          "token": {
+            "maxLength": 1024,
+            "minLength": 1,
+            "type": "string",
+          },
+        },
+        "required": [
+          "token",
+          "expiresInSeconds",
         ],
         "type": "object",
       },
@@ -2420,7 +2472,6 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         "required": [
           "vendorId",
           "locationId",
-          "sessionId",
           "state",
           "replayed",
         ],
@@ -2679,8 +2730,56 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
         "type": "object",
       },
+      "VendorMemberships": {
+        "additionalProperties": false,
+        "properties": {
+          "activeVendorId": {
+            "format": "uuid",
+            "nullable": true,
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "items": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "active": {
+                  "type": "boolean",
+                },
+                "displayName": {
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "vendorId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "vendorId",
+                "displayName",
+                "active",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+        },
+        "required": [
+          "activeVendorId",
+          "items",
+        ],
+        "type": "object",
+      },
     },
     "securitySchemes": {
+      "junction-auth-cookie": {
+        "description": "Better Auth session cookie for private staging identity.",
+        "in": "cookie",
+        "name": "__Secure-junction-auth.session_token",
+        "type": "apiKey",
+      },
       "junction-session": {
         "description": "Synthetic session identifier used by the current foundation endpoints.",
         "in": "header",
@@ -2739,6 +2838,90 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
         ],
         "summary": "Derive the current scoped access context.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/account/active-vendor": {
+      "post": {
+        "operationId": "AppController_selectActiveVendor",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActiveVendorSelection",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActiveVendorSelectionResult",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Select an eligible Vendor Owner membership after recent MFA, or return to the Customer scope.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/account/vendor-memberships": {
+      "get": {
+        "operationId": "AppController_listOwnerMemberships",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorMemberships",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "List the signed-in adult account’s eligible Vendor Owner memberships.",
         "tags": [
           "foundation",
         ],
@@ -3295,6 +3478,82 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
         },
         "summary": "Read synthetic API health.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/identity/sumsub-webhook": {
+      "post": {
+        "operationId": "AppController_sumsubWebhook",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-payload-digest-alg",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "x-payload-digest",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "summary": "Record a signed Sumsub sandbox review for later age-level reconciliation.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/identity/verification-session": {
+      "post": {
+        "operationId": "AppController_identityVerificationSession",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityVerificationSession",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Issue a short-lived Sumsub sandbox SDK token for the authenticated account.",
         "tags": [
           "foundation",
         ],

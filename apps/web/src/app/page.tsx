@@ -22,6 +22,7 @@ const categories = [
 ]
 
 export default async function Index({ searchParams }: { searchParams: SearchParams }) {
+	const isStaging = process.env.NEXT_PUBLIC_JUNCTION_RUNTIME_MODE === 'staging'
 	const values = await searchParams
 	const query = new URLSearchParams()
 	for (const key of ['kind', 'category', 'q', 'cursor', 'limit']) {
@@ -54,7 +55,10 @@ export default async function Index({ searchParams }: { searchParams: SearchPara
 					<Link className="text-sm text-muted-foreground transition-colors hover:text-foreground" href="/vendor-workspace">
 						Vendor workspace
 					</Link>
-					<Badge variant="outline">Synthetic preview</Badge>
+					<Link className="text-sm text-muted-foreground transition-colors hover:text-foreground" href="/account">
+						Account
+					</Link>
+					<Badge variant="outline">{isStaging ? 'Private staging' : 'Synthetic preview'}</Badge>
 					<ThemeToggle />
 				</nav>
 			</header>
@@ -68,7 +72,9 @@ export default async function Index({ searchParams }: { searchParams: SearchPara
 						Find the good work happening nearby.
 					</h1>
 					<p className="mt-6 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
-						Browse products and services from local Vendors. Every listing here has passed a publication review in this synthetic preview.
+						{isStaging
+							? 'Browse products and services from Vendors approved for this private staging environment.'
+							: 'Browse products and services from local Vendors. Every listing here has passed a publication review in this synthetic preview.'}
 					</p>
 				</div>
 				<div className="relative overflow-hidden rounded-2xl border bg-muted/40 p-6 sm:p-8">
@@ -168,10 +174,11 @@ export default async function Index({ searchParams }: { searchParams: SearchPara
 
 					{listingPage === null ? (
 						<div className="mt-5 rounded-xl border border-dashed bg-background px-6 py-10" role="status">
-							<h4 className="font-medium">The local catalog is not connected</h4>
+							<h4 className="font-medium">{isStaging ? 'The staging catalog is unavailable' : 'The local catalog is not connected'}</h4>
 							<p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-								Start the synthetic API and database to load approved listings. This preview does not show sample businesses as live catalog
-								results.
+								{isStaging
+									? 'The catalog could not be reached. Please try again after the staging service is restored.'
+									: 'Start the synthetic API and database to load approved listings. This preview does not show sample businesses as live catalog results.'}
 							</p>
 						</div>
 					) : listingPage.items.length === 0 ? (
@@ -229,7 +236,9 @@ export default async function Index({ searchParams }: { searchParams: SearchPara
 				</div>
 				{vendorPage === null ? (
 					<p className="mt-6 rounded-xl border border-dashed px-5 py-6 text-sm text-muted-foreground" role="status">
-						Storefronts will appear when the synthetic catalog is connected.
+						{isStaging
+							? 'Storefronts are unavailable while the staging catalog is offline.'
+							: 'Storefronts will appear when the synthetic catalog is connected.'}
 					</p>
 				) : vendorPage.items.length === 0 ? (
 					<p className="mt-6 rounded-xl border border-dashed px-5 py-6 text-sm text-muted-foreground">No published storefronts are available yet.</p>
@@ -255,7 +264,7 @@ export default async function Index({ searchParams }: { searchParams: SearchPara
 
 			<footer className="border-t">
 				<div className="mx-auto flex max-w-7xl flex-col gap-2 px-5 py-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-8">
-					<span>Junction · local discovery preview</span>
+					<span>Junction · {isStaging ? 'private staging' : 'local discovery preview'}</span>
 					<span>Browsing only · no checkout or booking</span>
 				</div>
 			</footer>

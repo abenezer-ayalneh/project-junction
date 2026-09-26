@@ -121,8 +121,11 @@ export class RealtimeGateway implements OnGatewayInit {
 	}
 
 	private async authorize(socket: RealtimeSocket, next: (error?: Error) => void): Promise<void> {
-		const sessionId = this.foundation.resolveSessionId(sessionFrom(socket), socket.handshake.headers.cookie)
 		try {
+			const sessionId =
+				process.env['JUNCTION_RUNTIME_MODE'] === 'staging'
+					? await this.foundation.authenticateFromCookie(socket.handshake.headers.cookie)
+					: this.foundation.resolveSessionId(sessionFrom(socket), socket.handshake.headers.cookie)
 			await this.fanoutReady
 			await this.foundation.accessContext(sessionId)
 			socket.data.sessionId = sessionId

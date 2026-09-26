@@ -4,6 +4,8 @@ import { PrismaPg } from '@prisma/adapter-pg'
 import {
 	type AccessContext,
 	AccessContextSchema,
+	ActiveVendorSelectionResultSchema,
+	ActiveVendorSelectionSchema,
 	AuditMarkerCommandSchema,
 	CatalogHealthSchema,
 	CatalogImportCommandSchema,
@@ -60,14 +62,16 @@ import {
 	VendorApplicationReviewSchema,
 	VendorCatalogSchema,
 	VendorFollowMutationSchema,
+	VendorMembershipsSchema,
 } from 'contracts'
 
 import { Prisma, PrismaClient } from '../../generated/prisma/index.js'
-import { AccessDeniedError, assertElevatedSession, assertScope } from './access.js'
+import { AccessDeniedError, assertElevatedSession, assertRecentMfa, assertScope } from './access.js'
 import { CATALOG_CSV_HEADER, decodeCatalogCsvText, encodeCatalogCsvField, parseCatalogCsv } from './catalog-csv.js'
-import { type ExternalEffectAdapter, FakeExternalEffectAdapter } from './external-effects.js'
+import { type ExternalEffectAdapter, FakeExternalEffectAdapter, UnconfiguredExternalEffectAdapter } from './external-effects.js'
 import { IdempotencyConflictError, stableHash } from './idempotency.js'
 import { type MediaStore, S3MediaStore } from './media-store.js'
+import { SumsubSandboxAdapter } from './sumsub.js'
 import { MediaRejectedError, VideoProcessor } from './video-processor.js'
 
 type Transaction = Prisma.TransactionClient
@@ -100,6 +104,7 @@ function isVerifiedAdult(user: { adultVerificationState: string; verifiedAt: Dat
 /** Prisma owns CRUD; parameterized SQL below is restricted to concurrency locks/claims. */
 export class PostgresFoundation {
 	readonly db: PrismaClient
+	private readonly publicWorkspaceKind = process.env['JUNCTION_RUNTIME_MODE'] === 'staging' ? 'real' : 'synthetic'
 	private readonly externalEffects: ExternalEffectAdapter
 	private readonly mediaStore: MediaStore | undefined
 	private readonly videoProcessor: VideoProcessor | undefined
@@ -107,7 +112,9 @@ export class PostgresFoundation {
 		const schema = new URL(url).searchParams.get('schema') ?? 'public'
 		if (!/^[a-z_][a-z0-9_]*$/.test(schema)) throw new Error('Unsupported database schema name.')
 		this.db = new PrismaClient({ adapter: new PrismaPg({ connectionString: url, options: `-c search_path=${schema},public` }, { schema }) })
-		this.externalEffects = externalEffects ?? new FakeExternalEffectAdapter(this.db)
+		this.externalEffects =
+			externalEffects ??
+			(process.env['JUNCTION_RUNTIME_MODE'] === 'staging' ? new UnconfiguredExternalEffectAdapter() : new FakeExternalEffectAdapter(this.db))
 		this.mediaStore = mediaStore ?? S3MediaStore.fromEnvironment()
 		this.videoProcessor = videoProcessor ?? VideoProcessor.fromEnvironment()
 	}
@@ -130,6 +137,251 @@ export class PostgresFoundation {
 
 	accessContext(sessionId: string | undefined) {
 		return this.db.$transaction((tx) => this.derive(tx, sessionId))
+	}
+
+	async listOwnerMemberships(sessionId: string | undefined) {
+		return this.db.$transaction(async (tx) => {
+			const context = await this.derive(tx, sessionId)
+			if (context.actor.kind !== 'user') throw new AccessDeniedError()
+			const memberships = await tx.vendorMembership.findMany({
+				where: {
+					userId: context.actor.userId,
+					role: 'vendor_owner',
+					revokedAt: null,
+					vendor: { workspaceId: context.workspaceId, applicationState: { notIn: ['rejected', 'restricted'] } },
+				},
+				include: { vendor: true },
+				orderBy: { vendorId: 'asc' },
+			})
+			return VendorMembershipsSchema.parse({
+				activeVendorId: context.activeVendorId,
+				items: memberships.map(({ vendorId, vendor }) => ({
+					vendorId,
+					displayName: vendor.displayName || vendor.publicSlug || 'Vendor',
+					active: context.activeVendorId === vendorId,
+				})),
+			})
+		})
+	}
+
+	async selectActiveVendor(sessionId: string | undefined, input: unknown) {
+		const { vendorId } = ActiveVendorSelectionSchema.parse(input)
+		return this.db.$transaction(async (tx) => {
+			const context = await this.derive(tx, sessionId)
+			if (context.actor.kind !== 'user') throw new AccessDeniedError()
+			if (vendorId) {
+				assertRecentMfa(context)
+				await tx.$queryRaw`SELECT id FROM "vendor_memberships" WHERE "user_id" = ${context.actor.userId}::uuid AND "vendor_id" = ${vendorId}::uuid FOR SHARE`
+				await tx.$queryRaw`SELECT id FROM "vendors" WHERE id = ${vendorId}::uuid FOR SHARE`
+				const membership = await tx.vendorMembership.findUnique({
+					where: { userId_vendorId: { userId: context.actor.userId, vendorId } },
+					include: { vendor: true },
+				})
+				if (
+					!membership ||
+					membership.revokedAt ||
+					membership.role !== 'vendor_owner' ||
+					membership.vendor.workspaceId !== context.workspaceId ||
+					['rejected', 'restricted'].includes(membership.vendor.applicationState)
+				)
+					throw new AccessDeniedError()
+			}
+			if (context.activeVendorId !== vendorId) {
+				await tx.session.update({ where: { id: context.session.id }, data: { activeVendorId: vendorId, activeRole: vendorId ? 'vendor_owner' : null } })
+				await tx.auditLog.create({
+					data: {
+						workspaceId: context.workspaceId,
+						actorId: context.actor.userId,
+						action: 'session.active-vendor-selected',
+						correlationId: randomUUID(),
+						metadata: json({ fromVendorId: context.activeVendorId, toVendorId: vendorId }),
+					},
+				})
+			}
+			return ActiveVendorSelectionResultSchema.parse({ activeVendorId: vendorId })
+		})
+	}
+
+	async ensureAuthenticatedSession(input: { sessionId: string; userId: string; email: string; expiresAt: Date }) {
+		this.requireResourceId(input.sessionId)
+		this.requireResourceId(input.userId)
+		if (input.expiresAt <= new Date()) throw new AccessDeniedError()
+		await this.db.$transaction(async (tx) => {
+			await tx.$executeRaw`SELECT pg_advisory_xact_lock(20260925, hashtext(${input.userId}))`
+			const existing = await tx.session.findUnique({ where: { id: input.sessionId }, include: { workspace: true } })
+			if (existing) {
+				if (existing.userId !== input.userId || existing.revokedAt || existing.workspace.kind !== 'real') throw new AccessDeniedError()
+				if (existing.expiresAt < input.expiresAt || (existing.activeRole === 'customer' && !existing.activeVendorId))
+					await tx.session.update({
+						where: { id: existing.id },
+						data: {
+							...(existing.expiresAt < input.expiresAt ? { expiresAt: input.expiresAt } : {}),
+							...(existing.activeRole === 'customer' && !existing.activeVendorId ? { activeRole: null } : {}),
+						},
+					})
+				return
+			}
+			const user = await tx.user.upsert({
+				where: { id: input.userId },
+				create: { id: input.userId, email: input.email, adultVerificationState: 'unverified' },
+				update: { email: input.email },
+			})
+			// One real marketplace scope lets separately signed-up Vendors reach the same
+			// review queue. Serialize creation so concurrent first sign-ups cannot split it.
+			await tx.$executeRaw`SELECT pg_advisory_xact_lock(20260925, 1)`
+			const prior = await tx.session.findFirst({ where: { userId: user.id, workspace: { kind: 'real' } }, orderBy: { createdAt: 'asc' } })
+			const sharedWorkspace = prior?.workspaceId
+				? null
+				: await tx.workspace.findFirst({ where: { kind: 'real' }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }], select: { id: true } })
+			const workspaceId = prior?.workspaceId ?? sharedWorkspace?.id ?? (await tx.workspace.create({ data: { kind: 'real' } })).id
+			const ownerMemberships = await tx.vendorMembership.findMany({
+				where: {
+					userId: user.id,
+					role: 'vendor_owner',
+					revokedAt: null,
+					vendor: { workspaceId, applicationState: { notIn: ['rejected', 'restricted'] } },
+				},
+				take: 2,
+			})
+			const activeOwner = ownerMemberships.length === 1 ? ownerMemberships[0] : null
+			await tx.session.create({
+				data: {
+					id: input.sessionId,
+					userId: user.id,
+					workspaceId,
+					expiresAt: input.expiresAt,
+					activeVendorId: activeOwner?.vendorId ?? null,
+					activeRole: activeOwner ? 'vendor_owner' : null,
+				},
+			})
+		})
+	}
+
+	async markVerifiedSecondFactor(sessionId: string, userId: string, verifiedAt: Date) {
+		this.requireResourceId(sessionId)
+		this.requireResourceId(userId)
+		const updated = await this.db.session.updateMany({
+			where: { id: sessionId, userId, revokedAt: null, expiresAt: { gt: verifiedAt }, workspace: { kind: 'real' } },
+			data: { mfaVerifiedAt: verifiedAt, recentAuthAt: verifiedAt },
+		})
+		if (updated.count !== 1) throw new AccessDeniedError()
+	}
+
+	async authenticatedIdentity(sessionId: string | undefined) {
+		if (!sessionId) throw new AccessDeniedError()
+		this.requireResourceId(sessionId)
+		const session = await this.db.session.findUnique({ where: { id: sessionId }, include: { user: true, workspace: true } })
+		if (!session?.user || session.revokedAt || session.expiresAt <= new Date() || session.workspace.kind !== 'real') throw new AccessDeniedError()
+		return { userId: session.user.id, email: session.user.email }
+	}
+
+	async recordSumsubReview(input: {
+		eventId: string
+		applicantId: string
+		userId: string
+		levelName: string
+		eventType: string
+		answer: string | null
+		status: string
+		observedAt: string
+		sandboxMode: boolean
+	}) {
+		this.requireResourceId(input.userId)
+		return this.db.$transaction(async (tx) => {
+			await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'sumsub:' + input.eventId}, 0))`
+			const prior = await tx.providerInboxEvent.findUnique({
+				where: { provider_providerEventId: { provider: 'sumsub-sandbox', providerEventId: input.eventId } },
+			})
+			if (prior) return { accepted: true, duplicate: true }
+			const session = await tx.session.findFirst({ where: { userId: input.userId, workspace: { kind: 'real' } }, orderBy: { createdAt: 'asc' } })
+			if (!session) throw new AccessDeniedError()
+			const revocation = input.eventType === 'applicantDeactivated' || input.eventType === 'applicantDeleted'
+			if (revocation) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'sumsub-user:' + input.userId}, 0))`
+			const now = new Date()
+			await tx.providerInboxEvent.create({
+				data: {
+					provider: 'sumsub-sandbox',
+					providerEventId: input.eventId,
+					providerReference: input.applicantId,
+					workspaceId: session.workspaceId,
+					payloadHash: stableHash(input),
+					payload: json(input),
+					reconciliationState: revocation ? 'reconciled' : 'pending_review',
+					...(revocation ? { reconciledAt: now, processedAt: now } : {}),
+				},
+			})
+			if (revocation) {
+				await tx.user.update({ where: { id: input.userId }, data: { adultVerificationState: 'unverified', verifiedAt: null } })
+				await tx.auditLog.create({
+					data: {
+						workspaceId: session.workspaceId,
+						actorId: null,
+						action: 'identity.sumsub-revoked',
+						correlationId: randomUUID(),
+						metadata: json({ userId: input.userId, providerEventId: input.eventId, applicantId: input.applicantId, eventType: input.eventType }),
+					},
+				})
+			}
+			return { accepted: true, duplicate: false }
+		})
+	}
+
+	async reconcileOneSumsubReview(adapter: SumsubSandboxAdapter, requiredLevel: string) {
+		const event = await this.db.providerInboxEvent.findFirst({
+			where: { provider: 'sumsub-sandbox', reconciliationState: 'pending_review' },
+			orderBy: [{ receivedAt: 'asc' }, { id: 'asc' }],
+		})
+		if (!event) return { processed: false }
+		const payload = event.payload as Record<string, unknown>
+		if (typeof payload['userId'] !== 'string' || typeof payload['applicantId'] !== 'string') throw new Error('Invalid stored Sumsub review.')
+		const userId = payload['userId']
+		const applicantId = payload['applicantId']
+		const current = await adapter.currentReview(userId)
+		const approved =
+			current.applicantId === applicantId &&
+			current.levelName === requiredLevel &&
+			current.reviewStatus === 'completed' &&
+			current.reviewAnswer === 'GREEN'
+		const rejected =
+			current.applicantId === applicantId && current.levelName === requiredLevel && current.reviewStatus === 'completed' && current.reviewAnswer === 'RED'
+		const state = approved ? 'verified' : rejected ? 'rejected' : 'unverified'
+		const outcome = await this.db.$transaction(async (tx) => {
+			await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'sumsub-user:' + userId}, 0))`
+			const pending = await tx.providerInboxEvent.findUniqueOrThrow({ where: { id: event.id } })
+			if (pending.reconciliationState !== 'pending_review') return null
+			const laterRevocations = await tx.$queryRaw<Array<{ id: string }>>`
+				SELECT id FROM provider_inbox_events
+				WHERE provider = 'sumsub-sandbox'
+					AND payload->>'userId' = ${userId}
+					AND payload->>'eventType' IN ('applicantDeactivated', 'applicantDeleted')
+					AND payload->>'observedAt' >= ${String(payload['observedAt'])}
+				LIMIT 1`
+			const realSession = await tx.session.findFirst({ where: { userId, workspaceId: event.workspaceId ?? undefined, workspace: { kind: 'real' } } })
+			if (!realSession) throw new AccessDeniedError()
+			const reconciledState = approved && laterRevocations.length === 0 ? 'verified' : rejected ? 'rejected' : 'unverified'
+			await tx.user.update({
+				where: { id: userId },
+				data: { adultVerificationState: reconciledState, verifiedAt: reconciledState === 'verified' ? new Date() : null },
+			})
+			const now = new Date()
+			await tx.providerInboxEvent.update({ where: { id: event.id }, data: { reconciliationState: 'reconciled', reconciledAt: now, processedAt: now } })
+			await tx.auditLog.create({
+				data: {
+					workspaceId: event.workspaceId,
+					actorId: userId,
+					action: 'identity.sumsub-reviewed',
+					correlationId: randomUUID(),
+					metadata: json({
+						providerEventId: event.providerEventId,
+						applicantId: current.applicantId,
+						levelName: current.levelName,
+						state: reconciledState,
+					}),
+				},
+			})
+			return reconciledState
+		})
+		return { processed: outcome !== null, state: outcome ?? state }
 	}
 
 	async readLocation(sessionId: string | undefined, locationId: string) {
@@ -255,7 +507,7 @@ export class PostgresFoundation {
 	async browsePublicVendors(queryInput: unknown) {
 		const query = PublicVendorBrowseQuerySchema.parse(queryInput)
 		const vendors = await this.db.vendor.findMany({
-			where: { publicSlug: { not: null }, publishedAt: { not: null }, applicationState: 'approved', workspace: { kind: 'synthetic' } },
+			where: { publicSlug: { not: null }, publishedAt: { not: null }, applicationState: 'approved', workspace: { kind: this.publicWorkspaceKind } },
 			orderBy: { id: 'asc' },
 			take: query.limit + 1,
 			...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
@@ -266,7 +518,7 @@ export class PostgresFoundation {
 
 	async readPublicStorefront(slug: string) {
 		const vendor = await this.db.vendor.findFirst({
-			where: { publicSlug: slug, publishedAt: { not: null }, applicationState: 'approved', workspace: { kind: 'synthetic' } },
+			where: { publicSlug: slug, publishedAt: { not: null }, applicationState: 'approved', workspace: { kind: this.publicWorkspaceKind } },
 			include: {
 				locations: true,
 				listings: {
@@ -431,10 +683,25 @@ export class PostgresFoundation {
 	async createVendorApplication(sessionId: string | undefined, keyInput: string | undefined, input: unknown) {
 		const key = IdempotencyKeySchema.parse(keyInput)
 		const application = VendorApplicationCommandSchema.parse(input)
+		const publicResult = (outcome: { vendorId: string; locationId: string; sessionId?: string; state: 'pending'; replayed: boolean }) =>
+			VendorApplicationResultSchema.parse(
+				this.publicWorkspaceKind === 'real'
+					? { vendorId: outcome.vendorId, locationId: outcome.locationId, state: outcome.state, replayed: outcome.replayed }
+					: outcome,
+			)
 		return this.db.$transaction(async (tx) => {
 			const context = await this.derive(tx, sessionId)
 			const userId = this.customerId(context)
-			if (context.activeVendorId) throw new AccessDeniedError()
+			if (context.activeVendorId) {
+				const originalScopeHash = stableHash({ actorId: userId, workspaceId: context.workspaceId, vendorId: null })
+				const prior = await tx.idempotencyRecord.findUnique({
+					where: { key_scopeHash_method: { key, scopeHash: originalScopeHash, method: 'POST /v1/vendor-applications' } },
+				})
+				if (!prior || prior.requestHash !== stableHash(application)) throw new AccessDeniedError()
+				const outcome = VendorApplicationResultSchema.parse(prior.outcome)
+				if (outcome.vendorId !== context.activeVendorId || outcome.sessionId !== context.session.id) throw new AccessDeniedError()
+				return publicResult({ ...outcome, replayed: true })
+			}
 			const result = await this.replayOrCreate(tx, context, key, 'POST /v1/vendor-applications', application, async () => {
 				const vendor = await tx.vendor.create({
 					data: {
@@ -453,15 +720,7 @@ export class PostgresFoundation {
 					},
 				})
 				await tx.vendorMembership.create({ data: { userId, vendorId: vendor.id, role: 'vendor_owner', locationIds: [location.id] } })
-				const session = await tx.session.create({
-					data: {
-						userId,
-						workspaceId: context.workspaceId,
-						activeVendorId: vendor.id,
-						activeRole: 'vendor_owner',
-						expiresAt: context.session.expiresAt,
-					},
-				})
+				await tx.session.update({ where: { id: context.session.id }, data: { activeVendorId: vendor.id, activeRole: 'vendor_owner' } })
 				await tx.auditLog.create({
 					data: {
 						workspaceId: context.workspaceId,
@@ -475,12 +734,12 @@ export class PostgresFoundation {
 				return VendorApplicationResultSchema.parse({
 					vendorId: vendor.id,
 					locationId: location.id,
-					sessionId: session.id,
+					sessionId: context.session.id,
 					state: 'pending',
 					replayed: false,
 				})
 			})
-			return VendorApplicationResultSchema.parse({ ...result.outcome, replayed: result.replayed })
+			return publicResult({ ...result.outcome, replayed: result.replayed })
 		})
 	}
 
@@ -491,6 +750,7 @@ export class PostgresFoundation {
 		return this.db.$transaction(async (tx) => {
 			const context = await this.derive(tx, sessionId)
 			if (!context.capabilities.includes('platform:vendor:review')) throw new AccessDeniedError()
+			if (context.actor.kind === 'user') assertRecentMfa(context)
 			const target = await tx.vendor.findFirst({ where: { id: vendorId, workspaceId: context.workspaceId } })
 			if (!target) throw new AccessDeniedError()
 			const result = await this.replayOrCreate(tx, context, key, 'POST /v1/vendor-applications/:vendorId/review', { vendorId, review }, async () => {
@@ -681,6 +941,7 @@ export class PostgresFoundation {
 		return this.db.$transaction(async (tx) => {
 			const context = await this.derive(tx, sessionId)
 			if (!context.capabilities.includes('platform:vendor:review')) throw new AccessDeniedError()
+			if (context.actor.kind === 'user') assertRecentMfa(context)
 			const target = await tx.listing.findFirst({
 				where: { id: listingId, vendor: { workspaceId: context.workspaceId, applicationState: 'approved' } },
 			})
@@ -1024,6 +1285,7 @@ export class PostgresFoundation {
 		return this.db.$transaction(async (tx) => {
 			const context = await this.derive(tx, sessionId)
 			if (!context.capabilities.includes('platform:vendor:review')) throw new AccessDeniedError()
+			if (context.actor.kind === 'user') assertRecentMfa(context)
 			const media = await tx.mediaAsset.findFirst({ where: { id: mediaId, listing: { vendor: { workspaceId: context.workspaceId } } } })
 			if (!media) throw new AccessDeniedError()
 			const result = await this.replayOrCreate(tx, context, key, 'POST /v1/platform/media/:mediaId/review', { mediaId, command }, async () => {
@@ -1076,7 +1338,7 @@ export class PostgresFoundation {
 				scanVerdict: 'clean',
 				listing: {
 					state: 'published',
-					vendor: { applicationState: 'approved', publishedAt: { not: null }, workspace: { kind: 'synthetic' } },
+					vendor: { applicationState: 'approved', publishedAt: { not: null }, workspace: { kind: this.publicWorkspaceKind } },
 				},
 			},
 			select: { renditionKey: true, posterKey: true, captionText: true },
@@ -1261,7 +1523,7 @@ export class PostgresFoundation {
 				...(query.q ? { title: { contains: query.q, mode: 'insensitive' } } : {}),
 				listing: {
 					state: 'published',
-					vendor: { applicationState: 'approved', publishedAt: { not: null }, workspace: { kind: 'synthetic' } },
+					vendor: { applicationState: 'approved', publishedAt: { not: null }, workspace: { kind: this.publicWorkspaceKind } },
 				},
 			},
 			orderBy: { listingId: 'asc' },
@@ -1368,7 +1630,7 @@ export class PostgresFoundation {
 		const listings = await this.db.listing.findMany({
 			where: {
 				state: 'published',
-				vendor: { applicationState: 'approved', publishedAt: { not: null }, workspace: { kind: 'synthetic' } },
+				vendor: { applicationState: 'approved', publishedAt: { not: null }, workspace: { kind: this.publicWorkspaceKind } },
 			},
 			orderBy: { publishedAt: 'desc' },
 			take: 20,
@@ -1795,13 +2057,14 @@ export class PostgresFoundation {
 
 	async claim(workerId: string, leaseMs = 30000): Promise<DurableClaim | undefined> {
 		if (!Number.isFinite(leaseMs) || leaseMs <= 0) throw new Error('Invalid lease.')
+		const stagingTypeFilter = process.env['JUNCTION_RUNTIME_MODE'] === 'staging' ? Prisma.sql`AND type = 'MediaQuarantined'` : Prisma.empty
 		await this.db.$executeRaw`
       UPDATE "outbox_events" SET state = 'dead_letter', "claimed_by" = NULL, "claimed_at" = NULL, "claim_token" = NULL
       WHERE state = 'in_flight' AND attempts >= 3 AND "claimed_at" <= clock_timestamp() - ${leaseMs} * interval '1 millisecond'`
 		const token = randomUUID()
 		const records = await this.db.$queryRaw<DurableClaim[]>`
       UPDATE "outbox_events" SET state = 'in_flight', "claimed_by" = ${workerId}, "claimed_at" = clock_timestamp(), "claim_token" = ${token}::uuid, attempts = attempts + 1
-      WHERE id = (SELECT id FROM "outbox_events" WHERE (state = 'pending' AND "available_at" <= clock_timestamp()) OR (state = 'in_flight' AND "claimed_at" <= clock_timestamp() - ${leaseMs} * interval '1 millisecond') ORDER BY "occurred_at", id FOR UPDATE SKIP LOCKED LIMIT 1)
+      WHERE id = (SELECT id FROM "outbox_events" WHERE ((state = 'pending' AND "available_at" <= clock_timestamp()) OR (state = 'in_flight' AND "claimed_at" <= clock_timestamp() - ${leaseMs} * interval '1 millisecond')) ${stagingTypeFilter} ORDER BY "occurred_at", id FOR UPDATE SKIP LOCKED LIMIT 1)
       RETURNING id, "claim_token" AS "claimToken", payload, attempts`
 		return records[0]
 	}
@@ -1839,6 +2102,8 @@ export class PostgresFoundation {
 		if (!claim) return { processed: false }
 		try {
 			const event = DomainEventSchema.parse(claim.payload)
+			if (process.env['JUNCTION_RUNTIME_MODE'] === 'staging' && event.type !== 'MediaQuarantined')
+				throw new Error('No real staging delivery handler is configured for this event type.')
 			if (event.type === 'FoundationCommandAccepted') await this.externalEffects.deliver(event)
 			if (event.type === 'MediaQuarantined') await this.processQuarantinedMedia(event.aggregateId)
 			await this.complete(claim)
@@ -1853,7 +2118,7 @@ export class PostgresFoundation {
 		this.requireResourceId(id)
 		await tx.$queryRaw`SELECT id FROM "workspaces" WHERE id = ${id}::uuid FOR UPDATE`
 		const workspace = await tx.workspace.findUnique({ where: { id }, include: { demos: true } })
-		if (!workspace || !['synthetic', 'demo'].includes(workspace.kind) || workspace.demos.some((d) => d.purgedAt || d.expiresAt <= new Date()))
+		if (!workspace || !['synthetic', 'demo', 'real'].includes(workspace.kind) || workspace.demos.some((d) => d.purgedAt || d.expiresAt <= new Date()))
 			throw new AccessDeniedError()
 	}
 
@@ -1898,6 +2163,18 @@ export class PostgresFoundation {
 			current.activeRole !== session.activeRole
 		)
 			throw new AccessDeniedError()
+		if (process.env['JUNCTION_RUNTIME_MODE'] === 'staging') {
+			if (!session.user) throw new AccessDeniedError()
+			const workspace = await tx.workspace.findUnique({ where: { id: session.workspaceId }, select: { kind: true } })
+			if (workspace?.kind !== 'real') throw new AccessDeniedError()
+			const authSessions = await tx.$queryRaw<Array<{ id: string }>>`
+				SELECT s.id FROM junction_auth.session s
+				JOIN junction_auth."user" u ON u.id = s."userId"
+				WHERE s.id = ${session.id} AND s."userId" = ${session.user.id}
+					AND s."expiresAt" > clock_timestamp() AND u."emailVerified" = true
+				FOR SHARE OF s, u`
+			if (authSessions.length !== 1) throw new AccessDeniedError()
+		}
 		if (session.demoPersona) {
 			await tx.$queryRaw`SELECT id FROM "demo_personas" WHERE id = ${session.demoPersona.id}::uuid FOR SHARE`
 			const persona = await tx.demoPersona.findUnique({ where: { id: session.demoPersona.id } })
@@ -1969,13 +2246,18 @@ export class PostgresFoundation {
 				{ vendorId: membership.vendorId, role: membership.role as 'vendor_owner' | 'vendor_staff', locationIds: membership.locationIds, active: true },
 			]
 		} else if (session.activeRole) throw new AccessDeniedError()
+		await tx.$queryRaw`SELECT user_id FROM "platform_reviewer_grants" WHERE user_id = ${session.user.id}::uuid FOR SHARE`
+		const reviewerGrant = await tx.platformReviewerGrant.findUnique({ where: { userId: session.user.id } })
+		const workspace = reviewerGrant?.revokedAt === null ? await tx.workspace.findUnique({ where: { id: session.workspaceId } }) : null
+		const capabilities = ['platform:foundation:read', 'platform:foundation:write']
+		if (reviewerGrant?.revokedAt === null && workspace?.kind === 'real') capabilities.push('platform:vendor:review')
 		return AccessContextSchema.parse({
 			actor: { kind: 'user', userId: session.user.id },
 			workspaceId: session.workspaceId,
 			activeVendorId: session.activeVendorId,
 			memberships,
 			locationIds: memberships[0]?.locationIds ?? [],
-			capabilities: ['platform:foundation:read', 'platform:foundation:write'],
+			capabilities,
 			session: {
 				id: session.id,
 				expiresAt: session.expiresAt.toISOString(),

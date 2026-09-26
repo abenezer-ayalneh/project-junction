@@ -1,0 +1,28 @@
+# Import this site block into the existing VPS Caddy configuration.
+# STAGING_HOSTNAME is the DNS name pointing at the VPS. Keep all upstreams
+# bound to loopback; do not publish the application ports directly.
+{$STAGING_HOSTNAME} {
+	@sumsub_webhook {
+		path /v1/identity/sumsub-webhook
+		method POST
+	}
+	@api path /v1/* /socket.io/*
+
+	# Sumsub cannot supply the operator's browser credentials. The API verifies
+	# the webhook digest and reconciles the applicant with Sumsub before changes.
+	handle @sumsub_webhook {
+		reverse_proxy {$STAGING_API_UPSTREAM}
+	}
+
+	handle {
+		basic_auth {
+			{$STAGING_BASIC_AUTH_USER} {$STAGING_BASIC_AUTH_HASH}
+		}
+		handle @api {
+			reverse_proxy {$STAGING_API_UPSTREAM}
+		}
+		handle {
+			reverse_proxy {$STAGING_WEB_UPSTREAM}
+		}
+	}
+}

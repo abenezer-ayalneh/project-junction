@@ -1,4 +1,4 @@
-import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto'
+import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto'
 
 import { Inject, Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
@@ -12,6 +12,7 @@ import {
 	EngagementMutationSchema,
 	HealthResponseSchema,
 	IdempotencyKeySchema,
+	IdentityVerificationSessionSchema,
 	InventoryAvailabilityQuerySchema,
 	InventoryMovementCommandSchema,
 	ListingDraftSchema,
@@ -44,7 +45,9 @@ import {
 	ProviderInbox,
 	type ProviderWebhookAdapter,
 	SessionRegistry,
+	SumsubSandboxAdapter,
 } from 'platform-core'
+import { getAuth } from 'platform-core/auth'
 
 const SYNTHETIC_IDS = {
 	location: '00000000-0000-4000-8000-000000000004',
@@ -77,16 +80,23 @@ export class FoundationService {
 		private readonly configService: ConfigService,
 		@Inject(PROVIDER_WEBHOOK_ADAPTER) private readonly providerWebhookAdapter: ProviderWebhookAdapter,
 	) {
-		this.durable = this.configService.get<string>('FOUNDATION_STORAGE') === 'postgresql' ? new PostgresFoundation(this.databaseUrl()) : undefined
+		const storage = this.configService.get<string>('FOUNDATION_STORAGE')
+		if (storage !== 'postgresql' && process.env['NODE_ENV'] !== 'test') {
+			throw new Error('FOUNDATION_STORAGE=postgresql is required for the API runtime.')
+		}
+		this.durable = storage === 'postgresql' ? new PostgresFoundation(this.databaseUrl()) : undefined
 		this.sessions.register(this.syntheticContext())
 	}
 
 	async health(requestId?: string) {
 		await this.durable?.health()
+		if (this.configService.get<string>('JUNCTION_RUNTIME_MODE') === 'staging' && process.env['SUMSUB_AGE_18_LEVEL_CONFIRMED'] !== 'true') {
+			throw new Error('The Sumsub age-18 sandbox level has not been confirmed.')
+		}
 		return HealthResponseSchema.parse({
 			status: 'ok',
 			service: 'api',
-			runtimeMode: 'synthetic',
+			runtimeMode: this.configService.get<string>('JUNCTION_RUNTIME_MODE') === 'staging' ? 'staging' : 'synthetic',
 			storage: this.durable ? 'postgresql' : 'in-memory-test-double',
 			requestId: requestId ?? randomUUID(),
 		})
@@ -103,7 +113,18 @@ export class FoundationService {
 		}
 	}
 
+	listOwnerMemberships(sessionId: string | undefined) {
+		if (this.configService.get<string>('JUNCTION_RUNTIME_MODE') !== 'staging' || !this.durable) throw new AccessDeniedError()
+		return this.durable.listOwnerMemberships(sessionId)
+	}
+
+	selectActiveVendor(sessionId: string | undefined, body: unknown) {
+		if (this.configService.get<string>('JUNCTION_RUNTIME_MODE') !== 'staging' || !this.durable) throw new AccessDeniedError()
+		return this.durable.selectActiveVendor(sessionId, body)
+	}
+
 	resolveSessionId(headerSessionId: string | undefined, cookieHeader: string | undefined) {
+		if (this.configService.get<string>('JUNCTION_RUNTIME_MODE') === 'staging') return headerSessionId
 		if (headerSessionId) return headerSessionId
 		const signedSession = cookieHeader
 			?.split(';')
@@ -125,6 +146,78 @@ export class FoundationService {
 		} catch {
 			return undefined
 		}
+	}
+
+	async authenticateFromCookie(cookieHeader: string | undefined) {
+		if (!cookieHeader) return undefined
+		const session = await getAuth().api.getSession({ headers: new Headers({ cookie: cookieHeader }) })
+		if (!session?.user.emailVerified || !this.durable) return undefined
+		await this.durable.ensureAuthenticatedSession({
+			sessionId: session.session.id,
+			userId: session.user.id,
+			email: session.user.email,
+			expiresAt: new Date(session.session.expiresAt),
+		})
+		return session.session.id
+	}
+
+	async issueIdentityVerificationSession(sessionId: string | undefined) {
+		if (this.configService.get<string>('JUNCTION_RUNTIME_MODE') !== 'staging' || !this.durable) throw new AccessDeniedError()
+		const { userId } = await this.durable.authenticatedIdentity(sessionId)
+		const adapter = new SumsubSandboxAdapter(
+			this.configService.getOrThrow<string>('SUMSUB_APP_TOKEN'),
+			this.configService.getOrThrow<string>('SUMSUB_SECRET_KEY'),
+			this.configService.getOrThrow<string>('SUMSUB_WEBHOOK_SECRET'),
+		)
+		const token = await adapter.issueSdkToken(userId, this.configService.getOrThrow<string>('SUMSUB_AGE_LEVEL'))
+		return IdentityVerificationSessionSchema.parse({ token, expiresInSeconds: 600 })
+	}
+
+	async receiveSumsubReview(rawBody: Buffer | undefined, digest: string | undefined, algorithm: string | undefined) {
+		if (this.configService.get<string>('JUNCTION_RUNTIME_MODE') !== 'staging' || !this.durable || !rawBody) throw new AccessDeniedError()
+		const adapter = new SumsubSandboxAdapter(
+			this.configService.getOrThrow<string>('SUMSUB_APP_TOKEN'),
+			this.configService.getOrThrow<string>('SUMSUB_SECRET_KEY'),
+			this.configService.getOrThrow<string>('SUMSUB_WEBHOOK_SECRET'),
+		)
+		const payload = adapter.verifyWebhook(rawBody, digest, algorithm)
+		if (!payload || typeof payload !== 'object') throw new AccessDeniedError()
+		const event = payload as Record<string, unknown>
+		const review = event['reviewResult']
+		const answer = review && typeof review === 'object' ? (review as Record<string, unknown>)['reviewAnswer'] : undefined
+		const supported = new Set([
+			'applicantReviewed',
+			'applicantReset',
+			'applicantOnHold',
+			'applicantLevelChanged',
+			'applicantDeactivated',
+			'applicantDeleted',
+			'applicantActivated',
+		])
+		if (
+			typeof event['type'] !== 'string' ||
+			!supported.has(event['type']) ||
+			event['sandboxMode'] !== true ||
+			'testMode' in event ||
+			typeof event['reviewStatus'] !== 'string' ||
+			typeof event['externalUserId'] !== 'string' ||
+			typeof event['applicantId'] !== 'string' ||
+			typeof event['levelName'] !== 'string' ||
+			!/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}$/.test(String(event['createdAtMs'])) ||
+			(event['type'] === 'applicantReviewed' && (event['reviewStatus'] !== 'completed' || (answer !== 'GREEN' && answer !== 'RED')))
+		)
+			throw new AccessDeniedError()
+		return this.durable.recordSumsubReview({
+			eventId: createHash('sha256').update(rawBody).digest('hex'),
+			applicantId: event['applicantId'],
+			userId: event['externalUserId'],
+			levelName: event['levelName'],
+			eventType: event['type'],
+			answer: answer === 'GREEN' || answer === 'RED' ? answer : null,
+			status: event['reviewStatus'],
+			observedAt: event['createdAtMs'] as string,
+			sandboxMode: true,
+		})
 	}
 
 	demoSessionCookie(sessionId: string, expiresAt: string) {
@@ -286,6 +379,7 @@ export class FoundationService {
 	}
 
 	async createSyntheticAccount(provisioningSecret: string | undefined, input: unknown) {
+		this.requireSyntheticRuntime()
 		if (!this.syntheticProvisioningSecretMatches(provisioningSecret)) throw new AccessDeniedError()
 		SyntheticAccountProvisionSchema.parse(input)
 		if (!this.durable) throw new AccessDeniedError()
@@ -293,11 +387,13 @@ export class FoundationService {
 	}
 
 	async grantSyntheticStaff(sessionId: string | undefined, input: unknown) {
+		this.requireSyntheticRuntime()
 		if (!this.durable) throw new AccessDeniedError()
 		return this.durable.grantSyntheticStaff(sessionId, input)
 	}
 
 	async revokeSyntheticStaff(sessionId: string | undefined, staffId: string) {
+		this.requireSyntheticRuntime()
 		if (!this.durable) throw new AccessDeniedError()
 		return this.durable.revokeSyntheticStaff(sessionId, staffId)
 	}
@@ -334,6 +430,7 @@ export class FoundationService {
 		body: unknown,
 		requireElevatedSession: boolean,
 	): Promise<CommandOutcome> {
+		this.requireSyntheticRuntime()
 		if (this.durable)
 			return requireElevatedSession
 				? this.durable.acceptElevatedAuditMarker(sessionId, idempotencyKey, body)
@@ -357,6 +454,7 @@ export class FoundationService {
 	}
 
 	receiveProviderWebhook(provider: string, eventId: string | undefined, signature: string | undefined, rawBody: Buffer | undefined, body: unknown) {
+		this.requireSyntheticRuntime()
 		const webhook = this.providerWebhookAdapter.verify({ provider, eventId, signature, rawBody, body })
 		if (this.durable) {
 			const workspace = this.configService.get<string>('SYNTHETIC_WEBHOOK_WORKSPACE_ID')
@@ -389,6 +487,10 @@ export class FoundationService {
 		return secret
 	}
 
+	private requireSyntheticRuntime() {
+		if (this.configService.get<string>('JUNCTION_RUNTIME_MODE') === 'staging') throw new AccessDeniedError()
+	}
+
 	private syntheticProvisioningSecretMatches(supplied: string | undefined): boolean {
 		const expected = this.configService.get<string>('SYNTHETIC_ACCOUNT_PROVISIONING_SECRET')
 		if (!expected || !supplied) return false
@@ -398,6 +500,7 @@ export class FoundationService {
 	}
 
 	async createDemoWorkspace() {
+		this.requireSyntheticRuntime()
 		if (this.durable) return this.durable.createDemoWorkspace()
 		const demo = this.demos.create()
 		const context = this.demos.context(demo.session.id)
@@ -407,6 +510,7 @@ export class FoundationService {
 	}
 
 	async switchDemoPersona(sessionId: string | undefined, workspaceId: string, key: string) {
+		this.requireSyntheticRuntime()
 		if (this.durable) return this.durable.switchDemoPersona(sessionId, workspaceId, key)
 		const current = this.sessions.derive(sessionId)
 		if (current.actor.kind !== 'demo_persona' || current.workspaceId !== workspaceId || !sessionId) throw new AccessDeniedError()

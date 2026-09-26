@@ -1,10 +1,18 @@
 import { type PublicListingPage, PublicListingPageSchema, PublicStorefrontSchema, type PublicVendorPage, PublicVendorPageSchema } from 'contracts'
 
-const apiBaseUrl = process.env.JUNCTION_API_URL ?? 'http://127.0.0.1:3001/v1'
+function apiBaseUrl(): string {
+	const configured = process.env.JUNCTION_API_URL
+	if (configured) return configured
+	if (process.env.NEXT_PUBLIC_JUNCTION_RUNTIME_MODE === 'staging') {
+		throw new Error('JUNCTION_API_URL is required for the private staging catalog.')
+	}
+	return 'http://127.0.0.1:3001/v1'
+}
 
 async function readApi<T>(path: string, parse: (input: unknown) => T): Promise<T | null> {
+	const url = `${apiBaseUrl()}${path}`
 	try {
-		const response = await fetch(`${apiBaseUrl}${path}`, { cache: 'no-store' })
+		const response = await fetch(url, { cache: 'no-store' })
 		if (!response.ok) return null
 		return parse(await response.json())
 	} catch {
