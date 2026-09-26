@@ -18,8 +18,17 @@ interface ConfigReader {
 }
 
 export function getApiRuntimeConfig(configService: ConfigReader): ApiRuntimeConfig {
+	const staging = configService.get<string>('JUNCTION_RUNTIME_MODE') === 'staging'
+	const stagingOrigin = staging ? configService.get<string>('BETTER_AUTH_URL') : undefined
+	if (staging && !stagingOrigin) throw new Error('BETTER_AUTH_URL is required for staging CORS.')
+	const corsAllowedOrigins = staging
+		? parseCorsAllowedOrigins(configService.get<string>('CORS_ALLOWED_ORIGINS') ?? stagingOrigin)
+		: parseCorsAllowedOrigins(configService.get<string>('CORS_ALLOWED_ORIGINS'))
+	if (staging && (corsAllowedOrigins.length !== 1 || corsAllowedOrigins[0] !== stagingOrigin || !stagingOrigin?.startsWith('https://'))) {
+		throw new Error('Staging CORS must allow only the BETTER_AUTH_URL HTTPS origin.')
+	}
 	return {
-		corsAllowedOrigins: parseCorsAllowedOrigins(configService.get<string>('CORS_ALLOWED_ORIGINS')),
+		corsAllowedOrigins,
 		logLevel: configService.get<string>('LOG_LEVEL') ?? 'info',
 		port: parsePort(configService.get<string>('API_PORT') ?? configService.get<string>('PORT')),
 		...parseRealtimeRedisFanout(configService.get<string>('REALTIME_REDIS_FANOUT'), configService.get<string>('REDIS_URL')),
