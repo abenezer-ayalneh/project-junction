@@ -4,6 +4,8 @@ const staging = (): NodeJS.ProcessEnv => ({
 	JUNCTION_RUNTIME_MODE: 'staging',
 	FOUNDATION_STORAGE: 'postgresql',
 	DATABASE_URL: 'postgresql://user:password@db.internal/junction',
+	REALTIME_REDIS_FANOUT: 'enabled',
+	REDIS_URL: 'redis://redis.internal:6379',
 	BETTER_AUTH_URL: 'https://staging.junction.test',
 	BETTER_AUTH_SECRET: 'a'.repeat(32),
 	RESEND_API_KEY: 'staging-key',
@@ -45,5 +47,10 @@ describe('private staging provider readiness', () => {
 	it('refuses local object-store fixtures and missing malware scanning', () => {
 		expect(() => assertStagingProviderConfiguration({ ...staging(), MEDIA_S3_ENDPOINT: 'http://127.0.0.1:59000' })).toThrow()
 		expect(() => assertStagingProviderConfiguration({ ...staging(), MEDIA_CLAMD_HOST: '' })).toThrow()
+	})
+
+	it('refuses single-process realtime and the local Redis fixture', () => {
+		expect(() => assertStagingProviderConfiguration({ ...staging(), REALTIME_REDIS_FANOUT: 'disabled' })).toThrow()
+		expect(() => assertStagingProviderConfiguration({ ...staging(), REDIS_URL: 'redis://127.0.0.1:6379' })).toThrow()
 	})
 })

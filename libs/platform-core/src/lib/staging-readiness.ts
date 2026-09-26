@@ -11,6 +11,11 @@ export function assertStagingProviderConfiguration(env: NodeJS.ProcessEnv = proc
 	}
 	if (env['FOUNDATION_STORAGE'] !== 'postgresql') throw new Error('FOUNDATION_STORAGE=postgresql is required in private staging.')
 	required(env, 'DATABASE_URL')
+	if (env['REALTIME_REDIS_FANOUT'] !== 'enabled') throw new Error('REALTIME_REDIS_FANOUT=enabled is required in private staging.')
+	const redisUrl = new URL(required(env, 'REDIS_URL'))
+	if (!['redis:', 'rediss:'].includes(redisUrl.protocol) || redisUrl.href === 'redis://127.0.0.1:6379') {
+		throw new Error('REDIS_URL must target a separate staging Redis service, not the local fixture.')
+	}
 	const origin = new URL(required(env, 'BETTER_AUTH_URL'))
 	if (
 		origin.protocol !== 'https:' ||

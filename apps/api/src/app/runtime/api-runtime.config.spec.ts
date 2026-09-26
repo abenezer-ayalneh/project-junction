@@ -31,11 +31,22 @@ describe('API runtime configuration', () => {
 	})
 
 	it('allows only the real same-origin staging browser', () => {
-		const staging = { JUNCTION_RUNTIME_MODE: 'staging', BETTER_AUTH_URL: 'https://staging.example.org' }
+		const staging = {
+			JUNCTION_RUNTIME_MODE: 'staging',
+			BETTER_AUTH_URL: 'https://staging.example.org',
+			REALTIME_REDIS_FANOUT: 'enabled',
+			REDIS_URL: 'redis://redis.internal:6379',
+		}
 		expect(getApiRuntimeConfig(configService(staging)).corsAllowedOrigins).toEqual(['https://staging.example.org'])
 		expect(() => getApiRuntimeConfig(configService({ ...staging, CORS_ALLOWED_ORIGINS: 'http://localhost:3000' }))).toThrow('Staging CORS must allow only')
 		expect(() => getApiRuntimeConfig(configService({ ...staging, CORS_ALLOWED_ORIGINS: 'https://staging.example.org,https://other.example.org' }))).toThrow(
 			'Staging CORS must allow only',
+		)
+	})
+
+	it('requires Redis fanout in staging', () => {
+		expect(() => getApiRuntimeConfig(configService({ JUNCTION_RUNTIME_MODE: 'staging', BETTER_AUTH_URL: 'https://staging.example.org' }))).toThrow(
+			'Staging realtime requires Redis fanout.',
 		)
 	})
 

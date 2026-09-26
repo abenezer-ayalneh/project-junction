@@ -39,8 +39,9 @@ export class AppController {
 	@Get('health')
 	@ApiOperation({ summary: 'Read synthetic API health.' })
 	@ApiOkResponse({ schema: OpenApiSchemaRefs.healthResponse })
-	health(@Req() request: RequestWithContext) {
-		return this.foundation.health(request.requestId)
+	async health(@Req() request: RequestWithContext) {
+		const [health] = await Promise.all([this.foundation.health(request.requestId), this.realtime.ready()])
+		return health
 	}
 
 	@Get('public/vendors')

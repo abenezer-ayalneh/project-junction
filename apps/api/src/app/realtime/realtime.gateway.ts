@@ -58,6 +58,13 @@ export class RealtimeGateway implements OnGatewayInit {
 		}
 	}
 
+	async ready(): Promise<void> {
+		if (process.env['JUNCTION_RUNTIME_MODE'] === 'staging' && !this.crossProcessFanout) {
+			throw new Error('Staging realtime Redis fanout is not initialized.')
+		}
+		await this.fanoutReady
+	}
+
 	async revokeSession(sessionId: string | undefined): Promise<void> {
 		if (!sessionId || !this.server) return
 		await this.disconnectSessionSockets(sessionId)

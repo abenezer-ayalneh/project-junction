@@ -27,11 +27,13 @@ export function getApiRuntimeConfig(configService: ConfigReader): ApiRuntimeConf
 	if (staging && (corsAllowedOrigins.length !== 1 || corsAllowedOrigins[0] !== stagingOrigin || !stagingOrigin?.startsWith('https://'))) {
 		throw new Error('Staging CORS must allow only the BETTER_AUTH_URL HTTPS origin.')
 	}
+	const redisFanout = parseRealtimeRedisFanout(configService.get<string>('REALTIME_REDIS_FANOUT'), configService.get<string>('REDIS_URL'))
+	if (staging && !redisFanout.realtimeRedisFanout) throw new Error('Staging realtime requires Redis fanout.')
 	return {
 		corsAllowedOrigins,
 		logLevel: configService.get<string>('LOG_LEVEL') ?? 'info',
 		port: parsePort(configService.get<string>('API_PORT') ?? configService.get<string>('PORT')),
-		...parseRealtimeRedisFanout(configService.get<string>('REALTIME_REDIS_FANOUT'), configService.get<string>('REDIS_URL')),
+		...redisFanout,
 		throttleLimit: parsePositiveInteger(configService.get<string>('THROTTLE_LIMIT'), DEFAULT_THROTTLE_LIMIT, 'THROTTLE_LIMIT'),
 		throttleTtlMs: parsePositiveInteger(configService.get<string>('THROTTLE_TTL_MS'), DEFAULT_THROTTLE_TTL_MS, 'THROTTLE_TTL_MS'),
 	}
