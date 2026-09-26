@@ -28,4 +28,5 @@ On 2026-09-26, a fresh isolated Compose project (`project-junction-phase00`) pas
 - Exercise the multi-Owner role switch on private staging, including MFA expiry, revoked membership, a foreign Vendor ID, and the Customer-scope return path. The transaction and UI have local checks but no provider-backed staging acceptance yet.
 - Exercise sign-up, mailbox verification, login, recovery, expired session, realtime authorization, identity check, denial, and revocation end to end on the private HTTPS host with real sandbox accounts. No such staging proof has been recorded yet.
 - Configure the exact staging DNS name, Caddy credentials/upstreams, isolated VPS services and secrets, and provider accounts. The ingress file is prepared but has not been validated on or installed into the VPS.
+- Run `pnpm staging:preflight` on the protected host before deployment. The preflight checks configuration shape only; it has not run against a real staging environment.
 - Reassess Phase 01 and later phase acceptance after Phase 00 becomes real. Local synthetic tests remain regression evidence only.

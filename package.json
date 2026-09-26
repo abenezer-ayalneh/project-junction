@@ -27,6 +27,7 @@
 		"db:migrate:local": "prisma migrate deploy",
 		"db:auth:migrate": "node tools/apply-auth-migrations.mjs",
 		"staging:reviewer": "node tools/manage-staging-reviewer.mjs",
+		"staging:preflight": "pnpm nx run platform-core:build && node tools/staging-preflight.mjs",
 		"db:compat:check": "node tools/check-migration-compatibility.mjs",
 		"db:lock:measure": "node tools/measure-workspace-lock.mjs",
 		"db:rollback:check": "node tools/check-rollback-compatibility.mjs",

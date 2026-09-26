@@ -15,6 +15,8 @@ Private ingress uses the [staging Caddy site block](../../ops/staging/Caddyfile)
 
 The API and worker refuse staging startup without PostgreSQL, Better Auth, Resend, Sumsub, HTTPS object storage, and a configured ClamAV scanner. Give staging a separate object-store bucket and credentials; the local MinIO fixture endpoint is rejected. The scanner may run on the VPS loopback interface, but it must be a running service before media processing is exercised. During Sumsub sandbox rehearsal, leave `SUMSUB_AGE_18_LEVEL_CONFIRMED` unset: adult grants stay disabled and the API health endpoint stays unready. Set it to `true` only after verifying that the configured level enforces age 18 or older and its signed callback and reconciliation path work.
 
+After rendering the protected staging environment on the host, run `pnpm staging:preflight`. It builds the shared validator and rejects missing provider configuration, a mismatched hostname, non-staging web settings, public API/web upstreams, and absent Basic authentication. It prints no secret values. A pass means only that configuration has the required shape; it does not prove DNS, provider credentials, resource isolation, or live acceptance.
+
 A staging hostname/routing rule, provider webhook, object key, cookie, telemetry event, or backup is never reused as a portfolio-production substitute; only an accepted immutable release artifact may be promoted.
 
 ## Provider mode
