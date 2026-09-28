@@ -29,6 +29,8 @@ The web container runs a [startup check](../../tools/staging-web-preflight.mjs) 
 
 Set the non-secret variables in `.env.example` through the host's protected deployment environment. Each `STAGING_*_FILE` points to a separate host-protected file that Compose mounts under `/run/secrets`; the container entrypoint exports those values only to the application process. `STAGING_DATABASE_URL_FILE` must target the `postgres` service and `STAGING_REDIS_URL_FILE` the `redis` service. Configure the Redis ACL file and matching URL credentials, and use a distinct staging PostgreSQL password. Keep the Caddy Basic-auth hash file and Caddy host environment synchronized. The exact paths, hostname, image digests, credentials, and ports are still pending.
 
+Set every `STAGING_*_CPUS` and `STAGING_*_MEMORY` value from measured spare capacity on the shared VPS before rendering Compose. All long-running services and one-shot tools have CPU, memory, and process-count limits; Compose refuses a missing limit. Account for the sum of concurrent limits, PostgreSQL/ClamAV startup peaks, existing portfolio services, backups, and host headroom. No budget can be accepted until the actual VPS capacity and workload are measured.
+
 Once the host release manifest, backups, and image digests have been reviewed, the restricted host procedure can run these commands from the approved deployment directory:
 
 ```sh

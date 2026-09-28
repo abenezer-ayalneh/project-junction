@@ -30,6 +30,9 @@ services:
     postgres:
         image: ${STAGING_POSTGRES_IMAGE:?}
         restart: unless-stopped
+        cpus: ${STAGING_POSTGRES_CPUS:?}
+        mem_limit: ${STAGING_POSTGRES_MEMORY:?}
+        pids_limit: 256
         environment:
             POSTGRES_DB: ${STAGING_DB_NAME:?}
             POSTGRES_USER: ${STAGING_DB_USER:?}
@@ -48,6 +51,9 @@ services:
     redis:
         image: ${STAGING_REDIS_IMAGE:?}
         restart: unless-stopped
+        cpus: ${STAGING_REDIS_CPUS:?}
+        mem_limit: ${STAGING_REDIS_MEMORY:?}
+        pids_limit: 128
         command: ['redis-server', '--aclfile', '/run/secrets/redis_acl', '--appendonly', 'yes']
         secrets:
             - { source: redis_acl, target: redis_acl }
@@ -58,6 +64,9 @@ services:
     clamav:
         image: ${STAGING_CLAMAV_IMAGE:?}
         restart: unless-stopped
+        cpus: ${STAGING_CLAMAV_CPUS:?}
+        mem_limit: ${STAGING_CLAMAV_MEMORY:?}
+        pids_limit: 256
         volumes:
             - clamav_data:/var/lib/clamav
         networks: [backend]
@@ -65,6 +74,9 @@ services:
     migrate:
         image: ${STAGING_APP_IMAGE:?}
         profiles: [tools]
+        cpus: ${STAGING_TOOLS_CPUS:?}
+        mem_limit: ${STAGING_TOOLS_MEMORY:?}
+        pids_limit: 256
         entrypoint: /app/ops/staging/load-secrets.sh
         command: ['sh', '-c', 'pnpm exec prisma migrate deploy && pnpm db:auth:migrate']
         environment:
@@ -78,6 +90,9 @@ services:
     preflight:
         image: ${STAGING_APP_IMAGE:?}
         profiles: [tools]
+        cpus: ${STAGING_TOOLS_CPUS:?}
+        mem_limit: ${STAGING_TOOLS_MEMORY:?}
+        pids_limit: 256
         entrypoint: /app/ops/staging/load-secrets.sh
         command: ['node', 'tools/staging-preflight.mjs']
         environment:
@@ -110,6 +125,9 @@ services:
     api:
         image: ${STAGING_APP_IMAGE:?}
         restart: unless-stopped
+        cpus: ${STAGING_API_CPUS:?}
+        mem_limit: ${STAGING_API_MEMORY:?}
+        pids_limit: 256
         command: ['node', 'apps/api/dist/main.js']
         environment:
             <<: *runtime-env
@@ -127,6 +145,9 @@ services:
     worker:
         image: ${STAGING_APP_IMAGE:?}
         restart: unless-stopped
+        cpus: ${STAGING_WORKER_CPUS:?}
+        mem_limit: ${STAGING_WORKER_MEMORY:?}
+        pids_limit: 256
         command: ['node', 'apps/worker/dist/main.js']
         environment:
             <<: *runtime-env
@@ -140,6 +161,9 @@ services:
     web:
         image: ${STAGING_APP_IMAGE:?}
         restart: unless-stopped
+        cpus: ${STAGING_WEB_CPUS:?}
+        mem_limit: ${STAGING_WEB_MEMORY:?}
+        pids_limit: 256
         command: ['sh', '-c', 'node tools/staging-web-preflight.mjs && exec pnpm exec next start apps/web -H 0.0.0.0 -p 3000']
         environment:
             NODE_ENV: production
