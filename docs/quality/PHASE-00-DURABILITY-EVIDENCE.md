@@ -8,9 +8,11 @@ This evidence concerns the Phase 00 continuation of the in-memory prototype. Pos
 
 Use Node 24 and pnpm 10.32.1. Install dependencies with `pnpm install`, then run:
 
+For reproducing this historical local synthetic evidence, use `.env.integration.example` as the source for a new ignored `.env`. The current `.env.example` is the private staging template. Preserve any existing ignored `.env` rather than overwriting it.
+
 ```sh
 pnpm env:local:up
-# Create .env from .env.example only if no local .env already exists.
+# Create .env from .env.integration.example only if no local .env already exists.
 # Export its local settings into the current shell without printing them.
 set -a
 . ./.env

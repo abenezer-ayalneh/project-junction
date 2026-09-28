@@ -31,7 +31,7 @@ A short-lived demo Vendor fixture entered an unsent Product draft in the served 
 
 ## Verification commands
 
-- `set -a; source ./.env.example; set +a; pnpm test:integration` passed 39 tests plus API/worker smoke on 2026-09-25 after the cleanup, catalog-health, and orphan-sweep changes. It includes real ClamAV/FFmpeg audio-caption validation, expired upload cleanup, fail-first demo object purge, orphan deletion failure/retry, and projection-lag detection/rebuild.
+- `set -a; source ./.env.example; set +a; pnpm test:integration` passed 39 tests plus API/worker smoke on 2026-09-25 after the cleanup, catalog-health, and orphan-sweep changes. The historical local fixture is now `.env.integration.example`; `.env.example` is the private staging template. The run includes real ClamAV/FFmpeg audio-caption validation, expired upload cleanup, fail-first demo object purge, orphan deletion failure/retry, and projection-lag detection/rebuild.
 - The OpenAPI test passed 20 tests and updated its reviewed snapshot with the catalog-health contract. The full Nx typecheck/lint/test/build gate passed for all five projects after the final review/import lag contract and browser draft-recovery changes.
 - A scoped Platform catalog-health read exposes pending review age, import dry-run age, projection lag, media backlog, and dead-letter count. Integration verifies denied Vendor access and projection lag clearing after rebuild; the scoped review page was also checked in the served browser.
 - A web test verified that an unsent private draft survives a reload and that an ambiguous network failure retains the same idempotency key for retry, then clears the tab-scoped draft on success.
