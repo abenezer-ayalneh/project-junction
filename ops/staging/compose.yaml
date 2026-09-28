@@ -73,7 +73,7 @@ services:
         pids_limit: 256
         volumes:
             - clamav_data:/var/lib/clamav
-        networks: [backend]
+        networks: [backend, egress]
 
     migrate:
         image: ${STAGING_APP_IMAGE:?}
@@ -141,7 +141,7 @@ services:
         depends_on:
             postgres: { condition: service_healthy }
             redis: { condition: service_started }
-            clamav: { condition: service_started }
+            clamav: { condition: service_healthy }
         ports:
             - 127.0.0.1:${STAGING_API_HOST_PORT:?}:3001
         networks: [backend, egress]
@@ -159,7 +159,7 @@ services:
         depends_on:
             postgres: { condition: service_healthy }
             redis: { condition: service_started }
-            clamav: { condition: service_started }
+            clamav: { condition: service_healthy }
         networks: [backend, egress]
 
     web:

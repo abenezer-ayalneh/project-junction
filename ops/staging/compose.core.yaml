@@ -42,6 +42,16 @@ services:
             - redis_data:/data
         networks: [backend]
 
+    clamav:
+        image: ${STAGING_CLAMAV_IMAGE:?}
+        restart: unless-stopped
+        cpus: ${STAGING_CLAMAV_CPUS:?}
+        mem_limit: ${STAGING_CLAMAV_MEMORY:?}
+        pids_limit: 256
+        volumes:
+            - clamav_data:/var/lib/clamav
+        networks: [backend, egress]
+
 secrets:
     postgres_password: { file: '${STAGING_POSTGRES_PASSWORD_FILE:?}' }
     redis_acl: { file: '${STAGING_REDIS_ACL_FILE:?}' }
@@ -49,7 +59,9 @@ secrets:
 volumes:
     postgres18_data:
     redis_data:
+    clamav_data:
 
 networks:
     backend:
         internal: true
+    egress:
