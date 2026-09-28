@@ -295,7 +295,10 @@ export class PostgresFoundation {
 			if (prior) return { accepted: true, duplicate: true }
 			const session = await tx.session.findFirst({ where: { userId: input.userId, workspace: { kind: 'real' } }, orderBy: { createdAt: 'asc' } })
 			if (!session) throw new AccessDeniedError()
-			const revocation = input.eventType === 'applicantDeactivated' || input.eventType === 'applicantDeleted'
+			const terminalRevocation = input.eventType === 'applicantDeactivated' || input.eventType === 'applicantDeleted'
+			const revocation =
+				['applicantDeactivated', 'applicantDeleted', 'applicantReset', 'applicantOnHold', 'applicantLevelChanged'].includes(input.eventType) ||
+				(input.eventType === 'applicantReviewed' && input.answer === 'RED')
 			if (revocation) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'sumsub-user:' + input.userId}, 0))`
 			const now = new Date()
 			await tx.providerInboxEvent.create({
@@ -306,8 +309,8 @@ export class PostgresFoundation {
 					workspaceId: session.workspaceId,
 					payloadHash: stableHash(input),
 					payload: json(input),
-					reconciliationState: revocation ? 'reconciled' : 'pending_review',
-					...(revocation ? { reconciledAt: now, processedAt: now } : {}),
+					reconciliationState: terminalRevocation ? 'reconciled' : 'pending_review',
+					...(terminalRevocation ? { reconciledAt: now, processedAt: now } : {}),
 				},
 			})
 			if (revocation) {
@@ -338,12 +341,17 @@ export class PostgresFoundation {
 		const applicantId = payload['applicantId']
 		const current = await adapter.currentReview(userId)
 		const approved =
+			['applicantReviewed', 'applicantActivated'].includes(String(payload['eventType'])) &&
 			current.applicantId === applicantId &&
 			current.levelName === requiredLevel &&
 			current.reviewStatus === 'completed' &&
 			current.reviewAnswer === 'GREEN'
 		const rejected =
-			current.applicantId === applicantId && current.levelName === requiredLevel && current.reviewStatus === 'completed' && current.reviewAnswer === 'RED'
+			payload['eventType'] === 'applicantReviewed' &&
+			current.applicantId === applicantId &&
+			current.levelName === requiredLevel &&
+			current.reviewStatus === 'completed' &&
+			current.reviewAnswer === 'RED'
 		const state = approved ? 'verified' : rejected ? 'rejected' : 'unverified'
 		const outcome = await this.db.$transaction(async (tx) => {
 			await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'sumsub-user:' + userId}, 0))`
@@ -353,7 +361,10 @@ export class PostgresFoundation {
 				SELECT id FROM provider_inbox_events
 				WHERE provider = 'sumsub-sandbox'
 					AND payload->>'userId' = ${userId}
-					AND payload->>'eventType' IN ('applicantDeactivated', 'applicantDeleted')
+					AND (
+						payload->>'eventType' IN ('applicantDeactivated', 'applicantDeleted', 'applicantReset', 'applicantOnHold', 'applicantLevelChanged')
+						OR (payload->>'eventType' = 'applicantReviewed' AND payload->>'answer' = 'RED')
+					)
 					AND payload->>'observedAt' >= ${String(payload['observedAt'])}
 				LIMIT 1`
 			const realSession = await tx.session.findFirst({ where: { userId, workspaceId: event.workspaceId ?? undefined, workspace: { kind: 'real' } } })

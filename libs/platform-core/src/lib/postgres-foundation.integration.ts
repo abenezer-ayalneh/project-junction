@@ -295,15 +295,26 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		})
 		await expect(repository.reconcileOneSumsubReview(adapter, 'age-18')).resolves.toEqual({ processed: true, state: 'verified' })
 		await expect(repository.accessContext(authSession.sessionId)).resolves.toMatchObject({ actor: { kind: 'user', userId: authSession.userId } })
-		await repository.recordSumsubReview({ ...review, eventId: randomUUID(), eventType: 'applicantReset', answer: null, status: 'init' })
-		currentStatus = 'init'
-		currentAnswer = null
+		await repository.recordSumsubReview({
+			...review,
+			eventId: randomUUID(),
+			eventType: 'applicantReset',
+			answer: null,
+			status: 'init',
+			observedAt: '2026-09-25 06:03:00.000',
+		})
+		user = await repository.db.user.findUniqueOrThrow({ where: { id: authSession.userId } })
+		expect(user.adultVerificationState).toBe('unverified')
+		await expect(repository.accessContext(authSession.sessionId)).rejects.toThrow(AccessDeniedError)
+		// A delayed provider read must not turn a reset event into a new approval.
 		await expect(repository.reconcileOneSumsubReview(adapter, 'age-18')).resolves.toEqual({ processed: true, state: 'unverified' })
 		user = await repository.db.user.findUniqueOrThrow({ where: { id: authSession.userId } })
 		expect(user.adultVerificationState).toBe('unverified')
 		expect(user.verifiedAt).toBeNull()
 		await expect(repository.accessContext(authSession.sessionId)).rejects.toThrow(AccessDeniedError)
-		await repository.recordSumsubReview({ ...review, eventId: randomUUID(), answer: 'RED' })
+		await repository.recordSumsubReview({ ...review, eventId: randomUUID() })
+		await expect(repository.reconcileOneSumsubReview(adapter, 'age-18')).resolves.toEqual({ processed: true, state: 'unverified' })
+		await repository.recordSumsubReview({ ...review, eventId: randomUUID(), answer: 'RED', observedAt: '2026-09-25 06:04:00.000' })
 		currentStatus = 'completed'
 		currentAnswer = 'RED'
 		await expect(repository.reconcileOneSumsubReview(adapter, 'age-18')).resolves.toEqual({ processed: true, state: 'rejected' })
