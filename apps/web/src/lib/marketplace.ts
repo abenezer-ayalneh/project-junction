@@ -9,13 +9,15 @@ function apiBaseUrl(): string {
 	return 'http://127.0.0.1:3001/v1'
 }
 
-async function readApi<T>(path: string, parse: (input: unknown) => T): Promise<T | null> {
+async function readApi<T>(path: string, parse: (input: unknown) => T, missingIsExpected = false): Promise<T | null> {
 	const url = `${apiBaseUrl()}${path}`
 	try {
 		const response = await fetch(url, { cache: 'no-store' })
-		if (!response.ok) return null
+		if (response.status === 404 && missingIsExpected) return null
+		if (!response.ok) throw new Error(`Marketplace API returned ${response.status}.`)
 		return parse(await response.json())
-	} catch {
+	} catch (error) {
+		if (process.env.NEXT_PUBLIC_JUNCTION_RUNTIME_MODE === 'staging') throw error
 		return null
 	}
 }
@@ -35,7 +37,7 @@ export function getPublicVendors(): Promise<PublicVendorPage | null> {
 }
 
 export function getPublicStorefront(slug: string) {
-	return readApi(`/public/vendors/${encodeURIComponent(slug)}`, (input) => PublicStorefrontSchema.parse(input))
+	return readApi(`/public/vendors/${encodeURIComponent(slug)}`, (input) => PublicStorefrontSchema.parse(input), true)
 }
 
 export function formatPrice(priceCents: number | undefined): string {
