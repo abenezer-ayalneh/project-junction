@@ -85,6 +85,7 @@ const auditMarkerMethod = 'POST /v1/foundation/audit-markers'
 const elevatedAuditMarkerMethod = 'POST /v1/foundation/elevated-audit-markers'
 const adultVerifiedStates = new Set(['verified', 'legacy_verified_compat'])
 const realtimeReplayLimit = 25
+const publicRealtimeTypes = ['ListingPublished', 'ListingUnpublished', 'StorefrontUpdated'] as const
 const stagingDeliveryTypes = [
 	'VendorApplicationSubmitted',
 	'VendorApplicationReviewed',
@@ -1778,7 +1779,14 @@ export class PostgresFoundation {
 	async realtimeHighWaterCursor(sessionId: string | undefined): Promise<string | null> {
 		return this.db.$transaction(async (tx) => {
 			const context = await this.derive(tx, sessionId)
-			const event = await tx.outboxEvent.findFirst({ where: { workspaceId: context.workspaceId }, orderBy: { id: 'desc' }, select: { id: true } })
+			const event = await tx.outboxEvent.findFirst({
+				where: {
+					workspaceId: context.workspaceId,
+					...(process.env['JUNCTION_RUNTIME_MODE'] === 'staging' ? { type: { in: [...publicRealtimeTypes] } } : {}),
+				},
+				orderBy: { id: 'desc' },
+				select: { id: true },
+			})
 			return event?.id ?? null
 		})
 	}
@@ -1787,16 +1795,20 @@ export class PostgresFoundation {
 		if (cursor) this.requireResourceId(cursor)
 		return this.db.$transaction(async (tx) => {
 			const context = await this.derive(tx, sessionId)
+			const stagingTypes = process.env['JUNCTION_RUNTIME_MODE'] === 'staging' ? { type: { in: [...publicRealtimeTypes] } } : {}
 			const highWater = await tx.outboxEvent.findFirst({
-				where: { workspaceId: context.workspaceId },
+				where: { workspaceId: context.workspaceId, ...stagingTypes },
 				orderBy: { id: 'desc' },
 				select: { id: true },
 			})
 			if (!cursor) return { cursor: highWater?.id ?? null, events: [], restRefetchRequired: false }
-			const cursorEvent = await tx.outboxEvent.findFirst({ where: { id: cursor, workspaceId: context.workspaceId }, select: { id: true } })
+			const cursorEvent = await tx.outboxEvent.findFirst({
+				where: { id: cursor, workspaceId: context.workspaceId, ...stagingTypes },
+				select: { id: true },
+			})
 			if (!cursorEvent || !highWater) return { cursor: highWater?.id ?? null, events: [], restRefetchRequired: true }
 			const records = await tx.outboxEvent.findMany({
-				where: { workspaceId: context.workspaceId, id: { gt: cursor, lte: highWater.id } },
+				where: { workspaceId: context.workspaceId, id: { gt: cursor, lte: highWater.id }, ...stagingTypes },
 				orderBy: { id: 'asc' },
 				take: realtimeReplayLimit + 1,
 				select: { id: true, eventId: true, type: true, payload: true, occurredAt: true },
@@ -1824,6 +1836,18 @@ export class PostgresFoundation {
 			})
 			return record ? this.realtimeEvent(record, context.workspaceId) : null
 		})
+	}
+
+	async realtimeDomainEventForEventId(eventId: string): Promise<RealtimeFoundationEvent | null> {
+		this.requireResourceId(eventId)
+		const record = await this.db.outboxEvent.findUnique({
+			where: { eventId },
+			select: { id: true, eventId: true, type: true, payload: true, occurredAt: true, workspaceId: true },
+		})
+		if (!record || !publicRealtimeTypes.includes(record.type as (typeof publicRealtimeTypes)[number])) return null
+		const workspace = await this.db.workspace.findUnique({ where: { id: record.workspaceId }, select: { kind: true } })
+		if (workspace?.kind !== 'real') return null
+		return this.realtimeEvent(record, record.workspaceId)
 	}
 
 	async acceptAuditMarker(sessionId: string | undefined, keyInput: string | undefined, input: unknown) {

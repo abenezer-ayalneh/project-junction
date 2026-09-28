@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import { OwnershipScopeSchema } from './access-context.js'
+import { DomainEventSchema } from './events.js'
 
 export const ApiErrorCodeSchema = z.enum([
 	'AUTH_REQUIRED',
@@ -515,7 +516,7 @@ export const RealtimeJoinRequestSchema = z.object({
 
 export type RealtimeJoinRequest = z.infer<typeof RealtimeJoinRequestSchema>
 
-export const RealtimeEventTypeSchema = z.enum(['FoundationCommandAccepted', 'ProviderCallbackReceived', 'ProviderTimeoutReconciled', 'DemoWorkspaceExpired'])
+export const RealtimeEventTypeSchema = DomainEventSchema.shape.type
 
 export const RealtimeFoundationEventSchema = z.object({
 	eventId: z.string().uuid(),

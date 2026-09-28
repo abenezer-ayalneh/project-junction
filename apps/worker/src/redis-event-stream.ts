@@ -11,10 +11,12 @@ const appendOnce = `
 local previous = redis.call('HGET', KEYS[1], ARGV[1])
 if previous then
   if previous ~= ARGV[2] then return redis.error_reply('event identity reused with different content') end
+  redis.call('PUBLISH', KEYS[3], ARGV[3])
   return 1
 end
 redis.call('XADD', KEYS[2], '*', 'eventId', ARGV[1], 'event', ARGV[3])
 redis.call('HSET', KEYS[1], ARGV[1], ARGV[2])
+redis.call('PUBLISH', KEYS[3], ARGV[3])
 return 0
 `
 
@@ -29,7 +31,7 @@ export class RedisEventStreamAdapter implements ExternalEffectAdapter {
 			throw new Error('Synthetic event types cannot enter the staging stream.')
 		}
 		const result = await this.redis.eval(appendOnce, {
-			keys: [`${this.namespace}:domain-event-identities`, `${this.namespace}:domain-events`],
+			keys: [`${this.namespace}:domain-event-identities`, `${this.namespace}:domain-events`, `${this.namespace}:domain-events-live`],
 			arguments: [event.eventId, stableHash(event), JSON.stringify(event)],
 		})
 		if (result !== 0 && result !== 1) throw new Error('Unexpected Redis stream append result.')

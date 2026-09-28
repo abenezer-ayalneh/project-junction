@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto'
 
 import { DomainEventSchema } from 'contracts'
 
+import { Prisma } from '../../generated/prisma/index.js'
 import { AccessDeniedError } from './access.js'
 import { FakeExternalEffectAdapter } from './external-effects.js'
 import { IdempotencyConflictError } from './idempotency.js'
@@ -397,6 +398,74 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		} finally {
 			if (previous === undefined) delete process.env['JUNCTION_RUNTIME_MODE']
 			else process.env['JUNCTION_RUNTIME_MODE'] = previous
+		}
+	})
+	it('exposes only public catalog events from real workspaces to staging realtime', async () => {
+		const real = await repository.db.workspace.create({ data: { kind: 'real' } })
+		const makeEvent = (type: 'ListingPublished' | 'VendorApplicationSubmitted', scopedWorkspaceId: string) =>
+			DomainEventSchema.parse({
+				eventId: randomUUID(),
+				type,
+				aggregateId: randomUUID(),
+				aggregateVersion: 1,
+				workspaceId: scopedWorkspaceId,
+				causationId: randomUUID(),
+				correlationId: randomUUID(),
+				idempotencyKey: null,
+				occurredAt: new Date().toISOString(),
+				schemaVersion: 1,
+				payload: {},
+			})
+		const publicEvent = makeEvent('ListingPublished', real.id)
+		const privateEvent = makeEvent('VendorApplicationSubmitted', real.id)
+		const nextPublicEvent = makeEvent('ListingPublished', real.id)
+		const syntheticEvent = makeEvent('ListingPublished', workspaceId)
+		const records = []
+		for (const event of [publicEvent, privateEvent, nextPublicEvent, syntheticEvent]) {
+			records.push(
+				await repository.db.outboxEvent.create({
+					data: {
+						eventId: event.eventId,
+						workspaceId: event.workspaceId,
+						type: event.type,
+						payload: event as Prisma.InputJsonValue,
+						occurredAt: new Date(event.occurredAt),
+					},
+				}),
+			)
+		}
+		await expect(repository.realtimeDomainEventForEventId(publicEvent.eventId)).resolves.toMatchObject({
+			eventId: publicEvent.eventId,
+			type: 'ListingPublished',
+			scope: { workspaceId: real.id },
+			payload: {},
+		})
+		await expect(repository.realtimeDomainEventForEventId(privateEvent.eventId)).resolves.toBeNull()
+		await expect(repository.realtimeDomainEventForEventId(syntheticEvent.eventId)).resolves.toBeNull()
+		const userId = randomUUID()
+		const sessionId = randomUUID()
+		const email = `${randomUUID()}@example.com`
+		const expiresAt = new Date(Date.now() + 3600000)
+		await repository.db.user.create({ data: { id: userId, email, adultVerificationState: 'verified', verifiedAt: new Date() } })
+		await repository.db.session.create({ data: { id: sessionId, userId, workspaceId: real.id, expiresAt } })
+		await repository.db
+			.$executeRaw`INSERT INTO junction_auth."user" (id, name, email, "emailVerified") VALUES (${userId}, ${'Public catalog test'}, ${email}, true)`
+		await repository.db
+			.$executeRaw`INSERT INTO junction_auth.session (id, "expiresAt", token, "updatedAt", "userId") VALUES (${sessionId}, ${expiresAt}, ${randomUUID()}, now(), ${userId})`
+		const previous = process.env['JUNCTION_RUNTIME_MODE']
+		process.env['JUNCTION_RUNTIME_MODE'] = 'staging'
+		try {
+			await expect(repository.realtimeHighWaterCursor(sessionId)).resolves.toBe(records[2].id)
+			await expect(repository.realtimeReplay(sessionId, records[0].id)).resolves.toMatchObject({
+				cursor: records[2].id,
+				restRefetchRequired: false,
+				events: [{ eventId: nextPublicEvent.eventId, type: 'ListingPublished' }],
+			})
+		} finally {
+			if (previous === undefined) delete process.env['JUNCTION_RUNTIME_MODE']
+			else process.env['JUNCTION_RUNTIME_MODE'] = previous
+			await repository.db.$executeRaw`DELETE FROM junction_auth.session WHERE id = ${sessionId}`
+			await repository.db.$executeRaw`DELETE FROM junction_auth."user" WHERE id = ${userId}`
 		}
 	})
 	it('denies stale roles, revoked/expired sessions and substituted scope', async () => {

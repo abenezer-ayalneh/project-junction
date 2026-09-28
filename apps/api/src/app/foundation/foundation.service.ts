@@ -416,6 +416,11 @@ export class FoundationService {
 		return null
 	}
 
+	realtimeDomainEventForEventId(eventId: string) {
+		if (this.configService.get<string>('JUNCTION_RUNTIME_MODE') !== 'staging' || !this.durable) throw new AccessDeniedError()
+		return this.durable.realtimeDomainEventForEventId(eventId)
+	}
+
 	async acceptAuditMarker(sessionId: string | undefined, idempotencyKey: string | undefined, body: unknown): Promise<CommandOutcome> {
 		return this.acceptAuditMarkerForMode(sessionId, idempotencyKey, body, false)
 	}
