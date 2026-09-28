@@ -1,15 +1,15 @@
 # CI/CD and Release Promotion
 
 > **Document status:** specified procedure
-> **System claim:** **Specified — Not Executed — Not Verified**
+> **System claim:** **Manual staging image workflow implemented locally — publication and deployment not executed**
 > **Decision coverage:** [`DEC-092`, `DEC-110`, `DEC-112`–`DEC-116`, `DEC-138`, `DEC-157`–`DEC-160`](../governance/DECISION-REGISTER.md)
 > **Normative owner:** future build, artifact, and promotion pipeline
 
 ## Artifact contract
 
-GitHub Actions builds web, API, and worker images and publishes them to GHCR [DEC-092]. Images are immutable, scanned, identified by source revision, pinned by digest in deployment, accompanied by an SBOM, and signed. The same digest proven in staging is promoted to portfolio production; production is not rebuilt from a branch.
+The [manual staging image workflow](../../.github/workflows/publish-staging-image.yml) builds the web, API, and worker into one application image from the reviewed `main` revision. It publishes to GHCR with a commit tag, emits BuildKit provenance and an SBOM, adds a GitHub artifact attestation, and signs and verifies the immutable digest with Cosign. This workflow has not run in GitHub Actions yet. Image scanning, a release manifest, staging deployment, and production promotion remain to be implemented. The same digest proven in staging must be promoted to portfolio production; production is not rebuilt from a branch.
 
-Exact workflow/action versions, signing technology, branch policy, and automatic-versus-manual staging trigger are **DERIVED-PLAN-DEFAULTS**. They must be pinned and approved when the repository exists.
+The staging image workflow uses commit-pinned actions and a manual trigger on `main`; its first GHCR run and permissions still need verification.
 
 ## Future promotion interface
 

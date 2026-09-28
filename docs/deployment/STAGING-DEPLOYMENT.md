@@ -30,6 +30,9 @@ Set the non-secret variables in `.env.example` through the host's protected depl
 Once the host release manifest, backups, and image digests have been reviewed, the restricted host procedure can run these commands from the approved deployment directory:
 
 ```sh
+cosign verify "$STAGING_APP_IMAGE" \
+  --certificate-identity=https://github.com/abenezer-ayalneh/project-junction/.github/workflows/publish-staging-image.yml@refs/heads/main \
+  --certificate-oidc-issuer=https://token.actions.githubusercontent.com
 docker compose -f ops/staging/compose.yaml config --quiet
 docker compose -f ops/staging/compose.yaml run --rm preflight
 docker compose -f ops/staging/compose.yaml up -d postgres redis clamav
@@ -38,6 +41,8 @@ docker compose -f ops/staging/compose.yaml up -d api worker web
 ```
 
 These commands are not a deployment approval or evidence of a VPS run. The image build is a local artifact check until the release pipeline publishes and signs a digest. The host procedure must still verify Caddy/TLS, provider delivery, migrations, backup freshness, resource headroom, and the real Phase 00 journeys before accepting staging.
+
+The manual [staging image workflow](../../.github/workflows/publish-staging-image.yml) is restricted to `main`. It builds the Linux AMD64 application image, publishes a commit-tagged image to GHCR, adds BuildKit provenance and an SBOM, attests its digest, then signs and verifies that digest with GitHub OIDC. The job summary prints the immutable `ghcr.io/...@sha256:...` reference to put in `STAGING_APP_IMAGE`. It does not deploy to the VPS or read staging provider secrets. No published workflow run has been accepted as staging evidence yet; the host must verify the digest and signing identity before pulling it.
 
 ## Provider mode
 
