@@ -388,7 +388,11 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		process.env['JUNCTION_RUNTIME_MODE'] = 'staging'
 		try {
 			const claim = await repository.claim(randomUUID())
-			if (claim) expect(DomainEventSchema.parse(claim.payload).type).toBe('MediaQuarantined')
+			if (claim) {
+				const claimedEvent = DomainEventSchema.parse(claim.payload)
+				expect(claimedEvent.type).not.toBe('FoundationCommandAccepted')
+				expect((await repository.db.workspace.findUniqueOrThrow({ where: { id: claimedEvent.workspaceId } })).kind).toBe('real')
+			}
 			expect((await repository.db.outboxEvent.findUniqueOrThrow({ where: { id: event.id } })).state).toBe('pending')
 		} finally {
 			if (previous === undefined) delete process.env['JUNCTION_RUNTIME_MODE']

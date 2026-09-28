@@ -85,6 +85,21 @@ const auditMarkerMethod = 'POST /v1/foundation/audit-markers'
 const elevatedAuditMarkerMethod = 'POST /v1/foundation/elevated-audit-markers'
 const adultVerifiedStates = new Set(['verified', 'legacy_verified_compat'])
 const realtimeReplayLimit = 25
+const stagingDeliveryTypes = [
+	'VendorApplicationSubmitted',
+	'VendorApplicationReviewed',
+	'ListingSubmittedForReview',
+	'ListingRevised',
+	'ListingPublished',
+	'ListingUnpublished',
+	'StorefrontUpdated',
+	'MediaQuarantined',
+	'MediaProcessed',
+	'MediaRejected',
+	'MediaReviewed',
+	'CatalogImportCommitted',
+	'StockMoved',
+] as const satisfies readonly DomainEvent['type'][]
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const json = (value: unknown) => JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue
 const DEMO_PERSONAS = [
@@ -2068,14 +2083,17 @@ export class PostgresFoundation {
 
 	async claim(workerId: string, leaseMs = 30000): Promise<DurableClaim | undefined> {
 		if (!Number.isFinite(leaseMs) || leaseMs <= 0) throw new Error('Invalid lease.')
-		const stagingTypeFilter = process.env['JUNCTION_RUNTIME_MODE'] === 'staging' ? Prisma.sql`AND type = 'MediaQuarantined'` : Prisma.empty
+		const stagingTypeFilter =
+			process.env['JUNCTION_RUNTIME_MODE'] === 'staging'
+				? Prisma.sql`AND type IN (${Prisma.join(stagingDeliveryTypes)}) AND EXISTS (SELECT 1 FROM "workspaces" w WHERE w.id = e.workspace_id AND w.kind = 'real')`
+				: Prisma.empty
 		await this.db.$executeRaw`
       UPDATE "outbox_events" SET state = 'dead_letter', "claimed_by" = NULL, "claimed_at" = NULL, "claim_token" = NULL
       WHERE state = 'in_flight' AND attempts >= 3 AND "claimed_at" <= clock_timestamp() - ${leaseMs} * interval '1 millisecond'`
 		const token = randomUUID()
 		const records = await this.db.$queryRaw<DurableClaim[]>`
       UPDATE "outbox_events" SET state = 'in_flight', "claimed_by" = ${workerId}, "claimed_at" = clock_timestamp(), "claim_token" = ${token}::uuid, attempts = attempts + 1
-      WHERE id = (SELECT id FROM "outbox_events" WHERE ((state = 'pending' AND "available_at" <= clock_timestamp()) OR (state = 'in_flight' AND "claimed_at" <= clock_timestamp() - ${leaseMs} * interval '1 millisecond')) ${stagingTypeFilter} ORDER BY "occurred_at", id FOR UPDATE SKIP LOCKED LIMIT 1)
+      WHERE id = (SELECT e.id FROM "outbox_events" e WHERE ((state = 'pending' AND "available_at" <= clock_timestamp()) OR (state = 'in_flight' AND "claimed_at" <= clock_timestamp() - ${leaseMs} * interval '1 millisecond')) ${stagingTypeFilter} ORDER BY "occurred_at", id FOR UPDATE SKIP LOCKED LIMIT 1)
       RETURNING id, "claim_token" AS "claimToken", payload, attempts`
 		return records[0]
 	}
@@ -2089,7 +2107,7 @@ export class PostgresFoundation {
 				data: { state: 'delivered', claimedBy: null, claimedAt: null, claimToken: null },
 			})
 			if (updated.count !== 1) throw new Error('Stale outbox claim.')
-			// Synthetic consumer effect and acknowledgement are atomic; event identity deduplicates replay.
+			// The receipt and PostgreSQL acknowledgement are atomic. The external destination deduplicates event identity on replay.
 			await tx.outboxReceipt.upsert({ where: { eventId: event.eventId }, create: { eventId: event.eventId, workspaceId: event.workspaceId }, update: {} })
 		})
 	}
@@ -2113,10 +2131,12 @@ export class PostgresFoundation {
 		if (!claim) return { processed: false }
 		try {
 			const event = DomainEventSchema.parse(claim.payload)
-			if (process.env['JUNCTION_RUNTIME_MODE'] === 'staging' && event.type !== 'MediaQuarantined')
-				throw new Error('No real staging delivery handler is configured for this event type.')
-			if (event.type === 'FoundationCommandAccepted') await this.externalEffects.deliver(event)
+			if (process.env['JUNCTION_RUNTIME_MODE'] === 'staging') {
+				if (!(stagingDeliveryTypes as readonly string[]).includes(event.type))
+					throw new Error('No real staging delivery handler is configured for this event type.')
+			} else if (event.type === 'FoundationCommandAccepted') await this.externalEffects.deliver(event)
 			if (event.type === 'MediaQuarantined') await this.processQuarantinedMedia(event.aggregateId)
+			if (process.env['JUNCTION_RUNTIME_MODE'] === 'staging') await this.externalEffects.deliver(event)
 			await this.complete(claim)
 			return { processed: true }
 		} catch {

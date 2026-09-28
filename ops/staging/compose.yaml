@@ -54,7 +54,7 @@ services:
         cpus: ${STAGING_REDIS_CPUS:?}
         mem_limit: ${STAGING_REDIS_MEMORY:?}
         pids_limit: 128
-        command: ['redis-server', '--aclfile', '/run/secrets/redis_acl', '--appendonly', 'yes']
+        command: ['redis-server', '--aclfile', '/run/secrets/redis_acl', '--appendonly', 'yes', '--appendfsync', 'always']
         secrets:
             - { source: redis_acl, target: redis_acl }
         volumes:

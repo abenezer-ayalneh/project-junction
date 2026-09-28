@@ -346,6 +346,9 @@ importers:
             platform-core:
                 specifier: workspace:*
                 version: link:../../libs/platform-core
+            redis:
+                specifier: ^4.7.1
+                version: 4.7.1
 
     libs/contracts:
         dependencies:

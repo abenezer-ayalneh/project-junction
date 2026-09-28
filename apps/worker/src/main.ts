@@ -1,13 +1,24 @@
 import { randomUUID } from 'node:crypto'
 
 import { assertStagingProviderConfiguration, PostgresFoundation, SumsubSandboxAdapter } from 'platform-core'
+import { createClient } from 'redis'
+
+import { RedisEventStreamAdapter } from './redis-event-stream'
 
 const workerId = randomUUID()
 assertStagingProviderConfiguration()
 if (process.env['FOUNDATION_STORAGE'] !== 'postgresql') throw new Error('FOUNDATION_STORAGE=postgresql is required for the worker runtime.')
 const databaseUrl = process.env['DATABASE_URL']
 if (!databaseUrl) throw new Error('DATABASE_URL is required.')
-const repository = new PostgresFoundation(databaseUrl)
+const staging = process.env['JUNCTION_RUNTIME_MODE'] === 'staging'
+const redis = staging
+	? createClient({
+			url: process.env['REDIS_URL'],
+			socket: { reconnectStrategy: (retries) => (retries >= 5 ? new Error('Redis is unavailable.') : Math.min(1000 * retries, 5000)) },
+		})
+	: undefined
+redis?.on('error', () => process.stderr.write(`${JSON.stringify({ type: 'worker.redis-error' })}\n`))
+const repository = new PostgresFoundation(databaseUrl, redis ? new RedisEventStreamAdapter(redis) : undefined)
 const sumsubReady = process.env['JUNCTION_RUNTIME_MODE'] === 'staging' && process.env['SUMSUB_AGE_18_LEVEL_CONFIRMED'] === 'true'
 const sumsub = sumsubReady
 	? new SumsubSandboxAdapter(process.env['SUMSUB_APP_TOKEN'] ?? '', process.env['SUMSUB_SECRET_KEY'] ?? '', process.env['SUMSUB_WEBHOOK_SECRET'] ?? '')
@@ -16,9 +27,16 @@ const sumsubLevel = sumsubReady ? process.env['SUMSUB_AGE_LEVEL'] : undefined
 if (sumsubReady && !sumsubLevel) throw new Error('SUMSUB_AGE_LEVEL is required after the age-18 level is confirmed.')
 let stopping = false
 let timer: ReturnType<typeof setTimeout>
+let tickRunning = false
+let shutdownPromise: Promise<void> | undefined
 let lastMediaSweep = 0
 let lastSumsubReconcile = 0
+function shutdown(): Promise<void> {
+	shutdownPromise ??= Promise.all([repository.close(), redis?.isOpen ? redis.quit() : Promise.resolve()]).then(() => undefined)
+	return shutdownPromise
+}
 async function tick() {
+	tickRunning = true
 	try {
 		if (process.env['JUNCTION_RUNTIME_MODE'] !== 'staging') await repository.purgeExpiredDemoWorkspaces()
 		await repository.expirePendingVideoUploads()
@@ -35,17 +53,24 @@ async function tick() {
 	} catch {
 		process.stderr.write(`${JSON.stringify({ type: 'worker.failure', retryable: true })}\n`)
 	} finally {
+		tickRunning = false
 		if (!stopping) timer = setTimeout(() => void tick(), 1000)
-		else await repository.close()
+		else await shutdown()
 	}
 }
 for (const signal of ['SIGINT', 'SIGTERM'] as const)
 	process.on(signal, () => {
 		stopping = true
 		clearTimeout(timer)
-		void repository.close()
+		if (!tickRunning) void shutdown()
 	})
-process.stdout.write(
-	`${JSON.stringify({ type: 'worker.started', runtimeMode: process.env['JUNCTION_RUNTIME_MODE'] === 'staging' ? 'staging' : 'synthetic', storage: 'postgresql' })}\n`,
-)
-void tick()
+void (async () => {
+	if (redis) await redis.connect()
+	if (stopping) return shutdown()
+	process.stdout.write(`${JSON.stringify({ type: 'worker.started', runtimeMode: staging ? 'staging' : 'synthetic', storage: 'postgresql' })}\n`)
+	await tick()
+})().catch(() => {
+	process.stderr.write(`${JSON.stringify({ type: 'worker.startup-failed' })}\n`)
+	process.exitCode = 1
+	void shutdown()
+})

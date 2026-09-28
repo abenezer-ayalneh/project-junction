@@ -21,6 +21,8 @@ The API and worker refuse staging startup without PostgreSQL, Better Auth, Resen
 
 Set `REALTIME_REDIS_FANOUT=enabled` and point `REDIS_URL` at the isolated staging Redis service. The checked-in local Redis fixture URL is rejected in staging. Verify that Redis is reachable before accepting realtime traffic; configuration checks alone do not establish availability.
 
+The worker uses the same isolated Redis service for `junction:staging:domain-events` and its event-ID identity hash. Its ACL must permit authenticated `EVAL`, stream writes, and hash reads/writes, as well as Socket.IO fanout commands. The Compose service uses append-only persistence with `appendfsync always` so a stream append is synced before Redis replies; measure the resulting write latency and disk growth on the VPS. The stream has no automatic trimming or downstream consumer yet. Back up the Redis volume, monitor its length, and do not treat an outbox receipt as proof of a completed downstream action.
+
 After rendering the protected staging environment on the host, run the bundled preflight as described below. It rejects missing provider configuration, a mismatched hostname, non-staging web settings, public API/web upstreams, non-digest images, and absent Basic authentication. It prints no secret values. A pass means only that configuration has the required shape; it does not prove DNS, provider credentials, resource isolation, or live acceptance.
 
 A staging hostname/routing rule, provider webhook, object key, cookie, telemetry event, or backup is never reused as a portfolio-production substitute; only an accepted immutable release artifact may be promoted.
