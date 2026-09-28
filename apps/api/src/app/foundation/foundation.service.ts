@@ -85,7 +85,7 @@ export class FoundationService {
 			throw new Error('FOUNDATION_STORAGE=postgresql is required for the API runtime.')
 		}
 		this.durable = storage === 'postgresql' ? new PostgresFoundation(this.databaseUrl()) : undefined
-		this.sessions.register(this.syntheticContext())
+		if (!this.durable) this.sessions.register(this.syntheticContext())
 	}
 
 	async health(requestId?: string) {

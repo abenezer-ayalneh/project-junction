@@ -134,7 +134,9 @@ export default async function VendorStorefront({ params }: { params: Promise<{ s
 						</ul>
 					)}
 				</section>
-				<p className="mt-10 border-t pt-5 text-xs text-muted-foreground">Local preview · browsing only · no checkout or booking</p>
+				<p className="mt-10 border-t pt-5 text-xs text-muted-foreground">
+					{process.env.NEXT_PUBLIC_JUNCTION_RUNTIME_MODE === 'staging' ? 'Private staging' : 'Local preview'} · browsing only · no checkout or booking
+				</p>
 			</div>
 		</main>
 	)
