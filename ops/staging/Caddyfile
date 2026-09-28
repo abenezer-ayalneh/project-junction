@@ -15,7 +15,7 @@
 	}
 
 	handle {
-		basic_auth {
+		basicauth {
 			{$STAGING_BASIC_AUTH_USER} {$STAGING_BASIC_AUTH_HASH}
 		}
 		handle @api {
