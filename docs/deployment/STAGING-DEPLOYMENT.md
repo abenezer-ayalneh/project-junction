@@ -41,6 +41,10 @@ Run `python3 ops/staging/prepare-core-secrets.py /home/deploy/.config/project-ju
 
 Keep the host configuration directory and its `core-secrets/` child at mode `0700`. File-backed Docker Compose secrets retain source-file permissions inside containers: mode `0600` made the Redis ACL unreadable to its non-root process. The Compose-mounted files therefore need mode `0644` within the protected host directory; the Basic-auth password remains `0600` and is never mounted. A temporary isolated Redis Compose probe verified the mounted ACL, authentication, `EVAL`, `XADD`, and `PUBLISH`, then was removed. This does not prove the full staging service or provider journeys.
 
+Once each real provider credential exists, enter it on the VPS with `ssh -t deploy@13.140.141.170`, then run `python3 /home/deploy/.config/project-junction-staging/install-provider-secret.py /home/deploy/.config/project-junction-staging SECRET_NAME`. Run it separately for `resend-api-key`, `sumsub-app-token`, `sumsub-secret-key`, `sumsub-webhook-secret`, `media-s3-access-key-id`, and `media-s3-secret-access-key`. The terminal prompt hides the value; the script refuses to overwrite an installed key. It stores Compose-readable files under the owner-only `provider-secrets/` directory. Point the corresponding `STAGING_RESEND_API_KEY_FILE`, `STAGING_SUMSUB_APP_TOKEN_FILE`, `STAGING_SUMSUB_SECRET_KEY_FILE`, `STAGING_SUMSUB_WEBHOOK_SECRET_FILE`, `STAGING_MEDIA_S3_ACCESS_KEY_ID_FILE`, and `STAGING_MEDIA_S3_SECRET_ACCESS_KEY_FILE` variables to those files. Never put values in the repository, shell command arguments, or chat.
+
+For Resend, verify a staging sending domain and its displayed DNS records, then create a sending-only key scoped to that domain; set `RESEND_FROM_EMAIL` to an address on the verified domain. For Sumsub, configure the age-18 verification level in Sandbox, an app token with applicant-read access, and a webhook at `https://staging-junction.abenezer-ayalneh.dev/v1/identity/sumsub-webhook` using `HMAC_SHA256_HEX` and a distinct webhook secret. Keep `SUMSUB_AGE_18_LEVEL_CONFIRMED` unset until the level rule and signed callback/reconciliation behavior are inspected. Sumsub documents that Sandbox does not run approval algorithms, so a sandbox approval alone cannot prove the age rule. For media, create a separate private Cloudflare R2 bucket and an Object Read & Write token scoped to that bucket; set `MEDIA_S3_ENDPOINT` to the account's HTTPS S3 endpoint, `MEDIA_S3_REGION=auto`, and `MEDIA_S3_BUCKET` to the new bucket. Verify each provider with a real staging request before accepting the service. See [Resend domains](https://resend.com/changelog/new-domains-workflow) and [key permissions](https://resend.com/changelog/new-api-key-permissions), [Sumsub Sandbox](https://docs.sumsub.com/docs/test-in-sandbox) and [webhooks](https://docs.sumsub.com/docs/webhooks), and [R2 S3 credentials](https://developers.cloudflare.com/r2/get-started/s3/).
+
 Set every `STAGING_*_CPUS` and `STAGING_*_MEMORY` value from measured spare capacity on the shared VPS before rendering Compose. All long-running services and one-shot tools have CPU, memory, and process-count limits; Compose refuses a missing limit. Account for the sum of concurrent limits, PostgreSQL/ClamAV startup peaks, existing portfolio services, backups, and host headroom. The conservative core-service limits above fit the observed idle snapshot; no complete deployment budget can be accepted until the actual VPS capacity and peak workload are measured.
 
 Once the host release manifest, backups, and image digests have been reviewed, the restricted host procedure can run these commands from the approved deployment directory:
@@ -64,11 +68,8 @@ If GHCR keeps the package private, give the VPS a read-only package credential t
 
 ## Provider mode
 
-- Stripe sandbox/Connect and synthetic connected accounts.
-- Google Meet test accounts connected by assigned synthetic Staff; no Calendar write/sync [DEC-099–DEC-101].
-- Sumsub private sandbox with a configured age-18 level and invited test users [DEC-066]. Do not grant adult capabilities until the provider's level rule and signed callback/reconciliation path are proven.
-- Resend test/staging route and allowlisted one-way AfroMessage transactional templates [DEC-073–DEC-074].
-- Restricted staging MapTiler key and separate R2 objects.
+- Phase 00 uses real Better Auth sessions, Resend delivery, Sumsub Sandbox checks, and a separate R2 bucket with invited staging accounts. No synthetic provider account or local mail/object-store substitute satisfies acceptance.
+- Stripe, AfroMessage, Google Meet, and MapTiler are later-phase provider integrations. Their sandbox accounts and restricted keys must be verified when those phases are brought to real staging; synthetic connected accounts and Staff fixtures do not satisfy those gates.
 
 ## Target deployment procedure
 
