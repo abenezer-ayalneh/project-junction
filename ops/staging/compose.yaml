@@ -40,10 +40,14 @@ services:
         secrets:
             - { source: postgres_password, target: POSTGRES_PASSWORD }
         volumes:
-            - postgres_data:/var/lib/postgresql
+            - postgres18_data:/var/lib/postgresql
         networks: [backend]
         healthcheck:
-            test: ['CMD-SHELL', 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+            test:
+                [
+                    'CMD-SHELL',
+                    'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}" && psql -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}" -Atqc "SELECT uuidv7() IS NOT NULL AND postgis_version() IS NOT NULL" | grep -qx t',
+                ]
             interval: 5s
             timeout: 3s
             retries: 20
@@ -199,7 +203,7 @@ secrets:
     staging_basic_auth_hash: { file: '${STAGING_BASIC_AUTH_HASH_FILE:?}' }
 
 volumes:
-    postgres_data:
+    postgres18_data:
     redis_data:
     clamav_data:
 
