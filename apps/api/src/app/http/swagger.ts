@@ -54,6 +54,8 @@ import {
 } from 'contracts'
 import { z } from 'zod'
 
+import { isSyntheticStagingPath } from './staging-synthetic-routes'
+
 function schemaFor(schema: z.ZodType): SchemaObject {
 	const openApiSchema = z.toJSONSchema(schema, { target: 'openapi-3.0' })
 	delete openApiSchema.$schema
@@ -168,11 +170,14 @@ function publicSchemas(): Record<string, SchemaObject> {
 	}
 }
 
-export function createSwaggerDocument(app: INestApplication): OpenAPIObject {
+export function createSwaggerDocument(app: INestApplication, runtimeMode = process.env['JUNCTION_RUNTIME_MODE']): OpenAPIObject {
+	const staging = runtimeMode === 'staging'
 	const config = new DocumentBuilder()
 		.setTitle('Project Junction API')
 		.setDescription(
-			'Synthetic-runtime API for the Project Junction platform foundation. Every response declares X-API-Version: v1 and X-API-Lifecycle: active.',
+			staging
+				? 'Private staging API backed by real account and provider integrations. Every response declares X-API-Version: v1 and X-API-Lifecycle: active.'
+				: 'Synthetic-runtime API for the Project Junction platform foundation. Every response declares X-API-Version: v1 and X-API-Lifecycle: active.',
 		)
 		.setVersion('v1')
 		.addApiKey(
@@ -201,6 +206,29 @@ export function createSwaggerDocument(app: INestApplication): OpenAPIObject {
 			...document.components?.schemas,
 			...publicSchemas(),
 		},
+	}
+	if (staging) {
+		for (const path of Object.keys(document.paths)) if (isSyntheticStagingPath(path)) delete document.paths[path]
+		for (const pathItem of Object.values(document.paths)) {
+			for (const method of ['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace'] as const) {
+				const operation = pathItem?.[method]
+				if (!operation) continue
+				operation.parameters = operation.parameters?.filter(
+					(parameter) => !('in' in parameter && parameter.in === 'header' && parameter.name.toLowerCase() === 'x-junction-session'),
+				)
+				operation.security = operation.security?.map((requirement) =>
+					'junction-session' in requirement ? { 'junction-auth-cookie': [] } : requirement,
+				)
+			}
+		}
+		delete document.components.securitySchemes?.['junction-session']
+		for (const name of Object.keys(document.components.schemas ?? {})) {
+			if (name.startsWith('Synthetic') || name.startsWith('Demo') || ['AuditMarkerCommand', 'CommandOutcome', 'ProviderWebhookReceipt'].includes(name)) {
+				delete document.components.schemas?.[name]
+			}
+		}
+		if (document.paths['/v1/health']?.get) document.paths['/v1/health'].get.summary = 'Read private staging API health.'
+		if (document.paths['/v1/public/vendors']?.get) document.paths['/v1/public/vendors'].get.summary = 'Browse published Vendor summaries.'
 	}
 
 	return document
