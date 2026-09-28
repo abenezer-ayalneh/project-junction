@@ -1,0 +1,51 @@
+name: project-junction-staging
+
+# Bring up isolated state services before external provider credentials exist.
+# Keep these service definitions identical to compose.yaml so full deployment
+# reuses their volumes and credentials.
+services:
+    postgres:
+        image: ${STAGING_POSTGRES_IMAGE:?}
+        restart: unless-stopped
+        cpus: ${STAGING_POSTGRES_CPUS:?}
+        mem_limit: ${STAGING_POSTGRES_MEMORY:?}
+        pids_limit: 256
+        environment:
+            POSTGRES_DB: ${STAGING_DB_NAME:?}
+            POSTGRES_USER: ${STAGING_DB_USER:?}
+            POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_PASSWORD
+        secrets:
+            - { source: postgres_password, target: POSTGRES_PASSWORD }
+        volumes:
+            - postgres_data:/var/lib/postgresql
+        networks: [backend]
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+            interval: 5s
+            timeout: 3s
+            retries: 20
+
+    redis:
+        image: ${STAGING_REDIS_IMAGE:?}
+        restart: unless-stopped
+        cpus: ${STAGING_REDIS_CPUS:?}
+        mem_limit: ${STAGING_REDIS_MEMORY:?}
+        pids_limit: 128
+        command: ['redis-server', '--aclfile', '/run/secrets/redis_acl', '--appendonly', 'yes', '--appendfsync', 'always']
+        secrets:
+            - { source: redis_acl, target: redis_acl }
+        volumes:
+            - redis_data:/data
+        networks: [backend]
+
+secrets:
+    postgres_password: { file: '${STAGING_POSTGRES_PASSWORD_FILE:?}' }
+    redis_acl: { file: '${STAGING_REDIS_ACL_FILE:?}' }
+
+volumes:
+    postgres_data:
+    redis_data:
+
+networks:
+    backend:
+        internal: true
