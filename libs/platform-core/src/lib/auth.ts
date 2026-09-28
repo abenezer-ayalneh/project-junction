@@ -37,6 +37,10 @@ export function createAuth() {
 				create: {
 					after: async (session, context) => {
 						if (context?.path !== '/two-factor/verify-totp' && context?.path !== '/two-factor/verify-backup-code') return
+						// Enrollment can create a replacement session on verify-totp while an
+						// authenticated session already exists. Only the sign-in challenge
+						// creates its session without one.
+						if (context.context.session) return
 						const user = await context.context.internalAdapter.findUserById(session.userId)
 						if (!user?.emailVerified) return
 						const foundation = new PostgresFoundation(databaseUrl)

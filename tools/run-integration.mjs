@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process'
-import { createRequire } from 'node:module'
 import { randomUUID } from 'node:crypto'
+import { createRequire } from 'node:module'
 const require = createRequire(new URL('../libs/platform-core/package.json', import.meta.url))
 const { Pool } = require('pg')
 if (!process.env.DATABASE_URL) throw new Error('Set DATABASE_URL to a local synthetic PostgreSQL database.')
@@ -16,8 +16,8 @@ const env = {
 	TS_NODE_COMPILER_OPTIONS: '{"moduleResolution":"node10","module":"commonjs","customConditions":null}',
 }
 const focusedTestName = process.env.FOUNDATION_TEST_NAME
-function run(args) {
-	const result = spawnSync('pnpm', args, { env, stdio: 'inherit' })
+function run(args, overrides = {}) {
+	const result = spawnSync('pnpm', args, { env: { ...env, ...overrides }, stdio: 'inherit' })
 	if (result.status !== 0) throw new Error('Integration command failed.')
 }
 try {
@@ -25,6 +25,7 @@ try {
 	run(['exec', 'prisma', 'migrate', 'deploy']) // restart/replay must be a no-op
 	run(['db:auth:migrate'])
 	if (!focusedTestName) {
+		run(['exec', 'node', 'tools/check-better-auth-mfa.mjs'], { JUNCTION_RUNTIME_MODE: 'staging' })
 		run(['db:compat:check'])
 		run(['db:upgrade:check'])
 		run(['db:restore:check'])
