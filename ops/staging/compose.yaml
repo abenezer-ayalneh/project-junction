@@ -140,7 +140,7 @@ services:
     web:
         image: ${STAGING_APP_IMAGE:?}
         restart: unless-stopped
-        command: ['pnpm', 'exec', 'next', 'start', 'apps/web', '-H', '0.0.0.0', '-p', '3000']
+        command: ['sh', '-c', 'node tools/staging-web-preflight.mjs && exec pnpm exec next start apps/web -H 0.0.0.0 -p 3000']
         environment:
             NODE_ENV: production
             JUNCTION_RUNTIME_MODE: staging

@@ -25,6 +25,8 @@ A staging hostname/routing rule, provider webhook, object key, cookie, telemetry
 
 The [application image](../../ops/staging/Dockerfile) builds the web, API, and worker without provider secrets. The [staging Compose file](../../ops/staging/compose.yaml) runs that same immutable image digest for all three processes and for one-shot migrations. PostgreSQL, Redis, and ClamAV use separate digest-pinned images and private volumes. Only web and API ports are published, bound to host loopback for the Caddy upstreams. The API container listens on all container interfaces only because its host-published port is loopback-bound. No local Mailpit, MinIO, synthetic seed, or fake provider service is in this bundle.
 
+The web container runs a [startup check](../../tools/staging-web-preflight.mjs) before Next.js starts. It rejects missing Better Auth or Resend configuration, local API or database endpoints, inherited synthetic secrets, and a non-staging build/runtime mode. A passing check validates configuration only; account sign-up and real email delivery still require live acceptance.
+
 Set the non-secret variables in `.env.example` through the host's protected deployment environment. Each `STAGING_*_FILE` points to a separate host-protected file that Compose mounts under `/run/secrets`; the container entrypoint exports those values only to the application process. `STAGING_DATABASE_URL_FILE` must target the `postgres` service and `STAGING_REDIS_URL_FILE` the `redis` service. Configure the Redis ACL file and matching URL credentials, and use a distinct staging PostgreSQL password. Keep the Caddy Basic-auth hash file and Caddy host environment synchronized. The exact paths, hostname, image digests, credentials, and ports are still pending.
 
 Once the host release manifest, backups, and image digests have been reviewed, the restricted host procedure can run these commands from the approved deployment directory:
@@ -43,6 +45,8 @@ docker compose -f ops/staging/compose.yaml up -d api worker web
 These commands are not a deployment approval or evidence of a VPS run. The image build is a local artifact check until the release pipeline publishes and signs a digest. The host procedure must still verify Caddy/TLS, provider delivery, migrations, backup freshness, resource headroom, and the real Phase 00 journeys before accepting staging.
 
 The manual [staging image workflow](../../.github/workflows/publish-staging-image.yml) is restricted to `main`. It builds the Linux AMD64 application image, publishes a commit-tagged image to GHCR, adds BuildKit provenance and an SBOM, attests its digest, then signs and verifies that digest with GitHub OIDC. The job summary prints the immutable `ghcr.io/...@sha256:...` reference to put in `STAGING_APP_IMAGE`. It does not deploy to the VPS or read staging provider secrets. No published workflow run has been accepted as staging evidence yet; the host must verify the digest and signing identity before pulling it.
+
+If GHCR keeps the package private, give the VPS a read-only package credential through its protected secret store and log in before verification and Compose pull. The workflow's write-capable `GITHUB_TOKEN` is only for publishing from GitHub Actions and must not be copied to the VPS.
 
 ## Provider mode
 
