@@ -52,5 +52,10 @@ describe('private staging provider readiness', () => {
 	it('refuses single-process realtime and the local Redis fixture', () => {
 		expect(() => assertStagingProviderConfiguration({ ...staging(), REALTIME_REDIS_FANOUT: 'disabled' })).toThrow()
 		expect(() => assertStagingProviderConfiguration({ ...staging(), REDIS_URL: 'redis://127.0.0.1:6379' })).toThrow()
+		expect(() => assertStagingProviderConfiguration({ ...staging(), REDIS_URL: 'redis://localhost:6380' })).toThrow()
+		expect(() => assertStagingProviderConfiguration({ ...staging(), REDIS_URL: 'redis://cache.localhost:6379' })).toThrow()
+		expect(() => assertStagingProviderConfiguration({ ...staging(), REDIS_URL: 'redis://127.0.0.2:6379' })).toThrow()
+		expect(() => assertStagingProviderConfiguration({ ...staging(), DATABASE_URL: 'postgresql://user:password@127.0.0.1:5433/junction' })).toThrow()
+		expect(() => assertStagingProviderConfiguration({ ...staging(), DATABASE_URL: 'postgresql://user:password@localhost:5432/junction' })).toThrow()
 	})
 })

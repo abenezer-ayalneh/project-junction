@@ -4,16 +4,24 @@ function required(env: NodeJS.ProcessEnv, name: string): string {
 	return value
 }
 
+function localHost(hostname: string): boolean {
+	const normalized = hostname.toLowerCase()
+	return normalized === 'localhost' || normalized === '[::1]' || normalized.endsWith('.localhost') || /^127(?:\.\d{1,3}){3}$/.test(normalized)
+}
+
 export function assertStagingProviderConfiguration(env: NodeJS.ProcessEnv = process.env): void {
 	if (env['JUNCTION_RUNTIME_MODE'] !== 'staging') {
 		if (env['NODE_ENV'] === 'test') return
 		throw new Error('Running API and worker processes require JUNCTION_RUNTIME_MODE=staging; synthetic mode is test-only.')
 	}
 	if (env['FOUNDATION_STORAGE'] !== 'postgresql') throw new Error('FOUNDATION_STORAGE=postgresql is required in private staging.')
-	required(env, 'DATABASE_URL')
+	const databaseUrl = new URL(required(env, 'DATABASE_URL'))
+	if (!['postgres:', 'postgresql:'].includes(databaseUrl.protocol) || localHost(databaseUrl.hostname)) {
+		throw new Error('DATABASE_URL must target the separate staging PostgreSQL service, not a local fixture.')
+	}
 	if (env['REALTIME_REDIS_FANOUT'] !== 'enabled') throw new Error('REALTIME_REDIS_FANOUT=enabled is required in private staging.')
 	const redisUrl = new URL(required(env, 'REDIS_URL'))
-	if (!['redis:', 'rediss:'].includes(redisUrl.protocol) || redisUrl.href === 'redis://127.0.0.1:6379') {
+	if (!['redis:', 'rediss:'].includes(redisUrl.protocol) || localHost(redisUrl.hostname)) {
 		throw new Error('REDIS_URL must target a separate staging Redis service, not the local fixture.')
 	}
 	const origin = new URL(required(env, 'BETTER_AUTH_URL'))
