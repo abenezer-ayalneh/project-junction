@@ -1,7 +1,7 @@
 import { createHmac } from 'node:crypto'
 
 import { AccessDeniedError } from './access.js'
-import { FakePaymentWebhookAdapter } from './provider-adapters.js'
+import { DisabledProviderWebhookAdapter, FakePaymentWebhookAdapter } from './provider-adapters.js'
 
 const signingSecret = 'fake-payment-test-secret'
 const body = { providerReference: 'payment-intent-01', outcome: 'confirmed' }
@@ -28,4 +28,9 @@ describe('FakePaymentWebhookAdapter', () => {
 
 		expect(() => adapter.verify(input)).toThrow(AccessDeniedError)
 	})
+})
+
+it('rejects a correctly signed fake callback when synthetic provider handling is disabled', () => {
+	const adapter = new DisabledProviderWebhookAdapter()
+	expect(() => adapter.verify({ provider: 'fake-payment', eventId: 'event-01', rawBody, signature, body })).toThrow(AccessDeniedError)
 })

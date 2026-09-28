@@ -25,6 +25,13 @@ export interface ProviderWebhookAdapter {
 	verify(input: ProviderWebhookInput): VerifiedProviderWebhook
 }
 
+export class DisabledProviderWebhookAdapter implements ProviderWebhookAdapter {
+	verify(input: ProviderWebhookInput): never {
+		void input
+		throw new AccessDeniedError('Synthetic provider callbacks are unavailable in staging.')
+	}
+}
+
 /**
  * Deterministic local substitute only. The adapter owns provider-specific
  * signature shape while the caller owns inbox deduplication and reconciliation.
