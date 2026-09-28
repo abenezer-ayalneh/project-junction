@@ -6,8 +6,13 @@ import { DisabledProviderWebhookAdapter, FakePaymentWebhookAdapter, PROVIDER_WEB
 
 import { FoundationService } from './foundation/foundation.service'
 import { AppController } from './http/app.controller'
+import { SyntheticController } from './http/synthetic.controller'
 import { RealtimeGateway } from './realtime/realtime.gateway'
 import { getApiRuntimeConfig } from './runtime/api-runtime.config'
+
+export function httpControllersForMode(mode: string | undefined) {
+	return mode === 'staging' ? [AppController] : [AppController, SyntheticController]
+}
 
 @Module({
 	imports: [
@@ -21,7 +26,7 @@ import { getApiRuntimeConfig } from './runtime/api-runtime.config'
 			},
 		}),
 	],
-	controllers: [AppController],
+	controllers: httpControllersForMode(process.env['JUNCTION_RUNTIME_MODE']),
 	providers: [
 		FoundationService,
 		{

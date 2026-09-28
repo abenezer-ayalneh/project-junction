@@ -3048,7 +3048,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
     },
     "/v1/demo/workspaces": {
       "post": {
-        "operationId": "AppController_createDemoWorkspace",
+        "operationId": "SyntheticController_createDemoWorkspace",
         "parameters": [],
         "responses": {
           "201": {
@@ -3080,7 +3080,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
     },
     "/v1/demo/workspaces/{workspaceId}/personas/{personaKey}/sessions": {
       "post": {
-        "operationId": "AppController_switchDemoPersona",
+        "operationId": "SyntheticController_switchDemoPersona",
         "parameters": [
           {
             "in": "path",
@@ -3182,7 +3182,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
     },
     "/v1/foundation/audit-markers": {
       "post": {
-        "operationId": "AppController_auditMarker",
+        "operationId": "SyntheticController_auditMarker",
         "parameters": [
           {
             "description": "A 16-200 character URL-safe request key.",
@@ -3248,7 +3248,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
     },
     "/v1/foundation/elevated-audit-markers": {
       "post": {
-        "operationId": "AppController_elevatedAuditMarker",
+        "operationId": "SyntheticController_elevatedAuditMarker",
         "parameters": [
           {
             "description": "A 16-200 character URL-safe request key.",
@@ -3370,7 +3370,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
     },
     "/v1/foundation/staff": {
       "post": {
-        "operationId": "AppController_grantSyntheticStaff",
+        "operationId": "SyntheticController_grantSyntheticStaff",
         "parameters": [
           {
             "description": "Current synthetic Vendor Owner session.",
@@ -3417,7 +3417,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
     },
     "/v1/foundation/staff/{staffId}": {
       "delete": {
-        "operationId": "AppController_revokeSyntheticStaff",
+        "operationId": "SyntheticController_revokeSyntheticStaff",
         "parameters": [
           {
             "in": "path",
@@ -4613,7 +4613,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
     },
     "/v1/synthetic/accounts": {
       "post": {
-        "operationId": "AppController_createSyntheticAccount",
+        "operationId": "SyntheticController_createSyntheticAccount",
         "parameters": [
           {
             "description": "Local-only synthetic provisioning secret.",
@@ -4898,7 +4898,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
     },
     "/v1/webhooks/{provider}": {
       "post": {
-        "operationId": "AppController_providerWebhook",
+        "operationId": "SyntheticController_providerWebhook",
         "parameters": [
           {
             "in": "path",
