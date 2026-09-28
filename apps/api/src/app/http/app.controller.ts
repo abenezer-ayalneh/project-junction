@@ -37,7 +37,7 @@ export class AppController {
 	) {}
 
 	@Get('health')
-	@ApiOperation({ summary: 'Read synthetic API health.' })
+	@ApiOperation({ summary: 'Read API health and readiness.' })
 	@ApiOkResponse({ schema: OpenApiSchemaRefs.healthResponse })
 	async health(@Req() request: RequestWithContext) {
 		const [health] = await Promise.all([this.foundation.health(request.requestId), this.realtime.ready()])
@@ -45,7 +45,7 @@ export class AppController {
 	}
 
 	@Get('public/vendors')
-	@ApiOperation({ summary: 'Browse explicitly published synthetic Vendor summaries without a session.' })
+	@ApiOperation({ summary: 'Browse explicitly published Vendor summaries without a session.' })
 	@ApiQuery({ name: 'cursor', required: false, schema: { type: 'string', format: 'uuid' } })
 	@ApiQuery({ name: 'limit', required: false, schema: { type: 'integer', minimum: 1, maximum: 100, default: 20 } })
 	@ApiOkResponse({ schema: OpenApiSchemaRefs.publicVendorPage })

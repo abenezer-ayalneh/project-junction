@@ -3477,7 +3477,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             "description": "",
           },
         },
-        "summary": "Read synthetic API health.",
+        "summary": "Read API health and readiness.",
         "tags": [
           "foundation",
         ],
@@ -4574,7 +4574,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             "description": "",
           },
         },
-        "summary": "Browse explicitly published synthetic Vendor summaries without a session.",
+        "summary": "Browse explicitly published Vendor summaries without a session.",
         "tags": [
           "foundation",
         ],
