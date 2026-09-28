@@ -83,7 +83,6 @@ export interface DurableClaim {
 }
 const auditMarkerMethod = 'POST /v1/foundation/audit-markers'
 const elevatedAuditMarkerMethod = 'POST /v1/foundation/elevated-audit-markers'
-const adultVerifiedStates = new Set(['verified', 'legacy_verified_compat'])
 const realtimeReplayLimit = 25
 const publicRealtimeTypes = ['ListingPublished', 'ListingUnpublished', 'StorefrontUpdated'] as const
 const stagingDeliveryTypes = [
@@ -114,7 +113,11 @@ const DEMO_PERSONAS = [
 ] as const
 
 function isVerifiedAdult(user: { adultVerificationState: string; verifiedAt: Date | null }): boolean {
-	return Boolean(user.verifiedAt) && adultVerifiedStates.has(user.adultVerificationState)
+	return (
+		Boolean(user.verifiedAt) &&
+		(user.adultVerificationState === 'verified' ||
+			(process.env['JUNCTION_RUNTIME_MODE'] !== 'staging' && user.adultVerificationState === 'legacy_verified_compat'))
+	)
 }
 
 /** Prisma owns CRUD; parameterized SQL below is restricted to concurrency locks/claims. */

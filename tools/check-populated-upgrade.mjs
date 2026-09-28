@@ -36,6 +36,7 @@ const migrations = [
 	'prisma/migrations/20260924000000_media_upload_intents/migration.sql',
 	'prisma/migrations/20260924010000_video_processing_and_moderation/migration.sql',
 	'prisma/migrations/20260925000000_real_platform_reviewer_grants/migration.sql',
+	'prisma/migrations/20260928000000_retire_legacy_adult_default/migration.sql',
 ]
 
 try {
@@ -84,7 +85,7 @@ try {
 	await client.query('INSERT INTO "users" (id, email, "verified_at") VALUES ($1::uuid, $2, now())', [oldWriterUser, `${oldWriterUser}@example.invalid`])
 	assert.deepEqual(
 		(await client.query('SELECT "adult_verification_state" AS "adultVerificationState" FROM "users" WHERE id = $1::uuid', [oldWriterUser])).rows,
-		[{ adultVerificationState: 'legacy_verified_compat' }],
+		[{ adultVerificationState: 'unverified' }],
 	)
 	const inbox = await client.query(
 		'SELECT "workspace_id" AS "workspaceId", "provider_reference" AS "providerReference", "reconciliation_state" AS "reconciliationState", "reconciled_at" AS "reconciledAt", payload FROM "provider_inbox_events" WHERE id = $1::uuid',

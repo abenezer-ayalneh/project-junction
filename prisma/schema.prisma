@@ -10,7 +10,7 @@ datasource db {
 model User {
   id                     String               @id @default(dbgenerated("uuidv7()")) @db.Uuid
   email                  String               @unique
-  adultVerificationState String               @default("legacy_verified_compat") @map("adult_verification_state")
+  adultVerificationState String               @default("unverified") @map("adult_verification_state")
   verifiedAt             DateTime?            @map("verified_at") @db.Timestamptz(6)
   createdAt              DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
   sessions               Session[]

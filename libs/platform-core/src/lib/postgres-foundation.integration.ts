@@ -489,9 +489,11 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		await repository.db.user.update({ where: { id: userId }, data: { adultVerificationState: 'verified', verifiedAt: new Date() } })
 		await expect(repository.accessContext(sessionId)).resolves.toMatchObject({ actor: { kind: 'user', userId } })
 	})
-	it('accepts only a timestamped legacy default during the mixed-version window', async () => {
+	it('keeps explicit legacy compatibility limited to synthetic regression', async () => {
 		const legacyWorkspace = await repository.db.workspace.create({ data: { kind: 'synthetic' } })
-		const legacyUser = await repository.db.user.create({ data: { email: `${randomUUID()}@example.invalid`, verifiedAt: new Date() } })
+		const legacyUser = await repository.db.user.create({
+			data: { email: `${randomUUID()}@example.invalid`, adultVerificationState: 'legacy_verified_compat', verifiedAt: new Date() },
+		})
 		const legacySession = await repository.db.session.create({
 			data: { userId: legacyUser.id, workspaceId: legacyWorkspace.id, expiresAt: new Date(Date.now() + 3600000) },
 		})
@@ -499,6 +501,31 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		await expect(repository.accessContext(legacySession.id)).resolves.toMatchObject({ actor: { kind: 'user', userId: legacyUser.id } })
 		await repository.db.user.update({ where: { id: legacyUser.id }, data: { adultVerificationState: 'unverified' } })
 		await expect(repository.accessContext(legacySession.id)).rejects.toThrow(AccessDeniedError)
+	})
+	it('denies a timestamped compatibility state in real staging sessions', async () => {
+		const sessionId = randomUUID()
+		const userId = randomUUID()
+		const email = `${randomUUID()}@example.com`
+		const expiresAt = new Date(Date.now() + 3600000)
+		await repository.ensureAuthenticatedSession({ sessionId, userId, email, expiresAt })
+		await repository.db.user.update({
+			where: { id: userId },
+			data: { adultVerificationState: 'legacy_verified_compat', verifiedAt: new Date() },
+		})
+		await repository.db
+			.$executeRaw`INSERT INTO junction_auth."user" (id, name, email, "emailVerified") VALUES (${userId}, ${'Legacy state probe'}, ${email}, true)`
+		await repository.db
+			.$executeRaw`INSERT INTO junction_auth.session (id, "expiresAt", token, "updatedAt", "userId") VALUES (${sessionId}, ${expiresAt}, ${randomUUID()}, now(), ${userId})`
+		const previous = process.env['JUNCTION_RUNTIME_MODE']
+		process.env['JUNCTION_RUNTIME_MODE'] = 'staging'
+		try {
+			await expect(repository.accessContext(sessionId)).rejects.toThrow(AccessDeniedError)
+			await repository.db.user.update({ where: { id: userId }, data: { adultVerificationState: 'verified' } })
+			await expect(repository.accessContext(sessionId)).resolves.toMatchObject({ actor: { kind: 'user', userId } })
+		} finally {
+			if (previous === undefined) delete process.env['JUNCTION_RUNTIME_MODE']
+			else process.env['JUNCTION_RUNTIME_MODE'] = previous
+		}
 	})
 	it('requires fresh MFA and recent authentication for elevated mutations', async () => {
 		await expect(repository.acceptElevatedAuditMarker(sessionId, randomUUID(), { marker: 'elevated deny' })).rejects.toThrow(AccessDeniedError)
