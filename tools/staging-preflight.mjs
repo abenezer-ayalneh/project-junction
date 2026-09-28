@@ -18,6 +18,15 @@ function privateUpstream(name) {
 try {
 	if (process.env.NODE_ENV === 'test') throw new Error('Staging preflight cannot run with NODE_ENV=test.')
 	assertStagingProviderConfiguration(process.env)
+	for (const name of ['STAGING_APP_IMAGE', 'STAGING_POSTGRES_IMAGE', 'STAGING_REDIS_IMAGE', 'STAGING_CLAMAV_IMAGE']) {
+		if (!/^[^\s@]+@sha256:[a-f0-9]{64}$/.test(requireValue(name))) {
+			throw new Error(`${name} must be an immutable image digest.`)
+		}
+	}
+	if (new URL(requireValue('DATABASE_URL')).hostname !== 'postgres' || new URL(requireValue('REDIS_URL')).hostname !== 'redis') {
+		throw new Error('Staging database and Redis URLs must target their isolated Compose services.')
+	}
+	if (requireValue('MEDIA_CLAMD_HOST') !== 'clamav') throw new Error('MEDIA_CLAMD_HOST must target the staging ClamAV service.')
 	const hostname = requireValue('STAGING_HOSTNAME')
 	if (
 		!/^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])$/.test(hostname) ||
@@ -44,6 +53,9 @@ try {
 	const api = privateUpstream('STAGING_API_UPSTREAM')
 	const web = privateUpstream('STAGING_WEB_UPSTREAM')
 	if (api === web) throw new Error('Staging API and web upstreams must use distinct ports.')
+	if (api !== `127.0.0.1:${requireValue('STAGING_API_HOST_PORT')}` || web !== `127.0.0.1:${requireValue('STAGING_WEB_HOST_PORT')}`) {
+		throw new Error('Staging Caddy upstreams must match the loopback-published Compose ports.')
+	}
 	console.log('Staging configuration preflight passed. Live provider, isolation, and release acceptance remain pending.')
 } catch (error) {
 	console.error(`Staging configuration preflight failed: ${error.message}`)

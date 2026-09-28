@@ -11,6 +11,7 @@ function configService(environment: Record<string, string | undefined>) {
 describe('API runtime configuration', () => {
 	it('uses local origins and safe throttling defaults when no environment overrides exist', () => {
 		expect(getApiRuntimeConfig(configService({}))).toEqual({
+			bindAddress: '127.0.0.1',
 			corsAllowedOrigins: ['http://localhost:3000', 'http://127.0.0.1:3000'],
 			logLevel: 'info',
 			port: 3001,
@@ -24,6 +25,11 @@ describe('API runtime configuration', () => {
 	it('uses API_PORT before the backwards-compatible PORT fallback', () => {
 		expect(getApiRuntimeConfig(configService({ API_PORT: '3002', PORT: '3003' })).port).toBe(3002)
 		expect(getApiRuntimeConfig(configService({ PORT: '3003' })).port).toBe(3003)
+	})
+
+	it('binds all container interfaces only when explicitly configured', () => {
+		expect(getApiRuntimeConfig(configService({ API_BIND_ADDRESS: '0.0.0.0' })).bindAddress).toBe('0.0.0.0')
+		expect(() => getApiRuntimeConfig(configService({ API_BIND_ADDRESS: 'example.com' }))).toThrow('API_BIND_ADDRESS')
 	})
 
 	it('deduplicates explicit allowed origins', () => {

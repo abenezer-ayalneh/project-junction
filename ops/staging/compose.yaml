@@ -1,0 +1,185 @@
+name: project-junction-staging
+
+x-runtime-env: &runtime-env
+    NODE_ENV: production
+    JUNCTION_RUNTIME_MODE: staging
+    FOUNDATION_STORAGE: postgresql
+    REALTIME_REDIS_FANOUT: enabled
+    BETTER_AUTH_URL: ${BETTER_AUTH_URL:?}
+    RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:?}
+    SUMSUB_AGE_LEVEL: ${SUMSUB_AGE_LEVEL:?}
+    SUMSUB_AGE_18_LEVEL_CONFIRMED: ${SUMSUB_AGE_18_LEVEL_CONFIRMED:-}
+    MEDIA_S3_ENDPOINT: ${MEDIA_S3_ENDPOINT:?}
+    MEDIA_S3_REGION: ${MEDIA_S3_REGION:?}
+    MEDIA_S3_BUCKET: ${MEDIA_S3_BUCKET:?}
+    MEDIA_CLAMD_HOST: clamav
+    MEDIA_CLAMD_PORT: '3310'
+
+x-runtime-secrets: &runtime-secrets
+    - { source: database_url, target: DATABASE_URL }
+    - { source: redis_url, target: REDIS_URL }
+    - { source: better_auth_secret, target: BETTER_AUTH_SECRET }
+    - { source: resend_api_key, target: RESEND_API_KEY }
+    - { source: sumsub_app_token, target: SUMSUB_APP_TOKEN }
+    - { source: sumsub_secret_key, target: SUMSUB_SECRET_KEY }
+    - { source: sumsub_webhook_secret, target: SUMSUB_WEBHOOK_SECRET }
+    - { source: media_s3_access_key_id, target: MEDIA_S3_ACCESS_KEY_ID }
+    - { source: media_s3_secret_access_key, target: MEDIA_S3_SECRET_ACCESS_KEY }
+
+services:
+    postgres:
+        image: ${STAGING_POSTGRES_IMAGE:?}
+        restart: unless-stopped
+        environment:
+            POSTGRES_DB: ${STAGING_DB_NAME:?}
+            POSTGRES_USER: ${STAGING_DB_USER:?}
+            POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_PASSWORD
+        secrets:
+            - { source: postgres_password, target: POSTGRES_PASSWORD }
+        volumes:
+            - postgres_data:/var/lib/postgresql
+        networks: [backend]
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+            interval: 5s
+            timeout: 3s
+            retries: 20
+
+    redis:
+        image: ${STAGING_REDIS_IMAGE:?}
+        restart: unless-stopped
+        command: ['redis-server', '--aclfile', '/run/secrets/redis_acl', '--appendonly', 'yes']
+        secrets:
+            - { source: redis_acl, target: redis_acl }
+        volumes:
+            - redis_data:/data
+        networks: [backend]
+
+    clamav:
+        image: ${STAGING_CLAMAV_IMAGE:?}
+        restart: unless-stopped
+        volumes:
+            - clamav_data:/var/lib/clamav
+        networks: [backend]
+
+    migrate:
+        image: ${STAGING_APP_IMAGE:?}
+        profiles: [tools]
+        entrypoint: /app/ops/staging/load-secrets.sh
+        command: ['sh', '-c', 'pnpm exec prisma migrate deploy && pnpm db:auth:migrate']
+        environment:
+            NODE_ENV: production
+        secrets:
+            - { source: database_url, target: DATABASE_URL }
+        depends_on:
+            postgres: { condition: service_healthy }
+        networks: [backend]
+
+    preflight:
+        image: ${STAGING_APP_IMAGE:?}
+        profiles: [tools]
+        entrypoint: /app/ops/staging/load-secrets.sh
+        command: ['node', 'tools/staging-preflight.mjs']
+        environment:
+            <<: *runtime-env
+            NEXT_PUBLIC_JUNCTION_RUNTIME_MODE: staging
+            NEXT_PUBLIC_JUNCTION_API_URL: /v1
+            STAGING_HOSTNAME: ${STAGING_HOSTNAME:?}
+            STAGING_BASIC_AUTH_USER: ${STAGING_BASIC_AUTH_USER:?}
+            STAGING_API_UPSTREAM: 127.0.0.1:${STAGING_API_HOST_PORT:?}
+            STAGING_WEB_UPSTREAM: 127.0.0.1:${STAGING_WEB_HOST_PORT:?}
+            STAGING_API_HOST_PORT: ${STAGING_API_HOST_PORT:?}
+            STAGING_WEB_HOST_PORT: ${STAGING_WEB_HOST_PORT:?}
+            STAGING_APP_IMAGE: ${STAGING_APP_IMAGE:?}
+            STAGING_POSTGRES_IMAGE: ${STAGING_POSTGRES_IMAGE:?}
+            STAGING_REDIS_IMAGE: ${STAGING_REDIS_IMAGE:?}
+            STAGING_CLAMAV_IMAGE: ${STAGING_CLAMAV_IMAGE:?}
+        secrets:
+            - { source: database_url, target: DATABASE_URL }
+            - { source: redis_url, target: REDIS_URL }
+            - { source: better_auth_secret, target: BETTER_AUTH_SECRET }
+            - { source: resend_api_key, target: RESEND_API_KEY }
+            - { source: sumsub_app_token, target: SUMSUB_APP_TOKEN }
+            - { source: sumsub_secret_key, target: SUMSUB_SECRET_KEY }
+            - { source: sumsub_webhook_secret, target: SUMSUB_WEBHOOK_SECRET }
+            - { source: media_s3_access_key_id, target: MEDIA_S3_ACCESS_KEY_ID }
+            - { source: media_s3_secret_access_key, target: MEDIA_S3_SECRET_ACCESS_KEY }
+            - { source: staging_basic_auth_hash, target: STAGING_BASIC_AUTH_HASH }
+        networks: [backend, egress]
+
+    api:
+        image: ${STAGING_APP_IMAGE:?}
+        restart: unless-stopped
+        command: ['node', 'apps/api/dist/main.js']
+        environment:
+            <<: *runtime-env
+            API_PORT: '3001'
+            API_BIND_ADDRESS: 0.0.0.0
+        secrets: *runtime-secrets
+        depends_on:
+            postgres: { condition: service_healthy }
+            redis: { condition: service_started }
+            clamav: { condition: service_started }
+        ports:
+            - 127.0.0.1:${STAGING_API_HOST_PORT:?}:3001
+        networks: [backend, egress]
+
+    worker:
+        image: ${STAGING_APP_IMAGE:?}
+        restart: unless-stopped
+        command: ['node', 'apps/worker/dist/main.js']
+        environment:
+            <<: *runtime-env
+        secrets: *runtime-secrets
+        depends_on:
+            postgres: { condition: service_healthy }
+            redis: { condition: service_started }
+            clamav: { condition: service_started }
+        networks: [backend, egress]
+
+    web:
+        image: ${STAGING_APP_IMAGE:?}
+        restart: unless-stopped
+        command: ['pnpm', 'exec', 'next', 'start', 'apps/web', '-H', '0.0.0.0', '-p', '3000']
+        environment:
+            NODE_ENV: production
+            JUNCTION_RUNTIME_MODE: staging
+            NEXT_PUBLIC_JUNCTION_RUNTIME_MODE: staging
+            NEXT_PUBLIC_JUNCTION_API_URL: /v1
+            JUNCTION_API_URL: http://api:3001/v1
+            BETTER_AUTH_URL: ${BETTER_AUTH_URL:?}
+            RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:?}
+        secrets:
+            - { source: database_url, target: DATABASE_URL }
+            - { source: better_auth_secret, target: BETTER_AUTH_SECRET }
+            - { source: resend_api_key, target: RESEND_API_KEY }
+        depends_on:
+            postgres: { condition: service_healthy }
+            api: { condition: service_started }
+        ports:
+            - 127.0.0.1:${STAGING_WEB_HOST_PORT:?}:3000
+        networks: [backend, egress]
+
+secrets:
+    database_url: { file: '${STAGING_DATABASE_URL_FILE:?}' }
+    postgres_password: { file: '${STAGING_POSTGRES_PASSWORD_FILE:?}' }
+    redis_url: { file: '${STAGING_REDIS_URL_FILE:?}' }
+    redis_acl: { file: '${STAGING_REDIS_ACL_FILE:?}' }
+    better_auth_secret: { file: '${STAGING_BETTER_AUTH_SECRET_FILE:?}' }
+    resend_api_key: { file: '${STAGING_RESEND_API_KEY_FILE:?}' }
+    sumsub_app_token: { file: '${STAGING_SUMSUB_APP_TOKEN_FILE:?}' }
+    sumsub_secret_key: { file: '${STAGING_SUMSUB_SECRET_KEY_FILE:?}' }
+    sumsub_webhook_secret: { file: '${STAGING_SUMSUB_WEBHOOK_SECRET_FILE:?}' }
+    media_s3_access_key_id: { file: '${STAGING_MEDIA_S3_ACCESS_KEY_ID_FILE:?}' }
+    media_s3_secret_access_key: { file: '${STAGING_MEDIA_S3_SECRET_ACCESS_KEY_FILE:?}' }
+    staging_basic_auth_hash: { file: '${STAGING_BASIC_AUTH_HASH_FILE:?}' }
+
+volumes:
+    postgres_data:
+    redis_data:
+    clamav_data:
+
+networks:
+    backend:
+        internal: true
+    egress:

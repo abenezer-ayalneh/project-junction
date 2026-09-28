@@ -17,9 +17,27 @@ The API and worker refuse staging startup without PostgreSQL, Better Auth, Resen
 
 Set `REALTIME_REDIS_FANOUT=enabled` and point `REDIS_URL` at the isolated staging Redis service. The checked-in local Redis fixture URL is rejected in staging. Verify that Redis is reachable before accepting realtime traffic; configuration checks alone do not establish availability.
 
-After rendering the protected staging environment on the host, run `pnpm staging:preflight`. It builds the shared validator and rejects missing provider configuration, a mismatched hostname, non-staging web settings, public API/web upstreams, and absent Basic authentication. It prints no secret values. A pass means only that configuration has the required shape; it does not prove DNS, provider credentials, resource isolation, or live acceptance.
+After rendering the protected staging environment on the host, run the bundled preflight as described below. It rejects missing provider configuration, a mismatched hostname, non-staging web settings, public API/web upstreams, non-digest images, and absent Basic authentication. It prints no secret values. A pass means only that configuration has the required shape; it does not prove DNS, provider credentials, resource isolation, or live acceptance.
 
 A staging hostname/routing rule, provider webhook, object key, cookie, telemetry event, or backup is never reused as a portfolio-production substitute; only an accepted immutable release artifact may be promoted.
+
+## Executable staging bundle
+
+The [application image](../../ops/staging/Dockerfile) builds the web, API, and worker without provider secrets. The [staging Compose file](../../ops/staging/compose.yaml) runs that same immutable image digest for all three processes and for one-shot migrations. PostgreSQL, Redis, and ClamAV use separate digest-pinned images and private volumes. Only web and API ports are published, bound to host loopback for the Caddy upstreams. The API container listens on all container interfaces only because its host-published port is loopback-bound. No local Mailpit, MinIO, synthetic seed, or fake provider service is in this bundle.
+
+Set the non-secret variables in `.env.example` through the host's protected deployment environment. Each `STAGING_*_FILE` points to a separate host-protected file that Compose mounts under `/run/secrets`; the container entrypoint exports those values only to the application process. `STAGING_DATABASE_URL_FILE` must target the `postgres` service and `STAGING_REDIS_URL_FILE` the `redis` service. Configure the Redis ACL file and matching URL credentials, and use a distinct staging PostgreSQL password. Keep the Caddy Basic-auth hash file and Caddy host environment synchronized. The exact paths, hostname, image digests, credentials, and ports are still pending.
+
+Once the host release manifest, backups, and image digests have been reviewed, the restricted host procedure can run these commands from the approved deployment directory:
+
+```sh
+docker compose -f ops/staging/compose.yaml config --quiet
+docker compose -f ops/staging/compose.yaml run --rm preflight
+docker compose -f ops/staging/compose.yaml up -d postgres redis clamav
+docker compose -f ops/staging/compose.yaml run --rm migrate
+docker compose -f ops/staging/compose.yaml up -d api worker web
+```
+
+These commands are not a deployment approval or evidence of a VPS run. The image build is a local artifact check until the release pipeline publishes and signs a digest. The host procedure must still verify Caddy/TLS, provider delivery, migrations, backup freshness, resource headroom, and the real Phase 00 journeys before accepting staging.
 
 ## Provider mode
 

@@ -4,6 +4,7 @@ const DEFAULT_THROTTLE_TTL_MS = 60_000
 const DEFAULT_THROTTLE_LIMIT = 100
 
 export interface ApiRuntimeConfig {
+	bindAddress: string
 	corsAllowedOrigins: string[]
 	logLevel: string
 	port: number
@@ -30,6 +31,7 @@ export function getApiRuntimeConfig(configService: ConfigReader): ApiRuntimeConf
 	const redisFanout = parseRealtimeRedisFanout(configService.get<string>('REALTIME_REDIS_FANOUT'), configService.get<string>('REDIS_URL'))
 	if (staging && !redisFanout.realtimeRedisFanout) throw new Error('Staging realtime requires Redis fanout.')
 	return {
+		bindAddress: parseBindAddress(configService.get<string>('API_BIND_ADDRESS')),
 		corsAllowedOrigins,
 		logLevel: configService.get<string>('LOG_LEVEL') ?? 'info',
 		port: parsePort(configService.get<string>('API_PORT') ?? configService.get<string>('PORT')),
@@ -37,6 +39,12 @@ export function getApiRuntimeConfig(configService: ConfigReader): ApiRuntimeConf
 		throttleLimit: parsePositiveInteger(configService.get<string>('THROTTLE_LIMIT'), DEFAULT_THROTTLE_LIMIT, 'THROTTLE_LIMIT'),
 		throttleTtlMs: parsePositiveInteger(configService.get<string>('THROTTLE_TTL_MS'), DEFAULT_THROTTLE_TTL_MS, 'THROTTLE_TTL_MS'),
 	}
+}
+
+function parseBindAddress(value: string | undefined): string {
+	if (value === undefined) return '127.0.0.1'
+	if (value === '127.0.0.1' || value === '0.0.0.0') return value
+	throw new Error('API_BIND_ADDRESS must be 127.0.0.1 or 0.0.0.0.')
 }
 
 function parseRealtimeRedisFanout(value: string | undefined, redisUrl: string | undefined) {

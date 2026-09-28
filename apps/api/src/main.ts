@@ -50,8 +50,8 @@ async function bootstrap() {
 	app.useGlobalFilters(new ApiExceptionFilter(logger))
 	configureSwagger(app)
 
-	await app.listen(config.port, '127.0.0.1')
-	logger.log(`API listening on http://127.0.0.1:${config.port}/v1`)
+	await app.listen(config.port, config.bindAddress)
+	logger.log(`API listening on http://${config.bindAddress}:${config.port}/v1`)
 }
 
 void bootstrap().catch(() => {
