@@ -14,6 +14,7 @@ import {
 
 import { FoundationService } from '../foundation/foundation.service'
 import { RealtimeGateway } from '../realtime/realtime.gateway'
+import { AuthenticatedSession } from './authenticated-session.decorator'
 import type { RequestWithContext } from './request-context'
 import { OpenApiSchemaRefs } from './swagger'
 
@@ -111,27 +112,20 @@ export class AppController {
 
 	@Post('vendor-applications')
 	@ApiOperation({ summary: 'Create a private Vendor application, structured storefront, basic Location, and scoped Owner session.' })
-	@ApiSecurity('junction-session')
-	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiSecurity('junction-auth-cookie')
 	@ApiHeader({ name: 'idempotency-key', required: true })
 	@ApiBody({ schema: OpenApiSchemaRefs.vendorApplicationCommand })
 	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.vendorApplicationResult })
-	createVendorApplication(
-		@Headers('x-junction-session') sessionId: string | undefined,
-		@Headers('cookie') cookie: string | undefined,
-		@Headers('idempotency-key') key: string | undefined,
-		@Body() body: unknown,
-	) {
-		return this.foundation.createVendorApplication(this.foundation.resolveSessionId(sessionId, cookie), key, body)
+	createVendorApplication(@AuthenticatedSession() sessionId: string | undefined, @Headers('idempotency-key') key: string | undefined, @Body() body: unknown) {
+		return this.foundation.createVendorApplication(sessionId, key, body)
 	}
 
 	@Get('vendor/catalog')
 	@ApiOperation({ summary: 'Read the active Vendor private storefront, locations, and listings across all publication states.' })
-	@ApiSecurity('junction-session')
-	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiSecurity('junction-auth-cookie')
 	@ApiOkResponse({ schema: OpenApiSchemaRefs.vendorCatalog })
-	readVendorCatalog(@Headers('x-junction-session') sessionId: string | undefined, @Headers('cookie') cookie: string | undefined) {
-		return this.foundation.readVendorCatalog(this.foundation.resolveSessionId(sessionId, cookie))
+	readVendorCatalog(@AuthenticatedSession() sessionId: string | undefined) {
+		return this.foundation.readVendorCatalog(sessionId)
 	}
 
 	@Get('account/vendor-memberships')
@@ -139,8 +133,8 @@ export class AppController {
 	@ApiSecurity('junction-auth-cookie')
 	@ApiOkResponse({ schema: OpenApiSchemaRefs.vendorMemberships })
 	@ApiForbiddenResponse({ schema: OpenApiSchemaRefs.apiError })
-	listOwnerMemberships(@Headers('x-junction-session') sessionId: string | undefined, @Headers('cookie') cookie: string | undefined) {
-		return this.foundation.listOwnerMemberships(this.foundation.resolveSessionId(sessionId, cookie))
+	listOwnerMemberships(@AuthenticatedSession() sessionId: string | undefined) {
+		return this.foundation.listOwnerMemberships(sessionId)
 	}
 
 	@Post('account/active-vendor')
@@ -149,12 +143,8 @@ export class AppController {
 	@ApiBody({ schema: OpenApiSchemaRefs.activeVendorSelection })
 	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.activeVendorSelectionResult })
 	@ApiForbiddenResponse({ schema: OpenApiSchemaRefs.apiError })
-	async selectActiveVendor(
-		@Headers('x-junction-session') sessionId: string | undefined,
-		@Headers('cookie') cookie: string | undefined,
-		@Body() body: unknown,
-	) {
-		const resolvedSessionId = this.foundation.resolveSessionId(sessionId, cookie)
+	async selectActiveVendor(@AuthenticatedSession() sessionId: string | undefined, @Body() body: unknown) {
+		const resolvedSessionId = sessionId
 		const result = await this.foundation.selectActiveVendor(resolvedSessionId, body)
 		await this.realtime.revokeSession(resolvedSessionId)
 		return result
@@ -162,27 +152,21 @@ export class AppController {
 
 	@Get('platform/review-queue')
 	@ApiOperation({ summary: 'Read scoped pending Vendor applications and approved-Vendor listings awaiting Platform review.' })
-	@ApiSecurity('junction-session')
-	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiSecurity('junction-auth-cookie')
 	@ApiQuery({ name: 'applicationCursor', required: false, schema: { type: 'string', format: 'uuid' } })
 	@ApiQuery({ name: 'listingCursor', required: false, schema: { type: 'string', format: 'uuid' } })
 	@ApiQuery({ name: 'limit', required: false, schema: { type: 'integer', minimum: 1, maximum: 100, default: 20 } })
 	@ApiOkResponse({ schema: OpenApiSchemaRefs.platformReviewQueue })
-	readPlatformReviewQueue(
-		@Headers('x-junction-session') sessionId: string | undefined,
-		@Headers('cookie') cookie: string | undefined,
-		@Query() query: unknown,
-	) {
-		return this.foundation.readPlatformReviewQueue(this.foundation.resolveSessionId(sessionId, cookie), query)
+	readPlatformReviewQueue(@AuthenticatedSession() sessionId: string | undefined, @Query() query: unknown) {
+		return this.foundation.readPlatformReviewQueue(sessionId, query)
 	}
 
 	@Get('platform/catalog-health')
 	@ApiOperation({ summary: 'Read scoped catalog review, import, media, and search projection health.' })
-	@ApiSecurity('junction-session')
-	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiSecurity('junction-auth-cookie')
 	@ApiOkResponse({ schema: OpenApiSchemaRefs.catalogHealth })
-	readPlatformCatalogHealth(@Headers('x-junction-session') sessionId: string | undefined, @Headers('cookie') cookie: string | undefined) {
-		return this.foundation.readPlatformCatalogHealth(this.foundation.resolveSessionId(sessionId, cookie))
+	readPlatformCatalogHealth(@AuthenticatedSession() sessionId: string | undefined) {
+		return this.foundation.readPlatformCatalogHealth(sessionId)
 	}
 
 	@Get('public/listings')
@@ -194,323 +178,241 @@ export class AppController {
 
 	@Get('public/recommendations')
 	@ApiOperation({ summary: 'Return deterministic public discovery recommendations with an explainable reason.' })
-	recommendations(@Headers('x-junction-session') sessionId: string | undefined, @Headers('cookie') cookie: string | undefined) {
-		return this.foundation.recommendPublicListings(this.foundation.resolveSessionId(sessionId, cookie))
+	recommendations(@AuthenticatedSession() sessionId: string | undefined) {
+		return this.foundation.recommendPublicListings(sessionId)
 	}
 
 	@Get('customer/discovery')
 	@ApiOperation({ summary: 'Read the current Customer saved listings, followed Vendors, and personalization preference.' })
-	@ApiSecurity('junction-session')
-	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiSecurity('junction-auth-cookie')
 	@ApiOkResponse({ schema: OpenApiSchemaRefs.customerDiscoveryState })
-	readCustomerDiscoveryState(@Headers('x-junction-session') sessionId: string | undefined, @Headers('cookie') cookie: string | undefined) {
-		return this.foundation.readCustomerDiscoveryState(this.foundation.resolveSessionId(sessionId, cookie))
+	readCustomerDiscoveryState(@AuthenticatedSession() sessionId: string | undefined) {
+		return this.foundation.readCustomerDiscoveryState(sessionId)
 	}
 
 	@Post('discovery/preference')
 	@ApiOperation({ summary: 'Set an explicit, revocable personalization preference.' })
-	@ApiSecurity('junction-session')
-	@ApiHeader({ name: 'x-junction-session', required: true })
-	setDiscoveryPreference(@Headers('x-junction-session') sessionId: string | undefined, @Headers('cookie') cookie: string | undefined, @Body() body: unknown) {
-		return this.foundation.setDiscoveryPreference(this.foundation.resolveSessionId(sessionId, cookie), body)
+	@ApiSecurity('junction-auth-cookie')
+	setDiscoveryPreference(@AuthenticatedSession() sessionId: string | undefined, @Body() body: unknown) {
+		return this.foundation.setDiscoveryPreference(sessionId, body)
 	}
 
 	@Post('listings/:listingId/save')
 	@ApiOperation({ summary: 'Save or remove a published listing for the current Customer.' })
-	@ApiSecurity('junction-session')
-	@ApiHeader({ name: 'x-junction-session', required: true })
-	saveListing(
-		@Headers('x-junction-session') sessionId: string | undefined,
-		@Headers('cookie') cookie: string | undefined,
-		@Param('listingId') listingId: string,
-		@Body() body: { saved?: unknown },
-	) {
-		return this.foundation.saveListing(this.foundation.resolveSessionId(sessionId, cookie), listingId, body.saved === true)
+	@ApiSecurity('junction-auth-cookie')
+	saveListing(@AuthenticatedSession() sessionId: string | undefined, @Param('listingId') listingId: string, @Body() body: { saved?: unknown }) {
+		return this.foundation.saveListing(sessionId, listingId, body.saved === true)
 	}
 
 	@Post('vendors/:vendorId/follow')
 	@ApiOperation({ summary: 'Follow or unfollow an approved Vendor for the current Customer.' })
-	@ApiSecurity('junction-session')
-	@ApiHeader({ name: 'x-junction-session', required: true })
-	followVendor(
-		@Headers('x-junction-session') sessionId: string | undefined,
-		@Headers('cookie') cookie: string | undefined,
-		@Param('vendorId') vendorId: string,
-		@Body() body: { following?: unknown },
-	) {
-		return this.foundation.followVendor(this.foundation.resolveSessionId(sessionId, cookie), vendorId, body.following === true)
+	@ApiSecurity('junction-auth-cookie')
+	followVendor(@AuthenticatedSession() sessionId: string | undefined, @Param('vendorId') vendorId: string, @Body() body: { following?: unknown }) {
+		return this.foundation.followVendor(sessionId, vendorId, body.following === true)
 	}
 
 	@Get('inventory/listings/:listingId/availability')
 	@ApiOperation({ summary: 'Read derived stock availability for a Product at an assigned Vendor Location.' })
-	@ApiSecurity('junction-session')
-	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiSecurity('junction-auth-cookie')
 	@ApiParam({ name: 'listingId', schema: { type: 'string', format: 'uuid' } })
 	@ApiQuery({ name: 'locationId', required: true, schema: { type: 'string', format: 'uuid' } })
 	@ApiQuery({ name: 'sku', required: false, schema: { type: 'string' } })
 	@ApiOkResponse({ schema: OpenApiSchemaRefs.inventoryAvailability })
-	readInventoryAvailability(
-		@Headers('x-junction-session') sessionId: string | undefined,
-		@Headers('cookie') cookie: string | undefined,
-		@Param('listingId') listingId: string,
-		@Query() query: unknown,
-	) {
-		return this.foundation.readInventoryAvailability(this.foundation.resolveSessionId(sessionId, cookie), listingId, query)
+	readInventoryAvailability(@AuthenticatedSession() sessionId: string | undefined, @Param('listingId') listingId: string, @Query() query: unknown) {
+		return this.foundation.readInventoryAvailability(sessionId, listingId, query)
 	}
 
 	@Post('inventory/movements')
 	@ApiOperation({ summary: 'Append an idempotent received, adjustment, or damage movement for a Vendor Product.' })
-	@ApiSecurity('junction-session')
-	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiSecurity('junction-auth-cookie')
 	@ApiHeader({ name: 'idempotency-key', required: true })
 	@ApiBody({ schema: OpenApiSchemaRefs.inventoryMovementCommand })
 	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.inventoryMovementResult })
-	createInventoryMovement(
-		@Headers('x-junction-session') sessionId: string | undefined,
-		@Headers('cookie') cookie: string | undefined,
-		@Headers('idempotency-key') key: string | undefined,
-		@Body() body: unknown,
-	) {
-		return this.foundation.createInventoryMovement(this.foundation.resolveSessionId(sessionId, cookie), key, body)
+	createInventoryMovement(@AuthenticatedSession() sessionId: string | undefined, @Headers('idempotency-key') key: string | undefined, @Body() body: unknown) {
+		return this.foundation.createInventoryMovement(sessionId, key, body)
 	}
 
 	@Post('listings')
 	@ApiOperation({ summary: 'Create a private Vendor-owned fixed-price listing.' })
-	@ApiSecurity('junction-session')
-	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiSecurity('junction-auth-cookie')
 	@ApiHeader({ name: 'idempotency-key', required: true })
 	@ApiBody({ schema: OpenApiSchemaRefs.listingDraft })
 	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.listingCommandResult })
-	createListing(
-		@Headers('x-junction-session') sessionId: string | undefined,
-		@Headers('cookie') cookie: string | undefined,
-		@Headers('idempotency-key') key: string | undefined,
-		@Body() body: unknown,
-	) {
-		return this.foundation.createListing(this.foundation.resolveSessionId(sessionId, cookie), key, body)
+	createListing(@AuthenticatedSession() sessionId: string | undefined, @Headers('idempotency-key') key: string | undefined, @Body() body: unknown) {
+		return this.foundation.createListing(sessionId, key, body)
 	}
 
 	@Post('vendor-storefront')
 	@ApiOperation({ summary: 'Update the active Vendor structured storefront before or after approval.' })
-	@ApiSecurity('junction-session')
-	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiSecurity('junction-auth-cookie')
 	@ApiHeader({ name: 'idempotency-key', required: true })
 	@ApiBody({ schema: OpenApiSchemaRefs.storefrontUpdate })
 	@ApiOkResponse({ schema: OpenApiSchemaRefs.storefrontUpdateResult })
-	updateStorefront(
-		@Headers('x-junction-session') sessionId: string | undefined,
-		@Headers('cookie') cookie: string | undefined,
-		@Headers('idempotency-key') key: string | undefined,
-		@Body() body: unknown,
-	) {
-		return this.foundation.updateStorefront(this.foundation.resolveSessionId(sessionId, cookie), key, body)
+	updateStorefront(@AuthenticatedSession() sessionId: string | undefined, @Headers('idempotency-key') key: string | undefined, @Body() body: unknown) {
+		return this.foundation.updateStorefront(sessionId, key, body)
 	}
 
 	@Post('listings/:listingId/revise')
 	@ApiOperation({ summary: 'Revise a draft, rejected, or unpublished listing before resubmission.' })
-	@ApiSecurity('junction-session')
-	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiSecurity('junction-auth-cookie')
 	@ApiHeader({ name: 'idempotency-key', required: true })
 	@ApiBody({ schema: OpenApiSchemaRefs.listingRevisionCommand })
 	@ApiOkResponse({ schema: OpenApiSchemaRefs.listingCommandResult })
 	reviseListing(
-		@Headers('x-junction-session') sessionId: string | undefined,
-		@Headers('cookie') cookie: string | undefined,
+		@AuthenticatedSession() sessionId: string | undefined,
 		@Headers('idempotency-key') key: string | undefined,
 		@Param('listingId') listingId: string,
 		@Body() body: unknown,
 	) {
-		return this.foundation.reviseListing(this.foundation.resolveSessionId(sessionId, cookie), key, listingId, body)
+		return this.foundation.reviseListing(sessionId, key, listingId, body)
 	}
 
 	@Post('listings/:listingId/submit')
 	@ApiOperation({ summary: 'Submit a private listing for Platform publication review.' })
-	@ApiSecurity('junction-session')
-	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiSecurity('junction-auth-cookie')
 	@ApiHeader({ name: 'idempotency-key', required: true })
 	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.listingCommandResult })
 	submitListing(
-		@Headers('x-junction-session') sessionId: string | undefined,
-		@Headers('cookie') cookie: string | undefined,
+		@AuthenticatedSession() sessionId: string | undefined,
 		@Headers('idempotency-key') key: string | undefined,
 		@Param('listingId') listingId: string,
 	) {
-		return this.foundation.submitListingForReview(this.foundation.resolveSessionId(sessionId, cookie), key, listingId)
+		return this.foundation.submitListingForReview(sessionId, key, listingId)
 	}
 
 	@Post('listings/:listingId/review')
 	@ApiOperation({ summary: 'Approve or reject a pending listing after policy review.' })
-	@ApiSecurity('junction-session')
-	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiSecurity('junction-auth-cookie')
 	@ApiHeader({ name: 'idempotency-key', required: true })
 	@ApiBody({ schema: OpenApiSchemaRefs.listingReviewCommand })
 	@ApiOkResponse({ schema: OpenApiSchemaRefs.listingCommandResult })
 	reviewListing(
-		@Headers('x-junction-session') sessionId: string | undefined,
-		@Headers('cookie') cookie: string | undefined,
+		@AuthenticatedSession() sessionId: string | undefined,
 		@Headers('idempotency-key') key: string | undefined,
 		@Param('listingId') listingId: string,
 		@Body() body: unknown,
 	) {
-		return this.foundation.reviewListing(this.foundation.resolveSessionId(sessionId, cookie), key, listingId, body)
+		return this.foundation.reviewListing(sessionId, key, listingId, body)
 	}
 
 	@Post('listings/:listingId/unpublish')
 	@ApiOperation({ summary: 'Unpublish a Vendor listing and remove its public search projection.' })
-	@ApiSecurity('junction-session')
-	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiSecurity('junction-auth-cookie')
 	@ApiHeader({ name: 'idempotency-key', required: true })
 	@ApiOkResponse({ schema: OpenApiSchemaRefs.listingCommandResult })
 	unpublishListing(
-		@Headers('x-junction-session') sessionId: string | undefined,
-		@Headers('cookie') cookie: string | undefined,
+		@AuthenticatedSession() sessionId: string | undefined,
 		@Headers('idempotency-key') key: string | undefined,
 		@Param('listingId') listingId: string,
 	) {
-		return this.foundation.unpublishListing(this.foundation.resolveSessionId(sessionId, cookie), key, listingId)
+		return this.foundation.unpublishListing(sessionId, key, listingId)
 	}
 
 	@Post('listings/:listingId/short-video')
 	@ApiOperation({ summary: 'Create quarantined short-video metadata; upload, scanning, and processing are required before publication.' })
-	@ApiSecurity('junction-session')
-	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiSecurity('junction-auth-cookie')
 	@ApiBody({ schema: OpenApiSchemaRefs.mediaProcessingCommand })
 	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.mediaAsset })
-	processShortVideo(
-		@Headers('x-junction-session') sessionId: string | undefined,
-		@Headers('cookie') cookie: string | undefined,
-		@Param('listingId') listingId: string,
-		@Body() body: unknown,
-	) {
-		return this.foundation.processShortVideo(this.foundation.resolveSessionId(sessionId, cookie), listingId, body)
+	processShortVideo(@AuthenticatedSession() sessionId: string | undefined, @Param('listingId') listingId: string, @Body() body: unknown) {
+		return this.foundation.processShortVideo(sessionId, listingId, body)
 	}
 
 	@Post('listings/:listingId/video-upload-intents')
 	@ApiOperation({ summary: 'Create a scoped, ten-minute signed PUT grant for a private quarantine object.' })
-	@ApiSecurity('junction-session')
-	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiSecurity('junction-auth-cookie')
 	@ApiHeader({ name: 'idempotency-key', required: true })
 	@ApiBody({ schema: OpenApiSchemaRefs.mediaUploadIntentCommand })
 	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.mediaUploadIntent })
 	createVideoUploadIntent(
-		@Headers('x-junction-session') sessionId: string | undefined,
-		@Headers('cookie') cookie: string | undefined,
+		@AuthenticatedSession() sessionId: string | undefined,
 		@Headers('idempotency-key') key: string | undefined,
 		@Param('listingId') listingId: string,
 		@Body() body: unknown,
 	) {
-		return this.foundation.createVideoUploadIntent(this.foundation.resolveSessionId(sessionId, cookie), key, listingId, body)
+		return this.foundation.createVideoUploadIntent(sessionId, key, listingId, body)
 	}
 
 	@Post('media/:mediaId/complete-upload')
 	@ApiOperation({ summary: 'Verify and seal an uploaded MP4 in private quarantine; safe processing is still required.' })
-	@ApiSecurity('junction-session')
-	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiSecurity('junction-auth-cookie')
 	@ApiBody({ schema: OpenApiSchemaRefs.mediaUploadCompleteCommand })
 	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.mediaAsset })
-	completeVideoUpload(
-		@Headers('x-junction-session') sessionId: string | undefined,
-		@Headers('cookie') cookie: string | undefined,
-		@Param('mediaId') mediaId: string,
-		@Body() body: unknown,
-	) {
-		return this.foundation.completeVideoUpload(this.foundation.resolveSessionId(sessionId, cookie), mediaId, body)
+	completeVideoUpload(@AuthenticatedSession() sessionId: string | undefined, @Param('mediaId') mediaId: string, @Body() body: unknown) {
+		return this.foundation.completeVideoUpload(sessionId, mediaId, body)
 	}
 
 	@Get('platform/media-review-queue')
 	@ApiOperation({ summary: 'Read processed, private videos awaiting scoped Platform media moderation.' })
-	@ApiSecurity('junction-session')
-	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiSecurity('junction-auth-cookie')
 	@ApiQuery({ name: 'cursor', required: false, schema: { type: 'string', format: 'uuid' } })
 	@ApiQuery({ name: 'limit', required: false, schema: { type: 'integer', minimum: 1, maximum: 100, default: 20 } })
 	@ApiOkResponse({ schema: OpenApiSchemaRefs.mediaReviewQueue })
-	readPlatformMediaQueue(
-		@Headers('x-junction-session') sessionId: string | undefined,
-		@Headers('cookie') cookie: string | undefined,
-		@Query() query: unknown,
-	) {
-		return this.foundation.readPlatformMediaQueue(this.foundation.resolveSessionId(sessionId, cookie), query)
+	readPlatformMediaQueue(@AuthenticatedSession() sessionId: string | undefined, @Query() query: unknown) {
+		return this.foundation.readPlatformMediaQueue(sessionId, query)
 	}
 
 	@Get('platform/media/:mediaId/preview')
 	@ApiOperation({ summary: 'Issue short-lived private processed-video and poster preview grants to a scoped reviewer.' })
-	@ApiSecurity('junction-session')
-	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiSecurity('junction-auth-cookie')
 	@ApiOkResponse({ schema: OpenApiSchemaRefs.mediaPreview })
-	previewMediaForReview(
-		@Headers('x-junction-session') sessionId: string | undefined,
-		@Headers('cookie') cookie: string | undefined,
-		@Param('mediaId') mediaId: string,
-	) {
-		return this.foundation.previewMediaForReview(this.foundation.resolveSessionId(sessionId, cookie), mediaId)
+	previewMediaForReview(@AuthenticatedSession() sessionId: string | undefined, @Param('mediaId') mediaId: string) {
+		return this.foundation.previewMediaForReview(sessionId, mediaId)
 	}
 
 	@Post('platform/media/:mediaId/review')
 	@ApiOperation({ summary: 'Approve or reject a scanned, processed media version after Platform moderation.' })
-	@ApiSecurity('junction-session')
-	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiSecurity('junction-auth-cookie')
 	@ApiHeader({ name: 'idempotency-key', required: true })
 	@ApiBody({ schema: OpenApiSchemaRefs.mediaReviewCommand })
 	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.mediaReviewResult })
 	reviewMedia(
-		@Headers('x-junction-session') sessionId: string | undefined,
-		@Headers('cookie') cookie: string | undefined,
+		@AuthenticatedSession() sessionId: string | undefined,
 		@Headers('idempotency-key') key: string | undefined,
 		@Param('mediaId') mediaId: string,
 		@Body() body: unknown,
 	) {
-		return this.foundation.reviewMedia(this.foundation.resolveSessionId(sessionId, cookie), key, mediaId, body)
+		return this.foundation.reviewMedia(sessionId, key, mediaId, body)
 	}
 
 	@Post('catalog-imports')
 	@ApiOperation({ summary: 'Dry-run or idempotently commit the versioned Vendor catalog CSV template.' })
-	@ApiSecurity('junction-session')
-	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiSecurity('junction-auth-cookie')
 	@ApiHeader({ name: 'idempotency-key', required: true })
 	@ApiBody({ schema: OpenApiSchemaRefs.catalogImportCommand })
 	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.catalogImportResult })
-	importCatalog(
-		@Headers('x-junction-session') sessionId: string | undefined,
-		@Headers('cookie') cookie: string | undefined,
-		@Headers('idempotency-key') key: string | undefined,
-		@Body() body: unknown,
-	) {
-		return this.foundation.importCatalogCsv(this.foundation.resolveSessionId(sessionId, cookie), key, body)
+	importCatalog(@AuthenticatedSession() sessionId: string | undefined, @Headers('idempotency-key') key: string | undefined, @Body() body: unknown) {
+		return this.foundation.importCatalogCsv(sessionId, key, body)
 	}
 
 	@Get('catalog-exports/v1')
 	@ApiOperation({ summary: 'Export only the active Vendor catalog in the versioned CSV template.' })
-	@ApiSecurity('junction-session')
-	@ApiHeader({ name: 'x-junction-session', required: true })
-	exportCatalog(@Headers('x-junction-session') sessionId: string | undefined, @Headers('cookie') cookie: string | undefined) {
-		return this.foundation.exportCatalogCsv(this.foundation.resolveSessionId(sessionId, cookie))
+	@ApiSecurity('junction-auth-cookie')
+	exportCatalog(@AuthenticatedSession() sessionId: string | undefined) {
+		return this.foundation.exportCatalogCsv(sessionId)
 	}
 
 	@Post('vendor-applications/:vendorId/review')
 	@ApiOperation({ summary: 'Approve, reject, or restrict a Vendor application before public publication is enabled.' })
-	@ApiSecurity('junction-session')
-	@ApiHeader({ name: 'x-junction-session', required: true })
+	@ApiSecurity('junction-auth-cookie')
 	@ApiHeader({ name: 'idempotency-key', required: true })
 	@ApiBody({ schema: OpenApiSchemaRefs.vendorApplicationReview })
 	@ApiOkResponse({ schema: OpenApiSchemaRefs.vendorApplicationReviewResult })
 	reviewVendorApplication(
-		@Headers('x-junction-session') sessionId: string | undefined,
-		@Headers('cookie') cookie: string | undefined,
+		@AuthenticatedSession() sessionId: string | undefined,
 		@Headers('idempotency-key') key: string | undefined,
 		@Param('vendorId') vendorId: string,
 		@Body() body: unknown,
 	) {
-		return this.foundation.reviewVendorApplication(this.foundation.resolveSessionId(sessionId, cookie), key, vendorId, body)
+		return this.foundation.reviewVendorApplication(sessionId, key, vendorId, body)
 	}
 
 	@Get('access-context')
 	@ApiOperation({ summary: 'Derive the current scoped access context.' })
-	@ApiSecurity('junction-session')
-	@ApiHeader({ name: 'x-junction-session', required: true, description: 'Synthetic session identifier.' })
+	@ApiSecurity('junction-auth-cookie')
 	@ApiOkResponse({ schema: OpenApiSchemaRefs.accessContext })
 	@ApiForbiddenResponse({ schema: OpenApiSchemaRefs.apiError })
-	accessContext(@Headers('x-junction-session') sessionId: string | undefined, @Headers('cookie') cookie: string | undefined) {
-		return this.foundation.accessContext(this.foundation.resolveSessionId(sessionId, cookie))
+	accessContext(@AuthenticatedSession() sessionId: string | undefined) {
+		return this.foundation.accessContext(sessionId)
 	}
 
 	@Post('identity/verification-session')
@@ -518,8 +420,8 @@ export class AppController {
 	@ApiSecurity('junction-auth-cookie')
 	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.identityVerificationSession })
 	@ApiForbiddenResponse({ schema: OpenApiSchemaRefs.apiError })
-	identityVerificationSession(@Headers('x-junction-session') sessionId: string | undefined, @Headers('cookie') cookie: string | undefined) {
-		return this.foundation.issueIdentityVerificationSession(this.foundation.resolveSessionId(sessionId, cookie))
+	identityVerificationSession(@AuthenticatedSession() sessionId: string | undefined) {
+		return this.foundation.issueIdentityVerificationSession(sessionId)
 	}
 
 	@Post('identity/didit-webhook')
@@ -532,16 +434,11 @@ export class AppController {
 
 	@Get('foundation/locations/:locationId')
 	@ApiOperation({ summary: 'Read an active Vendor Location within the derived access scope.' })
-	@ApiSecurity('junction-session')
-	@ApiHeader({ name: 'x-junction-session', required: true, description: 'Synthetic session identifier.' })
+	@ApiSecurity('junction-auth-cookie')
 	@ApiParam({ name: 'locationId', format: 'uuid' })
 	@ApiOkResponse({ schema: OpenApiSchemaRefs.locationRead })
 	@ApiForbiddenResponse({ schema: OpenApiSchemaRefs.apiError })
-	location(
-		@Headers('x-junction-session') sessionId: string | undefined,
-		@Headers('cookie') cookie: string | undefined,
-		@Param('locationId') locationId: string,
-	) {
-		return this.foundation.readLocation(this.foundation.resolveSessionId(sessionId, cookie), locationId)
+	location(@AuthenticatedSession() sessionId: string | undefined, @Param('locationId') locationId: string) {
+		return this.foundation.readLocation(sessionId, locationId)
 	}
 }

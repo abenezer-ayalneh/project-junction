@@ -28,7 +28,7 @@ export class RedisEventStreamAdapter implements ExternalEffectAdapter {
 
 	async deliver(event: DomainEvent): Promise<{ duplicate: boolean }> {
 		if (['FoundationCommandAccepted', 'ProviderCallbackReceived', 'ProviderTimeoutReconciled', 'DemoWorkspaceExpired'].includes(event.type)) {
-			throw new Error('Synthetic event types cannot enter the staging stream.')
+			throw new Error('Non-domain event types cannot enter the staging stream.')
 		}
 		const result = await this.redis.eval(appendOnce, {
 			keys: [`${this.namespace}:domain-event-identities`, `${this.namespace}:domain-events`, `${this.namespace}:domain-events-live`],

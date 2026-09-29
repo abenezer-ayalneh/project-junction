@@ -1,14 +1,9 @@
-import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import {
-	type AccessContext,
-	AccessContextSchema,
-	AuditMarkerCommandSchema,
-	type CommandOutcome,
 	DiscoveryPreferenceUpdateSchema,
-	type DomainEvent,
 	EngagementMutationSchema,
 	HealthResponseSchema,
 	IdempotencyKeySchema,
@@ -18,71 +13,40 @@ import {
 	ListingDraftSchema,
 	ListingReviewCommandSchema,
 	ListingRevisionCommandSchema,
-	LocationReadSchema,
 	MediaProcessingCommandSchema,
 	MediaReviewCommandSchema,
 	MediaReviewQueueQuerySchema,
 	MediaUploadCompleteCommandSchema,
 	MediaUploadIntentCommandSchema,
 	PublicListingBrowseQuerySchema,
-	PublicVendorBrowseQuerySchema,
-	PublicVendorPageSchema,
 	StorefrontUpdateSchema,
-	SyntheticAccountProvisionSchema,
 	VendorApplicationCommandSchema,
 	VendorApplicationReviewSchema,
 	VendorFollowMutationSchema,
 } from 'contracts'
-import {
-	AccessDeniedError,
-	assertElevatedSession,
-	assertScope,
-	DemoWorkspaceService,
-	DiditSandboxAdapter,
-	IdempotencyStore,
-	InMemoryOutbox,
-	PostgresFoundation,
-	SessionRegistry,
-} from 'platform-core'
+import { AccessDeniedError, DiditSandboxAdapter, PostgresFoundation } from 'platform-core'
 import { getAuth } from 'platform-core/auth'
-
-const SYNTHETIC_IDS = {
-	location: '00000000-0000-4000-8000-000000000004',
-	user: '00000000-0000-4000-8000-000000000001',
-	session: '00000000-0000-4000-8000-000000000002',
-	vendor: '00000000-0000-4000-8000-000000000005',
-	workspace: '00000000-0000-4000-8000-000000000003',
-}
 
 @Injectable()
 export class FoundationService {
-	private readonly durable: PostgresFoundation | undefined
+	private readonly durable: PostgresFoundation
 
 	private databaseUrl(): string {
 		return this.configService.getOrThrow<string>('DATABASE_URL')
 	}
 
 	async onModuleDestroy() {
-		await this.durable?.close()
+		await this.durable.close()
 	}
 
-	private readonly sessions = new SessionRegistry()
-	private readonly idempotency = new IdempotencyStore()
-	private readonly outbox = new InMemoryOutbox()
-	private readonly demos = new DemoWorkspaceService()
-	private readonly demoSessionCookieName = 'junction_demo_session'
-
 	constructor(private readonly configService: ConfigService) {
-		const storage = this.configService.get<string>('FOUNDATION_STORAGE')
-		if (storage !== 'postgresql' && process.env['NODE_ENV'] !== 'test') {
+		if (this.configService.get<string>('FOUNDATION_STORAGE') !== 'postgresql')
 			throw new Error('FOUNDATION_STORAGE=postgresql is required for the API runtime.')
-		}
-		this.durable = storage === 'postgresql' ? new PostgresFoundation(this.databaseUrl()) : undefined
-		if (!this.durable) this.sessions.register(this.syntheticContext())
+		this.durable = new PostgresFoundation(this.databaseUrl())
 	}
 
 	async health(requestId?: string) {
-		await this.durable?.health()
+		await this.durable.health()
 		if (this.configService.get<string>('JUNCTION_RUNTIME_MODE') === 'staging' && process.env['DIDIT_AGE_18_WORKFLOW_CONFIRMED'] !== 'true') {
 			throw new Error('The Didit age-18 sandbox workflow has not been confirmed.')
 		}
@@ -90,13 +54,13 @@ export class FoundationService {
 			status: 'ok',
 			service: 'api',
 			runtimeMode: 'staging',
-			storage: this.durable ? 'postgresql' : 'in-memory-test-double',
+			storage: 'postgresql',
 			requestId: requestId ?? randomUUID(),
 		})
 	}
 
 	async accessContext(sessionId: string | undefined) {
-		const context = this.durable ? await this.durable.accessContext(sessionId) : this.sessions.derive(sessionId)
+		const context = await this.durable.accessContext(sessionId)
 		return {
 			actor: context.actor,
 			workspaceId: context.workspaceId,
@@ -107,44 +71,17 @@ export class FoundationService {
 	}
 
 	listOwnerMemberships(sessionId: string | undefined) {
-		if (this.configService.get<string>('JUNCTION_RUNTIME_MODE') !== 'staging' || !this.durable) throw new AccessDeniedError()
 		return this.durable.listOwnerMemberships(sessionId)
 	}
 
 	selectActiveVendor(sessionId: string | undefined, body: unknown) {
-		if (this.configService.get<string>('JUNCTION_RUNTIME_MODE') !== 'staging' || !this.durable) throw new AccessDeniedError()
 		return this.durable.selectActiveVendor(sessionId, body)
-	}
-
-	resolveSessionId(headerSessionId: string | undefined, cookieHeader: string | undefined) {
-		if (this.configService.get<string>('JUNCTION_RUNTIME_MODE') === 'staging') return headerSessionId
-		if (headerSessionId) return headerSessionId
-		const signedSession = cookieHeader
-			?.split(';')
-			.map((value) => value.trim())
-			.find((value) => value.startsWith(`${this.demoSessionCookieName}=`))
-			?.slice(this.demoSessionCookieName.length + 1)
-		if (!signedSession) return undefined
-		try {
-			const decoded = decodeURIComponent(signedSession)
-			const separator = decoded.lastIndexOf('.')
-			if (separator <= 0) return undefined
-			const sessionId = decoded.slice(0, separator)
-			const signature = decoded.slice(separator + 1)
-			if (!/^[0-9a-f-]{36}$/i.test(sessionId)) return undefined
-			const expected = createHmac('sha256', this.demoSessionSecret()).update(sessionId).digest('hex')
-			const expectedBytes = Buffer.from(expected, 'hex')
-			const suppliedBytes = Buffer.from(signature, 'hex')
-			return suppliedBytes.length === expectedBytes.length && timingSafeEqual(suppliedBytes, expectedBytes) ? sessionId : undefined
-		} catch {
-			return undefined
-		}
 	}
 
 	async authenticateFromCookie(cookieHeader: string | undefined) {
 		if (!cookieHeader) return undefined
 		const session = await getAuth().api.getSession({ headers: new Headers({ cookie: cookieHeader }) })
-		if (!session?.user.emailVerified || !this.durable) return undefined
+		if (!session?.user.emailVerified) return undefined
 		await this.durable.ensureAuthenticatedSession({
 			sessionId: session.session.id,
 			userId: session.user.id,
@@ -155,7 +92,6 @@ export class FoundationService {
 	}
 
 	async issueIdentityVerificationSession(sessionId: string | undefined) {
-		if (this.configService.get<string>('JUNCTION_RUNTIME_MODE') !== 'staging' || !this.durable) throw new AccessDeniedError()
 		const { userId } = await this.durable.authenticatedIdentity(sessionId)
 		const adapter = new DiditSandboxAdapter(
 			this.configService.getOrThrow<string>('DIDIT_API_KEY'),
@@ -168,7 +104,7 @@ export class FoundationService {
 	}
 
 	async receiveDiditWebhook(rawBody: Buffer | undefined, signatureV2: string | undefined) {
-		if (this.configService.get<string>('JUNCTION_RUNTIME_MODE') !== 'staging' || !this.durable || !rawBody) throw new AccessDeniedError()
+		if (!rawBody) throw new AccessDeniedError()
 		const adapter = new DiditSandboxAdapter(
 			this.configService.getOrThrow<string>('DIDIT_API_KEY'),
 			this.configService.getOrThrow<string>('DIDIT_WEBHOOK_SECRET'),
@@ -203,340 +139,173 @@ export class FoundationService {
 		})
 	}
 
-	demoSessionCookie(sessionId: string, expiresAt: string) {
-		const signature = createHmac('sha256', this.demoSessionSecret()).update(sessionId).digest('hex')
-		return { name: this.demoSessionCookieName, value: `${sessionId}.${signature}`, expires: new Date(expiresAt) }
-	}
-
 	async readLocation(sessionId: string | undefined, locationId: string) {
-		if (this.durable) return this.durable.readLocation(sessionId, locationId)
-		const context = this.sessions.derive(sessionId)
-		if (!context.activeVendorId || !context.locationIds.includes(locationId)) throw new AccessDeniedError()
-		assertScope(context, { workspaceId: context.workspaceId, vendorId: context.activeVendorId, locationId })
-		return LocationReadSchema.parse({ id: locationId, vendorId: context.activeVendorId, workspaceId: context.workspaceId })
+		return this.durable.readLocation(sessionId, locationId)
 	}
 
 	async browsePublicVendors(query: unknown) {
-		if (this.durable) return this.durable.browsePublicVendors(query)
-		PublicVendorBrowseQuerySchema.parse(query)
-		return PublicVendorPageSchema.parse({ items: [{ id: SYNTHETIC_IDS.vendor, slug: 'synthetic-foundation' }], nextCursor: null })
-	}
-
-	private requireDurableCatalog() {
-		if (!this.durable) throw new AccessDeniedError('Catalog operations require the PostgreSQL synthetic runtime.')
-		return this.durable
+		return this.durable.browsePublicVendors(query)
 	}
 
 	browsePublicListings(query: unknown) {
 		PublicListingBrowseQuerySchema.parse(query)
-		return this.requireDurableCatalog().browsePublicListings(query)
+		return this.durable.browsePublicListings(query)
 	}
 
 	readPublicStorefront(slug: string) {
-		return this.requireDurableCatalog().readPublicStorefront(slug)
+		return this.durable.readPublicStorefront(slug)
 	}
 
 	readPublicMedia(mediaId: string, kind: 'video' | 'poster' | 'captions') {
-		return this.requireDurableCatalog().readPublicMedia(mediaId, kind)
+		return this.durable.readPublicMedia(mediaId, kind)
 	}
 
 	readVendorCatalog(sessionId: string | undefined) {
-		return this.requireDurableCatalog().readVendorCatalog(sessionId)
+		return this.durable.readVendorCatalog(sessionId)
 	}
 
 	readCustomerDiscoveryState(sessionId: string | undefined) {
-		return this.requireDurableCatalog().readCustomerDiscoveryState(sessionId)
+		return this.durable.readCustomerDiscoveryState(sessionId)
 	}
 
 	readPlatformReviewQueue(sessionId: string | undefined, query: unknown) {
-		return this.requireDurableCatalog().readPlatformReviewQueue(sessionId, query)
+		return this.durable.readPlatformReviewQueue(sessionId, query)
 	}
 
 	readPlatformCatalogHealth(sessionId: string | undefined) {
-		return this.requireDurableCatalog().readPlatformCatalogHealth(sessionId)
+		return this.durable.readPlatformCatalogHealth(sessionId)
 	}
 
 	recommendPublicListings(sessionId: string | undefined) {
-		return this.requireDurableCatalog().recommendPublicListings(sessionId)
+		return this.durable.recommendPublicListings(sessionId)
 	}
 
 	setDiscoveryPreference(sessionId: string | undefined, body: unknown) {
 		DiscoveryPreferenceUpdateSchema.parse(body)
-		return this.requireDurableCatalog().setDiscoveryPreference(sessionId, body)
+		return this.durable.setDiscoveryPreference(sessionId, body)
 	}
 
 	saveListing(sessionId: string | undefined, listingId: string, saved: boolean) {
 		EngagementMutationSchema.parse({ saved })
-		return this.requireDurableCatalog().saveListing(sessionId, listingId, saved)
+		return this.durable.saveListing(sessionId, listingId, saved)
 	}
 
 	followVendor(sessionId: string | undefined, vendorId: string, following: boolean) {
 		VendorFollowMutationSchema.parse({ following })
-		return this.requireDurableCatalog().followVendor(sessionId, vendorId, following)
+		return this.durable.followVendor(sessionId, vendorId, following)
 	}
 
 	readInventoryAvailability(sessionId: string | undefined, listingId: string, query: unknown) {
 		InventoryAvailabilityQuerySchema.parse(query)
-		return this.requireDurableCatalog().readInventoryAvailability(sessionId, listingId, query)
+		return this.durable.readInventoryAvailability(sessionId, listingId, query)
 	}
 
 	createInventoryMovement(sessionId: string | undefined, idempotencyKey: string | undefined, body: unknown) {
 		InventoryMovementCommandSchema.parse(body)
 		IdempotencyKeySchema.parse(idempotencyKey)
-		return this.requireDurableCatalog().createInventoryMovement(sessionId, idempotencyKey, body)
+		return this.durable.createInventoryMovement(sessionId, idempotencyKey, body)
 	}
 
 	createListing(sessionId: string | undefined, idempotencyKey: string | undefined, body: unknown) {
 		ListingDraftSchema.parse(body)
-		return this.requireDurableCatalog().createListing(sessionId, idempotencyKey, body)
+		return this.durable.createListing(sessionId, idempotencyKey, body)
 	}
 
 	updateStorefront(sessionId: string | undefined, idempotencyKey: string | undefined, body: unknown) {
 		StorefrontUpdateSchema.parse(body)
-		return this.requireDurableCatalog().updateStorefront(sessionId, idempotencyKey, body)
+		return this.durable.updateStorefront(sessionId, idempotencyKey, body)
 	}
 
 	reviseListing(sessionId: string | undefined, idempotencyKey: string | undefined, listingId: string, body: unknown) {
 		ListingRevisionCommandSchema.parse(body)
-		return this.requireDurableCatalog().reviseListing(sessionId, idempotencyKey, listingId, body)
+		return this.durable.reviseListing(sessionId, idempotencyKey, listingId, body)
 	}
 
 	submitListingForReview(sessionId: string | undefined, idempotencyKey: string | undefined, listingId: string) {
-		return this.requireDurableCatalog().submitListingForReview(sessionId, idempotencyKey, listingId)
+		return this.durable.submitListingForReview(sessionId, idempotencyKey, listingId)
 	}
 
 	reviewListing(sessionId: string | undefined, idempotencyKey: string | undefined, listingId: string, body: unknown) {
 		ListingReviewCommandSchema.parse(body)
-		return this.requireDurableCatalog().reviewListing(sessionId, idempotencyKey, listingId, body)
+		return this.durable.reviewListing(sessionId, idempotencyKey, listingId, body)
 	}
 
 	unpublishListing(sessionId: string | undefined, idempotencyKey: string | undefined, listingId: string) {
-		return this.requireDurableCatalog().unpublishListing(sessionId, idempotencyKey, listingId)
+		return this.durable.unpublishListing(sessionId, idempotencyKey, listingId)
 	}
 
 	processShortVideo(sessionId: string | undefined, listingId: string, body: unknown) {
 		MediaProcessingCommandSchema.parse(body)
-		return this.requireDurableCatalog().processShortVideo(sessionId, listingId, body)
+		return this.durable.processShortVideo(sessionId, listingId, body)
 	}
 
 	createVideoUploadIntent(sessionId: string | undefined, idempotencyKey: string | undefined, listingId: string, body: unknown) {
 		MediaUploadIntentCommandSchema.parse(body)
-		return this.requireDurableCatalog().createVideoUploadIntent(sessionId, idempotencyKey, listingId, body)
+		return this.durable.createVideoUploadIntent(sessionId, idempotencyKey, listingId, body)
 	}
 
 	completeVideoUpload(sessionId: string | undefined, mediaId: string, body: unknown) {
 		MediaUploadCompleteCommandSchema.parse(body)
-		return this.requireDurableCatalog().completeVideoUpload(sessionId, mediaId, body)
+		return this.durable.completeVideoUpload(sessionId, mediaId, body)
 	}
 
 	readPlatformMediaQueue(sessionId: string | undefined, query: unknown) {
 		MediaReviewQueueQuerySchema.parse(query)
-		return this.requireDurableCatalog().readPlatformMediaQueue(sessionId, query)
+		return this.durable.readPlatformMediaQueue(sessionId, query)
 	}
 
 	previewMediaForReview(sessionId: string | undefined, mediaId: string) {
-		return this.requireDurableCatalog().previewMediaForReview(sessionId, mediaId)
+		return this.durable.previewMediaForReview(sessionId, mediaId)
 	}
 
 	reviewMedia(sessionId: string | undefined, idempotencyKey: string | undefined, mediaId: string, body: unknown) {
 		MediaReviewCommandSchema.parse(body)
-		return this.requireDurableCatalog().reviewMedia(sessionId, idempotencyKey, mediaId, body)
+		return this.durable.reviewMedia(sessionId, idempotencyKey, mediaId, body)
 	}
 
 	importCatalogCsv(sessionId: string | undefined, idempotencyKey: string | undefined, body: unknown) {
-		return this.requireDurableCatalog().importCatalogCsv(sessionId, idempotencyKey, body)
+		return this.durable.importCatalogCsv(sessionId, idempotencyKey, body)
 	}
 
 	exportCatalogCsv(sessionId: string | undefined) {
-		return this.requireDurableCatalog().exportCatalogCsv(sessionId)
+		return this.durable.exportCatalogCsv(sessionId)
 	}
 
 	reviewVendorApplication(sessionId: string | undefined, idempotencyKey: string | undefined, vendorId: string, body: unknown) {
 		VendorApplicationReviewSchema.parse(body)
-		return this.requireDurableCatalog().reviewVendorApplication(sessionId, idempotencyKey, vendorId, body)
+		return this.durable.reviewVendorApplication(sessionId, idempotencyKey, vendorId, body)
 	}
 
 	createVendorApplication(sessionId: string | undefined, idempotencyKey: string | undefined, body: unknown) {
 		VendorApplicationCommandSchema.parse(body)
-		return this.requireDurableCatalog().createVendorApplication(sessionId, idempotencyKey, body)
-	}
-
-	async createSyntheticAccount(provisioningSecret: string | undefined, input: unknown) {
-		this.requireSyntheticRuntime()
-		if (!this.syntheticProvisioningSecretMatches(provisioningSecret)) throw new AccessDeniedError()
-		SyntheticAccountProvisionSchema.parse(input)
-		if (!this.durable) throw new AccessDeniedError()
-		return this.durable.createSyntheticAccount(input)
-	}
-
-	async grantSyntheticStaff(sessionId: string | undefined, input: unknown) {
-		this.requireSyntheticRuntime()
-		if (!this.durable) throw new AccessDeniedError()
-		return this.durable.grantSyntheticStaff(sessionId, input)
-	}
-
-	async revokeSyntheticStaff(sessionId: string | undefined, staffId: string) {
-		this.requireSyntheticRuntime()
-		if (!this.durable) throw new AccessDeniedError()
-		return this.durable.revokeSyntheticStaff(sessionId, staffId)
+		return this.durable.createVendorApplication(sessionId, idempotencyKey, body)
 	}
 
 	async realtimeHighWaterCursor(sessionId: string | undefined): Promise<string | null> {
-		if (this.durable) return this.durable.realtimeHighWaterCursor(sessionId)
-		this.sessions.derive(sessionId)
-		return null
+		return this.durable.realtimeHighWaterCursor(sessionId)
 	}
 
 	async realtimeReplay(sessionId: string | undefined, cursor: string | undefined) {
-		if (this.durable) return this.durable.realtimeReplay(sessionId, cursor)
-		this.sessions.derive(sessionId)
-		return { cursor: null, events: [], restRefetchRequired: cursor !== undefined }
+		return this.durable.realtimeReplay(sessionId, cursor)
 	}
 
 	async realtimeFoundationEventForCommand(sessionId: string | undefined, commandId: string) {
-		if (this.durable) return this.durable.realtimeFoundationEventForCommand(sessionId, commandId)
-		this.sessions.derive(sessionId)
-		return null
+		return this.durable.realtimeFoundationEventForCommand(sessionId, commandId)
 	}
 
 	realtimeDomainEventForEventId(eventId: string) {
-		if (this.configService.get<string>('JUNCTION_RUNTIME_MODE') !== 'staging' || !this.durable) throw new AccessDeniedError()
 		return this.durable.realtimeDomainEventForEventId(eventId)
 	}
 
-	async acceptAuditMarker(sessionId: string | undefined, idempotencyKey: string | undefined, body: unknown): Promise<CommandOutcome> {
-		return this.acceptAuditMarkerForMode(sessionId, idempotencyKey, body, false)
+	async acceptAuditMarker(sessionId: string | undefined, idempotencyKey: string | undefined, body: unknown) {
+		return this.durable.acceptAuditMarker(sessionId, idempotencyKey, body)
 	}
 
-	async acceptElevatedAuditMarker(sessionId: string | undefined, idempotencyKey: string | undefined, body: unknown): Promise<CommandOutcome> {
-		return this.acceptAuditMarkerForMode(sessionId, idempotencyKey, body, true)
-	}
-
-	private async acceptAuditMarkerForMode(
-		sessionId: string | undefined,
-		idempotencyKey: string | undefined,
-		body: unknown,
-		requireElevatedSession: boolean,
-	): Promise<CommandOutcome> {
-		this.requireSyntheticRuntime()
-		if (this.durable)
-			return requireElevatedSession
-				? this.durable.acceptElevatedAuditMarker(sessionId, idempotencyKey, body)
-				: this.durable.acceptAuditMarker(sessionId, idempotencyKey, body)
-		const context = this.sessions.derive(sessionId)
-		if (requireElevatedSession) assertElevatedSession(context)
-		this.requireCapability(context, 'platform:foundation:write')
-		const command = AuditMarkerCommandSchema.parse(body)
-		if (command.scope) assertScope(context, command.scope)
-		const key = IdempotencyKeySchema.parse(idempotencyKey)
-		const actorId = context.actor.kind === 'user' ? context.actor.userId : context.actor.personaId
-
-		const result = this.idempotency.execute(key, { actorId, workspaceId: context.workspaceId, vendorId: context.activeVendorId }, command, () => {
-			if (context.actor.kind === 'demo_persona') this.demos.consumeCommandQuota(context.actor.personaId)
-			const commandId = randomUUID()
-			this.outbox.publish(this.eventFor(context, commandId, key, 'FoundationCommandAccepted', { marker: command.marker }))
-			return { commandId, status: 'accepted' as const, marker: command.marker }
-		})
-
-		return { ...result.outcome, replayed: result.replayed }
-	}
-
-	private demoSessionSecret() {
-		const secret = this.configService.get<string>('SYNTHETIC_DEMO_SESSION_SECRET')
-		if (!secret) throw new AccessDeniedError('Demo session is not accepted.')
-		return secret
-	}
-
-	private requireSyntheticRuntime() {
-		if (this.configService.get<string>('JUNCTION_RUNTIME_MODE') === 'staging') throw new AccessDeniedError()
-	}
-
-	private syntheticProvisioningSecretMatches(supplied: string | undefined): boolean {
-		const expected = this.configService.get<string>('SYNTHETIC_ACCOUNT_PROVISIONING_SECRET')
-		if (!expected || !supplied) return false
-		const expectedBytes = Buffer.from(expected)
-		const suppliedBytes = Buffer.from(supplied)
-		return expectedBytes.length === suppliedBytes.length && timingSafeEqual(expectedBytes, suppliedBytes)
-	}
-
-	async createDemoWorkspace() {
-		this.requireSyntheticRuntime()
-		if (this.durable) return this.durable.createDemoWorkspace()
-		const demo = this.demos.create()
-		const context = this.demos.context(demo.session.id)
-		if (!context) throw new Error('Demo fixture session is missing.')
-		this.sessions.register(context)
-		return demo
-	}
-
-	async switchDemoPersona(sessionId: string | undefined, workspaceId: string, key: string) {
-		this.requireSyntheticRuntime()
-		if (this.durable) return this.durable.switchDemoPersona(sessionId, workspaceId, key)
-		const current = this.sessions.derive(sessionId)
-		if (current.actor.kind !== 'demo_persona' || current.workspaceId !== workspaceId || !sessionId) throw new AccessDeniedError()
-		try {
-			const switched = this.demos.switchPersona(workspaceId, sessionId, key)
-			this.sessions.revoke(sessionId)
-			this.sessions.register(switched.next)
-			return { id: switched.next.session.id, personaKey: key, expiresAt: switched.next.session.expiresAt }
-		} catch {
-			throw new AccessDeniedError()
-		}
+	async acceptElevatedAuditMarker(sessionId: string | undefined, idempotencyKey: string | undefined, body: unknown) {
+		return this.durable.acceptElevatedAuditMarker(sessionId, idempotencyKey, body)
 	}
 
 	processOneOutboxEvent(workerId: string) {
-		if (this.durable) return this.durable.processOne(workerId)
-		const record = this.outbox.claim(workerId)
-		if (!record) return { processed: false }
-		this.outbox.complete(record.id, workerId)
-		return { processed: true, eventId: record.event.eventId }
-	}
-
-	purgeExpiredDemoWorkspaces(now = new Date()) {
-		return this.durable ? this.durable.purgeExpiredDemoWorkspaces(now) : this.demos.purgeExpired(now)
-	}
-
-	private requireCapability(context: AccessContext, capability: AccessContext['capabilities'][number]) {
-		if (!context.capabilities.includes(capability)) throw new AccessDeniedError()
-	}
-
-	private eventFor(
-		context: AccessContext,
-		aggregateId: string,
-		idempotencyKey: string,
-		type: DomainEvent['type'],
-		payload: Record<string, unknown>,
-	): DomainEvent {
-		return {
-			eventId: randomUUID(),
-			type,
-			aggregateId,
-			aggregateVersion: 1,
-			workspaceId: context.workspaceId,
-			causationId: aggregateId,
-			correlationId: aggregateId,
-			idempotencyKey,
-			occurredAt: new Date().toISOString(),
-			schemaVersion: 1,
-			payload,
-		}
-	}
-
-	private syntheticContext(): AccessContext {
-		return AccessContextSchema.parse({
-			actor: { kind: 'user', userId: SYNTHETIC_IDS.user },
-			workspaceId: SYNTHETIC_IDS.workspace,
-			activeVendorId: SYNTHETIC_IDS.vendor,
-			locationIds: [SYNTHETIC_IDS.location],
-			memberships: [{ vendorId: SYNTHETIC_IDS.vendor, role: 'vendor_owner', locationIds: [SYNTHETIC_IDS.location], active: true }],
-			capabilities: ['platform:foundation:read', 'platform:foundation:write', 'demo:workspace:create', 'demo:workspace:purge'],
-			session: {
-				id: SYNTHETIC_IDS.session,
-				expiresAt: '2099-01-01T00:00:00.000Z',
-				revokedAt: null,
-				mfaVerifiedAt: new Date().toISOString(),
-				recentAuthAt: new Date().toISOString(),
-			},
-		})
+		return this.durable.processOne(workerId)
 	}
 }

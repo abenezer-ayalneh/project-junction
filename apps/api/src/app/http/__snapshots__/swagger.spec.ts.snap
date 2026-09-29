@@ -2712,7 +2712,6 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             "description": "",
           },
         },
-        "security": undefined,
         "summary": "Read private staging API health.",
         "tags": [
           "foundation",
@@ -2744,7 +2743,6 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             "description": "",
           },
         },
-        "security": undefined,
         "summary": "Record a signed Didit sandbox status update for later age-level reconciliation.",
         "tags": [
           "foundation",
@@ -3543,7 +3541,6 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             "description": "",
           },
         },
-        "security": undefined,
         "summary": "Browse approved, published Product and Service listings from the rebuildable search projection.",
         "tags": [
           "foundation",
@@ -3568,7 +3565,6 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             "description": "",
           },
         },
-        "security": undefined,
         "summary": "Read reviewed WebVTT captions for a currently published video.",
         "tags": [
           "foundation",
@@ -3593,7 +3589,6 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             "description": "",
           },
         },
-        "security": undefined,
         "summary": "Read a moderated poster only while its listing and Vendor remain published.",
         "tags": [
           "foundation",
@@ -3619,7 +3614,6 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             "description": "",
           },
         },
-        "security": undefined,
         "summary": "Stream a moderated video only while its listing and Vendor remain published.",
         "tags": [
           "foundation",
@@ -3635,7 +3629,6 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             "description": "",
           },
         },
-        "security": undefined,
         "summary": "Return deterministic public discovery recommendations with an explainable reason.",
         "tags": [
           "foundation",
@@ -3679,7 +3672,6 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             "description": "",
           },
         },
-        "security": undefined,
         "summary": "Browse published Vendor summaries.",
         "tags": [
           "foundation",
@@ -3711,7 +3703,6 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             "description": "",
           },
         },
-        "security": undefined,
         "summary": "Read a structured public storefront with only published offerings and basic locations.",
         "tags": [
           "foundation",

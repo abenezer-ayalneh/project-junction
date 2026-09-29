@@ -28,7 +28,7 @@ async function bootstrap() {
 			const cookie = request.headers.cookie
 			void foundation.authenticateFromCookie(Array.isArray(cookie) ? cookie.join('; ') : cookie).then(
 				(sessionId) => {
-					request.headers['x-junction-session'] = sessionId
+					request.authenticatedSessionId = sessionId
 					next()
 				},
 				(error: Error) => next(error),

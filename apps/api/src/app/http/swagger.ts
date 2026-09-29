@@ -145,15 +145,6 @@ export function createSwaggerDocument(app: INestApplication): OpenAPIObject {
 		.addApiKey(
 			{
 				type: 'apiKey',
-				in: 'header',
-				name: 'x-junction-session',
-				description: 'Deprecated internal scheme replaced by the Better Auth session cookie in every published operation.',
-			},
-			'junction-session',
-		)
-		.addApiKey(
-			{
-				type: 'apiKey',
 				in: 'cookie',
 				name: '__Secure-junction-auth.session_token',
 				description: 'Better Auth session cookie for private staging identity.',
@@ -169,17 +160,6 @@ export function createSwaggerDocument(app: INestApplication): OpenAPIObject {
 			...publicSchemas(),
 		},
 	}
-	for (const pathItem of Object.values(document.paths)) {
-		for (const method of ['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace'] as const) {
-			const operation = pathItem?.[method]
-			if (!operation) continue
-			operation.parameters = operation.parameters?.filter(
-				(parameter) => !('in' in parameter && parameter.in === 'header' && parameter.name.toLowerCase() === 'x-junction-session'),
-			)
-			operation.security = operation.security?.map((requirement) => ('junction-session' in requirement ? { 'junction-auth-cookie': [] } : requirement))
-		}
-	}
-	delete document.components.securitySchemes?.['junction-session']
 	if (document.paths['/v1/health']?.get) document.paths['/v1/health'].get.summary = 'Read private staging API health.'
 	if (document.paths['/v1/public/vendors']?.get) document.paths['/v1/public/vendors'].get.summary = 'Browse published Vendor summaries.'
 

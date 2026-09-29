@@ -1,7 +1,7 @@
 //@ts-check
 
 if (process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_JUNCTION_RUNTIME_MODE !== 'staging') {
-	throw new Error('Production web builds require NEXT_PUBLIC_JUNCTION_RUNTIME_MODE=staging. Synthetic preview builds are test-only.')
+	throw new Error('Only private staging web builds are supported.')
 }
 
 if (process.env.NEXT_PUBLIC_JUNCTION_RUNTIME_MODE === 'staging' && process.env.NEXT_PUBLIC_JUNCTION_API_URL !== '/v1') {

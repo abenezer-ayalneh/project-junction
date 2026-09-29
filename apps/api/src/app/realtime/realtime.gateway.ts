@@ -28,14 +28,6 @@ function roomKey(room: RealtimeRoom): string {
 	return `location:${room.workspaceId}:${room.vendorId}:${room.locationId}`
 }
 
-function sessionFrom(socket: RealtimeSocket): string | undefined {
-	const auth = socket.handshake.auth as unknown
-	if (typeof auth === 'object' && auth && 'sessionId' in auth && typeof (auth as Record<string, unknown>)['sessionId'] === 'string')
-		return (auth as Record<string, string>)['sessionId']
-	const headerSession = socket.handshake.headers['x-junction-session']
-	return typeof headerSession === 'string' ? headerSession : undefined
-}
-
 function storedSessionFrom(data: unknown): string | undefined {
 	return typeof data === 'object' && data && 'sessionId' in data && typeof data.sessionId === 'string' ? data.sessionId : undefined
 }
@@ -161,10 +153,7 @@ export class RealtimeGateway implements OnGatewayInit {
 
 	private async authorize(socket: RealtimeSocket, next: (error?: Error) => void): Promise<void> {
 		try {
-			const sessionId =
-				process.env['JUNCTION_RUNTIME_MODE'] === 'staging'
-					? await this.foundation.authenticateFromCookie(socket.handshake.headers.cookie)
-					: this.foundation.resolveSessionId(sessionFrom(socket), socket.handshake.headers.cookie)
+			const sessionId = await this.foundation.authenticateFromCookie(socket.handshake.headers.cookie)
 			await this.fanoutReady
 			await this.foundation.accessContext(sessionId)
 			socket.data.sessionId = sessionId
