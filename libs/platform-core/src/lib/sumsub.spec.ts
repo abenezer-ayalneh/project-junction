@@ -10,7 +10,7 @@ describe('Sumsub sandbox boundary', () => {
 			return Promise.resolve(new Response(JSON.stringify({ token: 'sandbox-sdk-token' }), { status: 200 }))
 		})
 		const adapter = new SumsubSandboxAdapter('app-token', 'app-secret', 'webhook-secret', request as typeof fetch)
-		await expect(adapter.issueSdkToken('123e4567-e89b-42d3-a456-426614174000', 'age-18')).resolves.toBe('sandbox-sdk-token')
+		await expect(adapter.issueSdkToken('00000000-0000-0000-0000-000000000001', 'age-18')).resolves.toBe('sandbox-sdk-token')
 		const [url, init] = request.mock.calls[0]
 		expect(url).toBe('https://api.sumsub.com/resources/accessTokens/sdk')
 		const headers = init.headers as Record<string, string>
@@ -34,7 +34,7 @@ describe('Sumsub sandbox boundary', () => {
 	})
 
 	it('reads the current applicant and review with signed GET requests', async () => {
-		const userId = '123e4567-e89b-42d3-a456-426614174000'
+		const userId = '00000000-0000-0000-0000-000000000001'
 		const applicantId = '5cb56e8e0a975a35f333cb83'
 		const request = jest.fn((url: string, init: RequestInit) => {
 			const path = new URL(url).pathname
