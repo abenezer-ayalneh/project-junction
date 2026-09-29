@@ -84,6 +84,8 @@ services:
         environment:
             MINIO_ROOT_USER_FILE: /run/secrets/MINIO_ROOT_USER
             MINIO_ROOT_PASSWORD_FILE: /run/secrets/MINIO_ROOT_PASSWORD
+            MINIO_API_CORS_ALLOW_ORIGIN: https://${STAGING_HOSTNAME:?}
+            MINIO_API_CORS_ALLOW_CREDENTIALS_WITH_WILDCARD: 'off'
         secrets:
             - { source: minio_root_user, target: MINIO_ROOT_USER }
             - { source: minio_root_password, target: MINIO_ROOT_PASSWORD }
@@ -107,10 +109,6 @@ services:
             - |
                 until mc alias set junction http://minio:9000 "$$(cat /run/secrets/MINIO_ROOT_USER)" "$$(cat /run/secrets/MINIO_ROOT_PASSWORD)"; do sleep 2; done
                 mc mb --ignore-existing "junction/$${MINIO_BUCKET}"
-                cat >/tmp/junction-media-cors.xml <<EOF
-                <CORSConfiguration><CORSRule><AllowedOrigin>https://$${STAGING_HOSTNAME}</AllowedOrigin><AllowedMethod>GET</AllowedMethod><AllowedMethod>PUT</AllowedMethod><AllowedMethod>HEAD</AllowedMethod><AllowedHeader>*</AllowedHeader><ExposeHeader>ETag</ExposeHeader><MaxAgeSeconds>3600</MaxAgeSeconds></CORSRule></CORSConfiguration>
-                EOF
-                mc cors set "junction/$${MINIO_BUCKET}" /tmp/junction-media-cors.xml
                 if ! mc admin user info junction "$$(cat /run/secrets/MEDIA_S3_ACCESS_KEY_ID)" >/dev/null 2>&1; then
                     mc admin user add junction "$$(cat /run/secrets/MEDIA_S3_ACCESS_KEY_ID)" "$$(cat /run/secrets/MEDIA_S3_SECRET_ACCESS_KEY)"
                 fi
