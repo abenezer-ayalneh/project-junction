@@ -15,7 +15,7 @@ describe('private staging API route boundary', () => {
 	})
 
 	it('keeps real account, identity, and resource routes', () => {
-		for (const path of ['/v1/access-context', '/v1/identity/sumsub-webhook', '/v1/foundation/locations/abc']) {
+		for (const path of ['/v1/access-context', '/v1/identity/didit-webhook', '/v1/foundation/locations/abc']) {
 			expect(isSyntheticStagingPath(path)).toBe(false)
 		}
 	})

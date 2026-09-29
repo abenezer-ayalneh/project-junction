@@ -66,8 +66,8 @@ export const ActiveVendorSelectionSchema = z.object({ vendorId: z.string().uuid(
 export const ActiveVendorSelectionResultSchema = z.object({ activeVendorId: z.string().uuid().nullable() })
 
 export const IdentityVerificationSessionSchema = z.object({
-	token: z.string().min(1).max(1024),
-	expiresInSeconds: z.literal(600),
+	url: z.string().url().max(2048),
+	sessionId: z.string().min(1).max(200),
 })
 
 export const LocationReadSchema = z.object({

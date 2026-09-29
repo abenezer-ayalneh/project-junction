@@ -514,7 +514,7 @@ export class AppController {
 	}
 
 	@Post('identity/verification-session')
-	@ApiOperation({ summary: 'Issue a short-lived Sumsub sandbox SDK token for the authenticated account.' })
+	@ApiOperation({ summary: 'Create a Didit sandbox verification session for the authenticated account.' })
 	@ApiSecurity('junction-auth-cookie')
 	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.identityVerificationSession })
 	@ApiForbiddenResponse({ schema: OpenApiSchemaRefs.apiError })
@@ -522,17 +522,12 @@ export class AppController {
 		return this.foundation.issueIdentityVerificationSession(this.foundation.resolveSessionId(sessionId, cookie))
 	}
 
-	@Post('identity/sumsub-webhook')
-	@ApiOperation({ summary: 'Record a signed Sumsub sandbox review for later age-level reconciliation.' })
-	@ApiHeader({ name: 'x-payload-digest', required: true })
-	@ApiHeader({ name: 'x-payload-digest-alg', required: true })
+	@Post('identity/didit-webhook')
+	@ApiOperation({ summary: 'Record a signed Didit sandbox status update for later age-level reconciliation.' })
+	@ApiHeader({ name: 'x-signature-v2', required: true })
 	@ApiForbiddenResponse({ schema: OpenApiSchemaRefs.apiError })
-	sumsubWebhook(
-		@Headers('x-payload-digest') digest: string | undefined,
-		@Headers('x-payload-digest-alg') algorithm: string | undefined,
-		@Req() request: { rawBody?: Buffer },
-	) {
-		return this.foundation.receiveSumsubReview(request.rawBody, digest, algorithm)
+	diditWebhook(@Headers('x-signature-v2') signatureV2: string | undefined, @Req() request: { rawBody?: Buffer }) {
+		return this.foundation.receiveDiditWebhook(request.rawBody, signatureV2)
 	}
 
 	@Get('foundation/locations/:locationId')

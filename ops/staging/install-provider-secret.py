@@ -9,9 +9,8 @@ from pathlib import Path
 
 ALLOWED_NAMES = {
     "resend-api-key",
-    "sumsub-app-token",
-    "sumsub-secret-key",
-    "sumsub-webhook-secret",
+    "didit-api-key",
+    "didit-webhook-secret",
     "media-s3-access-key-id",
     "media-s3-secret-access-key",
 }

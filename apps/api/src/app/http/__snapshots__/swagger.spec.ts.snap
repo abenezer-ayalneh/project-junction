@@ -666,21 +666,20 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
       "IdentityVerificationSession": {
         "additionalProperties": false,
         "properties": {
-          "expiresInSeconds": {
-            "enum": [
-              600,
-            ],
-            "type": "number",
-          },
-          "token": {
-            "maxLength": 1024,
+          "sessionId": {
+            "maxLength": 200,
             "minLength": 1,
+            "type": "string",
+          },
+          "url": {
+            "format": "uri",
+            "maxLength": 2048,
             "type": "string",
           },
         },
         "required": [
-          "token",
-          "expiresInSeconds",
+          "url",
+          "sessionId",
         ],
         "type": "object",
       },
@@ -3483,21 +3482,13 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
       },
     },
-    "/v1/identity/sumsub-webhook": {
+    "/v1/identity/didit-webhook": {
       "post": {
-        "operationId": "AppController_sumsubWebhook",
+        "operationId": "AppController_diditWebhook",
         "parameters": [
           {
             "in": "header",
-            "name": "x-payload-digest-alg",
-            "required": true,
-            "schema": {
-              "type": "string",
-            },
-          },
-          {
-            "in": "header",
-            "name": "x-payload-digest",
+            "name": "x-signature-v2",
             "required": true,
             "schema": {
               "type": "string",
@@ -3516,7 +3507,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             "description": "",
           },
         },
-        "summary": "Record a signed Sumsub sandbox review for later age-level reconciliation.",
+        "summary": "Record a signed Didit sandbox status update for later age-level reconciliation.",
         "tags": [
           "foundation",
         ],
@@ -3553,7 +3544,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             "junction-auth-cookie": [],
           },
         ],
-        "summary": "Issue a short-lived Sumsub sandbox SDK token for the authenticated account.",
+        "summary": "Create a Didit sandbox verification session for the authenticated account.",
         "tags": [
           "foundation",
         ],

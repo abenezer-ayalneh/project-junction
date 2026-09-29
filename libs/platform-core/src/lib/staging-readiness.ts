@@ -36,10 +36,9 @@ export function assertStagingProviderConfiguration(env: NodeJS.ProcessEnv = proc
 	if (required(env, 'BETTER_AUTH_SECRET').length < 32) throw new Error('BETTER_AUTH_SECRET must contain at least 32 characters.')
 	required(env, 'RESEND_API_KEY')
 	required(env, 'RESEND_FROM_EMAIL')
-	required(env, 'SUMSUB_APP_TOKEN')
-	required(env, 'SUMSUB_SECRET_KEY')
-	required(env, 'SUMSUB_WEBHOOK_SECRET')
-	required(env, 'SUMSUB_AGE_LEVEL')
+	required(env, 'DIDIT_API_KEY')
+	required(env, 'DIDIT_WEBHOOK_SECRET')
+	required(env, 'DIDIT_WORKFLOW_ID')
 	const mediaEndpoint = new URL(required(env, 'MEDIA_S3_ENDPOINT'))
 	if (
 		mediaEndpoint.protocol !== 'https:' ||
@@ -47,7 +46,7 @@ export function assertStagingProviderConfiguration(env: NodeJS.ProcessEnv = proc
 		['localhost', '127.0.0.1', '[::1]'].includes(mediaEndpoint.hostname) ||
 		mediaEndpoint.hostname.endsWith('.local')
 	) {
-		throw new Error('MEDIA_S3_ENDPOINT must be a private staging HTTPS object-store origin.')
+		throw new Error('MEDIA_S3_ENDPOINT must be the private staging HTTPS MinIO origin.')
 	}
 	required(env, 'MEDIA_S3_REGION')
 	required(env, 'MEDIA_S3_BUCKET')
@@ -56,8 +55,8 @@ export function assertStagingProviderConfiguration(env: NodeJS.ProcessEnv = proc
 	required(env, 'MEDIA_CLAMD_HOST')
 	const clamdPort = Number(required(env, 'MEDIA_CLAMD_PORT'))
 	if (!Number.isInteger(clamdPort) || clamdPort < 1 || clamdPort > 65535) throw new Error('MEDIA_CLAMD_PORT must be a valid TCP port.')
-	if (env['SUMSUB_AGE_18_LEVEL_CONFIRMED'] && env['SUMSUB_AGE_18_LEVEL_CONFIRMED'] !== 'true') {
-		throw new Error('SUMSUB_AGE_18_LEVEL_CONFIRMED must be true or unset.')
+	if (env['DIDIT_AGE_18_WORKFLOW_CONFIRMED'] && env['DIDIT_AGE_18_WORKFLOW_CONFIRMED'] !== 'true') {
+		throw new Error('DIDIT_AGE_18_WORKFLOW_CONFIRMED must be true or unset.')
 	}
 	for (const name of ['SYNTHETIC_ACCOUNT_PROVISIONING_SECRET', 'SYNTHETIC_DEMO_SESSION_SECRET', 'SYNTHETIC_WEBHOOK_WORKSPACE_ID']) {
 		if (env[name]) throw new Error(`${name} must be absent from private staging.`)

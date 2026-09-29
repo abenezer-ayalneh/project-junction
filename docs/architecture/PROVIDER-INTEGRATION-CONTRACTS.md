@@ -7,11 +7,11 @@
 | Capability      | Target adapter                         | Local/demo substitute            | Required boundary                                          |
 | --------------- | -------------------------------------- | -------------------------------- | ---------------------------------------------------------- |
 | payments/ledger | Stripe sandbox; later Chapa adapter    | FakePayment                      | verified webhook/inbox/reconciliation; no commercial claim |
-| identity/KYB    | private sandbox candidate              | synthetic verification fixture   | never public-demo real documents                           |
+| identity/KYB    | Didit Sandbox                          | synthetic verification fixture   | signed session callback and reconciliation                 |
 | online meeting  | Google Meet REST in private staging    | DemoMeet                         | assigned Staff connection; no Calendar write/sync          |
 | email/SMS/push  | Resend/AfroMessage/Web Push candidates | captured outbox                  | delivery state/consent/minimal payload                     |
 | maps            | MapTiler candidate                     | deterministic manual/map fixture | PostGIS/address snapshot authority                         |
-| media           | R2 candidate                           | local quarantine fixture         | scoped signed intent/quarantine/processing                 |
+| media           | self-hosted MinIO                      | local quarantine fixture         | scoped signed intent/quarantine/processing                 |
 | backup          | B2 candidate                           | test backup fixture              | encrypted offsite restore drills                           |
 | telemetry       | Sentry/Better Stack candidates         | local sanitized sink             | scrubbed errors/metrics/status                             |
 

@@ -2,15 +2,15 @@
 # STAGING_HOSTNAME is the DNS name pointing at the VPS. Keep all upstreams
 # bound to loopback; do not publish the application ports directly.
 {$STAGING_HOSTNAME} {
-	@sumsub_webhook {
-		path /v1/identity/sumsub-webhook
+	@didit_webhook {
+		path /v1/identity/didit-webhook
 		method POST
 	}
 	@api path /v1/* /socket.io/*
 
-	# Sumsub cannot supply the operator's browser credentials. The API verifies
-	# the webhook digest and reconciles the applicant with Sumsub before changes.
-	handle @sumsub_webhook {
+	# Didit cannot supply the operator's browser credentials. The API verifies
+	# the signed callback and reconciles the session before changing access.
+	handle @didit_webhook {
 		reverse_proxy {$STAGING_API_UPSTREAM}
 	}
 
@@ -25,4 +25,10 @@
 			reverse_proxy {$STAGING_WEB_UPSTREAM}
 		}
 	}
+}
+
+# The S3 endpoint stays private by bucket policy and signed requests. It has
+# no Basic authentication because presigned PUT/GET calls need their exact URL.
+{$STAGING_MINIO_HOSTNAME} {
+	reverse_proxy {$STAGING_MINIO_UPSTREAM}
 }

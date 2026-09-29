@@ -52,14 +52,36 @@ services:
             - clamav_data:/var/lib/clamav
         networks: [backend, egress]
 
+    minio:
+        image: ${STAGING_MINIO_IMAGE:?}
+        restart: unless-stopped
+        cpus: ${STAGING_MINIO_CPUS:?}
+        mem_limit: ${STAGING_MINIO_MEMORY:?}
+        pids_limit: 256
+        command: ['server', '/data', '--console-address', ':9001']
+        environment:
+            MINIO_ROOT_USER_FILE: /run/secrets/MINIO_ROOT_USER
+            MINIO_ROOT_PASSWORD_FILE: /run/secrets/MINIO_ROOT_PASSWORD
+        secrets:
+            - { source: minio_root_user, target: MINIO_ROOT_USER }
+            - { source: minio_root_password, target: MINIO_ROOT_PASSWORD }
+        volumes:
+            - minio_data:/data
+        ports:
+            - 127.0.0.1:${STAGING_MINIO_HOST_PORT:?}:9000
+        networks: [backend]
+
 secrets:
     postgres_password: { file: '${STAGING_POSTGRES_PASSWORD_FILE:?}' }
     redis_acl: { file: '${STAGING_REDIS_ACL_FILE:?}' }
+    minio_root_user: { file: '${STAGING_MINIO_ROOT_USER_FILE:?}' }
+    minio_root_password: { file: '${STAGING_MINIO_ROOT_PASSWORD_FILE:?}' }
 
 volumes:
     postgres18_data:
     redis_data:
     clamav_data:
+    minio_data:
 
 networks:
     backend:

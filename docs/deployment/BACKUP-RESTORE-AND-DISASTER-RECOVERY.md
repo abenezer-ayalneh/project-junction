@@ -7,9 +7,9 @@
 
 ## Targets and scope
 
-The PostgreSQL recovery-point objective is 15 minutes and the total-host recovery-time objective is four hours [DEC-111]. These are unverified targets until timed drills pass. pgBackRest sends encrypted full/incremental backups and continuous WAL to a separate Backblaze B2 account/bucket with Object Lock. Required R2 media versions are copied through an encrypted offsite copy path. Better Stack monitors backup/archival heartbeats.
+The PostgreSQL recovery-point objective is 15 minutes and the total-host recovery-time objective is four hours [DEC-111]. These are unverified targets until timed drills pass. pgBackRest sends encrypted full/incremental backups and continuous WAL to a separate Backblaze B2 account/bucket with Object Lock. Required MinIO media versions are copied through an encrypted offsite copy path. Better Stack monitors backup/archival heartbeats.
 
-Backups must cover PostgreSQL, required R2 media versions, deployment manifests/digests, migration history, Caddy/Compose configuration, encrypted secret sources, and enough infrastructure documentation to rebuild. Redis, BullMQ, and Meilisearch are rebuilt from PostgreSQL and do not require authoritative backup.
+Backups must cover PostgreSQL, required MinIO media versions, deployment manifests/digests, migration history, Caddy/Compose configuration, encrypted secret sources, and enough infrastructure documentation to rebuild. Redis, BullMQ, and Meilisearch are rebuilt from PostgreSQL and do not require authoritative backup.
 
 ## Target backup validation
 

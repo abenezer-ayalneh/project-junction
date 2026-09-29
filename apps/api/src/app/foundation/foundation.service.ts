@@ -38,6 +38,7 @@ import {
 	assertElevatedSession,
 	assertScope,
 	DemoWorkspaceService,
+	DiditSandboxAdapter,
 	IdempotencyStore,
 	InMemoryOutbox,
 	PostgresFoundation,
@@ -45,7 +46,6 @@ import {
 	ProviderInbox,
 	type ProviderWebhookAdapter,
 	SessionRegistry,
-	SumsubSandboxAdapter,
 } from 'platform-core'
 import { getAuth } from 'platform-core/auth'
 
@@ -90,8 +90,8 @@ export class FoundationService {
 
 	async health(requestId?: string) {
 		await this.durable?.health()
-		if (this.configService.get<string>('JUNCTION_RUNTIME_MODE') === 'staging' && process.env['SUMSUB_AGE_18_LEVEL_CONFIRMED'] !== 'true') {
-			throw new Error('The Sumsub age-18 sandbox level has not been confirmed.')
+		if (this.configService.get<string>('JUNCTION_RUNTIME_MODE') === 'staging' && process.env['DIDIT_AGE_18_WORKFLOW_CONFIRMED'] !== 'true') {
+			throw new Error('The Didit age-18 sandbox workflow has not been confirmed.')
 		}
 		return HealthResponseSchema.parse({
 			status: 'ok',
@@ -164,58 +164,48 @@ export class FoundationService {
 	async issueIdentityVerificationSession(sessionId: string | undefined) {
 		if (this.configService.get<string>('JUNCTION_RUNTIME_MODE') !== 'staging' || !this.durable) throw new AccessDeniedError()
 		const { userId } = await this.durable.authenticatedIdentity(sessionId)
-		const adapter = new SumsubSandboxAdapter(
-			this.configService.getOrThrow<string>('SUMSUB_APP_TOKEN'),
-			this.configService.getOrThrow<string>('SUMSUB_SECRET_KEY'),
-			this.configService.getOrThrow<string>('SUMSUB_WEBHOOK_SECRET'),
+		const adapter = new DiditSandboxAdapter(
+			this.configService.getOrThrow<string>('DIDIT_API_KEY'),
+			this.configService.getOrThrow<string>('DIDIT_WEBHOOK_SECRET'),
 		)
-		const token = await adapter.issueSdkToken(userId, this.configService.getOrThrow<string>('SUMSUB_AGE_LEVEL'))
-		return IdentityVerificationSessionSchema.parse({ token, expiresInSeconds: 600 })
+		const callbackUrl = new URL('/account', this.configService.getOrThrow<string>('BETTER_AUTH_URL')).toString()
+		return IdentityVerificationSessionSchema.parse(
+			await adapter.createSession(userId, this.configService.getOrThrow<string>('DIDIT_WORKFLOW_ID'), callbackUrl),
+		)
 	}
 
-	async receiveSumsubReview(rawBody: Buffer | undefined, digest: string | undefined, algorithm: string | undefined) {
+	async receiveDiditWebhook(rawBody: Buffer | undefined, signatureV2: string | undefined) {
 		if (this.configService.get<string>('JUNCTION_RUNTIME_MODE') !== 'staging' || !this.durable || !rawBody) throw new AccessDeniedError()
-		const adapter = new SumsubSandboxAdapter(
-			this.configService.getOrThrow<string>('SUMSUB_APP_TOKEN'),
-			this.configService.getOrThrow<string>('SUMSUB_SECRET_KEY'),
-			this.configService.getOrThrow<string>('SUMSUB_WEBHOOK_SECRET'),
+		const adapter = new DiditSandboxAdapter(
+			this.configService.getOrThrow<string>('DIDIT_API_KEY'),
+			this.configService.getOrThrow<string>('DIDIT_WEBHOOK_SECRET'),
 		)
-		const payload = adapter.verifyWebhook(rawBody, digest, algorithm)
+		const payload = adapter.verifyWebhook(rawBody, signatureV2)
 		if (!payload || typeof payload !== 'object') throw new AccessDeniedError()
 		const event = payload as Record<string, unknown>
-		const review = event['reviewResult']
-		const answer = review && typeof review === 'object' ? (review as Record<string, unknown>)['reviewAnswer'] : undefined
-		const supported = new Set([
-			'applicantReviewed',
-			'applicantReset',
-			'applicantOnHold',
-			'applicantLevelChanged',
-			'applicantDeactivated',
-			'applicantDeleted',
-			'applicantActivated',
-		])
+		const createdAt = typeof event['created_at'] === 'string' ? new Date(event['created_at']) : undefined
 		if (
-			typeof event['type'] !== 'string' ||
-			!supported.has(event['type']) ||
-			event['sandboxMode'] !== true ||
-			'testMode' in event ||
-			typeof event['reviewStatus'] !== 'string' ||
-			typeof event['externalUserId'] !== 'string' ||
-			typeof event['applicantId'] !== 'string' ||
-			typeof event['levelName'] !== 'string' ||
-			!/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}$/.test(String(event['createdAtMs'])) ||
-			(event['type'] === 'applicantReviewed' && (event['reviewStatus'] !== 'completed' || (answer !== 'GREEN' && answer !== 'RED')))
+			event['webhook_type'] !== 'status.updated' ||
+			event['environment'] !== 'sandbox' ||
+			typeof event['session_id'] !== 'string' ||
+			!event['session_id'] ||
+			event['session_id'].length > 200 ||
+			typeof event['vendor_data'] !== 'string' ||
+			!/^[0-9a-f-]{36}$/i.test(event['vendor_data']) ||
+			typeof event['status'] !== 'string' ||
+			!event['status'] ||
+			event['status'].length > 100 ||
+			!createdAt ||
+			Number.isNaN(createdAt.valueOf())
 		)
 			throw new AccessDeniedError()
-		return this.durable.recordSumsubReview({
+		return this.durable.recordDiditSessionUpdate({
 			eventId: createHash('sha256').update(rawBody).digest('hex'),
-			applicantId: event['applicantId'],
-			userId: event['externalUserId'],
-			levelName: event['levelName'],
-			eventType: event['type'],
-			answer: answer === 'GREEN' || answer === 'RED' ? answer : null,
-			status: event['reviewStatus'],
-			observedAt: event['createdAtMs'] as string,
+			sessionId: event['session_id'],
+			userId: event['vendor_data'],
+			eventType: event['webhook_type'],
+			status: event['status'],
+			observedAt: createdAt.toISOString(),
 			sandboxMode: true,
 		})
 	}

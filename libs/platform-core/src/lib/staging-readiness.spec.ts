@@ -10,10 +10,9 @@ const staging = (): NodeJS.ProcessEnv => ({
 	BETTER_AUTH_SECRET: 'a'.repeat(32),
 	RESEND_API_KEY: 'staging-key',
 	RESEND_FROM_EMAIL: 'verify@junction.test',
-	SUMSUB_APP_TOKEN: 'sandbox-token',
-	SUMSUB_SECRET_KEY: 'sandbox-api-secret',
-	SUMSUB_WEBHOOK_SECRET: 'sandbox-webhook-secret',
-	SUMSUB_AGE_LEVEL: 'sandbox-adult',
+	DIDIT_API_KEY: 'sandbox-key',
+	DIDIT_WEBHOOK_SECRET: 'sandbox-webhook-secret',
+	DIDIT_WORKFLOW_ID: 'sandbox-adult-workflow',
 	MEDIA_S3_ENDPOINT: 'https://objects.junction.test',
 	MEDIA_S3_REGION: 'auto',
 	MEDIA_S3_BUCKET: 'junction-staging',
@@ -30,7 +29,7 @@ describe('private staging provider readiness', () => {
 		expect(() => assertStagingProviderConfiguration({ NODE_ENV: 'production' })).toThrow()
 	})
 
-	it('allows the Sumsub rehearsal before adult grants are enabled', () => {
+	it('allows the Didit rehearsal before adult grants are enabled', () => {
 		expect(() => assertStagingProviderConfiguration(staging())).not.toThrow()
 	})
 
@@ -41,7 +40,7 @@ describe('private staging provider readiness', () => {
 
 	it('refuses staging without a real email or identity adapter configuration', () => {
 		expect(() => assertStagingProviderConfiguration({ ...staging(), RESEND_API_KEY: '' })).toThrow()
-		expect(() => assertStagingProviderConfiguration({ ...staging(), SUMSUB_WEBHOOK_SECRET: '' })).toThrow()
+		expect(() => assertStagingProviderConfiguration({ ...staging(), DIDIT_WEBHOOK_SECRET: '' })).toThrow()
 	})
 
 	it('refuses local object-store fixtures and missing malware scanning', () => {

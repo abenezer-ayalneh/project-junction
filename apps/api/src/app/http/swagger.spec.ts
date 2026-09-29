@@ -30,7 +30,7 @@ describe('OpenAPI v1 contract', () => {
 			expect(Object.keys(document.paths)).not.toEqual(
 				expect.arrayContaining(['/v1/synthetic/accounts', '/v1/demo/workspaces', '/v1/webhooks/{provider}']),
 			)
-			expect(document.paths['/v1/identity/sumsub-webhook']).toBeDefined()
+			expect(document.paths['/v1/identity/didit-webhook']).toBeDefined()
 			expect(document.components?.securitySchemes?.['junction-session']).toBeUndefined()
 			expect(document.paths['/v1/access-context']?.get?.security).toEqual([{ 'junction-auth-cookie': [] }])
 			expect(JSON.stringify(document)).not.toContain('x-junction-session')

@@ -18,7 +18,14 @@ function privateUpstream(name) {
 try {
 	if (process.env.NODE_ENV === 'test') throw new Error('Staging preflight cannot run with NODE_ENV=test.')
 	assertStagingProviderConfiguration(process.env)
-	for (const name of ['STAGING_APP_IMAGE', 'STAGING_POSTGRES_IMAGE', 'STAGING_REDIS_IMAGE', 'STAGING_CLAMAV_IMAGE']) {
+	for (const name of [
+		'STAGING_APP_IMAGE',
+		'STAGING_POSTGRES_IMAGE',
+		'STAGING_REDIS_IMAGE',
+		'STAGING_CLAMAV_IMAGE',
+		'STAGING_MINIO_IMAGE',
+		'STAGING_MINIO_MC_IMAGE',
+	]) {
 		if (!/^[^\s@]+@sha256:[a-f0-9]{64}$/.test(requireValue(name))) {
 			throw new Error(`${name} must be an immutable image digest.`)
 		}
@@ -38,6 +45,13 @@ try {
 	if (new URL(process.env.BETTER_AUTH_URL).hostname !== hostname) {
 		throw new Error('STAGING_HOSTNAME must match BETTER_AUTH_URL.')
 	}
+	const minioHostname = requireValue('STAGING_MINIO_HOSTNAME')
+	if (!/^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])$/.test(minioHostname) || !minioHostname.includes('.') || minioHostname === hostname) {
+		throw new Error('STAGING_MINIO_HOSTNAME must be a separate actual DNS hostname.')
+	}
+	if (new URL(process.env.MEDIA_S3_ENDPOINT).hostname !== minioHostname || new URL(process.env.MEDIA_S3_ENDPOINT).protocol !== 'https:') {
+		throw new Error('MEDIA_S3_ENDPOINT must use the configured HTTPS MinIO hostname.')
+	}
 	if (requireValue('NEXT_PUBLIC_JUNCTION_RUNTIME_MODE') !== 'staging') {
 		throw new Error('NEXT_PUBLIC_JUNCTION_RUNTIME_MODE must be staging.')
 	}
@@ -52,10 +66,13 @@ try {
 	}
 	const api = privateUpstream('STAGING_API_UPSTREAM')
 	const web = privateUpstream('STAGING_WEB_UPSTREAM')
-	if (api === web) throw new Error('Staging API and web upstreams must use distinct ports.')
+	const minio = privateUpstream('STAGING_MINIO_UPSTREAM')
+	if (new Set([api, web, minio]).size !== 3) throw new Error('Staging API, web, and MinIO upstreams must use distinct ports.')
 	if (api !== `127.0.0.1:${requireValue('STAGING_API_HOST_PORT')}` || web !== `127.0.0.1:${requireValue('STAGING_WEB_HOST_PORT')}`) {
 		throw new Error('Staging Caddy upstreams must match the loopback-published Compose ports.')
 	}
+	if (minio !== `127.0.0.1:${requireValue('STAGING_MINIO_HOST_PORT')}`)
+		throw new Error('Staging MinIO upstream must match its loopback-published Compose port.')
 	console.log('Staging configuration preflight passed. Live provider, isolation, and release acceptance remain pending.')
 } catch (error) {
 	console.error(`Staging configuration preflight failed: ${error.message}`)

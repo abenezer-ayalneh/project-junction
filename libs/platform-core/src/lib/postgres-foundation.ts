@@ -68,10 +68,10 @@ import {
 import { Prisma, PrismaClient } from '../../generated/prisma/index.js'
 import { AccessDeniedError, assertElevatedSession, assertRecentMfa, assertScope } from './access.js'
 import { CATALOG_CSV_HEADER, decodeCatalogCsvText, encodeCatalogCsvField, parseCatalogCsv } from './catalog-csv.js'
+import { DiditSandboxAdapter } from './didit.js'
 import { type ExternalEffectAdapter, FakeExternalEffectAdapter, UnconfiguredExternalEffectAdapter } from './external-effects.js'
 import { IdempotencyConflictError, stableHash } from './idempotency.js'
 import { type MediaStore, S3MediaStore } from './media-store.js'
-import { SumsubSandboxAdapter } from './sumsub.js'
 import { MediaRejectedError, VideoProcessor } from './video-processor.js'
 
 type Transaction = Prisma.TransactionClient
@@ -294,42 +294,35 @@ export class PostgresFoundation {
 		return { userId: session.user.id, email: session.user.email }
 	}
 
-	async recordSumsubReview(input: {
+	async recordDiditSessionUpdate(input: {
 		eventId: string
-		applicantId: string
+		sessionId: string
 		userId: string
-		levelName: string
 		eventType: string
-		answer: string | null
 		status: string
 		observedAt: string
 		sandboxMode: boolean
 	}) {
 		this.requireResourceId(input.userId)
 		return this.db.$transaction(async (tx) => {
-			await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'sumsub:' + input.eventId}, 0))`
+			await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'didit:' + input.eventId}, 0))`
 			const prior = await tx.providerInboxEvent.findUnique({
-				where: { provider_providerEventId: { provider: 'sumsub-sandbox', providerEventId: input.eventId } },
+				where: { provider_providerEventId: { provider: 'didit-sandbox', providerEventId: input.eventId } },
 			})
 			if (prior) return { accepted: true, duplicate: true }
 			const session = await tx.session.findFirst({ where: { userId: input.userId, workspace: { kind: 'real' } }, orderBy: { createdAt: 'asc' } })
 			if (!session) throw new AccessDeniedError()
-			const terminalRevocation = input.eventType === 'applicantDeactivated' || input.eventType === 'applicantDeleted'
-			const revocation =
-				['applicantDeactivated', 'applicantDeleted', 'applicantReset', 'applicantOnHold', 'applicantLevelChanged'].includes(input.eventType) ||
-				(input.eventType === 'applicantReviewed' && input.answer === 'RED')
-			if (revocation) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'sumsub-user:' + input.userId}, 0))`
-			const now = new Date()
+			const revocation = input.status !== 'Approved'
+			if (revocation) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'didit-user:' + input.userId}, 0))`
 			await tx.providerInboxEvent.create({
 				data: {
-					provider: 'sumsub-sandbox',
+					provider: 'didit-sandbox',
 					providerEventId: input.eventId,
-					providerReference: input.applicantId,
+					providerReference: input.sessionId,
 					workspaceId: session.workspaceId,
 					payloadHash: stableHash(input),
 					payload: json(input),
-					reconciliationState: terminalRevocation ? 'reconciled' : 'pending_review',
-					...(terminalRevocation ? { reconciledAt: now, processedAt: now } : {}),
+					reconciliationState: 'pending_review',
 				},
 			})
 			if (revocation) {
@@ -338,9 +331,9 @@ export class PostgresFoundation {
 					data: {
 						workspaceId: session.workspaceId,
 						actorId: null,
-						action: 'identity.sumsub-revoked',
+						action: 'identity.didit-revoked',
 						correlationId: randomUUID(),
-						metadata: json({ userId: input.userId, providerEventId: input.eventId, applicantId: input.applicantId, eventType: input.eventType }),
+						metadata: json({ userId: input.userId, providerEventId: input.eventId, sessionId: input.sessionId, eventType: input.eventType }),
 					},
 				})
 			}
@@ -348,42 +341,31 @@ export class PostgresFoundation {
 		})
 	}
 
-	async reconcileOneSumsubReview(adapter: SumsubSandboxAdapter, requiredLevel: string) {
+	async reconcileOneDiditSession(adapter: DiditSandboxAdapter) {
 		const event = await this.db.providerInboxEvent.findFirst({
-			where: { provider: 'sumsub-sandbox', reconciliationState: 'pending_review' },
+			where: { provider: 'didit-sandbox', reconciliationState: 'pending_review' },
 			orderBy: [{ receivedAt: 'asc' }, { id: 'asc' }],
 		})
 		if (!event) return { processed: false }
 		const payload = event.payload as Record<string, unknown>
-		if (typeof payload['userId'] !== 'string' || typeof payload['applicantId'] !== 'string') throw new Error('Invalid stored Sumsub review.')
+		if (typeof payload['userId'] !== 'string' || typeof payload['sessionId'] !== 'string' || typeof payload['status'] !== 'string') {
+			throw new Error('Invalid stored Didit session update.')
+		}
 		const userId = payload['userId']
-		const applicantId = payload['applicantId']
-		const current = await adapter.currentReview(userId)
-		const approved =
-			['applicantReviewed', 'applicantActivated'].includes(String(payload['eventType'])) &&
-			current.applicantId === applicantId &&
-			current.levelName === requiredLevel &&
-			current.reviewStatus === 'completed' &&
-			current.reviewAnswer === 'GREEN'
-		const rejected =
-			payload['eventType'] === 'applicantReviewed' &&
-			current.applicantId === applicantId &&
-			current.levelName === requiredLevel &&
-			current.reviewStatus === 'completed' &&
-			current.reviewAnswer === 'RED'
+		const sessionId = payload['sessionId']
+		const current = await adapter.currentDecision(sessionId)
+		const approved = payload['status'] === 'Approved' && current.status === 'Approved'
+		const rejected = payload['status'] === 'Declined' && current.status === 'Declined'
 		const state = approved ? 'verified' : rejected ? 'rejected' : 'unverified'
 		const outcome = await this.db.$transaction(async (tx) => {
-			await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'sumsub-user:' + userId}, 0))`
+			await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'didit-user:' + userId}, 0))`
 			const pending = await tx.providerInboxEvent.findUniqueOrThrow({ where: { id: event.id } })
 			if (pending.reconciliationState !== 'pending_review') return null
 			const laterRevocations = await tx.$queryRaw<Array<{ id: string }>>`
 				SELECT id FROM provider_inbox_events
-				WHERE provider = 'sumsub-sandbox'
+				WHERE provider = 'didit-sandbox'
 					AND payload->>'userId' = ${userId}
-					AND (
-						payload->>'eventType' IN ('applicantDeactivated', 'applicantDeleted', 'applicantReset', 'applicantOnHold', 'applicantLevelChanged')
-						OR (payload->>'eventType' = 'applicantReviewed' AND payload->>'answer' = 'RED')
-					)
+					AND payload->>'status' <> 'Approved'
 					AND payload->>'observedAt' >= ${String(payload['observedAt'])}
 				LIMIT 1`
 			const realSession = await tx.session.findFirst({ where: { userId, workspaceId: event.workspaceId ?? undefined, workspace: { kind: 'real' } } })
@@ -399,12 +381,12 @@ export class PostgresFoundation {
 				data: {
 					workspaceId: event.workspaceId,
 					actorId: userId,
-					action: 'identity.sumsub-reviewed',
+					action: 'identity.didit-reviewed',
 					correlationId: randomUUID(),
 					metadata: json({
 						providerEventId: event.providerEventId,
-						applicantId: current.applicantId,
-						levelName: current.levelName,
+						sessionId,
+						providerStatus: current.status,
 						state: reconciledState,
 					}),
 				},

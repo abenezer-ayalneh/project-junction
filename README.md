@@ -4,7 +4,7 @@ Project Junction is a marketplace project for physical goods and fixed-duration 
 
 ## Current status
 
-**Phase 00 real-service transition is in progress.** The staging code uses Better Auth, Resend, Sumsub sandbox, PostgreSQL, Redis fanout, and private object storage configuration. It has not been deployed to the VPS or accepted through live provider flows. The earlier synthetic Phase 00 and Phase 01 evidence remains local regression evidence only; see the [real transition tracker](./docs/quality/PHASE-00-REAL-TRANSITION.md) and [Phase 01 evidence](./docs/quality/PHASE-01-ACCEPTANCE-EVIDENCE.md). No public deployment, live money movement, or verified real identity flow is claimed.
+**Phase 00 real-service transition is in progress.** The staging code uses Better Auth, Resend, Didit Sandbox, PostgreSQL, Redis fanout, and self-hosted MinIO. It has not been deployed to the VPS or accepted through live provider flows. The earlier synthetic Phase 00 and Phase 01 evidence remains local regression evidence only; see the [real transition tracker](./docs/quality/PHASE-00-REAL-TRANSITION.md) and [Phase 01 evidence](./docs/quality/PHASE-01-ACCEPTANCE-EVIDENCE.md). No public deployment, live money movement, or verified real identity flow is claimed.
 
 The intended system is Ethiopia-first and globally adaptable: it uses synthetic Dire Dawa context, ETB, Ethiopian address/phone conventions, and `Africa/Addis_Ababa` as its initial configuration. It makes no claim of cross-border support, lawful Ethiopian payment operations, tax compliance, or commercial readiness.
 

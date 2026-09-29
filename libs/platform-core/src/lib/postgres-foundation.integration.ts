@@ -5,11 +5,11 @@ import { DomainEventSchema } from 'contracts'
 
 import { Prisma } from '../../generated/prisma/index.js'
 import { AccessDeniedError } from './access.js'
+import { DiditSandboxAdapter } from './didit.js'
 import { FakeExternalEffectAdapter } from './external-effects.js'
 import { IdempotencyConflictError } from './idempotency.js'
 import type { MediaStore } from './media-store.js'
 import { PostgresFoundation } from './postgres-foundation.js'
-import { SumsubSandboxAdapter } from './sumsub.js'
 
 async function* noMediaObjects(): AsyncGenerator<{ key: string; lastModified: Date }> {
 	await Promise.resolve()
@@ -222,111 +222,42 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		expect(await repository.db.outboxEvent.count({ where: { workspaceId: applicantSession.workspaceId } })).toBe(after.outbox)
 	})
 
-	it('records a Sumsub review once without granting adult access', async () => {
+	it('records a Didit status update once and grants adult access only after reconciliation', async () => {
 		const authSession = { sessionId: randomUUID(), userId: randomUUID(), email: `${randomUUID()}@example.com`, expiresAt: new Date(Date.now() + 3600000) }
 		await repository.ensureAuthenticatedSession(authSession)
-		const applicantId = randomUUID().replaceAll('-', '').slice(0, 24)
-		const review = {
+		const update = {
 			eventId: randomUUID(),
-			applicantId,
+			sessionId: `session-${randomUUID()}`,
 			userId: authSession.userId,
-			levelName: 'age-18',
-			eventType: 'applicantReviewed',
-			answer: 'GREEN',
-			status: 'completed',
-			observedAt: '2026-09-25 06:00:00.000',
+			eventType: 'status.updated',
+			status: 'Approved',
+			observedAt: '2026-09-25T06:00:00.000Z',
 			sandboxMode: true,
 		}
-		const results = await Promise.all([repository.recordSumsubReview(review), other.recordSumsubReview(review)])
+		const results = await Promise.all([repository.recordDiditSessionUpdate(update), other.recordDiditSessionUpdate(update)])
 		expect(results.filter((result) => !result.duplicate)).toHaveLength(1)
-		expect(await repository.db.providerInboxEvent.count({ where: { provider: 'sumsub-sandbox', providerEventId: review.eventId } })).toBe(1)
+		expect(await repository.db.providerInboxEvent.count({ where: { provider: 'didit-sandbox', providerEventId: update.eventId } })).toBe(1)
 		await expect(repository.accessContext(authSession.sessionId)).rejects.toThrow(AccessDeniedError)
-		await expect(repository.recordSumsubReview({ ...review, eventId: randomUUID(), userId: randomUUID() })).rejects.toThrow(AccessDeniedError)
-		let currentStatus = 'completed'
-		let currentAnswer: 'GREEN' | 'RED' | null = 'GREEN'
-		let currentLevel = 'age-18'
-		const request = jest.fn((url: string) =>
-			Promise.resolve(
-				new Response(
-					JSON.stringify(
-						url.endsWith('/status')
-							? {
-									levelName: currentLevel,
-									reviewStatus: currentStatus,
-									reviewResult: currentAnswer ? { reviewAnswer: currentAnswer } : undefined,
-								}
-							: { id: applicantId, externalUserId: authSession.userId },
-					),
-					{ status: 200 },
-				),
-			),
-		)
-		const adapter = new SumsubSandboxAdapter('app-token', 'app-secret', 'webhook-secret', request as typeof fetch)
-		await expect(repository.reconcileOneSumsubReview(adapter, 'age-18')).resolves.toEqual({ processed: true, state: 'verified' })
+		await expect(repository.recordDiditSessionUpdate({ ...update, eventId: randomUUID(), userId: randomUUID() })).rejects.toThrow(AccessDeniedError)
+		let currentStatus = 'Approved'
+		const request = jest.fn(() => Promise.resolve(new Response(JSON.stringify({ status: currentStatus }), { status: 200 })))
+		const adapter = new DiditSandboxAdapter('didit-api-key', 'webhook-secret', request as typeof fetch)
+		await expect(repository.reconcileOneDiditSession(adapter)).resolves.toEqual({ processed: true, state: 'verified' })
 		let user = await repository.db.user.findUniqueOrThrow({ where: { id: authSession.userId } })
 		expect(user.adultVerificationState).toBe('verified')
 		expect(user.verifiedAt).not.toBeNull()
 		await expect(repository.accessContext(authSession.sessionId)).resolves.toMatchObject({ actor: { kind: 'user', userId: authSession.userId } })
-		const deactivatedEventId = randomUUID()
-		await repository.recordSumsubReview({
-			...review,
-			eventId: deactivatedEventId,
-			eventType: 'applicantDeactivated',
-			observedAt: '2026-09-25 06:01:00.000',
-		})
-		expect(
-			(
-				await repository.db.providerInboxEvent.findUniqueOrThrow({
-					where: { provider_providerEventId: { provider: 'sumsub-sandbox', providerEventId: deactivatedEventId } },
-				})
-			).reconciliationState,
-		).toBe('reconciled')
+		await repository.recordDiditSessionUpdate({ ...update, eventId: randomUUID(), status: 'In Review', observedAt: '2026-09-25T06:01:00.000Z' })
 		user = await repository.db.user.findUniqueOrThrow({ where: { id: authSession.userId } })
 		expect(user.adultVerificationState).toBe('unverified')
 		expect(user.verifiedAt).toBeNull()
 		await expect(repository.accessContext(authSession.sessionId)).rejects.toThrow(AccessDeniedError)
-		await repository.recordSumsubReview({ ...review, eventId: randomUUID() })
-		await expect(repository.reconcileOneSumsubReview(adapter, 'age-18')).resolves.toEqual({ processed: true, state: 'unverified' })
-		await expect(repository.accessContext(authSession.sessionId)).rejects.toThrow(AccessDeniedError)
-		await repository.recordSumsubReview({
-			...review,
-			eventId: randomUUID(),
-			eventType: 'applicantActivated',
-			observedAt: '2026-09-25 06:02:00.000',
-		})
-		await expect(repository.reconcileOneSumsubReview(adapter, 'age-18')).resolves.toEqual({ processed: true, state: 'verified' })
-		await expect(repository.accessContext(authSession.sessionId)).resolves.toMatchObject({ actor: { kind: 'user', userId: authSession.userId } })
-		await repository.recordSumsubReview({
-			...review,
-			eventId: randomUUID(),
-			eventType: 'applicantReset',
-			answer: null,
-			status: 'init',
-			observedAt: '2026-09-25 06:03:00.000',
-		})
-		user = await repository.db.user.findUniqueOrThrow({ where: { id: authSession.userId } })
-		expect(user.adultVerificationState).toBe('unverified')
-		await expect(repository.accessContext(authSession.sessionId)).rejects.toThrow(AccessDeniedError)
-		// A delayed provider read must not turn a reset event into a new approval.
-		await expect(repository.reconcileOneSumsubReview(adapter, 'age-18')).resolves.toEqual({ processed: true, state: 'unverified' })
-		user = await repository.db.user.findUniqueOrThrow({ where: { id: authSession.userId } })
-		expect(user.adultVerificationState).toBe('unverified')
-		expect(user.verifiedAt).toBeNull()
-		await expect(repository.accessContext(authSession.sessionId)).rejects.toThrow(AccessDeniedError)
-		await repository.recordSumsubReview({ ...review, eventId: randomUUID() })
-		await expect(repository.reconcileOneSumsubReview(adapter, 'age-18')).resolves.toEqual({ processed: true, state: 'unverified' })
-		await repository.recordSumsubReview({ ...review, eventId: randomUUID(), answer: 'RED', observedAt: '2026-09-25 06:04:00.000' })
-		currentStatus = 'completed'
-		currentAnswer = 'RED'
-		await expect(repository.reconcileOneSumsubReview(adapter, 'age-18')).resolves.toEqual({ processed: true, state: 'rejected' })
+		await expect(repository.reconcileOneDiditSession(adapter)).resolves.toEqual({ processed: true, state: 'unverified' })
+		await repository.recordDiditSessionUpdate({ ...update, eventId: randomUUID(), status: 'Declined', observedAt: '2026-09-25T06:02:00.000Z' })
+		currentStatus = 'Declined'
+		await expect(repository.reconcileOneDiditSession(adapter)).resolves.toEqual({ processed: true, state: 'rejected' })
 		user = await repository.db.user.findUniqueOrThrow({ where: { id: authSession.userId } })
 		expect(user.adultVerificationState).toBe('rejected')
-		expect(user.verifiedAt).toBeNull()
-		await repository.recordSumsubReview({ ...review, eventId: randomUUID() })
-		currentAnswer = 'GREEN'
-		currentLevel = 'different-level'
-		await expect(repository.reconcileOneSumsubReview(adapter, 'age-18')).resolves.toEqual({ processed: true, state: 'unverified' })
-		user = await repository.db.user.findUniqueOrThrow({ where: { id: authSession.userId } })
 		expect(user.verifiedAt).toBeNull()
 	})
 

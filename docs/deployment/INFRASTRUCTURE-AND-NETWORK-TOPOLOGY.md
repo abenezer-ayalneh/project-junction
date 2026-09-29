@@ -27,7 +27,7 @@ flowchart TB
   SSH --> HOST[Host management plane]
   HOST --> PC[Portfolio Compose project]
   HOST --> SC[Staging Compose project]
-  PC --> OFF[External providers / R2 / B2 / telemetry]
+  PC --> OFF[External providers / MinIO / B2 / telemetry]
   SC --> OFF
 ```
 
@@ -48,7 +48,7 @@ Portfolio production and staging have separate project names, networks, volumes,
 - pgBackRest/WAL archiving and encrypted media-copy jobs.
 - Host metrics/log shipping and heartbeat checks, with sensitive-data scrubbing.
 
-R2 is outside the host for app media. A separate B2 account/bucket with encryption and Object Lock receives backups [DEC-094].
+MinIO runs in the isolated Compose project for app media and exposes only an HTTPS S3 endpoint through Caddy. A separate B2 account/bucket with encryption and Object Lock receives backups [DEC-094].
 
 ## Management and recovery
 

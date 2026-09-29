@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 
-import { assertStagingProviderConfiguration, PostgresFoundation, SumsubSandboxAdapter } from 'platform-core'
+import { assertStagingProviderConfiguration, DiditSandboxAdapter, PostgresFoundation } from 'platform-core'
 import { createClient } from 'redis'
 
 import { RedisEventStreamAdapter } from './redis-event-stream'
@@ -19,18 +19,14 @@ const redis = staging
 	: undefined
 redis?.on('error', () => process.stderr.write(`${JSON.stringify({ type: 'worker.redis-error' })}\n`))
 const repository = new PostgresFoundation(databaseUrl, redis ? new RedisEventStreamAdapter(redis) : undefined)
-const sumsubReady = process.env['JUNCTION_RUNTIME_MODE'] === 'staging' && process.env['SUMSUB_AGE_18_LEVEL_CONFIRMED'] === 'true'
-const sumsub = sumsubReady
-	? new SumsubSandboxAdapter(process.env['SUMSUB_APP_TOKEN'] ?? '', process.env['SUMSUB_SECRET_KEY'] ?? '', process.env['SUMSUB_WEBHOOK_SECRET'] ?? '')
-	: undefined
-const sumsubLevel = sumsubReady ? process.env['SUMSUB_AGE_LEVEL'] : undefined
-if (sumsubReady && !sumsubLevel) throw new Error('SUMSUB_AGE_LEVEL is required after the age-18 level is confirmed.')
+const diditReady = process.env['JUNCTION_RUNTIME_MODE'] === 'staging' && process.env['DIDIT_AGE_18_WORKFLOW_CONFIRMED'] === 'true'
+const didit = diditReady ? new DiditSandboxAdapter(process.env['DIDIT_API_KEY'] ?? '', process.env['DIDIT_WEBHOOK_SECRET'] ?? '') : undefined
 let stopping = false
 let timer: ReturnType<typeof setTimeout>
 let tickRunning = false
 let shutdownPromise: Promise<void> | undefined
 let lastMediaSweep = 0
-let lastSumsubReconcile = 0
+let lastDiditReconcile = 0
 function shutdown(): Promise<void> {
 	shutdownPromise ??= Promise.all([repository.close(), redis?.isOpen ? redis.quit() : Promise.resolve()]).then(() => undefined)
 	return shutdownPromise
@@ -45,9 +41,9 @@ async function tick() {
 			lastMediaSweep = Date.now()
 		}
 		const result = await repository.processOne(workerId)
-		if (sumsub && sumsubLevel && Date.now() - lastSumsubReconcile >= 30_000) {
-			lastSumsubReconcile = Date.now()
-			await repository.reconcileOneSumsubReview(sumsub, sumsubLevel)
+		if (didit && Date.now() - lastDiditReconcile >= 30_000) {
+			lastDiditReconcile = Date.now()
+			await repository.reconcileOneDiditSession(didit)
 		}
 		process.stdout.write(`${JSON.stringify({ type: 'worker.heartbeat', ...result })}\n`)
 	} catch {

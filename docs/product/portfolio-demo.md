@@ -23,7 +23,7 @@ The exact expiry duration and quota numbers were not confirmed in the grilling s
 
 Demo content will use fictional Vendors, Staff, Customers, Locations, Products, Services, Orders, Bookings, returns, disputes, reviews, messages, ledger entries, and analytics. Dire Dawa-oriented examples are contextual seed data, not market validation or representations of real businesses. `[DEC-011, DEC-109]`
 
-No real identity document or registry query is allowed in the public demo. Sumsub KYB is restricted to a separately controlled private sandbox demonstration. `[DEC-066]`
+No real identity document or registry query is allowed in the public demo. Didit identity verification is restricted to a separately controlled private sandbox demonstration. `[DEC-066]`
 
 ## Provider behavior
 
