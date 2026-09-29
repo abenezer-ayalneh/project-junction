@@ -278,7 +278,7 @@ _Normative owners: architecture, security, environments, deployment, and demo._
 
 <a id="dec-066"></a>
 
-- `DEC-066` — Sumsub KYB is gated to private sandbox; public demo is synthetic; Smile ID is not Ethiopian KYB. [Provider contracts](../architecture/PROVIDER-INTEGRATION-CONTRACTS.md)
+- `DEC-066` — Didit age verification is gated to private sandbox; public demo identity fixtures stay non-authoritative; no provider result establishes commercial KYB. [Provider contracts](../architecture/PROVIDER-INTEGRATION-CONTRACTS.md)
   <a id="dec-067"></a>
 - `DEC-067` — Vendor roles are Owner, Manager, Catalog, Fulfillment, Scheduler, Service Staff, Finance, with optional Location scope. [Roles](../product/ROLES-PERMISSIONS-AND-RESPONSIBILITIES.md)
   <a id="dec-068"></a>
@@ -334,7 +334,7 @@ _Normative owners: architecture, security, environments, deployment, and demo._
   <a id="dec-093"></a>
 - `DEC-093` — Staging is isolated resource-limited Compose on the same VPS with separate services/secrets/networks. [Staging](../deployment/STAGING-DEPLOYMENT.md)
   <a id="dec-094"></a>
-- `DEC-094` — R2 stores app media; a separate B2 account/bucket holds encrypted Object-Locked backups. [Backup](../deployment/BACKUP-RESTORE-AND-DISASTER-RECOVERY.md)
+- `DEC-094` — A self-hosted MinIO staging bucket stores app media; a separate B2 account/bucket holds encrypted Object-Locked backups. [Backup](../deployment/BACKUP-RESTORE-AND-DISASTER-RECOVERY.md)
   <a id="dec-095"></a>
 - `DEC-095` — MapLibre/MapTiler provide presentation; domain owns normalized pins/polygons and manual pin fallback; public OSM endpoints are excluded. [Maps](../architecture/MAPS-ADDRESSES-AND-POSTGIS.md)
   <a id="dec-096"></a>

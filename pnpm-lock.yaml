@@ -3308,12 +3308,6 @@ packages:
     '@standard-schema/spec@1.1.0':
         resolution: { integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w== }
 
-    '@sumsub/websdk-react@2.9.0':
-        resolution: { integrity: sha512-oLuEjDBYv+lk4hLe0NlPBrTrqwBMn+Rl4s0fHZ2zIihPTxyzHzN2lv8xwXAidG/a59MJ0Q0BrChKfgyp9tAD/A== }
-        peerDependencies:
-            react: '>=16.8.0'
-            react-dom: '>=16.8.0'
-
     '@swc-node/core@1.15.0':
         resolution: { integrity: sha512-WAerrrl087WgenB92XG4Th2t0NQFfMNLYSe0sW2cEMMqM/LQmP4rozsDJl0vuzTrbewjpKQryxFXI+aYig/dBg== }
         engines: { node: '>= 10' }
@@ -13417,11 +13411,6 @@ snapshots:
     '@stablelib/base64@1.0.1': {}
 
     '@standard-schema/spec@1.1.0': {}
-
-    '@sumsub/websdk-react@2.9.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
-        dependencies:
-            react: 19.2.8
-            react-dom: 19.2.8(react@19.2.8)
 
     '@swc-node/core@1.15.0(@swc/core@1.15.47(@swc/helpers@0.5.23))(@swc/types@0.1.28)':
         dependencies:

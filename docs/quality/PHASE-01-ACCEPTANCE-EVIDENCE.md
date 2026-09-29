@@ -39,6 +39,6 @@ A short-lived demo Vendor fixture entered an unsent Product draft in the served 
 
 ## Open target phase-exit evidence
 
-1. A private target environment still needs real Cloudflare R2 credentials, bucket policy, and end-to-end acceptance. Local MinIO proves the S3-compatible boundary only.
+1. The private target environment needs its self-hosted MinIO bucket, scoped policy, HTTPS origin, and end-to-end acceptance. The historical local MinIO run proves only the S3-compatible boundary.
 2. Independent accessibility review on the target browser/device matrix remains outstanding. The local served browser showed keyboard playback, visible captions, and a narrow viewport, but that is not an independent audit.
 3. Exact non-demo rejected-media retention periods remain `REQUIRES-FUTURE-VALIDATION` in the target registry. The local cleanup policy retains referenced evidence until that registry exists; no age-based deletion is implemented for non-demo rejected media.
