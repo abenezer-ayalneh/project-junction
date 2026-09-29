@@ -1,10 +1,14 @@
 name: Publish staging image
 
 on:
+    push:
+        branches:
+            - codex/phase-00-real-staging
     workflow_dispatch:
 
 permissions:
     contents: read
+    checks: read
     packages: write
     id-token: write
     attestations: write
@@ -15,7 +19,7 @@ concurrency:
 
 jobs:
     publish:
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/codex/phase-00-real-staging'
         runs-on: ubuntu-24.04
         timeout-minutes: 60
         env:
@@ -25,6 +29,27 @@ jobs:
               uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
               with:
                   persist-credentials: false
+
+            - name: Require GitGuardian approval for this commit
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  set -eu
+                  for attempt in $(seq 1 40); do
+                    result=$(curl --fail --silent --show-error \
+                      -H "Accept: application/vnd.github+json" \
+                      -H "Authorization: Bearer $GH_TOKEN" \
+                      "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs?per_page=100" \
+                      | python3 -c 'import json,sys; runs=[r for r in json.load(sys.stdin)["check_runs"] if r["name"] == "GitGuardian Security Checks"]; print(runs[0]["conclusion"] or runs[0]["status"] if runs else "missing")')
+                    if [ "$result" = success ]; then exit 0; fi
+                    if [ "$result" != missing ] && [ "$result" != queued ] && [ "$result" != in_progress ]; then
+                      echo "GitGuardian check did not pass: $result" >&2
+                      exit 1
+                    fi
+                    sleep 15
+                  done
+                  echo "GitGuardian check did not complete in time" >&2
+                  exit 1
 
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
@@ -66,6 +91,6 @@ jobs:
                   set -eu
                   cosign sign --yes "$IMAGE@$DIGEST"
                   cosign verify "$IMAGE@$DIGEST" \
-                    --certificate-identity="https://github.com/$GITHUB_REPOSITORY/.github/workflows/publish-staging-image.yml@refs/heads/main" \
+                    --certificate-identity="https://github.com/$GITHUB_REPOSITORY/.github/workflows/publish-staging-image.yml@$GITHUB_REF" \
                     --certificate-oidc-issuer=https://token.actions.githubusercontent.com
                   printf 'Staging application image: `%s@%s`\n' "$IMAGE" "$DIGEST" >> "$GITHUB_STEP_SUMMARY"

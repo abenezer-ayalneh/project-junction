@@ -55,7 +55,7 @@ Once the host release manifest, backups, and image digests have been reviewed, t
 
 ```sh
 cosign verify "$STAGING_APP_IMAGE" \
-  --certificate-identity=https://github.com/abenezer-ayalneh/project-junction/.github/workflows/publish-staging-image.yml@refs/heads/main \
+  --certificate-identity=https://github.com/abenezer-ayalneh/project-junction/.github/workflows/publish-staging-image.yml@refs/heads/codex/phase-00-real-staging \
   --certificate-oidc-issuer=https://token.actions.githubusercontent.com
 docker compose -f ops/staging/compose.yaml config --quiet
 docker compose -f ops/staging/compose.yaml run --rm preflight
@@ -66,7 +66,7 @@ docker compose -f ops/staging/compose.yaml up -d api worker web
 
 These commands are not a deployment approval or evidence of a VPS run. The image build is a local artifact check until the release pipeline publishes and signs a digest. The host procedure must still verify Caddy/TLS, provider delivery, migrations, backup freshness, resource headroom, and the real Phase 00 journeys before accepting staging.
 
-The manual [staging image workflow](../../.github/workflows/publish-staging-image.yml) is restricted to `main`. It builds the Linux AMD64 application image, publishes a commit-tagged image to GHCR, adds BuildKit provenance and an SBOM, attests its digest, then signs and verifies that digest with GitHub OIDC. The job summary prints the immutable `ghcr.io/...@sha256:...` reference to put in `STAGING_APP_IMAGE`. It does not deploy to the VPS or read staging provider secrets. No published workflow run has been accepted as staging evidence yet; the host must verify the digest and signing identity before pulling it.
+The [staging image workflow](../../.github/workflows/publish-staging-image.yml) publishes on pushes to the exact `codex/phase-00-real-staging` branch and also supports manual runs from `main` after the workflow is merged. GitHub requires a manually dispatched workflow file to exist on the default branch, so branch pushes provide the pre-merge image path. The workflow waits for a passing GitGuardian check on its exact commit and fails closed if that check fails or never arrives. It then builds the Linux AMD64 application image, publishes a commit-tagged image to GHCR, adds BuildKit provenance and an SBOM, attests its digest, then signs and verifies that digest with GitHub OIDC. The job summary prints the immutable `ghcr.io/...@sha256:...` reference to put in `STAGING_APP_IMAGE`. It does not deploy to the VPS or read staging provider secrets. The host must verify the digest against the exact workflow branch identity that produced it before pulling; use the branch identity above for the draft staging image and `refs/heads/main` only for a later main image. No published workflow run has been accepted as staging evidence yet.
 
 If GHCR keeps the package private, give the VPS a read-only package credential through its protected secret store and log in before verification and Compose pull. The workflow's write-capable `GITHUB_TOKEN` is only for publishing from GitHub Actions and must not be copied to the VPS.
 
