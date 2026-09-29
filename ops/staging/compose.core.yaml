@@ -71,7 +71,7 @@ services:
             - minio_data:/data
         ports:
             - 127.0.0.1:${STAGING_MINIO_HOST_PORT:?}:9000
-        networks: [backend]
+        networks: [backend, proxy]
 
     minio-init:
         image: ${STAGING_MINIO_IMAGE:?}
@@ -124,3 +124,4 @@ networks:
     backend:
         internal: true
     egress:
+    proxy:
