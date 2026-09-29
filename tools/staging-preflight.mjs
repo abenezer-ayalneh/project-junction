@@ -18,14 +18,7 @@ function privateUpstream(name) {
 try {
 	if (process.env.NODE_ENV === 'test') throw new Error('Staging preflight cannot run with NODE_ENV=test.')
 	assertStagingProviderConfiguration(process.env)
-	for (const name of [
-		'STAGING_APP_IMAGE',
-		'STAGING_POSTGRES_IMAGE',
-		'STAGING_REDIS_IMAGE',
-		'STAGING_CLAMAV_IMAGE',
-		'STAGING_MINIO_IMAGE',
-		'STAGING_MINIO_MC_IMAGE',
-	]) {
+	for (const name of ['STAGING_APP_IMAGE', 'STAGING_POSTGRES_IMAGE', 'STAGING_REDIS_IMAGE', 'STAGING_CLAMAV_IMAGE', 'STAGING_MINIO_IMAGE']) {
 		if (!/^[^\s@]+@sha256:[a-f0-9]{64}$/.test(requireValue(name))) {
 			throw new Error(`${name} must be an immutable image digest.`)
 		}

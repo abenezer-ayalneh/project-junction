@@ -94,7 +94,7 @@ services:
         networks: [backend]
 
     minio-init:
-        image: ${STAGING_MINIO_MC_IMAGE:?}
+        image: ${STAGING_MINIO_IMAGE:?}
         restart: 'no'
         cpus: ${STAGING_TOOLS_CPUS:?}
         mem_limit: ${STAGING_TOOLS_MEMORY:?}
@@ -169,7 +169,6 @@ services:
             STAGING_REDIS_IMAGE: ${STAGING_REDIS_IMAGE:?}
             STAGING_CLAMAV_IMAGE: ${STAGING_CLAMAV_IMAGE:?}
             STAGING_MINIO_IMAGE: ${STAGING_MINIO_IMAGE:?}
-            STAGING_MINIO_MC_IMAGE: ${STAGING_MINIO_MC_IMAGE:?}
             STAGING_MINIO_HOSTNAME: ${STAGING_MINIO_HOSTNAME:?}
             STAGING_MINIO_HOST_PORT: ${STAGING_MINIO_HOST_PORT:?}
             STAGING_MINIO_UPSTREAM: 127.0.0.1:${STAGING_MINIO_HOST_PORT:?}
