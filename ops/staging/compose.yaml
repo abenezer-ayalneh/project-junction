@@ -135,7 +135,9 @@ services:
         mem_limit: ${STAGING_TOOLS_MEMORY:?}
         pids_limit: 256
         entrypoint: /app/ops/staging/load-secrets.sh
-        command: ['sh', '-c', 'pnpm exec prisma migrate deploy && pnpm db:auth:migrate']
+        # The release image contains its production dependencies. Do not invoke
+        # Corepack here: it attempts a registry download when its cache is empty.
+        command: ['sh', '-c', './node_modules/.bin/prisma migrate deploy && node tools/apply-auth-migrations.mjs']
         environment:
             NODE_ENV: production
         secrets:
@@ -226,7 +228,7 @@ services:
         cpus: ${STAGING_WEB_CPUS:?}
         mem_limit: ${STAGING_WEB_MEMORY:?}
         pids_limit: 256
-        command: ['sh', '-c', 'node tools/staging-web-preflight.mjs && exec pnpm exec next start apps/web -H 0.0.0.0 -p 3000']
+        command: ['sh', '-c', 'node tools/staging-web-preflight.mjs && exec ./node_modules/.bin/next start apps/web -H 0.0.0.0 -p 3000']
         environment:
             NODE_ENV: production
             JUNCTION_RUNTIME_MODE: staging
