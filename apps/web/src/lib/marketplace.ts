@@ -1,12 +1,12 @@
 import { type PublicListingPage, PublicListingPageSchema, PublicStorefrontSchema, type PublicVendorPage, PublicVendorPageSchema } from 'contracts'
 
 function apiBaseUrl(): string {
-	const configured = process.env.JUNCTION_API_URL
-	if (configured) return configured
-	if (process.env.NEXT_PUBLIC_JUNCTION_RUNTIME_MODE === 'staging') {
-		throw new Error('JUNCTION_API_URL is required for the private staging catalog.')
-	}
-	return 'http://127.0.0.1:3001/v1'
+	return (
+		process.env.JUNCTION_API_URL ??
+		(() => {
+			throw new Error('JUNCTION_API_URL is required for the private staging catalog.')
+		})()
+	)
 }
 
 async function readApi<T>(path: string, parse: (input: unknown) => T, missingIsExpected = false): Promise<T | null> {
@@ -16,8 +16,7 @@ async function readApi<T>(path: string, parse: (input: unknown) => T, missingIsE
 		if (response.status === 404 && missingIsExpected) return null
 		if (!response.ok) throw new Error(`Marketplace API returned ${response.status}.`)
 		return parse(await response.json())
-	} catch (error) {
-		if (process.env.NEXT_PUBLIC_JUNCTION_RUNTIME_MODE === 'staging') throw error
+	} catch {
 		return null
 	}
 }

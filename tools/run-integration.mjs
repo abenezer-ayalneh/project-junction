@@ -42,7 +42,6 @@ try {
 		'--runInBand',
 		...(focusedTestName ? ['--testNamePattern', focusedTestName] : []),
 	])
-	if (!focusedTestName) run(['exec', 'node', 'tools/runtime-smoke.mjs'])
 } finally {
 	await pool.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`)
 	await pool.end()

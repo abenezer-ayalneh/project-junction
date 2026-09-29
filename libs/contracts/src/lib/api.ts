@@ -546,7 +546,7 @@ export type RealtimeJoinResult = z.infer<typeof RealtimeJoinResultSchema>
 export const HealthResponseSchema = z.object({
 	status: z.literal('ok'),
 	service: z.literal('api'),
-	runtimeMode: z.enum(['synthetic', 'staging']),
+	runtimeMode: z.literal('staging'),
 	storage: z.enum(['in-memory-test-double', 'postgresql']),
 	requestId: z.string().uuid(),
 })

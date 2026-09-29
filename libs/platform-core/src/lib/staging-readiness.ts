@@ -11,8 +11,7 @@ function localHost(hostname: string): boolean {
 
 export function assertStagingProviderConfiguration(env: NodeJS.ProcessEnv = process.env): void {
 	if (env['JUNCTION_RUNTIME_MODE'] !== 'staging') {
-		if (env['NODE_ENV'] === 'test') return
-		throw new Error('Running API and worker processes require JUNCTION_RUNTIME_MODE=staging; synthetic mode is test-only.')
+		throw new Error('Running API and worker processes require JUNCTION_RUNTIME_MODE=staging.')
 	}
 	if (env['FOUNDATION_STORAGE'] !== 'postgresql') throw new Error('FOUNDATION_STORAGE=postgresql is required in private staging.')
 	const databaseUrl = new URL(required(env, 'DATABASE_URL'))

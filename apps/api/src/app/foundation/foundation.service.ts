@@ -1,6 +1,6 @@
 import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto'
 
-import { Inject, Injectable } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import {
 	type AccessContext,
@@ -42,9 +42,6 @@ import {
 	IdempotencyStore,
 	InMemoryOutbox,
 	PostgresFoundation,
-	PROVIDER_WEBHOOK_ADAPTER,
-	ProviderInbox,
-	type ProviderWebhookAdapter,
 	SessionRegistry,
 } from 'platform-core'
 import { getAuth } from 'platform-core/auth'
@@ -72,14 +69,10 @@ export class FoundationService {
 	private readonly sessions = new SessionRegistry()
 	private readonly idempotency = new IdempotencyStore()
 	private readonly outbox = new InMemoryOutbox()
-	private readonly inbox = new ProviderInbox()
 	private readonly demos = new DemoWorkspaceService()
 	private readonly demoSessionCookieName = 'junction_demo_session'
 
-	constructor(
-		private readonly configService: ConfigService,
-		@Inject(PROVIDER_WEBHOOK_ADAPTER) private readonly providerWebhookAdapter: ProviderWebhookAdapter,
-	) {
+	constructor(private readonly configService: ConfigService) {
 		const storage = this.configService.get<string>('FOUNDATION_STORAGE')
 		if (storage !== 'postgresql' && process.env['NODE_ENV'] !== 'test') {
 			throw new Error('FOUNDATION_STORAGE=postgresql is required for the API runtime.')
@@ -96,7 +89,7 @@ export class FoundationService {
 		return HealthResponseSchema.parse({
 			status: 'ok',
 			service: 'api',
-			runtimeMode: this.configService.get<string>('JUNCTION_RUNTIME_MODE') === 'staging' ? 'staging' : 'synthetic',
+			runtimeMode: 'staging',
 			storage: this.durable ? 'postgresql' : 'in-memory-test-double',
 			requestId: requestId ?? randomUUID(),
 		})
@@ -446,34 +439,6 @@ export class FoundationService {
 		})
 
 		return { ...result.outcome, replayed: result.replayed }
-	}
-
-	receiveProviderWebhook(provider: string, eventId: string | undefined, signature: string | undefined, rawBody: Buffer | undefined, body: unknown) {
-		this.requireSyntheticRuntime()
-		const webhook = this.providerWebhookAdapter.verify({ provider, eventId, signature, rawBody, body })
-		if (this.durable) {
-			const workspace = this.configService.get<string>('SYNTHETIC_WEBHOOK_WORKSPACE_ID')
-			if (!workspace) throw new AccessDeniedError()
-			return this.durable.receiveProviderWebhook(workspace, webhook.provider, webhook.eventId, webhook.callback)
-		}
-
-		const received = this.inbox.receive(webhook.provider, webhook.eventId, webhook.callback, () => {
-			this.outbox.publish({
-				eventId: randomUUID(),
-				type: 'ProviderCallbackReceived',
-				aggregateId: randomUUID(),
-				aggregateVersion: 1,
-				workspaceId: SYNTHETIC_IDS.workspace,
-				causationId: randomUUID(),
-				correlationId: randomUUID(),
-				idempotencyKey: null,
-				occurredAt: new Date().toISOString(),
-				schemaVersion: 1,
-				payload: { provider: webhook.provider, eventId: webhook.eventId, providerReference: webhook.callback.providerReference },
-			})
-			return { accepted: true }
-		})
-		return { accepted: true, duplicate: received.duplicate }
 	}
 
 	private demoSessionSecret() {

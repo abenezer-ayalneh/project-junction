@@ -21,7 +21,7 @@ An invited user signs up through Better Auth, verifies email through Resend, com
 - `REQ-P00-API-001`: define versioned REST/OpenAPI/Zod public contracts and canonical errors/idempotency conventions.
 - `REQ-P00-DATA-001`: establish context ownership, transactional PostgreSQL truth, audited SQL lane for locks, and migration compatibility strategy.
 - `REQ-P00-EVT-001`: define transactional outbox, provider webhook inbox, worker retry/dead-letter/reconciliation behavior.
-- `REQ-P00-DEMO-001`: keep the legacy synthetic workspace boundary available only for isolated regression tests; staging must deny synthetic account creation, no-signup persona switching, fake callbacks, and promotion of demo records.
+- `REQ-P00-DEMO-001`: retire the legacy synthetic HTTP boundary. Test fixtures may exercise isolated repository behavior, but no runtime may register synthetic account creation, no-signup persona switching, fake callbacks, or promotion of demo records.
 
 ## Affected definitions
 

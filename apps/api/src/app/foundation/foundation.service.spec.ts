@@ -1,20 +1,13 @@
-import { createHmac } from 'node:crypto'
-
 import { ConfigService } from '@nestjs/config'
-import { AccessDeniedError, FakePaymentWebhookAdapter, IdempotencyConflictError } from 'platform-core'
+import { AccessDeniedError, IdempotencyConflictError } from 'platform-core'
 
 import { FoundationService } from './foundation.service'
 
 const syntheticSession = '00000000-0000-4000-8000-000000000002'
 
 describe('FoundationService', () => {
-	const webhookSecret = 'synthetic-webhook-signing-secret'
-	const configService = new ConfigService({ FOUNDATION_STORAGE: 'memory', SYNTHETIC_WEBHOOK_SECRET: webhookSecret })
-	const signedWebhook = (body: unknown) => {
-		const rawBody = Buffer.from(JSON.stringify(body))
-		return { rawBody, signature: `sha256=${createHmac('sha256', webhookSecret).update(rawBody).digest('hex')}` }
-	}
-	const createService = () => new FoundationService(configService, new FakePaymentWebhookAdapter(webhookSecret))
+	const configService = new ConfigService({ FOUNDATION_STORAGE: 'memory' })
+	const createService = () => new FoundationService(configService)
 
 	it('makes a protected synthetic command replay-safe', async () => {
 		const service = createService()
@@ -59,21 +52,6 @@ describe('FoundationService', () => {
 			workspaceId: '00000000-0000-4000-8000-000000000003',
 		})
 		await expect(service.readLocation(syntheticSession, '00000000-0000-4000-8000-000000000099')).rejects.toThrow(AccessDeniedError)
-	})
-
-	it('deduplicates a signed synthetic provider callback', () => {
-		const service = createService()
-		const body = { providerReference: 'payment-intent-01', outcome: 'confirmed' }
-		const { rawBody, signature } = signedWebhook(body)
-		expect(service.receiveProviderWebhook('fake-payment', 'callback-01', signature, rawBody, body)).toEqual({
-			accepted: true,
-			duplicate: false,
-		})
-		expect(service.receiveProviderWebhook('fake-payment', 'callback-01', signature, rawBody, body)).toEqual({
-			accepted: true,
-			duplicate: true,
-		})
-		expect(() => service.receiveProviderWebhook('fake-payment', 'callback-02', 'sha256=deadbeef', rawBody, body)).toThrow(AccessDeniedError)
 	})
 
 	it('issues one demo persona session at a time without signup', async () => {

@@ -10,16 +10,13 @@ assertStagingProviderConfiguration()
 if (process.env['FOUNDATION_STORAGE'] !== 'postgresql') throw new Error('FOUNDATION_STORAGE=postgresql is required for the worker runtime.')
 const databaseUrl = process.env['DATABASE_URL']
 if (!databaseUrl) throw new Error('DATABASE_URL is required.')
-const staging = process.env['JUNCTION_RUNTIME_MODE'] === 'staging'
-const redis = staging
-	? createClient({
-			url: process.env['REDIS_URL'],
-			socket: { reconnectStrategy: (retries) => (retries >= 5 ? new Error('Redis is unavailable.') : Math.min(1000 * retries, 5000)) },
-		})
-	: undefined
+const redis = createClient({
+	url: process.env['REDIS_URL'],
+	socket: { reconnectStrategy: (retries) => (retries >= 5 ? new Error('Redis is unavailable.') : Math.min(1000 * retries, 5000)) },
+})
 redis?.on('error', () => process.stderr.write(`${JSON.stringify({ type: 'worker.redis-error' })}\n`))
 const repository = new PostgresFoundation(databaseUrl, redis ? new RedisEventStreamAdapter(redis) : undefined)
-const diditReady = process.env['JUNCTION_RUNTIME_MODE'] === 'staging' && process.env['DIDIT_AGE_18_WORKFLOW_CONFIRMED'] === 'true'
+const diditReady = process.env['DIDIT_AGE_18_WORKFLOW_CONFIRMED'] === 'true'
 const didit = diditReady ? new DiditSandboxAdapter(process.env['DIDIT_API_KEY'] ?? '', process.env['DIDIT_WEBHOOK_SECRET'] ?? '') : undefined
 let stopping = false
 let timer: ReturnType<typeof setTimeout>
@@ -34,7 +31,6 @@ function shutdown(): Promise<void> {
 async function tick() {
 	tickRunning = true
 	try {
-		if (process.env['JUNCTION_RUNTIME_MODE'] !== 'staging') await repository.purgeExpiredDemoWorkspaces()
 		await repository.expirePendingVideoUploads()
 		if (Date.now() - lastMediaSweep >= 10 * 60 * 1000) {
 			await repository.reconcileOrphanMediaObjects()
@@ -63,7 +59,7 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const)
 void (async () => {
 	if (redis) await redis.connect()
 	if (stopping) return shutdown()
-	process.stdout.write(`${JSON.stringify({ type: 'worker.started', runtimeMode: staging ? 'staging' : 'synthetic', storage: 'postgresql' })}\n`)
+	process.stdout.write(`${JSON.stringify({ type: 'worker.started', runtimeMode: 'staging', storage: 'postgresql' })}\n`)
 	await tick()
 })().catch(() => {
 	process.stderr.write(`${JSON.stringify({ type: 'worker.startup-failed' })}\n`)

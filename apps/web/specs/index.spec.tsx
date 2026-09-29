@@ -22,10 +22,10 @@ function updateSystemTheme(matches: boolean) {
 }
 
 describe('Page', () => {
-	it('discloses the synthetic-only boundary', async () => {
+	it('identifies the private staging environment', async () => {
 		render(await Page({ searchParams: Promise.resolve({}) }))
 
-		expect(screen.getByText('Synthetic preview')).toBeTruthy()
+		expect(screen.getByText('Private staging')).toBeTruthy()
 		expect(screen.getByRole('heading', { name: /find the good work happening nearby/i })).toBeTruthy()
 	})
 

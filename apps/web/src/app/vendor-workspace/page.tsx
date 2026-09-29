@@ -16,15 +16,13 @@ import { type FormEvent, useEffect, useRef, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 
-const apiBase = process.env.NEXT_PUBLIC_JUNCTION_RUNTIME_MODE === 'staging' ? '/v1' : (process.env.NEXT_PUBLIC_JUNCTION_API_URL ?? 'http://127.0.0.1:3001/v1')
-const isStaging = process.env.NEXT_PUBLIC_JUNCTION_RUNTIME_MODE === 'staging'
+const apiBase = '/v1'
 const categories = ['goods', 'home', 'fashion', 'beauty', 'appointment', 'education', 'repair'] as const
 
-async function apiRequest(path: string, sessionId: string, body?: unknown, requestKey?: string) {
+async function apiRequest(path: string, body?: unknown, requestKey?: string) {
 	const response = await fetch(`${apiBase}${path}`, {
 		method: body === undefined ? 'GET' : 'POST',
 		headers: {
-			...(isStaging ? {} : { 'x-junction-session': sessionId }),
 			...(body === undefined ? {} : { 'content-type': 'application/json', 'idempotency-key': requestKey ?? crypto.randomUUID() }),
 		},
 		...(body === undefined ? {} : { body: JSON.stringify(body) }),
@@ -39,8 +37,6 @@ async function apiRequest(path: string, sessionId: string, body?: unknown, reque
 }
 
 export default function VendorWorkspace() {
-	const [sessionId, setSessionId] = useState('')
-	const [issuedSessionId, setIssuedSessionId] = useState('')
 	const [catalog, setCatalog] = useState<VendorCatalog | null>(null)
 	const [memberships, setMemberships] = useState<ReturnType<typeof VendorMembershipsSchema.parse> | null>(null)
 	const [selectedVendorId, setSelectedVendorId] = useState('')
@@ -74,13 +70,13 @@ export default function VendorWorkspace() {
 		sessionStorage.removeItem(`${draftStorageKey}:request-key`)
 	}
 
-	async function loadCatalog(id = sessionId) {
-		setCatalog(VendorCatalogSchema.parse(await apiRequest('/vendor/catalog', id)))
+	async function loadCatalog() {
+		setCatalog(VendorCatalogSchema.parse(await apiRequest('/vendor/catalog')))
 		setMessage('Private catalog loaded.')
 	}
 
 	async function loadMemberships() {
-		const result = VendorMembershipsSchema.parse(await apiRequest('/account/vendor-memberships', ''))
+		const result = VendorMembershipsSchema.parse(await apiRequest('/account/vendor-memberships'))
 		setMemberships(result)
 		setSelectedVendorId(result.activeVendorId ?? '')
 	}
@@ -88,10 +84,10 @@ export default function VendorWorkspace() {
 	function chooseVendor(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault()
 		void run(async () => {
-			await apiRequest('/account/active-vendor', '', { vendorId: selectedVendorId || null })
+			await apiRequest('/account/active-vendor', { vendorId: selectedVendorId || null })
 			setCatalog(null)
 			await loadMemberships()
-			if (selectedVendorId) await loadCatalog('')
+			if (selectedVendorId) await loadCatalog()
 			else setMessage('Customer scope selected. You can submit another Vendor application.')
 		})
 	}
@@ -117,21 +113,16 @@ export default function VendorWorkspace() {
 		event.preventDefault()
 		const form = new FormData(event.currentTarget)
 		void run(async () => {
-			const result = VendorApplicationResultSchema.parse(
-				await apiRequest('/vendor-applications', sessionId, {
+			VendorApplicationResultSchema.parse(
+				await apiRequest('/vendor-applications', {
 					displayName: formValue(form, 'displayName'),
 					slug: formValue(form, 'slug'),
 					description: formValue(form, 'description'),
 					location: { label: formValue(form, 'locationLabel'), city: formValue(form, 'city'), address: formValue(form, 'address') },
 				}),
 			)
-			if (!isStaging) {
-				if (!result.sessionId) throw new Error('The synthetic session was not returned.')
-				setSessionId(result.sessionId)
-				setIssuedSessionId(result.sessionId)
-			}
-			await loadCatalog(isStaging ? '' : (result.sessionId ?? ''))
-			if (isStaging) await loadMemberships()
+			await loadCatalog()
+			await loadMemberships()
 			setMessage('Application submitted. Your storefront and listings stay private until Platform approval.')
 		})
 	}
@@ -148,7 +139,6 @@ export default function VendorWorkspace() {
 		void run(async () => {
 			await apiRequest(
 				'/listings',
-				sessionId,
 				{
 					kind,
 					category: formValue(form, 'category'),
@@ -172,7 +162,7 @@ export default function VendorWorkspace() {
 		const form = new FormData(event.currentTarget)
 		const price = formValue(form, 'price')
 		void run(async () => {
-			await apiRequest(`/listings/${listing.id}/revise`, sessionId, {
+			await apiRequest(`/listings/${listing.id}/revise`, {
 				expectedVersion: listing.version,
 				kind: listing.kind,
 				category: formValue(form, 'category'),
@@ -190,7 +180,7 @@ export default function VendorWorkspace() {
 
 	function unpublishListing(listingId: string) {
 		void run(async () => {
-			await apiRequest(`/listings/${listingId}/unpublish`, sessionId, {})
+			await apiRequest(`/listings/${listingId}/unpublish`, {})
 			await loadCatalog()
 			setMessage('Listing unpublished and removed from public discovery.')
 		})
@@ -200,7 +190,7 @@ export default function VendorWorkspace() {
 		event.preventDefault()
 		const form = new FormData(event.currentTarget)
 		void run(async () => {
-			await apiRequest('/vendor-storefront', sessionId, {
+			await apiRequest('/vendor-storefront', {
 				displayName: formValue(form, 'displayName'),
 				slug: formValue(form, 'slug'),
 				description: formValue(form, 'description'),
@@ -212,7 +202,7 @@ export default function VendorWorkspace() {
 
 	function importCsv(mode: 'dry_run' | 'commit') {
 		void run(async () => {
-			const result = CatalogImportResultSchema.parse(await apiRequest('/catalog-imports', sessionId, { templateVersion: 'v1', mode, csv }))
+			const result = CatalogImportResultSchema.parse(await apiRequest('/catalog-imports', { templateVersion: 'v1', mode, csv }))
 			setImportResult(result)
 			if (mode === 'commit' && result.state === 'committed') await loadCatalog()
 			setMessage(
@@ -227,7 +217,7 @@ export default function VendorWorkspace() {
 
 	function exportCsv() {
 		void run(async () => {
-			const response = await fetch(`${apiBase}/catalog-exports/v1`, { headers: isStaging ? {} : { 'x-junction-session': sessionId }, cache: 'no-store' })
+			const response = await fetch(`${apiBase}/catalog-exports/v1`, { cache: 'no-store' })
 			if (!response.ok) throw new Error(`Export failed (${response.status}).`)
 			const contents = await response.text()
 			const url = URL.createObjectURL(new Blob([contents], { type: 'text/csv;charset=utf-8' }))
@@ -253,7 +243,7 @@ export default function VendorWorkspace() {
 			const digest = await crypto.subtle.digest('SHA-256', bytes)
 			const sha256 = [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('')
 			const intent = MediaUploadIntentSchema.parse(
-				await apiRequest(`/listings/${listingId}/video-upload-intents`, sessionId, {
+				await apiRequest(`/listings/${listingId}/video-upload-intents`, {
 					bytes: file.size,
 					sha256,
 					...(captions ? { captionText: captions } : { noSpeechDeclared: true, description }),
@@ -261,7 +251,7 @@ export default function VendorWorkspace() {
 			)
 			const uploaded = await fetch(intent.url, { method: intent.method, headers: intent.headers, body: file })
 			if (!uploaded.ok) throw new Error(`Private upload failed (${uploaded.status}).`)
-			await apiRequest(`/media/${intent.mediaId}/complete-upload`, sessionId, { sha256 })
+			await apiRequest(`/media/${intent.mediaId}/complete-upload`, { sha256 })
 			setMessage('Video sealed in quarantine. Processing and Platform moderation are pending.')
 		})
 	}
@@ -272,87 +262,51 @@ export default function VendorWorkspace() {
 				<Link href="/" className="text-sm font-semibold">
 					Junction
 				</Link>
-				<Badge variant="outline">{isStaging ? 'Private staging workspace' : 'Synthetic Vendor workspace'}</Badge>
+				<Badge variant="outline">Private staging workspace</Badge>
 			</header>
 			<div className="py-10">
 				<h1 className="text-4xl font-semibold tracking-tight">Your Vendor workspace</h1>
 				<p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-					{isStaging
-						? 'Sign in with your verified account to apply. After application, your Owner access stays with that account.'
-						: 'Use a current synthetic Customer session to apply. After application, use the issued Owner session to manage private drafts.'}
+					Sign in with your verified account to apply. After application, your Owner access stays with that account.
 				</p>
 			</div>
-			{isStaging && (
-				<section className="mb-5 rounded-xl border p-5" aria-label="Vendor role selection">
-					<Button type="button" variant="outline" disabled={busy} onClick={() => void run(loadMemberships)}>
-						Load my Vendor roles
-					</Button>
-					{memberships && (
-						<form onSubmit={chooseVendor} className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
-							<label className="grid flex-1 gap-1.5 text-sm font-medium">
-								Active Vendor
-								<select
-									value={selectedVendorId}
-									onChange={(event) => setSelectedVendorId(event.target.value)}
-									className="h-10 rounded-lg border bg-background px-3">
-									<option value="">Customer scope</option>
-									{memberships.items.map((membership) => (
-										<option key={membership.vendorId} value={membership.vendorId}>
-											{membership.displayName}
-										</option>
-									))}
-								</select>
-							</label>
-							<Button disabled={busy || selectedVendorId === (memberships.activeVendorId ?? '')} type="submit">
-								Select role
-							</Button>
-						</form>
-					)}
-					<p className="mt-2 text-xs text-muted-foreground">Selecting an Owner role requires MFA completed within the last 15 minutes.</p>
-				</section>
-			)}
+			<section className="mb-5 rounded-xl border p-5" aria-label="Vendor role selection">
+				<Button type="button" variant="outline" disabled={busy} onClick={() => void run(loadMemberships)}>
+					Load my Vendor roles
+				</Button>
+				{memberships && (
+					<form onSubmit={chooseVendor} className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+						<label className="grid flex-1 gap-1.5 text-sm font-medium">
+							Active Vendor
+							<select
+								value={selectedVendorId}
+								onChange={(event) => setSelectedVendorId(event.target.value)}
+								className="h-10 rounded-lg border bg-background px-3">
+								<option value="">Customer scope</option>
+								{memberships.items.map((membership) => (
+									<option key={membership.vendorId} value={membership.vendorId}>
+										{membership.displayName}
+									</option>
+								))}
+							</select>
+						</label>
+						<Button disabled={busy || selectedVendorId === (memberships.activeVendorId ?? '')} type="submit">
+							Select role
+						</Button>
+					</form>
+				)}
+				<p className="mt-2 text-xs text-muted-foreground">Selecting an Owner role requires MFA completed within the last 15 minutes.</p>
+			</section>
 			<form
 				onSubmit={(event) => {
 					event.preventDefault()
 					void run(() => loadCatalog())
 				}}
 				className="flex flex-col gap-3 rounded-xl border p-5 sm:flex-row sm:items-end">
-				{!isStaging && (
-					<label className="grid flex-1 gap-1.5 text-sm font-medium">
-						Synthetic session ID
-						<input
-							type="password"
-							required
-							value={sessionId}
-							onChange={(event) => {
-								setSessionId(event.target.value)
-								setIssuedSessionId('')
-								setCatalog(null)
-							}}
-							className="h-10 rounded-lg border bg-background px-3 font-normal"
-							placeholder="Current Customer or Vendor Owner session"
-							aria-describedby="session-help"
-						/>
-					</label>
-				)}
 				<Button disabled={busy} type="submit">
 					Load workspace
 				</Button>
 			</form>
-			{!isStaging && (
-				<p id="session-help" className="mt-2 text-xs text-muted-foreground">
-					The session stays in this page only and is cleared when you reload it.
-				</p>
-			)}
-			{!isStaging && issuedSessionId && (
-				<div className="mt-4 rounded-lg border p-4 text-sm">
-					<p className="font-medium">Your new synthetic Owner session</p>
-					<p className="mt-1 text-muted-foreground">
-						Save it for your next visit to this local workspace. It expires with the original Customer session.
-					</p>
-					<code className="mt-3 block break-all rounded bg-muted px-3 py-2">{issuedSessionId}</code>
-				</div>
-			)}
 			{message && (
 				<p className="mt-5 rounded-lg border px-4 py-3 text-sm" role="status">
 					{message}
@@ -467,7 +421,7 @@ export default function VendorWorkspace() {
 													variant="outline"
 													onClick={() =>
 														void run(async () => {
-															await apiRequest(`/listings/${listing.id}/submit`, sessionId, {})
+															await apiRequest(`/listings/${listing.id}/submit`, {})
 															await loadCatalog()
 															setMessage('Listing submitted for Platform review.')
 														})
@@ -606,22 +560,16 @@ export default function VendorWorkspace() {
 							/>
 						</label>
 						<div className="mt-4 flex flex-wrap gap-2">
-							<Button disabled={busy || (!isStaging && !sessionId)} type="button" variant="outline" onClick={() => importCsv('dry_run')}>
+							<Button disabled={busy} type="button" variant="outline" onClick={() => importCsv('dry_run')}>
 								Preview CSV
 							</Button>
 							<Button
-								disabled={
-									busy ||
-									(!isStaging && !sessionId) ||
-									!importResult ||
-									importResult.state !== 'dry_run' ||
-									importResult.validRowCount !== importResult.rowCount
-								}
+								disabled={busy || !importResult || importResult.state !== 'dry_run' || importResult.validRowCount !== importResult.rowCount}
 								type="button"
 								onClick={() => importCsv('commit')}>
 								Commit valid CSV
 							</Button>
-							<Button disabled={busy || (!isStaging && !sessionId)} type="button" variant="outline" onClick={exportCsv}>
+							<Button disabled={busy} type="button" variant="outline" onClick={exportCsv}>
 								Export catalog
 							</Button>
 						</div>
@@ -737,7 +685,7 @@ export default function VendorWorkspace() {
 							Address
 							<input name="address" required minLength={5} className="h-10 rounded-lg border bg-background px-3" />
 						</label>
-						<Button disabled={busy || (!isStaging && !sessionId)} type="submit" className="sm:col-span-2 sm:w-fit">
+						<Button disabled={busy} type="submit" className="sm:col-span-2 sm:w-fit">
 							Submit application
 						</Button>
 					</form>

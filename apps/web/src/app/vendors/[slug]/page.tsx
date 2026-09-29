@@ -7,8 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { formatPrice, getPublicStorefront } from '@/lib/marketplace'
 
-const publicMediaBase =
-	process.env.NEXT_PUBLIC_JUNCTION_RUNTIME_MODE === 'staging' ? '/v1' : (process.env.NEXT_PUBLIC_JUNCTION_API_URL ?? 'http://127.0.0.1:3001/v1')
+const publicMediaBase = '/v1'
 
 export default async function VendorStorefront({ params }: { params: Promise<{ slug: string }> }) {
 	const { slug } = await params
@@ -18,10 +17,10 @@ export default async function VendorStorefront({ params }: { params: Promise<{ s
 		if (process.env.NODE_ENV === 'production') notFound()
 		return (
 			<main className="mx-auto flex min-h-svh max-w-3xl flex-col justify-center px-5 py-16">
-				<p className="text-sm text-muted-foreground">Local discovery preview</p>
+				<p className="text-sm text-muted-foreground">Private staging</p>
 				<h1 className="mt-3 text-3xl font-semibold tracking-tight">This storefront is unavailable</h1>
 				<p className="mt-3 max-w-xl leading-7 text-muted-foreground">
-					The Vendor may be unpublished, or the synthetic API may not be running. Public content is shown only while the Vendor is approved and
+					The Vendor may be unpublished, or the staging catalog may be unavailable. Public content is shown only while the Vendor is approved and
 					published.
 				</p>
 				<Link href="/" className="mt-6 inline-flex w-fit items-center gap-2 text-sm font-medium underline underline-offset-4">
@@ -40,7 +39,7 @@ export default async function VendorStorefront({ params }: { params: Promise<{ s
 					<span className="text-sm font-semibold tracking-tight">Junction</span>
 				</Link>
 				<div className="flex items-center gap-3">
-					<Badge variant="outline">{process.env.NEXT_PUBLIC_JUNCTION_RUNTIME_MODE === 'staging' ? 'Private staging' : 'Synthetic preview'}</Badge>
+					<Badge variant="outline">Private staging</Badge>
 					<ThemeToggle />
 				</div>
 			</header>
@@ -134,9 +133,7 @@ export default async function VendorStorefront({ params }: { params: Promise<{ s
 						</ul>
 					)}
 				</section>
-				<p className="mt-10 border-t pt-5 text-xs text-muted-foreground">
-					{process.env.NEXT_PUBLIC_JUNCTION_RUNTIME_MODE === 'staging' ? 'Private staging' : 'Local preview'} · browsing only · no checkout or booking
-				</p>
+				<p className="mt-10 border-t pt-5 text-xs text-muted-foreground">Private staging · browsing only · no checkout or booking</p>
 			</div>
 		</main>
 	)

@@ -5,14 +5,10 @@ import {
 	ActiveVendorSelectionResultSchema,
 	ActiveVendorSelectionSchema,
 	ApiErrorSchema,
-	AuditMarkerCommandSchema,
 	CatalogHealthSchema,
 	CatalogImportCommandSchema,
 	CatalogImportResultSchema,
-	CommandOutcomeSchema,
 	CustomerDiscoveryStateSchema,
-	DemoSessionSchema,
-	DemoWorkspaceSchema,
 	HealthResponseSchema,
 	IdentityVerificationSessionSchema,
 	InventoryAvailabilitySchema,
@@ -33,18 +29,11 @@ import {
 	MediaUploadIntentCommandSchema,
 	MediaUploadIntentSchema,
 	PlatformReviewQueueSchema,
-	ProviderWebhookReceiptSchema,
 	PublicListingPageSchema,
 	PublicStorefrontSchema,
 	PublicVendorPageSchema,
 	StorefrontUpdateResultSchema,
 	StorefrontUpdateSchema,
-	SyntheticAccountProvisionSchema,
-	SyntheticAccountSchema,
-	SyntheticProviderCallbackSchema,
-	SyntheticStaffGrantResultSchema,
-	SyntheticStaffGrantSchema,
-	SyntheticStaffRevokeResultSchema,
 	VendorApplicationCommandSchema,
 	VendorApplicationResultSchema,
 	VendorApplicationReviewResultSchema,
@@ -53,8 +42,6 @@ import {
 	VendorMembershipsSchema,
 } from 'contracts'
 import { z } from 'zod'
-
-import { isSyntheticStagingPath } from './staging-synthetic-routes'
 
 function schemaFor(schema: z.ZodType): SchemaObject {
 	const openApiSchema = z.toJSONSchema(schema, { target: 'openapi-3.0' })
@@ -67,19 +54,10 @@ export const OpenApiSchemaRefs = {
 	activeVendorSelection: { $ref: '#/components/schemas/ActiveVendorSelection' },
 	activeVendorSelectionResult: { $ref: '#/components/schemas/ActiveVendorSelectionResult' },
 	apiError: { $ref: '#/components/schemas/ApiError' },
-	auditMarkerCommand: { $ref: '#/components/schemas/AuditMarkerCommand' },
 	catalogImportCommand: { $ref: '#/components/schemas/CatalogImportCommand' },
 	catalogImportResult: { $ref: '#/components/schemas/CatalogImportResult' },
 	catalogHealth: { $ref: '#/components/schemas/CatalogHealth' },
-	commandOutcome: { $ref: '#/components/schemas/CommandOutcome' },
 	customerDiscoveryState: { $ref: '#/components/schemas/CustomerDiscoveryState' },
-	demoWorkspace: { $ref: '#/components/schemas/DemoWorkspace' },
-	syntheticAccountProvision: { $ref: '#/components/schemas/SyntheticAccountProvision' },
-	syntheticAccount: { $ref: '#/components/schemas/SyntheticAccount' },
-	syntheticStaffGrant: { $ref: '#/components/schemas/SyntheticStaffGrant' },
-	syntheticStaffGrantResult: { $ref: '#/components/schemas/SyntheticStaffGrantResult' },
-	syntheticStaffRevokeResult: { $ref: '#/components/schemas/SyntheticStaffRevokeResult' },
-	demoSession: { $ref: '#/components/schemas/DemoSession' },
 	healthResponse: { $ref: '#/components/schemas/HealthResponse' },
 	identityVerificationSession: { $ref: '#/components/schemas/IdentityVerificationSession' },
 	inventoryAvailability: { $ref: '#/components/schemas/InventoryAvailability' },
@@ -102,11 +80,9 @@ export const OpenApiSchemaRefs = {
 	platformReviewQueue: { $ref: '#/components/schemas/PlatformReviewQueue' },
 	publicListingPage: { $ref: '#/components/schemas/PublicListingPage' },
 	publicStorefront: { $ref: '#/components/schemas/PublicStorefront' },
-	providerWebhookReceipt: { $ref: '#/components/schemas/ProviderWebhookReceipt' },
 	publicVendorPage: { $ref: '#/components/schemas/PublicVendorPage' },
 	storefrontUpdate: { $ref: '#/components/schemas/StorefrontUpdate' },
 	storefrontUpdateResult: { $ref: '#/components/schemas/StorefrontUpdateResult' },
-	syntheticProviderCallback: { $ref: '#/components/schemas/SyntheticProviderCallback' },
 	vendorApplicationReview: { $ref: '#/components/schemas/VendorApplicationReview' },
 	vendorCatalog: { $ref: '#/components/schemas/VendorCatalog' },
 	vendorMemberships: { $ref: '#/components/schemas/VendorMemberships' },
@@ -121,19 +97,10 @@ function publicSchemas(): Record<string, SchemaObject> {
 		ActiveVendorSelection: schemaFor(ActiveVendorSelectionSchema),
 		ActiveVendorSelectionResult: schemaFor(ActiveVendorSelectionResultSchema),
 		ApiError: schemaFor(ApiErrorSchema),
-		AuditMarkerCommand: schemaFor(AuditMarkerCommandSchema),
 		CatalogImportCommand: schemaFor(CatalogImportCommandSchema),
 		CatalogImportResult: schemaFor(CatalogImportResultSchema),
 		CatalogHealth: schemaFor(CatalogHealthSchema),
-		CommandOutcome: schemaFor(CommandOutcomeSchema),
 		CustomerDiscoveryState: schemaFor(CustomerDiscoveryStateSchema),
-		DemoWorkspace: schemaFor(DemoWorkspaceSchema),
-		SyntheticAccountProvision: schemaFor(SyntheticAccountProvisionSchema),
-		SyntheticAccount: schemaFor(SyntheticAccountSchema),
-		SyntheticStaffGrant: schemaFor(SyntheticStaffGrantSchema),
-		SyntheticStaffGrantResult: schemaFor(SyntheticStaffGrantResultSchema),
-		SyntheticStaffRevokeResult: schemaFor(SyntheticStaffRevokeResultSchema),
-		DemoSession: schemaFor(DemoSessionSchema),
 		HealthResponse: schemaFor(HealthResponseSchema),
 		IdentityVerificationSession: schemaFor(IdentityVerificationSessionSchema),
 		InventoryAvailability: schemaFor(InventoryAvailabilitySchema),
@@ -156,11 +123,9 @@ function publicSchemas(): Record<string, SchemaObject> {
 		PlatformReviewQueue: schemaFor(PlatformReviewQueueSchema),
 		PublicListingPage: schemaFor(PublicListingPageSchema),
 		PublicStorefront: schemaFor(PublicStorefrontSchema),
-		ProviderWebhookReceipt: schemaFor(ProviderWebhookReceiptSchema),
 		PublicVendorPage: schemaFor(PublicVendorPageSchema),
 		StorefrontUpdate: schemaFor(StorefrontUpdateSchema),
 		StorefrontUpdateResult: schemaFor(StorefrontUpdateResultSchema),
-		SyntheticProviderCallback: schemaFor(SyntheticProviderCallbackSchema),
 		VendorApplicationReview: schemaFor(VendorApplicationReviewSchema),
 		VendorCatalog: schemaFor(VendorCatalogSchema),
 		VendorMemberships: schemaFor(VendorMembershipsSchema),
@@ -170,14 +135,11 @@ function publicSchemas(): Record<string, SchemaObject> {
 	}
 }
 
-export function createSwaggerDocument(app: INestApplication, runtimeMode = process.env['JUNCTION_RUNTIME_MODE']): OpenAPIObject {
-	const staging = runtimeMode === 'staging'
+export function createSwaggerDocument(app: INestApplication): OpenAPIObject {
 	const config = new DocumentBuilder()
 		.setTitle('Project Junction API')
 		.setDescription(
-			staging
-				? 'Private staging API backed by real account and provider integrations. Every response declares X-API-Version: v1 and X-API-Lifecycle: active.'
-				: 'Synthetic-runtime API for the Project Junction platform foundation. Every response declares X-API-Version: v1 and X-API-Lifecycle: active.',
+			'Private staging API backed by real account and provider integrations. Every response declares X-API-Version: v1 and X-API-Lifecycle: active.',
 		)
 		.setVersion('v1')
 		.addApiKey(
@@ -185,7 +147,7 @@ export function createSwaggerDocument(app: INestApplication, runtimeMode = proce
 				type: 'apiKey',
 				in: 'header',
 				name: 'x-junction-session',
-				description: 'Synthetic session identifier used by the current foundation endpoints.',
+				description: 'Deprecated internal scheme replaced by the Better Auth session cookie in every published operation.',
 			},
 			'junction-session',
 		)
@@ -207,29 +169,19 @@ export function createSwaggerDocument(app: INestApplication, runtimeMode = proce
 			...publicSchemas(),
 		},
 	}
-	if (staging) {
-		for (const path of Object.keys(document.paths)) if (isSyntheticStagingPath(path)) delete document.paths[path]
-		for (const pathItem of Object.values(document.paths)) {
-			for (const method of ['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace'] as const) {
-				const operation = pathItem?.[method]
-				if (!operation) continue
-				operation.parameters = operation.parameters?.filter(
-					(parameter) => !('in' in parameter && parameter.in === 'header' && parameter.name.toLowerCase() === 'x-junction-session'),
-				)
-				operation.security = operation.security?.map((requirement) =>
-					'junction-session' in requirement ? { 'junction-auth-cookie': [] } : requirement,
-				)
-			}
+	for (const pathItem of Object.values(document.paths)) {
+		for (const method of ['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace'] as const) {
+			const operation = pathItem?.[method]
+			if (!operation) continue
+			operation.parameters = operation.parameters?.filter(
+				(parameter) => !('in' in parameter && parameter.in === 'header' && parameter.name.toLowerCase() === 'x-junction-session'),
+			)
+			operation.security = operation.security?.map((requirement) => ('junction-session' in requirement ? { 'junction-auth-cookie': [] } : requirement))
 		}
-		delete document.components.securitySchemes?.['junction-session']
-		for (const name of Object.keys(document.components.schemas ?? {})) {
-			if (name.startsWith('Synthetic') || name.startsWith('Demo') || ['AuditMarkerCommand', 'CommandOutcome', 'ProviderWebhookReceipt'].includes(name)) {
-				delete document.components.schemas?.[name]
-			}
-		}
-		if (document.paths['/v1/health']?.get) document.paths['/v1/health'].get.summary = 'Read private staging API health.'
-		if (document.paths['/v1/public/vendors']?.get) document.paths['/v1/public/vendors'].get.summary = 'Browse published Vendor summaries.'
 	}
+	delete document.components.securitySchemes?.['junction-session']
+	if (document.paths['/v1/health']?.get) document.paths['/v1/health'].get.summary = 'Read private staging API health.'
+	if (document.paths['/v1/public/vendors']?.get) document.paths['/v1/public/vendors'].get.summary = 'Browse published Vendor summaries.'
 
 	return document
 }

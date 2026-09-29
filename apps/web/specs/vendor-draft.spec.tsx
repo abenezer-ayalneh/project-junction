@@ -31,7 +31,6 @@ it('keeps an unsent private draft through reload and reuses the retry key after 
 	}) as typeof fetch
 	try {
 		const first = render(<VendorWorkspace />)
-		fireEvent.change(screen.getByLabelText('Synthetic session ID'), { target: { value: 'private-session' } })
 		fireEvent.click(screen.getByRole('button', { name: 'Load workspace' }))
 		await screen.findByRole('heading', { name: 'Create a private draft' })
 		const draftSection = screen.getByRole('heading', { name: 'Create a private draft' }).closest('section')
@@ -42,7 +41,6 @@ it('keeps an unsent private draft through reload and reuses the retry key after 
 		first.unmount()
 
 		render(<VendorWorkspace />)
-		fireEvent.change(screen.getByLabelText('Synthetic session ID'), { target: { value: 'private-session' } })
 		fireEvent.click(screen.getByRole('button', { name: 'Load workspace' }))
 		await screen.findByRole('heading', { name: 'Create a private draft' })
 		await waitFor(() => expect((screen.getByLabelText('Title') as unknown as { value: string }).value).toBe('Saved basket'))

@@ -14,14 +14,12 @@ import { type FormEvent, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 
-const apiBase = process.env.NEXT_PUBLIC_JUNCTION_RUNTIME_MODE === 'staging' ? '/v1' : (process.env.NEXT_PUBLIC_JUNCTION_API_URL ?? 'http://127.0.0.1:3001/v1')
-const isStaging = process.env.NEXT_PUBLIC_JUNCTION_RUNTIME_MODE === 'staging'
+const apiBase = '/v1'
 
-async function apiRequest(path: string, sessionId: string, body?: unknown) {
+async function apiRequest(path: string, body?: unknown) {
 	const response = await fetch(`${apiBase}${path}`, {
 		method: body === undefined ? 'GET' : 'POST',
 		headers: {
-			...(isStaging ? {} : { 'x-junction-session': sessionId }),
 			...(body === undefined ? {} : { 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() }),
 		},
 		...(body === undefined ? {} : { body: JSON.stringify(body) }),
@@ -45,7 +43,6 @@ function mergeQueue(current: PlatformReviewQueue, next: PlatformReviewQueue): Pl
 }
 
 export default function PlatformReview() {
-	const [sessionId, setSessionId] = useState('')
 	const [queue, setQueue] = useState<PlatformReviewQueue | null>(null)
 	const [mediaQueue, setMediaQueue] = useState<MediaReviewQueue | null>(null)
 	const [catalogHealth, setCatalogHealth] = useState<CatalogHealth | null>(null)
@@ -69,10 +66,10 @@ export default function PlatformReview() {
 		const query = new URLSearchParams({ limit: '50' })
 		if (append && queue?.applicationsNextCursor) query.set('applicationCursor', queue.applicationsNextCursor)
 		if (append && queue?.listingsNextCursor) query.set('listingCursor', queue.listingsNextCursor)
-		const next = PlatformReviewQueueSchema.parse(await apiRequest(`/platform/review-queue?${query.toString()}`, sessionId))
+		const next = PlatformReviewQueueSchema.parse(await apiRequest(`/platform/review-queue?${query.toString()}`))
 		setQueue(append && queue ? mergeQueue(queue, next) : next)
-		if (!append) setMediaQueue(MediaReviewQueueSchema.parse(await apiRequest('/platform/media-review-queue?limit=50', sessionId)))
-		if (!append) setCatalogHealth(CatalogHealthSchema.parse(await apiRequest('/platform/catalog-health', sessionId)))
+		if (!append) setMediaQueue(MediaReviewQueueSchema.parse(await apiRequest('/platform/media-review-queue?limit=50')))
+		if (!append) setCatalogHealth(CatalogHealthSchema.parse(await apiRequest('/platform/catalog-health')))
 		setMessage('Review queue loaded.')
 	}
 
@@ -85,7 +82,7 @@ export default function PlatformReview() {
 		event.preventDefault()
 		const form = new FormData(event.currentTarget)
 		void run(async () => {
-			await apiRequest(path, sessionId, {
+			await apiRequest(path, {
 				decision: formValue(form, 'decision'),
 				note: formValue(form, 'note'),
 				...(expectedVersion === undefined ? {} : { expectedVersion }),
@@ -101,7 +98,7 @@ export default function PlatformReview() {
 				<Link href="/" className="text-sm font-semibold">
 					Junction
 				</Link>
-				<Badge variant="outline">{isStaging ? 'Private staging review' : 'Synthetic Platform review'}</Badge>
+				<Badge variant="outline">Private staging review</Badge>
 			</header>
 			<div className="py-10">
 				<h1 className="text-4xl font-semibold tracking-tight">Review queue</h1>
@@ -115,34 +112,11 @@ export default function PlatformReview() {
 					void run(() => loadQueue())
 				}}
 				className="flex flex-col gap-3 rounded-xl border p-5 sm:flex-row sm:items-end">
-				{!isStaging && (
-					<label className="grid flex-1 gap-1.5 text-sm font-medium">
-						Platform review session ID
-						<input
-							type="password"
-							required
-							value={sessionId}
-							onChange={(event) => {
-								setSessionId(event.target.value)
-								setQueue(null)
-								setMediaQueue(null)
-								setCatalogHealth(null)
-								setMediaPreview(null)
-							}}
-							className="h-10 rounded-lg border bg-background px-3 font-normal"
-							placeholder="Current Trust or Platform Owner session"
-						/>
-					</label>
-				)}
 				<Button type="submit" disabled={busy}>
 					Load queue
 				</Button>
 			</form>
-			{isStaging ? (
-				<p className="mt-2 text-xs text-muted-foreground">Sign in with a verified, MFA-protected reviewer account before loading the queue.</p>
-			) : (
-				<p className="mt-2 text-xs text-muted-foreground">The session stays in this page only and is cleared when you reload it.</p>
-			)}
+			<p className="mt-2 text-xs text-muted-foreground">Sign in with a verified, MFA-protected reviewer account before loading the queue.</p>
 			{message && (
 				<p className="mt-5 rounded-lg border px-4 py-3 text-sm" role="status">
 					{message}
@@ -196,7 +170,7 @@ export default function PlatformReview() {
 											className="mt-4"
 											onClick={() =>
 												void run(async () => {
-													const preview = (await apiRequest(`/platform/media/${item.id}/preview`, sessionId)) as {
+													const preview = (await apiRequest(`/platform/media/${item.id}/preview`)) as {
 														mediaId: string
 														videoUrl: string
 														posterUrl: string

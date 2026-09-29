@@ -23,8 +23,8 @@ const staging = (): NodeJS.ProcessEnv => ({
 })
 
 describe('private staging provider readiness', () => {
-	it('allows synthetic fixtures only inside a test process', () => {
-		expect(() => assertStagingProviderConfiguration({ JUNCTION_RUNTIME_MODE: 'synthetic', NODE_ENV: 'test' })).not.toThrow()
+	it('refuses every non-staging runtime mode', () => {
+		expect(() => assertStagingProviderConfiguration({ JUNCTION_RUNTIME_MODE: 'synthetic', NODE_ENV: 'test' })).toThrow()
 		expect(() => assertStagingProviderConfiguration({ JUNCTION_RUNTIME_MODE: 'synthetic', NODE_ENV: 'production' })).toThrow()
 		expect(() => assertStagingProviderConfiguration({ NODE_ENV: 'production' })).toThrow()
 	})
