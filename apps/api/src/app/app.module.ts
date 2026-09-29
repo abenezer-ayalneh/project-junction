@@ -8,10 +8,7 @@ import { AppController } from './http/app.controller'
 import { RealtimeGateway } from './realtime/realtime.gateway'
 import { getApiRuntimeConfig } from './runtime/api-runtime.config'
 
-export function httpControllersForMode(mode: string | undefined) {
-	void mode
-	return [AppController]
-}
+export const httpControllers = [AppController]
 
 @Module({
 	imports: [
@@ -25,7 +22,7 @@ export function httpControllersForMode(mode: string | undefined) {
 			},
 		}),
 	],
-	controllers: httpControllersForMode(process.env['JUNCTION_RUNTIME_MODE']),
+	controllers: httpControllers,
 	providers: [
 		FoundationService,
 		RealtimeGateway,

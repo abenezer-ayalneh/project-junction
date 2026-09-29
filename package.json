@@ -30,7 +30,6 @@
 		"staging:preflight": "pnpm nx run platform-core:build && node tools/staging-preflight.mjs",
 		"db:compat:check": "node tools/check-migration-compatibility.mjs",
 		"db:lock:measure": "node tools/measure-workspace-lock.mjs",
-		"db:rollback:check": "node tools/check-rollback-compatibility.mjs",
 		"db:restore:check": "node tools/check-restore-rehearsal.mjs",
 		"db:upgrade:check": "node tools/check-populated-upgrade.mjs",
 		"db:generate": "prisma generate"

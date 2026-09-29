@@ -8,7 +8,7 @@
 
 - Treat this as a prospective procedure only. No target deployment, artifact, environment, or rollback has been executed or verified.
 - Promote only an immutable, reviewed artifact that passed the applicable [release gate](../../requirements/PHASE-AND-RELEASE-GATES.md), staging evidence, and [promotion contract](../../deployment/CI-CD-AND-RELEASE-PROMOTION.md).
-- Record the current artifact digest, schema head, feature configuration, health, active incidents, rollback compatibility, and recent backup/WAL health before changing anything.
+- Record the current artifact digest, schema head, feature configuration, health, active incidents, and recent backup/WAL health before changing anything. The real-runtime schema cutover removes retired demo tables, so recovery uses the protected pre-migration backup rather than an application-binary downgrade.
 - Name the operator, approver, change window, communications owner, and stop condition. Do not combine a release with an unreviewed policy, data-repair, or financial correction.
 - Keep the portfolio environment synthetic and isolated; a release must not promote demo data or imply commercial operation.
 

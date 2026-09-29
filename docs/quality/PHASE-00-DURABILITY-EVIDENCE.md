@@ -1,6 +1,6 @@
 # Phase 00 durability and acceptance evidence — 2026-09-23
 
-Status: Phase 00 accepted for its local synthetic foundation scope on 2026-09-23. This is not public-release, real-provider, real-identity, deployment, or commercial acceptance.
+Status: historical evidence only. The 2026-09-29 real-runtime cutover removed the documented demo, fixture-account, fake-provider, and in-process effect paths; migration `20260929000000_retire_synthetic_schema` also removes their database structures. The sections below record prior evidence and must not be treated as supported behavior.
 
 ## Scope and reproduction
 

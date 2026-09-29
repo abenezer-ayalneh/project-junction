@@ -5,7 +5,7 @@ import { createRequire } from 'node:module'
 const require = createRequire(new URL('../libs/platform-core/package.json', import.meta.url))
 const { Pool } = require('pg')
 
-if (!process.env.DATABASE_URL) throw new Error('Set DATABASE_URL to a local synthetic PostgreSQL database.')
+if (!process.env.DATABASE_URL) throw new Error('Set DATABASE_URL to a local PostgreSQL database.')
 
 const databaseUrl = new URL(process.env.DATABASE_URL)
 if (!['localhost', '127.0.0.1'].includes(databaseUrl.hostname)) throw new Error('Migration compatibility checks require a loopback database.')

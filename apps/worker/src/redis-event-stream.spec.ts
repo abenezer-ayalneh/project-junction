@@ -57,7 +57,7 @@ describeWithRedis('staging Redis event stream', () => {
 			expect(records).toHaveLength(1)
 			expect(records[0].message['eventId']).toBe(id)
 			expect(JSON.parse(records[0].message['event'])).toEqual(event)
-			await expect(adapter.deliver({ ...event, type: 'FoundationCommandAccepted' })).rejects.toThrow('Synthetic event types')
+			await expect(adapter.deliver({ ...event, type: 'FoundationCommandAccepted' })).rejects.toThrow('Non-domain event types')
 		} finally {
 			clearTimeout(liveTimeout)
 			await redis.del([`${namespace}:domain-events`, `${namespace}:domain-event-identities`])

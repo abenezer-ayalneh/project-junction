@@ -2,13 +2,7 @@ import { z } from 'zod'
 
 const IdentifierSchema = z.string().uuid()
 
-export const CapabilitySchema = z.enum([
-	'platform:foundation:read',
-	'platform:foundation:write',
-	'platform:vendor:review',
-	'demo:workspace:create',
-	'demo:workspace:purge',
-])
+export const CapabilitySchema = z.enum(['platform:foundation:read', 'platform:foundation:write', 'platform:vendor:review'])
 
 export const MembershipSchema = z.object({
 	vendorId: IdentifierSchema,
@@ -18,10 +12,7 @@ export const MembershipSchema = z.object({
 })
 
 export const AccessContextSchema = z.object({
-	actor: z.discriminatedUnion('kind', [
-		z.object({ kind: z.literal('user'), userId: IdentifierSchema }),
-		z.object({ kind: z.literal('demo_persona'), personaId: IdentifierSchema }),
-	]),
+	actor: z.object({ kind: z.literal('user'), userId: IdentifierSchema }),
 	workspaceId: IdentifierSchema,
 	activeVendorId: IdentifierSchema.nullable(),
 	locationIds: z.array(IdentifierSchema),

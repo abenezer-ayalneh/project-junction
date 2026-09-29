@@ -21,15 +21,12 @@ describe('OpenAPI v1 contract', () => {
 		}
 	})
 
-	it('publishes no synthetic endpoints or session-header contract', async () => {
+	it('publishes the real identity contract without a session-header contract', async () => {
 		const module = await Test.createTestingModule({ imports: [AppModule] }).compile()
 		const app = module.createNestApplication()
 		app.setGlobalPrefix('v1')
 		try {
 			const document = createSwaggerDocument(app)
-			expect(Object.keys(document.paths)).not.toEqual(
-				expect.arrayContaining(['/v1/synthetic/accounts', '/v1/demo/workspaces', '/v1/webhooks/{provider}']),
-			)
 			expect(document.paths['/v1/identity/didit-webhook']).toBeDefined()
 			expect(document.components?.securitySchemes?.['junction-session']).toBeUndefined()
 			expect(document.paths['/v1/access-context']?.get?.security).toEqual([{ 'junction-auth-cookie': [] }])

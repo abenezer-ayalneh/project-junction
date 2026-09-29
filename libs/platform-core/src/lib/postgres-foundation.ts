@@ -11,9 +11,6 @@ import {
 	CatalogImportCommandSchema,
 	CatalogImportResultSchema,
 	CustomerDiscoveryStateSchema,
-	DemoPersonaKeySchema,
-	DemoSessionSchema,
-	DemoWorkspaceSchema,
 	DiscoveryPreferenceSchema,
 	DiscoveryPreferenceUpdateSchema,
 	type DomainEvent,
@@ -51,12 +48,6 @@ import {
 	RealtimeFoundationEventSchema,
 	RecommendationPageSchema,
 	StorefrontUpdateSchema,
-	SyntheticAccountProvisionSchema,
-	SyntheticAccountSchema,
-	SyntheticProviderCallbackSchema,
-	SyntheticStaffGrantResultSchema,
-	SyntheticStaffGrantSchema,
-	SyntheticStaffRevokeResultSchema,
 	VendorApplicationCommandSchema,
 	VendorApplicationResultSchema,
 	VendorApplicationReviewSchema,
@@ -69,7 +60,7 @@ import { Prisma, PrismaClient } from '../../generated/prisma/index.js'
 import { AccessDeniedError, assertElevatedSession, assertRecentMfa, assertScope } from './access.js'
 import { CATALOG_CSV_HEADER, decodeCatalogCsvText, encodeCatalogCsvField, parseCatalogCsv } from './catalog-csv.js'
 import { DiditSandboxAdapter } from './didit.js'
-import { type ExternalEffectAdapter, FakeExternalEffectAdapter, UnconfiguredExternalEffectAdapter } from './external-effects.js'
+import { type ExternalEffectAdapter, UnconfiguredExternalEffectAdapter } from './external-effects.js'
 import { IdempotencyConflictError, stableHash } from './idempotency.js'
 import { type MediaStore, S3MediaStore } from './media-store.js'
 import { MediaRejectedError, VideoProcessor } from './video-processor.js'
@@ -102,28 +93,14 @@ const stagingDeliveryTypes = [
 ] as const satisfies readonly DomainEvent['type'][]
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const json = (value: unknown) => JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue
-const DEMO_PERSONAS = [
-	{ key: 'customer', role: 'customer' },
-	{ key: 'vendor_owner', role: 'vendor_owner' },
-	{ key: 'service_staff', role: 'service_staff' },
-	{ key: 'support', role: 'support' },
-	{ key: 'trust', role: 'trust' },
-	{ key: 'finance', role: 'finance' },
-	{ key: 'platform_owner', role: 'platform_owner' },
-] as const
-
 function isVerifiedAdult(user: { adultVerificationState: string; verifiedAt: Date | null }): boolean {
-	return (
-		Boolean(user.verifiedAt) &&
-		(user.adultVerificationState === 'verified' ||
-			(process.env['JUNCTION_RUNTIME_MODE'] !== 'staging' && user.adultVerificationState === 'legacy_verified_compat'))
-	)
+	return Boolean(user.verifiedAt) && user.adultVerificationState === 'verified'
 }
 
 /** Prisma owns CRUD; parameterized SQL below is restricted to concurrency locks/claims. */
 export class PostgresFoundation {
 	readonly db: PrismaClient
-	private readonly publicWorkspaceKind = process.env['JUNCTION_RUNTIME_MODE'] === 'staging' ? 'real' : 'synthetic'
+	private readonly publicWorkspaceKind = 'real'
 	private readonly externalEffects: ExternalEffectAdapter
 	private readonly mediaStore: MediaStore | undefined
 	private readonly videoProcessor: VideoProcessor | undefined
@@ -131,9 +108,7 @@ export class PostgresFoundation {
 		const schema = new URL(url).searchParams.get('schema') ?? 'public'
 		if (!/^[a-z_][a-z0-9_]*$/.test(schema)) throw new Error('Unsupported database schema name.')
 		this.db = new PrismaClient({ adapter: new PrismaPg({ connectionString: url, options: `-c search_path=${schema},public` }, { schema }) })
-		this.externalEffects =
-			externalEffects ??
-			(process.env['JUNCTION_RUNTIME_MODE'] === 'staging' ? new UnconfiguredExternalEffectAdapter() : new FakeExternalEffectAdapter(this.db))
+		this.externalEffects = externalEffects ?? new UnconfiguredExternalEffectAdapter()
 		this.mediaStore = mediaStore ?? S3MediaStore.fromEnvironment()
 		this.videoProcessor = videoProcessor ?? VideoProcessor.fromEnvironment()
 	}
@@ -1675,99 +1650,13 @@ export class PostgresFoundation {
 		return { rebuilt: listings.length }
 	}
 
-	async createSyntheticAccount(input: unknown) {
-		const account = SyntheticAccountProvisionSchema.parse(input)
-		const user = await this.db.user.create({
-			data: {
-				email: account.email,
-				adultVerificationState: account.adultVerificationState,
-				verifiedAt: account.adultVerificationState === 'verified' ? new Date() : null,
-			},
-		})
-		return SyntheticAccountSchema.parse({ id: user.id, email: user.email, adultVerificationState: user.adultVerificationState })
-	}
-
-	async grantSyntheticStaff(sessionId: string | undefined, input: unknown) {
-		const grant = SyntheticStaffGrantSchema.parse(input)
-		return this.db.$transaction(async (tx) => {
-			const context = await this.derive(tx, sessionId)
-			if (context.actor.kind !== 'user' || !context.activeVendorId || context.memberships[0]?.role !== 'vendor_owner') throw new AccessDeniedError()
-			const user = await tx.user.findUnique({ where: { id: grant.userId } })
-			const vendor = await tx.vendor.findUnique({ where: { id: context.activeVendorId }, include: { locations: true } })
-			if (!user || !isVerifiedAdult(user) || !vendor || grant.locationIds.some((id) => !vendor.locations.some((location) => location.id === id)))
-				throw new AccessDeniedError()
-			if (await tx.vendorMembership.findUnique({ where: { userId_vendorId: { userId: user.id, vendorId: vendor.id } } })) throw new AccessDeniedError()
-			const staff = await tx.staff.create({ data: { vendorId: vendor.id, userId: user.id } })
-			await tx.vendorMembership.create({
-				data: { userId: user.id, vendorId: vendor.id, role: 'vendor_staff', staffId: staff.id, locationIds: grant.locationIds },
-			})
-			const session = await tx.session.create({
-				data: {
-					userId: user.id,
-					workspaceId: context.workspaceId,
-					activeVendorId: vendor.id,
-					activeRole: 'vendor_staff',
-					expiresAt: new Date(Date.now() + 3600000),
-				},
-			})
-			await tx.auditLog.create({
-				data: {
-					workspaceId: context.workspaceId,
-					actorId: context.actor.userId,
-					action: 'synthetic.staff-granted',
-					correlationId: randomUUID(),
-					metadata: json({ staffId: staff.id, userId: user.id, vendorId: vendor.id, locationIds: grant.locationIds }),
-				},
-			})
-			return SyntheticStaffGrantResultSchema.parse({
-				staffId: staff.id,
-				userId: user.id,
-				sessionId: session.id,
-				expiresAt: session.expiresAt.toISOString(),
-			})
-		})
-	}
-
-	async revokeSyntheticStaff(sessionId: string | undefined, staffId: string) {
-		this.requireResourceId(staffId)
-		return this.db.$transaction(async (tx) => {
-			const context = await this.derive(tx, sessionId)
-			if (context.actor.kind !== 'user' || !context.activeVendorId || context.memberships[0]?.role !== 'vendor_owner') throw new AccessDeniedError()
-			const staff = await tx.staff.findUnique({ where: { id: staffId } })
-			if (!staff || staff.vendorId !== context.activeVendorId || !staff.userId) throw new AccessDeniedError()
-			const sessions = await tx.session.findMany({
-				where: {
-					userId: staff.userId,
-					workspaceId: context.workspaceId,
-					activeVendorId: context.activeVendorId,
-					activeRole: 'vendor_staff',
-					revokedAt: null,
-				},
-				select: { id: true },
-			})
-			await tx.session.updateMany({ where: { id: { in: sessions.map(({ id }) => id) } }, data: { revokedAt: new Date() } })
-			await tx.vendorMembership.deleteMany({ where: { staffId } })
-			await tx.staff.delete({ where: { id: staffId } })
-			await tx.auditLog.create({
-				data: {
-					workspaceId: context.workspaceId,
-					actorId: context.actor.userId,
-					action: 'synthetic.staff-revoked',
-					correlationId: randomUUID(),
-					metadata: json({ staffId, userId: staff.userId, vendorId: context.activeVendorId, revokedSessionIds: sessions.map(({ id }) => id) }),
-				},
-			})
-			return { result: SyntheticStaffRevokeResultSchema.parse({ revoked: true }), revokedSessionIds: sessions.map(({ id }) => id) }
-		})
-	}
-
 	async realtimeHighWaterCursor(sessionId: string | undefined): Promise<string | null> {
 		return this.db.$transaction(async (tx) => {
 			const context = await this.derive(tx, sessionId)
 			const event = await tx.outboxEvent.findFirst({
 				where: {
 					workspaceId: context.workspaceId,
-					...(process.env['JUNCTION_RUNTIME_MODE'] === 'staging' ? { type: { in: [...publicRealtimeTypes] } } : {}),
+					type: { in: [...publicRealtimeTypes] },
 				},
 				orderBy: { id: 'desc' },
 				select: { id: true },
@@ -1780,20 +1669,20 @@ export class PostgresFoundation {
 		if (cursor) this.requireResourceId(cursor)
 		return this.db.$transaction(async (tx) => {
 			const context = await this.derive(tx, sessionId)
-			const stagingTypes = process.env['JUNCTION_RUNTIME_MODE'] === 'staging' ? { type: { in: [...publicRealtimeTypes] } } : {}
+			const publicTypes = { type: { in: [...publicRealtimeTypes] } }
 			const highWater = await tx.outboxEvent.findFirst({
-				where: { workspaceId: context.workspaceId, ...stagingTypes },
+				where: { workspaceId: context.workspaceId, ...publicTypes },
 				orderBy: { id: 'desc' },
 				select: { id: true },
 			})
 			if (!cursor) return { cursor: highWater?.id ?? null, events: [], restRefetchRequired: false }
 			const cursorEvent = await tx.outboxEvent.findFirst({
-				where: { id: cursor, workspaceId: context.workspaceId, ...stagingTypes },
+				where: { id: cursor, workspaceId: context.workspaceId, ...publicTypes },
 				select: { id: true },
 			})
 			if (!cursorEvent || !highWater) return { cursor: highWater?.id ?? null, events: [], restRefetchRequired: true }
 			const records = await tx.outboxEvent.findMany({
-				where: { workspaceId: context.workspaceId, id: { gt: cursor, lte: highWater.id }, ...stagingTypes },
+				where: { workspaceId: context.workspaceId, id: { gt: cursor, lte: highWater.id }, ...publicTypes },
 				orderBy: { id: 'asc' },
 				take: realtimeReplayLimit + 1,
 				select: { id: true, eventId: true, type: true, payload: true, occurredAt: true },
@@ -1841,178 +1730,6 @@ export class PostgresFoundation {
 
 	async acceptElevatedAuditMarker(sessionId: string | undefined, keyInput: string | undefined, input: unknown) {
 		return this.acceptAuditMarkerForMethod(sessionId, keyInput, input, elevatedAuditMarkerMethod, true)
-	}
-
-	async receiveProviderWebhook(workspaceId: string, provider: string, eventId: string | undefined, body: unknown) {
-		if (provider !== 'fake-payment' || !eventId || eventId.length > 200) throw new AccessDeniedError()
-		const callback = SyntheticProviderCallbackSchema.parse(body)
-		return this.db.$transaction(async (tx) => {
-			await this.workspaceLock(tx, workspaceId)
-			// Provider event identity is global, independent of the configured workspace.
-			await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${provider + ':' + eventId}, 0))`
-			const prior = await tx.providerInboxEvent.findUnique({ where: { provider_providerEventId: { provider, providerEventId: eventId } } })
-			const payloadHash = stableHash(body)
-			if (prior) {
-				if (prior.payloadHash !== payloadHash || prior.workspaceId !== workspaceId) throw new IdempotencyConflictError()
-				return { accepted: true, duplicate: true }
-			}
-			await this.consumeDemoProviderQuota(tx, workspaceId)
-			const now = new Date()
-			await tx.providerInboxEvent.create({
-				data: {
-					provider,
-					providerEventId: eventId,
-					workspaceId,
-					providerReference: callback.providerReference,
-					payloadHash,
-					payload: json(callback),
-					reconciliationState: callback.outcome === 'timed_out' ? 'pending_reconciliation' : 'reconciled',
-					reconciledAt: callback.outcome === 'confirmed' ? now : null,
-					processedAt: now,
-				},
-			})
-			await this.enqueueProviderEvent(tx, workspaceId, 'ProviderCallbackReceived', { provider, eventId, providerReference: callback.providerReference })
-			if (callback.outcome === 'confirmed') {
-				await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${provider + ':' + callback.providerReference}, 0))`
-				const reconciled = await tx.providerInboxEvent.updateMany({
-					where: { workspaceId, provider, providerReference: callback.providerReference, reconciliationState: 'pending_reconciliation' },
-					data: { reconciliationState: 'reconciled', reconciledAt: now },
-				})
-				if (reconciled.count > 0)
-					await this.enqueueProviderEvent(tx, workspaceId, 'ProviderTimeoutReconciled', {
-						provider,
-						providerReference: callback.providerReference,
-						reconciledTimeouts: reconciled.count,
-					})
-			}
-			return { accepted: true, duplicate: false }
-		})
-	}
-
-	async createDemoWorkspace(now = new Date()) {
-		return this.db.$transaction(async (tx) => {
-			await tx.$executeRaw`SELECT pg_advisory_xact_lock(773001)`
-			if ((await tx.demoWorkspace.count({ where: { purgedAt: null, expiresAt: { gt: now } } })) >= 100)
-				throw new AccessDeniedError('Synthetic workspace quota reached.')
-			const workspace = await tx.workspace.create({ data: { kind: 'demo' } })
-			const expiresAt = new Date(now.getTime() + 86400000)
-			const demo = await tx.demoWorkspace.create({ data: { workspaceId: workspace.id, expiresAt } })
-			const vendor = await tx.vendor.create({ data: { workspaceId: workspace.id } })
-			const location = await tx.location.create({ data: { vendorId: vendor.id } })
-			const personas = []
-			for (const fixture of DEMO_PERSONAS)
-				personas.push(
-					await tx.demoPersona.create({
-						data: {
-							workspaceId: workspace.id,
-							key: fixture.key,
-							role: fixture.role,
-							vendorId: fixture.key === 'vendor_owner' ? vendor.id : null,
-							locationIds: fixture.key === 'vendor_owner' ? [location.id] : [],
-						},
-					}),
-				)
-			const owner = personas.find((persona) => persona.key === 'vendor_owner')
-			if (!owner) throw new Error('Demo owner fixture is missing.')
-			const session = await tx.session.create({
-				data: { demoPersonaId: owner.id, workspaceId: workspace.id, activeVendorId: vendor.id, activeRole: owner.role, expiresAt },
-			})
-			return DemoWorkspaceSchema.parse({
-				id: workspace.id,
-				createdAt: demo.createdAt.toISOString(),
-				expiresAt: demo.expiresAt.toISOString(),
-				state: 'active',
-				personas: personas.map(({ key, role }) => ({ key, role })),
-				session: { id: session.id, personaKey: 'vendor_owner', expiresAt: session.expiresAt.toISOString() },
-			})
-		})
-	}
-
-	async switchDemoPersona(sessionId: string | undefined, workspaceId: string, keyInput: string) {
-		this.requireResourceId(workspaceId)
-		const key = DemoPersonaKeySchema.parse(keyInput)
-		return this.db.$transaction(async (tx) => {
-			const context = await this.derive(tx, sessionId)
-			if (context.actor.kind !== 'demo_persona' || context.workspaceId !== workspaceId) throw new AccessDeniedError()
-			const persona = await tx.demoPersona.findUnique({ where: { workspaceId_key: { workspaceId, key } } })
-			const demo = await tx.demoWorkspace.findFirst({ where: { workspaceId, purgedAt: null, expiresAt: { gt: new Date() } } })
-			if (!persona || !demo) throw new AccessDeniedError()
-			const revoked = await tx.session.updateMany({ where: { id: context.session.id, revokedAt: null }, data: { revokedAt: new Date() } })
-			if (revoked.count !== 1) throw new AccessDeniedError()
-			const session = await tx.session.create({
-				data: {
-					demoPersonaId: persona.id,
-					workspaceId,
-					activeVendorId: persona.vendorId,
-					activeRole: persona.role,
-					expiresAt: demo.expiresAt,
-				},
-			})
-			await tx.auditLog.create({
-				data: {
-					workspaceId,
-					actorId: context.actor.personaId,
-					action: 'demo.persona-switched',
-					correlationId: randomUUID(),
-					metadata: json({ fromPersonaId: context.actor.personaId, toPersonaId: persona.id, personaKey: key }),
-				},
-			})
-			return DemoSessionSchema.parse({ id: session.id, personaKey: key, expiresAt: session.expiresAt.toISOString() })
-		})
-	}
-
-	async purgeExpiredDemoWorkspaces(now = new Date()) {
-		const demos = await this.db.demoWorkspace.findMany({ where: { purgedAt: null, expiresAt: { lte: now } } })
-		const purged: string[] = []
-		for (const demo of demos)
-			await this.db.$transaction(
-				async (tx) => {
-					const id = demo.workspaceId
-					await tx.$queryRaw`SELECT id FROM "workspaces" WHERE id = ${id}::uuid FOR UPDATE`
-					const current = await tx.demoWorkspace.findUnique({ where: { id: demo.id } })
-					if (!current || current.purgedAt || current.expiresAt > now) return
-					const workspace = await tx.workspace.findUnique({ where: { id } })
-					if (workspace?.kind !== 'demo') throw new AccessDeniedError()
-					const media = await tx.mediaAsset.findMany({
-						where: { listing: { vendor: { workspaceId: id } } },
-						select: { uploadKey: true, sealedKey: true, renditionKey: true, posterKey: true },
-					})
-					const mediaKeys = [
-						...new Set(
-							media.flatMap((asset) =>
-								[asset.uploadKey, asset.sealedKey, asset.renditionKey, asset.posterKey].filter((key): key is string => Boolean(key)),
-							),
-						),
-					]
-					if (mediaKeys.length) {
-						const store = this.requireMediaStore()
-						for (const key of mediaKeys) await store.deletePrivate(key)
-					}
-					await tx.session.deleteMany({ where: { workspaceId: id } })
-					await tx.demoPersona.deleteMany({ where: { workspaceId: id } })
-					await tx.vendorMembership.deleteMany({ where: { vendor: { workspaceId: id } } })
-					await tx.inventoryMovement.deleteMany({ where: { location: { vendor: { workspaceId: id } } } })
-					await tx.mediaAsset.deleteMany({ where: { listing: { vendor: { workspaceId: id } } } })
-					await tx.listingRevision.deleteMany({ where: { listing: { vendor: { workspaceId: id } } } })
-					await tx.listing.deleteMany({ where: { vendor: { workspaceId: id } } })
-					await tx.catalogImportJob.deleteMany({ where: { vendor: { workspaceId: id } } })
-					await tx.location.deleteMany({ where: { vendor: { workspaceId: id } } })
-					await tx.staff.deleteMany({ where: { vendor: { workspaceId: id } } })
-					await tx.vendor.deleteMany({ where: { workspaceId: id } })
-					await tx.savedSearch.deleteMany({ where: { workspaceId: id } })
-					await tx.discoveryPreference.deleteMany({ where: { workspaceId: id } })
-					await tx.idempotencyRecord.deleteMany({ where: { workspaceId: id } })
-					await tx.providerInboxEvent.deleteMany({ where: { workspaceId: id } })
-					await tx.outboxEvent.deleteMany({ where: { workspaceId: id } })
-					await tx.outboxReceipt.deleteMany({ where: { workspaceId: id } })
-					await tx.syntheticExternalEffect.deleteMany({ where: { workspaceId: id } })
-					await tx.auditLog.deleteMany({ where: { workspaceId: id } })
-					await tx.demoWorkspace.update({ where: { id: demo.id }, data: { purgedAt: now } })
-					purged.push(id)
-				},
-				{ timeout: 120_000 },
-			)
-		return purged
 	}
 
 	async expirePendingVideoUploads(now = new Date()) {
@@ -2092,17 +1809,14 @@ export class PostgresFoundation {
 
 	async claim(workerId: string, leaseMs = 30000): Promise<DurableClaim | undefined> {
 		if (!Number.isFinite(leaseMs) || leaseMs <= 0) throw new Error('Invalid lease.')
-		const stagingTypeFilter =
-			process.env['JUNCTION_RUNTIME_MODE'] === 'staging'
-				? Prisma.sql`AND type IN (${Prisma.join(stagingDeliveryTypes)}) AND EXISTS (SELECT 1 FROM "workspaces" w WHERE w.id = e.workspace_id AND w.kind = 'real')`
-				: Prisma.empty
+		const deliveryTypeFilter = Prisma.sql`AND type IN (${Prisma.join(stagingDeliveryTypes)}) AND EXISTS (SELECT 1 FROM "workspaces" w WHERE w.id = e.workspace_id AND w.kind = 'real')`
 		await this.db.$executeRaw`
       UPDATE "outbox_events" SET state = 'dead_letter', "claimed_by" = NULL, "claimed_at" = NULL, "claim_token" = NULL
       WHERE state = 'in_flight' AND attempts >= 3 AND "claimed_at" <= clock_timestamp() - ${leaseMs} * interval '1 millisecond'`
 		const token = randomUUID()
 		const records = await this.db.$queryRaw<DurableClaim[]>`
       UPDATE "outbox_events" SET state = 'in_flight', "claimed_by" = ${workerId}, "claimed_at" = clock_timestamp(), "claim_token" = ${token}::uuid, attempts = attempts + 1
-      WHERE id = (SELECT e.id FROM "outbox_events" e WHERE ((state = 'pending' AND "available_at" <= clock_timestamp()) OR (state = 'in_flight' AND "claimed_at" <= clock_timestamp() - ${leaseMs} * interval '1 millisecond')) ${stagingTypeFilter} ORDER BY "occurred_at", id FOR UPDATE SKIP LOCKED LIMIT 1)
+      WHERE id = (SELECT e.id FROM "outbox_events" e WHERE ((state = 'pending' AND "available_at" <= clock_timestamp()) OR (state = 'in_flight' AND "claimed_at" <= clock_timestamp() - ${leaseMs} * interval '1 millisecond')) ${deliveryTypeFilter} ORDER BY "occurred_at", id FOR UPDATE SKIP LOCKED LIMIT 1)
       RETURNING id, "claim_token" AS "claimToken", payload, attempts`
 		return records[0]
 	}
@@ -2140,12 +1854,10 @@ export class PostgresFoundation {
 		if (!claim) return { processed: false }
 		try {
 			const event = DomainEventSchema.parse(claim.payload)
-			if (process.env['JUNCTION_RUNTIME_MODE'] === 'staging') {
-				if (!(stagingDeliveryTypes as readonly string[]).includes(event.type))
-					throw new Error('No real staging delivery handler is configured for this event type.')
-			} else if (event.type === 'FoundationCommandAccepted') await this.externalEffects.deliver(event)
+			if (!(stagingDeliveryTypes as readonly string[]).includes(event.type))
+				throw new Error('No real delivery handler is configured for this event type.')
 			if (event.type === 'MediaQuarantined') await this.processQuarantinedMedia(event.aggregateId)
-			if (process.env['JUNCTION_RUNTIME_MODE'] === 'staging') await this.externalEffects.deliver(event)
+			await this.externalEffects.deliver(event)
 			await this.complete(claim)
 			return { processed: true }
 		} catch {
@@ -2157,38 +1869,16 @@ export class PostgresFoundation {
 	private async workspaceLock(tx: Transaction, id: string) {
 		this.requireResourceId(id)
 		await tx.$queryRaw`SELECT id FROM "workspaces" WHERE id = ${id}::uuid FOR UPDATE`
-		const workspace = await tx.workspace.findUnique({ where: { id }, include: { demos: true } })
-		if (!workspace || !['synthetic', 'demo', 'real'].includes(workspace.kind) || workspace.demos.some((d) => d.purgedAt || d.expiresAt <= new Date()))
-			throw new AccessDeniedError()
-	}
-
-	private async consumeDemoProviderQuota(tx: Transaction, workspaceId: string) {
-		const demo = await tx.demoWorkspace.findFirst({ where: { workspaceId, purgedAt: null, expiresAt: { gt: new Date() } } })
-		if (!demo) return
-		const consumed = await tx.demoWorkspace.updateMany({
-			where: { id: demo.id, providerEventsUsed: { lt: demo.providerEventsLimit } },
-			data: { providerEventsUsed: { increment: 1 } },
-		})
-		if (consumed.count !== 1) throw new AccessDeniedError('Synthetic demo provider quota reached.')
-	}
-
-	private async consumeDemoPersonaCommandQuota(tx: Transaction, personaId: string) {
-		const consumed = await tx.$executeRaw`
-			UPDATE "demo_personas"
-			SET "command_events_used" = "command_events_used" + 1
-			WHERE id = ${personaId}::uuid
-				AND "command_events_used" < "command_events_limit"
-		`
-		if (consumed !== 1) throw new AccessDeniedError('Synthetic demo persona command quota reached.')
+		const workspace = await tx.workspace.findUnique({ where: { id }, select: { kind: true } })
+		if (workspace?.kind !== 'real') throw new AccessDeniedError()
 	}
 
 	private async derive(tx: Transaction, sessionId: string | undefined): Promise<AccessContext> {
 		if (!sessionId) throw new AccessDeniedError()
 		this.requireResourceId(sessionId)
-		const session = await tx.session.findUnique({ where: { id: sessionId }, include: { user: true, demoPersona: true } })
-		if (!session || session.revokedAt || session.expiresAt <= new Date() || Boolean(session.user) === Boolean(session.demoPersona))
-			throw new AccessDeniedError()
-		if (session.user && !isVerifiedAdult(session.user)) throw new AccessDeniedError()
+		const session = await tx.session.findUnique({ where: { id: sessionId }, include: { user: true } })
+		if (!session || session.revokedAt || session.expiresAt <= new Date() || !session.user) throw new AccessDeniedError()
+		if (!isVerifiedAdult(session.user)) throw new AccessDeniedError()
 		await this.workspaceLock(tx, session.workspaceId)
 		// Lock identity/session/membership rows so revocation cannot race an accepted write.
 		await tx.$queryRaw`SELECT id FROM "sessions" WHERE id = ${session.id}::uuid FOR UPDATE`
@@ -2197,69 +1887,18 @@ export class PostgresFoundation {
 			current.revokedAt ||
 			current.expiresAt <= new Date() ||
 			current.userId !== session.userId ||
-			current.demoPersonaId !== session.demoPersonaId ||
 			current.workspaceId !== session.workspaceId ||
 			current.activeVendorId !== session.activeVendorId ||
 			current.activeRole !== session.activeRole
 		)
 			throw new AccessDeniedError()
-		if (process.env['JUNCTION_RUNTIME_MODE'] === 'staging') {
-			if (!session.user) throw new AccessDeniedError()
-			const workspace = await tx.workspace.findUnique({ where: { id: session.workspaceId }, select: { kind: true } })
-			if (workspace?.kind !== 'real') throw new AccessDeniedError()
-			const authSessions = await tx.$queryRaw<Array<{ id: string }>>`
-				SELECT s.id FROM junction_auth.session s
-				JOIN junction_auth."user" u ON u.id = s."userId"
-				WHERE s.id = ${session.id} AND s."userId" = ${session.user.id}
-					AND s."expiresAt" > clock_timestamp() AND u."emailVerified" = true
-				FOR SHARE OF s, u`
-			if (authSessions.length !== 1) throw new AccessDeniedError()
-		}
-		if (session.demoPersona) {
-			await tx.$queryRaw`SELECT id FROM "demo_personas" WHERE id = ${session.demoPersona.id}::uuid FOR SHARE`
-			const persona = await tx.demoPersona.findUnique({ where: { id: session.demoPersona.id } })
-			if (!persona || persona.workspaceId !== session.workspaceId || persona.role !== session.activeRole || persona.vendorId !== session.activeVendorId)
-				throw new AccessDeniedError()
-			if (persona.vendorId) {
-				const vendor = await tx.vendor.findUnique({ where: { id: persona.vendorId }, include: { locations: true } })
-				if (
-					!vendor ||
-					vendor.workspaceId !== session.workspaceId ||
-					['rejected', 'restricted'].includes(vendor.applicationState) ||
-					!['vendor_owner', 'vendor_staff'].includes(persona.role) ||
-					persona.locationIds.some((id) => !vendor.locations.some((location) => location.id === id))
-				)
-					throw new AccessDeniedError()
-				return AccessContextSchema.parse({
-					actor: { kind: 'demo_persona', personaId: persona.id },
-					workspaceId: session.workspaceId,
-					activeVendorId: persona.vendorId,
-					memberships: [{ vendorId: persona.vendorId, role: persona.role, locationIds: persona.locationIds, active: true }],
-					locationIds: persona.locationIds,
-					capabilities: ['platform:foundation:read', 'platform:foundation:write'],
-					session: {
-						id: session.id,
-						expiresAt: session.expiresAt.toISOString(),
-						revokedAt: null,
-						mfaVerifiedAt: null,
-						recentAuthAt: null,
-					},
-				})
-			}
-			if (persona.locationIds.length !== 0) throw new AccessDeniedError()
-			const capabilities = ['platform:foundation:read']
-			if (['trust', 'platform_owner'].includes(persona.role)) capabilities.push('platform:vendor:review')
-			return AccessContextSchema.parse({
-				actor: { kind: 'demo_persona', personaId: persona.id },
-				workspaceId: session.workspaceId,
-				activeVendorId: null,
-				memberships: [],
-				locationIds: [],
-				capabilities,
-				session: { id: session.id, expiresAt: session.expiresAt.toISOString(), revokedAt: null, mfaVerifiedAt: null, recentAuthAt: null },
-			})
-		}
-		if (!session.user) throw new AccessDeniedError()
+		const authSessions = await tx.$queryRaw<Array<{ id: string }>>`
+			SELECT s.id FROM junction_auth.session s
+			JOIN junction_auth."user" u ON u.id = s."userId"
+			WHERE s.id = ${session.id} AND s."userId" = ${session.user.id}
+				AND s."expiresAt" > clock_timestamp() AND u."emailVerified" = true
+			FOR SHARE OF s, u`
+		if (authSessions.length !== 1) throw new AccessDeniedError()
 		await tx.$queryRaw`SELECT id FROM "users" WHERE id = ${session.user.id}::uuid FOR SHARE`
 		const user = await tx.user.findUniqueOrThrow({ where: { id: session.user.id } })
 		if (!isVerifiedAdult(user)) throw new AccessDeniedError()
@@ -2309,7 +1948,7 @@ export class PostgresFoundation {
 	}
 
 	private actorId(context: AccessContext) {
-		return context.actor.kind === 'user' ? context.actor.userId : context.actor.personaId
+		return context.actor.userId
 	}
 
 	private async vendorForWrite(tx: Transaction, context: AccessContext) {
@@ -2535,7 +2174,7 @@ export class PostgresFoundation {
 			const context = await this.derive(tx, sessionId)
 			if (requireElevatedSession) assertElevatedSession(context)
 			if (command.scope) assertScope(context, command.scope)
-			const actorId = context.actor.kind === 'user' ? context.actor.userId : context.actor.personaId
+			const actorId = context.actor.userId
 			const scopeHash = stableHash({ actorId, workspaceId: context.workspaceId, vendorId: context.activeVendorId })
 			const requestHash = stableHash(command)
 			const where = { key_scopeHash_method: { key, scopeHash, method } }
@@ -2544,7 +2183,6 @@ export class PostgresFoundation {
 				if (prior.requestHash !== requestHash) throw new IdempotencyConflictError()
 				return { ...(prior.outcome as { commandId: string; status: 'accepted'; marker: string }), replayed: true }
 			}
-			if (context.actor.kind === 'demo_persona') await this.consumeDemoPersonaCommandQuota(tx, context.actor.personaId)
 			const commandId = randomUUID()
 			const outcome = { commandId, status: 'accepted' as const, marker: command.marker }
 			await tx.auditLog.create({
@@ -2561,28 +2199,6 @@ export class PostgresFoundation {
 				data: { key, scopeHash, method, workspaceId: context.workspaceId, requestHash, outcome, expiresAt: new Date(Date.now() + 86400000) },
 			})
 			return { ...outcome, replayed: false }
-		})
-	}
-
-	private enqueueProviderEvent(
-		tx: Transaction,
-		workspaceId: string,
-		type: Extract<DomainEvent['type'], 'ProviderCallbackReceived' | 'ProviderTimeoutReconciled'>,
-		payload: Record<string, unknown>,
-	) {
-		const id = randomUUID()
-		return this.enqueue(tx, {
-			eventId: id,
-			type,
-			aggregateId: id,
-			aggregateVersion: 1,
-			workspaceId,
-			causationId: id,
-			correlationId: id,
-			idempotencyKey: null,
-			occurredAt: new Date().toISOString(),
-			schemaVersion: 1,
-			payload,
 		})
 	}
 }

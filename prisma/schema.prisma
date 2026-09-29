@@ -26,13 +26,11 @@ model User {
 }
 
 model Workspace {
-  id           String          @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  kind         String
-  createdAt    DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
-  vendors      Vendor[]
-  sessions     Session[]
-  demos        DemoWorkspace[]
-  demoPersonas DemoPersona[]
+  id        String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  kind      String    @default("real")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  vendors   Vendor[]
+  sessions  Session[]
 
   @@map("workspaces")
 }
@@ -48,21 +46,19 @@ model PlatformReviewerGrant {
 }
 
 model Session {
-  id             String       @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  userId         String?      @map("user_id") @db.Uuid
-  demoPersonaId  String?      @map("demo_persona_id") @db.Uuid
-  workspaceId    String       @map("workspace_id") @db.Uuid
-  expiresAt      DateTime     @map("expires_at") @db.Timestamptz(6)
-  revokedAt      DateTime?    @map("revoked_at") @db.Timestamptz(6)
-  mfaVerifiedAt  DateTime?    @map("mfa_verified_at") @db.Timestamptz(6)
-  recentAuthAt   DateTime?    @map("recent_auth_at") @db.Timestamptz(6)
-  activeVendorId String?      @map("active_vendor_id") @db.Uuid
-  activeRole     String?      @map("active_role")
-  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
-  user           User?        @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  demoPersona    DemoPersona? @relation(fields: [demoPersonaId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  workspace      Workspace    @relation(fields: [workspaceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  activeVendor   Vendor?      @relation("SessionActiveVendor", fields: [activeVendorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id             String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  workspaceId    String    @map("workspace_id") @db.Uuid
+  expiresAt      DateTime  @map("expires_at") @db.Timestamptz(6)
+  revokedAt      DateTime? @map("revoked_at") @db.Timestamptz(6)
+  mfaVerifiedAt  DateTime? @map("mfa_verified_at") @db.Timestamptz(6)
+  recentAuthAt   DateTime? @map("recent_auth_at") @db.Timestamptz(6)
+  activeVendorId String?   @map("active_vendor_id") @db.Uuid
+  activeRole     String?   @map("active_role")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  user           User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  workspace      Workspace @relation(fields: [workspaceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  activeVendor   Vendor?   @relation("SessionActiveVendor", fields: [activeVendorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([workspaceId, expiresAt])
   @@map("sessions")
@@ -400,37 +396,6 @@ model ProviderInboxEvent {
   @@map("provider_inbox_events")
 }
 
-model DemoWorkspace {
-  id                  String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  workspaceId         String    @map("workspace_id") @db.Uuid
-  providerEventsUsed  Int       @default(0) @map("provider_events_used")
-  providerEventsLimit Int       @default(25) @map("provider_events_limit")
-  expiresAt           DateTime  @map("expires_at") @db.Timestamptz(6)
-  purgedAt            DateTime? @map("purged_at") @db.Timestamptz(6)
-  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  workspace           Workspace @relation(fields: [workspaceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-
-  @@index([expiresAt, purgedAt])
-  @@map("demo_workspaces")
-}
-
-model DemoPersona {
-  id                 String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  workspaceId        String    @map("workspace_id") @db.Uuid
-  key                String
-  role               String
-  vendorId           String?   @map("vendor_id") @db.Uuid
-  locationIds        String[]  @map("location_ids") @db.Uuid
-  commandEventsUsed  Int       @default(0) @map("command_events_used")
-  commandEventsLimit Int       @default(25) @map("command_events_limit")
-  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  workspace          Workspace @relation(fields: [workspaceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  sessions           Session[]
-
-  @@unique([workspaceId, key])
-  @@index([workspaceId, role])
-  @@map("demo_personas")
-}
 
 model AuditLog {
   id            String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -451,17 +416,4 @@ model OutboxReceipt {
   processedAt DateTime @default(now()) @map("processed_at") @db.Timestamptz(6)
 
   @@map("outbox_receipts")
-}
-
-// Local substitute for an external receiver's durable idempotency record.
-// Its commit is separate from the outbox acknowledgement transaction.
-model SyntheticExternalEffect {
-  idempotencyKey String   @id @map("idempotency_key")
-  eventId        String   @unique @map("event_id") @db.Uuid
-  workspaceId    String   @map("workspace_id") @db.Uuid
-  payloadHash    String   @map("payload_hash")
-  deliveredAt    DateTime @default(now()) @map("delivered_at") @db.Timestamptz(6)
-
-  @@index([workspaceId, deliveredAt])
-  @@map("synthetic_external_effects")
 }

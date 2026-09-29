@@ -15,7 +15,7 @@ Production migrations use a deployment lock and expand/contract sequence [DEC-09
 2. Deploy code capable of old and new representations.
 3. Backfill in bounded, restartable, observable batches.
 4. Switch reads/writes and verify.
-5. Contract only in a later release after rollback compatibility ends.
+5. Contract only after the rollback window ends and a verified protected backup is available. Migration `20260929000000_retire_synthetic_schema` is that cutover for the former demo and local-effect tables.
 
 Destructive DDL, table rewrites, unbounded backfills, and long blocking locks require a rehearsal and explicit maintenance decision. Application rollback cannot assume a contracted schema can be restored automatically.
 

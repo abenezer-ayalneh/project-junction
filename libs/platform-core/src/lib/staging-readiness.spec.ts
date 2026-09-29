@@ -24,8 +24,8 @@ const staging = (): NodeJS.ProcessEnv => ({
 
 describe('private staging provider readiness', () => {
 	it('refuses every non-staging runtime mode', () => {
-		expect(() => assertStagingProviderConfiguration({ JUNCTION_RUNTIME_MODE: 'synthetic', NODE_ENV: 'test' })).toThrow()
-		expect(() => assertStagingProviderConfiguration({ JUNCTION_RUNTIME_MODE: 'synthetic', NODE_ENV: 'production' })).toThrow()
+		expect(() => assertStagingProviderConfiguration({ JUNCTION_RUNTIME_MODE: 'development', NODE_ENV: 'test' })).toThrow()
+		expect(() => assertStagingProviderConfiguration({ JUNCTION_RUNTIME_MODE: 'development', NODE_ENV: 'production' })).toThrow()
 		expect(() => assertStagingProviderConfiguration({ NODE_ENV: 'production' })).toThrow()
 	})
 
@@ -33,9 +33,8 @@ describe('private staging provider readiness', () => {
 		expect(() => assertStagingProviderConfiguration(staging())).not.toThrow()
 	})
 
-	it('refuses placeholder origins and inherited synthetic secrets', () => {
+	it('refuses placeholder origins', () => {
 		expect(() => assertStagingProviderConfiguration({ ...staging(), BETTER_AUTH_URL: 'https://staging.example.com' })).toThrow()
-		expect(() => assertStagingProviderConfiguration({ ...staging(), SYNTHETIC_DEMO_SESSION_SECRET: 'old-secret' })).toThrow()
 	})
 
 	it('refuses staging without a real email or identity adapter configuration', () => {

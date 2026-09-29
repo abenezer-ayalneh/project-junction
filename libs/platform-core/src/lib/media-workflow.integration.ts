@@ -39,7 +39,7 @@ suite('Phase 01 sealed video worker path', () => {
 		const directory = await mkdtemp(join(tmpdir(), 'junction-media-workflow-'))
 		const keys: string[] = []
 		try {
-			const workspace = await repository.db.workspace.create({ data: { kind: 'synthetic' } })
+			const workspace = await repository.db.workspace.create({ data: { kind: 'real' } })
 			const user = await repository.db.user.create({
 				data: { email: `${randomUUID()}@example.invalid`, adultVerificationState: 'verified', verifiedAt: new Date() },
 			})
@@ -61,7 +61,7 @@ suite('Phase 01 sealed video worker path', () => {
 					kind: 'service',
 					category: 'repair',
 					title: 'Scanned video fixture',
-					description: 'A private one-second synthetic clip.',
+					description: 'A private one-second test clip.',
 					priceCents: 1200,
 					durationMinutes: 30,
 				},
@@ -97,7 +97,7 @@ suite('Phase 01 sealed video worker path', () => {
 				bytes: source.length,
 				sha256,
 				noSpeechDeclared: true,
-				description: 'A silent synthetic repair demonstration.',
+				description: 'A silent repair demonstration.',
 			})
 			const uploaded = await fetch(intent.url, { method: intent.method, headers: intent.headers, body: new Uint8Array(source) })
 			expect(uploaded.ok).toBe(true)
@@ -124,12 +124,26 @@ suite('Phase 01 sealed video worker path', () => {
 			expect((await fetch(`${endpoint}/${bucket}/${after.renditionKey}`)).status).toBe(403)
 			expect((await fetch(`${endpoint}/${bucket}/${after.posterKey}`)).status).toBe(403)
 			await expect(repository.readPlatformMediaQueue(session.id, {})).rejects.toThrow(AccessDeniedError)
-			const reviewer = await repository.db.demoPersona.create({
-				data: { workspaceId: workspace.id, key: `media-reviewer-${randomUUID()}`, role: 'trust', locationIds: [] },
-			})
+			const reviewerUserId = randomUUID()
+			const reviewerSessionId = randomUUID()
+			const reviewerEmail = `${reviewerUserId}@example.com`
+			const reviewerExpiresAt = new Date(Date.now() + 3600000)
+			await repository.db.user.create({ data: { id: reviewerUserId, email: reviewerEmail, adultVerificationState: 'verified', verifiedAt: new Date() } })
 			const reviewerSession = await repository.db.session.create({
-				data: { demoPersonaId: reviewer.id, workspaceId: workspace.id, activeRole: 'trust', expiresAt: new Date(Date.now() + 3600000) },
+				data: {
+					id: reviewerSessionId,
+					userId: reviewerUserId,
+					workspaceId: workspace.id,
+					mfaVerifiedAt: new Date(),
+					recentAuthAt: new Date(),
+					expiresAt: reviewerExpiresAt,
+				},
 			})
+			await repository.db.platformReviewerGrant.create({ data: { userId: reviewerUserId, grantedBy: 'integration-test' } })
+			await repository.db
+				.$executeRaw`INSERT INTO junction_auth."user" (id, name, email, "emailVerified") VALUES (${reviewerUserId}, ${'Media integration reviewer'}, ${reviewerEmail}, true)`
+			await repository.db
+				.$executeRaw`INSERT INTO junction_auth.session (id, "expiresAt", token, "updatedAt", "userId") VALUES (${reviewerSessionId}, ${reviewerExpiresAt}, ${randomUUID()}, now(), ${reviewerUserId})`
 			const queue = await repository.readPlatformMediaQueue(reviewerSession.id, {})
 			expect(queue.items).toMatchObject([{ id: intent.mediaId, version: after.version, captioned: false, noSpeechDeclared: true }])
 			const preview = await repository.previewMediaForReview(reviewerSession.id, intent.mediaId)

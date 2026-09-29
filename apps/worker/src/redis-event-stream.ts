@@ -27,7 +27,7 @@ export class RedisEventStreamAdapter implements ExternalEffectAdapter {
 	) {}
 
 	async deliver(event: DomainEvent): Promise<{ duplicate: boolean }> {
-		if (['FoundationCommandAccepted', 'ProviderCallbackReceived', 'ProviderTimeoutReconciled', 'DemoWorkspaceExpired'].includes(event.type)) {
+		if (['FoundationCommandAccepted', 'ProviderCallbackReceived', 'ProviderTimeoutReconciled'].includes(event.type)) {
 			throw new Error('Non-domain event types cannot enter the staging stream.')
 		}
 		const result = await this.redis.eval(appendOnce, {

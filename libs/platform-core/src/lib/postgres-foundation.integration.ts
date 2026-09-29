@@ -6,7 +6,6 @@ import { DomainEventSchema } from 'contracts'
 import { Prisma } from '../../generated/prisma/index.js'
 import { AccessDeniedError } from './access.js'
 import { DiditSandboxAdapter } from './didit.js'
-import { FakeExternalEffectAdapter } from './external-effects.js'
 import { IdempotencyConflictError } from './idempotency.js'
 import type { MediaStore } from './media-store.js'
 import { PostgresFoundation } from './postgres-foundation.js'
@@ -14,6 +13,21 @@ import { PostgresFoundation } from './postgres-foundation.js'
 async function* noMediaObjects(): AsyncGenerator<{ key: string; lastModified: Date }> {
 	await Promise.resolve()
 	for (const object of [] as Array<{ key: string; lastModified: Date }>) yield object
+}
+
+async function createReviewerSession(repository: PostgresFoundation, workspaceId: string) {
+	const userId = randomUUID()
+	const sessionId = randomUUID()
+	const email = `${userId}@example.com`
+	const expiresAt = new Date(Date.now() + 3600000)
+	await repository.db.user.create({ data: { id: userId, email, adultVerificationState: 'verified', verifiedAt: new Date() } })
+	await repository.db.session.create({ data: { id: sessionId, userId, workspaceId, mfaVerifiedAt: new Date(), recentAuthAt: new Date(), expiresAt } })
+	await repository.db.platformReviewerGrant.create({ data: { userId, grantedBy: 'integration-test' } })
+	await repository.db
+		.$executeRaw`INSERT INTO junction_auth."user" (id, name, email, "emailVerified") VALUES (${userId}, ${'Integration reviewer'}, ${email}, true)`
+	await repository.db
+		.$executeRaw`INSERT INTO junction_auth.session (id, "expiresAt", token, "updatedAt", "userId") VALUES (${sessionId}, ${expiresAt}, ${randomUUID()}, now(), ${userId})`
+	return { id: sessionId }
 }
 
 const suite = process.env['FOUNDATION_INTEGRATION'] === '1' ? describe : describe.skip
@@ -28,7 +42,7 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 	beforeAll(async () => {
 		repository = new PostgresFoundation(process.env['DATABASE_URL']!)
 		other = new PostgresFoundation(process.env['DATABASE_URL']!)
-		const workspace = await repository.db.workspace.create({ data: { kind: 'synthetic' } })
+		const workspace = await repository.db.workspace.create({ data: { kind: 'real' } })
 		workspaceId = workspace.id
 		const user = await repository.db.user.create({
 			data: { email: `${randomUUID()}@example.invalid`, adultVerificationState: 'verified', verifiedAt: new Date() },
@@ -155,7 +169,6 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 				vendors: await repository.db.vendor.count(),
 				audits: await repository.db.auditLog.count(),
 				outbox: await repository.db.outboxEvent.count(),
-				effects: await repository.db.syntheticExternalEffect.count(),
 			}
 			await expect(
 				repository.createVendorApplication(sessionId, randomUUID(), {
@@ -168,7 +181,6 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 			expect(await repository.db.vendor.count()).toBe(before.vendors)
 			expect(await repository.db.auditLog.count()).toBe(before.audits)
 			expect(await repository.db.outboxEvent.count()).toBe(before.outbox)
-			expect(await repository.db.syntheticExternalEffect.count()).toBe(before.effects)
 		} finally {
 			await repository.db.$executeRaw`DELETE FROM junction_auth.session WHERE id = ${sessionId}`
 			await repository.db.$executeRaw`DELETE FROM junction_auth."user" WHERE id = ${userId}`
@@ -275,31 +287,6 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		expect(session.recentAuthAt).toEqual(verifiedAt)
 	})
 
-	it('publishes real workspaces instead of synthetic fixtures in staging', async () => {
-		const real = await repository.db.workspace.create({ data: { kind: 'real' } })
-		const slug = `real-${randomUUID()}`
-		const realVendor = await repository.db.vendor.create({
-			data: { workspaceId: real.id, publicSlug: slug, publishedAt: new Date(), applicationState: 'approved' },
-		})
-		const syntheticSlug = `synthetic-${randomUUID()}`
-		const syntheticVendor = await repository.db.vendor.create({
-			data: { workspaceId, publicSlug: syntheticSlug, publishedAt: new Date(), applicationState: 'approved' },
-		})
-		const previous = process.env['JUNCTION_RUNTIME_MODE']
-		process.env['JUNCTION_RUNTIME_MODE'] = 'staging'
-		const staging = new PostgresFoundation(process.env['DATABASE_URL']!)
-		try {
-			const page = await staging.browsePublicVendors({ limit: 100 })
-			expect(page.items.some((item) => item.slug === slug)).toBe(true)
-			expect(page.items.some((item) => item.slug === syntheticSlug)).toBe(false)
-		} finally {
-			await staging.close()
-			await repository.db.vendor.deleteMany({ where: { id: { in: [realVendor.id, syntheticVendor.id] } } })
-			if (previous === undefined) delete process.env['JUNCTION_RUNTIME_MODE']
-			else process.env['JUNCTION_RUNTIME_MODE'] = previous
-		}
-	})
-
 	it('commits one audit/event/outcome under concurrent replay and across connections', async () => {
 		const key = randomUUID()
 		const results = await Promise.all(
@@ -311,14 +298,12 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		expect(await repository.db.outboxEvent.count({ where: { workspaceId } })).toBe(1)
 		await expect(other.acceptAuditMarker(sessionId, key, { marker: 'mismatch' })).rejects.toThrow(IdempotencyConflictError)
 	})
-	it('does not acknowledge synthetic outbox effects through the staging worker', async () => {
+	it('keeps internal audit events out of the real delivery stream', async () => {
 		const command = await repository.acceptAuditMarker(sessionId, randomUUID(), { marker: 'staging delivery boundary' })
 		const event = await repository.db.outboxEvent.findFirstOrThrow({
 			where: { workspaceId, type: 'FoundationCommandAccepted', payload: { path: ['aggregateId'], equals: command.commandId } },
 		})
-		const previous = process.env['JUNCTION_RUNTIME_MODE']
-		process.env['JUNCTION_RUNTIME_MODE'] = 'staging'
-		try {
+		{
 			const claim = await repository.claim(randomUUID())
 			if (claim) {
 				const claimedEvent = DomainEventSchema.parse(claim.payload)
@@ -326,12 +311,9 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 				expect((await repository.db.workspace.findUniqueOrThrow({ where: { id: claimedEvent.workspaceId } })).kind).toBe('real')
 			}
 			expect((await repository.db.outboxEvent.findUniqueOrThrow({ where: { id: event.id } })).state).toBe('pending')
-		} finally {
-			if (previous === undefined) delete process.env['JUNCTION_RUNTIME_MODE']
-			else process.env['JUNCTION_RUNTIME_MODE'] = previous
 		}
 	})
-	it('exposes only public catalog events from real workspaces to staging realtime', async () => {
+	it('exposes only public catalog events from real workspaces to realtime', async () => {
 		const real = await repository.db.workspace.create({ data: { kind: 'real' } })
 		const makeEvent = (type: 'ListingPublished' | 'VendorApplicationSubmitted', scopedWorkspaceId: string) =>
 			DomainEventSchema.parse({
@@ -350,9 +332,8 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		const publicEvent = makeEvent('ListingPublished', real.id)
 		const privateEvent = makeEvent('VendorApplicationSubmitted', real.id)
 		const nextPublicEvent = makeEvent('ListingPublished', real.id)
-		const syntheticEvent = makeEvent('ListingPublished', workspaceId)
 		const records = []
-		for (const event of [publicEvent, privateEvent, nextPublicEvent, syntheticEvent]) {
+		for (const event of [publicEvent, privateEvent, nextPublicEvent]) {
 			records.push(
 				await repository.db.outboxEvent.create({
 					data: {
@@ -372,7 +353,6 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 			payload: {},
 		})
 		await expect(repository.realtimeDomainEventForEventId(privateEvent.eventId)).resolves.toBeNull()
-		await expect(repository.realtimeDomainEventForEventId(syntheticEvent.eventId)).resolves.toBeNull()
 		const userId = randomUUID()
 		const sessionId = randomUUID()
 		const email = `${randomUUID()}@example.com`
@@ -420,20 +400,7 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		await repository.db.user.update({ where: { id: userId }, data: { adultVerificationState: 'verified', verifiedAt: new Date() } })
 		await expect(repository.accessContext(sessionId)).resolves.toMatchObject({ actor: { kind: 'user', userId } })
 	})
-	it('keeps explicit legacy compatibility limited to synthetic regression', async () => {
-		const legacyWorkspace = await repository.db.workspace.create({ data: { kind: 'synthetic' } })
-		const legacyUser = await repository.db.user.create({
-			data: { email: `${randomUUID()}@example.invalid`, adultVerificationState: 'legacy_verified_compat', verifiedAt: new Date() },
-		})
-		const legacySession = await repository.db.session.create({
-			data: { userId: legacyUser.id, workspaceId: legacyWorkspace.id, expiresAt: new Date(Date.now() + 3600000) },
-		})
-		expect(legacyUser.adultVerificationState).toBe('legacy_verified_compat')
-		await expect(repository.accessContext(legacySession.id)).resolves.toMatchObject({ actor: { kind: 'user', userId: legacyUser.id } })
-		await repository.db.user.update({ where: { id: legacyUser.id }, data: { adultVerificationState: 'unverified' } })
-		await expect(repository.accessContext(legacySession.id)).rejects.toThrow(AccessDeniedError)
-	})
-	it('denies a timestamped compatibility state in real staging sessions', async () => {
+	it('denies a timestamped nonverified state in real sessions', async () => {
 		const sessionId = randomUUID()
 		const userId = randomUUID()
 		const email = `${randomUUID()}@example.com`
@@ -441,7 +408,7 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		await repository.ensureAuthenticatedSession({ sessionId, userId, email, expiresAt })
 		await repository.db.user.update({
 			where: { id: userId },
-			data: { adultVerificationState: 'legacy_verified_compat', verifiedAt: new Date() },
+			data: { adultVerificationState: 'unverified', verifiedAt: new Date() },
 		})
 		await repository.db
 			.$executeRaw`INSERT INTO junction_auth."user" (id, name, email, "emailVerified") VALUES (${userId}, ${'Legacy state probe'}, ${email}, true)`
@@ -512,49 +479,12 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 			await repository.db.vendorMembership.update({ where: { userId_vendorId: { userId, vendorId } }, data: { revokedAt: null } })
 		}
 	})
-	it('provisions a synthetic verified account and grants then revokes its scoped Staff session', async () => {
-		const account = await repository.createSyntheticAccount({ email: `${randomUUID()}@example.invalid`, adultVerificationState: 'verified' })
-		const grant = await repository.grantSyntheticStaff(sessionId, { userId: account.id, locationIds: [locationId] })
-		const grantAudit = await repository.db.auditLog.findFirstOrThrow({ where: { action: 'synthetic.staff-granted' } })
-		expect(grantAudit.workspaceId).toBe(workspaceId)
-		expect(grantAudit.actorId).toBe(userId)
-		expect(grantAudit.metadata).toEqual({ staffId: grant.staffId, userId: account.id, vendorId, locationIds: [locationId] })
-		await expect(repository.accessContext(grant.sessionId)).resolves.toMatchObject({
-			actor: { kind: 'user', userId: account.id },
-			activeVendorId: vendorId,
-		})
-		await expect(repository.readLocation(grant.sessionId, locationId)).resolves.toEqual({ id: locationId, vendorId, workspaceId })
-		await expect(repository.exportCatalogCsv(grant.sessionId)).rejects.toThrow(AccessDeniedError)
-		await expect(
-			repository.createListing(grant.sessionId, randomUUID(), {
-				kind: 'product',
-				category: 'goods',
-				title: 'Staff denied item',
-				description: 'A listing requiring Vendor Owner authority.',
-				priceCents: 1000,
-			}),
-		).rejects.toThrow(AccessDeniedError)
-		const revoked = await repository.revokeSyntheticStaff(sessionId, grant.staffId)
-		expect(revoked.result).toEqual({ revoked: true })
-		expect(revoked.revokedSessionIds).toEqual([grant.sessionId])
-		await expect(repository.revokeSyntheticStaff(sessionId, grant.staffId)).rejects.toThrow(AccessDeniedError)
-		const revokeAudit = await repository.db.auditLog.findFirstOrThrow({ where: { action: 'synthetic.staff-revoked' } })
-		expect(revokeAudit.workspaceId).toBe(workspaceId)
-		expect(revokeAudit.actorId).toBe(userId)
-		expect(revokeAudit.metadata).toEqual({ staffId: grant.staffId, userId: account.id, vendorId, revokedSessionIds: [grant.sessionId] })
-		await expect(repository.accessContext(grant.sessionId)).rejects.toThrow(AccessDeniedError)
-		const pending = await repository.createSyntheticAccount({ email: `${randomUUID()}@example.invalid`, adultVerificationState: 'pending' })
-		await expect(repository.grantSyntheticStaff(sessionId, { userId: pending.id, locationIds: [locationId] })).rejects.toThrow(AccessDeniedError)
-	})
-	it('lists only explicitly published non-demo Vendor summaries without leaking scope data', async () => {
+	it('lists only explicitly published real Vendor summaries without leaking scope data', async () => {
 		await repository.db.vendor.update({
 			where: { id: vendorId },
 			data: { publicSlug: 'published-foundation', publishedAt: new Date(), applicationState: 'approved' },
 		})
 		const unpublished = await repository.db.vendor.create({ data: { workspaceId } })
-		const demo = await repository.createDemoWorkspace()
-		const demoVendor = await repository.db.vendor.findFirstOrThrow({ where: { workspaceId: demo.id } })
-		await repository.db.vendor.update({ where: { id: demoVendor.id }, data: { publicSlug: 'must-not-leak', publishedAt: new Date() } })
 		await expect(repository.browsePublicVendors({ limit: 1 })).resolves.toEqual({
 			items: [{ id: vendorId, slug: 'published-foundation' }],
 			nextCursor: null,
@@ -572,12 +502,7 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		})
 		const submitted = await repository.submitListingForReview(sessionId, randomUUID(), listing.id)
 		expect(submitted.state).toBe('pending_review')
-		const reviewer = await repository.db.demoPersona.create({
-			data: { workspaceId, key: `reviewer-${randomUUID()}`, role: 'platform_owner', locationIds: [] },
-		})
-		const reviewerSession = await repository.db.session.create({
-			data: { demoPersonaId: reviewer.id, workspaceId, activeRole: 'platform_owner', expiresAt: new Date(Date.now() + 3600000) },
-		})
+		const reviewerSession = await createReviewerSession(repository, workspaceId)
 		await expect(repository.readPlatformReviewQueue(sessionId, {})).rejects.toThrow(AccessDeniedError)
 		await expect(repository.readPlatformCatalogHealth(sessionId)).rejects.toThrow(AccessDeniedError)
 		const pendingQueue = await repository.readPlatformReviewQueue(reviewerSession.id, {})
@@ -655,7 +580,7 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 			repository.updateStorefront(sessionId, randomUUID(), {
 				slug: 'published-foundation',
 				displayName: 'Foundation Vendor',
-				description: 'A verified synthetic Vendor storefront for catalog acceptance.',
+				description: 'A verified Vendor storefront for catalog acceptance.',
 			}),
 		).resolves.toMatchObject({ vendorId, replayed: false })
 		await repository.db.location.update({ where: { id: locationId }, data: { label: 'Foundation location', city: 'Addis Ababa' } })
@@ -718,16 +643,13 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 				publishedAt: new Date(),
 				publicSlug: `restrict-${randomUUID().slice(0, 8)}`,
 				displayName: 'Restrictable Vendor',
-				description: 'A synthetic Vendor used to verify public suspension.',
+				description: 'A Vendor used to verify public suspension.',
 			},
 		})
-		const reviewer = await repository.db.demoPersona.create({ data: { workspaceId, key: `restrict-${randomUUID()}`, role: 'trust', locationIds: [] } })
-		const reviewerSession = await repository.db.session.create({
-			data: { demoPersonaId: reviewer.id, workspaceId, activeRole: 'trust', expiresAt: new Date(Date.now() + 3600000) },
-		})
+		const reviewerSession = await createReviewerSession(repository, workspaceId)
 		expect((await repository.browsePublicVendors({ limit: 100 })).items.some((item) => item.id === vendor.id)).toBe(true)
 		await expect(
-			repository.reviewVendorApplication(reviewerSession.id, randomUUID(), vendor.id, { decision: 'restrict', note: 'synthetic suspension check' }),
+			repository.reviewVendorApplication(reviewerSession.id, randomUUID(), vendor.id, { decision: 'restrict', note: 'suspension check' }),
 		).resolves.toMatchObject({ state: 'restricted' })
 		expect((await repository.db.vendor.findUniqueOrThrow({ where: { id: vendor.id } })).publishedAt).toBeNull()
 		expect((await repository.browsePublicVendors({ limit: 100 })).items.some((item) => item.id === vendor.id)).toBe(false)
@@ -810,7 +732,7 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 			}),
 		).rejects.toThrow(AccessDeniedError)
 
-		const foreignWorkspace = await repository.db.workspace.create({ data: { kind: 'synthetic' } })
+		const foreignWorkspace = await repository.db.workspace.create({ data: { kind: 'real' } })
 		const foreignVendor = await repository.db.vendor.create({ data: { workspaceId: foreignWorkspace.id } })
 		const foreignLocation = await repository.db.location.create({ data: { vendorId: foreignVendor.id } })
 		const foreignListing = await repository.db.listing.create({
@@ -852,10 +774,7 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		expect(captioned.state).toBe('quarantined')
 		expect((await repository.db.mediaAsset.findUniqueOrThrow({ where: { id: captioned.id } })).processedAt).toBeNull()
 		const submitted = await repository.submitListingForReview(sessionId, randomUUID(), listing.id)
-		const reviewer = await repository.db.demoPersona.create({ data: { workspaceId, key: `trust-${randomUUID()}`, role: 'trust', locationIds: [] } })
-		const reviewerSession = await repository.db.session.create({
-			data: { demoPersonaId: reviewer.id, workspaceId, activeRole: 'trust', expiresAt: new Date(Date.now() + 3600000) },
-		})
+		const reviewerSession = await createReviewerSession(repository, workspaceId)
 		await expect(
 			repository.reviewListing(reviewerSession.id, randomUUID(), listing.id, {
 				decision: 'approve',
@@ -1042,7 +961,7 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		expect((await repository.recommendPublicListings(sessionId)).items.find((item) => item.id === listing.id)?.reason).toBe(
 			'Recently published in public discovery.',
 		)
-		const otherWorkspace = await repository.db.workspace.create({ data: { kind: 'synthetic' } })
+		const otherWorkspace = await repository.db.workspace.create({ data: { kind: 'real' } })
 		const otherVendor = await repository.db.vendor.create({ data: { workspaceId: otherWorkspace.id, applicationState: 'approved' } })
 		await expect(repository.followVendor(sessionId, otherVendor.id, true)).rejects.toThrow(AccessDeniedError)
 	})
@@ -1055,7 +974,7 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 				publishedAt: new Date(),
 				publicSlug: slug,
 				displayName: 'Restricted test Vendor',
-				description: 'A synthetic Vendor for visibility checks.',
+				description: 'A Vendor for visibility checks.',
 			},
 		})
 		const listing = await repository.db.listing.create({
@@ -1064,7 +983,7 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 				kind: 'product',
 				category: 'home',
 				title: 'Restricted test tray',
-				description: 'A synthetic published listing for visibility checks.',
+				description: 'A published listing for visibility checks.',
 				priceCents: 8500,
 				state: 'published',
 				publishedAt: new Date(),
@@ -1112,57 +1031,6 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		expect(await repository.db.auditLog.count()).toBe(before)
 		expect(await repository.db.idempotencyRecord.count({ where: { outcome: { path: ['marker'], equals: 'rollback' } } })).toBe(0)
 	})
-	it('deduplicates concurrent webhook delivery and rejects payload substitution', async () => {
-		const eventId = randomUUID()
-		const results = await Promise.all(
-			[repository, other].map((repo) =>
-				repo.receiveProviderWebhook(workspaceId, 'fake-payment', eventId, {
-					providerReference: 'payment-intent-concurrent',
-					outcome: 'confirmed',
-				}),
-			),
-		)
-		expect(results.filter((result) => !result.duplicate)).toHaveLength(1)
-		await expect(
-			repository.receiveProviderWebhook(workspaceId, 'fake-payment', eventId, {
-				providerReference: 'payment-intent-concurrent',
-				outcome: 'timed_out',
-			}),
-		).rejects.toThrow(IdempotencyConflictError)
-		await expect(
-			repository.receiveProviderWebhook(workspaceId, 'unsupported', randomUUID(), {
-				providerReference: 'payment-intent-unsupported',
-				outcome: 'confirmed',
-			}),
-		).rejects.toThrow(AccessDeniedError)
-	})
-	it('keeps timed-out callbacks pending until a distinct confirmed callback reconciles their provider reference', async () => {
-		const providerReference = `payment-intent-${randomUUID()}`
-		const timedOutEventId = randomUUID()
-		await repository.receiveProviderWebhook(workspaceId, 'fake-payment', timedOutEventId, {
-			providerReference,
-			outcome: 'timed_out',
-		})
-		const pending = await repository.db.providerInboxEvent.findUniqueOrThrow({
-			where: { provider_providerEventId: { provider: 'fake-payment', providerEventId: timedOutEventId } },
-		})
-		expect(pending).toMatchObject({ reconciliationState: 'pending_reconciliation', reconciledAt: null })
-		const confirmedEventId = randomUUID()
-		await Promise.all(
-			[repository, other].map((repo) =>
-				repo.receiveProviderWebhook(workspaceId, 'fake-payment', confirmedEventId, {
-					providerReference,
-					outcome: 'confirmed',
-				}),
-			),
-		)
-		const reconciled = await repository.db.providerInboxEvent.findUniqueOrThrow({
-			where: { provider_providerEventId: { provider: 'fake-payment', providerEventId: timedOutEventId } },
-		})
-		expect(reconciled.reconciliationState).toBe('reconciled')
-		expect(reconciled.reconciledAt).toBeInstanceOf(Date)
-		expect(await repository.db.outboxEvent.count({ where: { workspaceId, type: 'ProviderTimeoutReconciled' } })).toBe(1)
-	})
 	it('claims distinct work, fences stale workers, and deduplicates consumer replay', async () => {
 		const markerIds = await Promise.all(
 			['first', 'second'].map(
@@ -1195,34 +1063,6 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 				where: { eventId: { in: [DomainEventSchema.parse(first!.payload).eventId, DomainEventSchema.parse(second!.payload).eventId] } },
 			}),
 		).toBe(2)
-	})
-	it('applies a synthetic external effect once when the worker crashes before acknowledgement', async () => {
-		// Earlier real-account fixtures share this integration database but are not
-		// part of the synthetic receiver's delivery queue under test.
-		await repository.db.outboxEvent.updateMany({
-			where: { workspaceId: { not: workspaceId }, state: { in: ['pending', 'in_flight'] } },
-			data: { state: 'delivered', claimedBy: null, claimedAt: null, claimToken: null },
-		})
-		await repository.db.outboxEvent.updateMany({
-			where: { workspaceId, state: { in: ['pending', 'in_flight'] } },
-			data: { state: 'delivered', claimedBy: null, claimedAt: null, claimToken: null },
-		})
-		await repository.acceptAuditMarker(sessionId, randomUUID(), { marker: 'external effect crash window' })
-		const originalClaim = (await repository.claim('crashed-after-effect'))!
-		const event = DomainEventSchema.parse(originalClaim.payload)
-		const receiver = new FakeExternalEffectAdapter(other.db)
-		const deliveries = await Promise.all([receiver.deliver(event), new FakeExternalEffectAdapter(repository.db).deliver(event)])
-		expect(deliveries).toContainEqual({ duplicate: false })
-		expect(deliveries).toContainEqual({ duplicate: true })
-		expect(await repository.db.outboxReceipt.count({ where: { eventId: event.eventId } })).toBe(0)
-		await repository.db.outboxEvent.update({ where: { id: originalClaim.id }, data: { claimedAt: new Date(0) } })
-		await expect(other.processOne('recovered-after-effect')).resolves.toEqual({ processed: true })
-		await expect(repository.complete(originalClaim)).rejects.toThrow('Stale outbox claim')
-		await expect(receiver.deliver(event)).resolves.toEqual({ duplicate: true })
-		await expect(receiver.deliver({ ...event, payload: { marker: 'substituted' } })).rejects.toThrow('different content')
-		expect(await repository.db.syntheticExternalEffect.count({ where: { eventId: event.eventId, workspaceId } })).toBe(1)
-		expect(await repository.db.outboxReceipt.count({ where: { eventId: event.eventId, workspaceId } })).toBe(1)
-		expect((await repository.db.outboxEvent.findUniqueOrThrow({ where: { id: originalClaim.id } })).state).toBe('delivered')
 	})
 	it('derives a workspace-only realtime high-water cursor from the current session', async () => {
 		const cursor = await repository.realtimeHighWaterCursor(sessionId)
@@ -1277,96 +1117,6 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		}
 		expect(await repository.claim('recovery')).toBeUndefined()
 		expect((await repository.db.outboxEvent.findUniqueOrThrow({ where: { id } })).state).toBe('dead_letter')
-	})
-	it('issues one scoped demo persona session at a time, then purges only expired demo-owned records', async () => {
-		const demo = await repository.createDemoWorkspace()
-		const owner = await repository.accessContext(demo.session.id)
-		expect(owner.actor.kind).toBe('demo_persona')
-		expect(owner.activeVendorId).not.toBeNull()
-		await repository.acceptAuditMarker(demo.session.id, randomUUID(), { marker: 'demo data' })
-		const demoEvent = await repository.db.outboxEvent.findFirstOrThrow({ where: { workspaceId: demo.id, type: 'FoundationCommandAccepted' } })
-		await new FakeExternalEffectAdapter(other.db).deliver(DomainEventSchema.parse(demoEvent.payload))
-		expect(await repository.db.syntheticExternalEffect.count({ where: { workspaceId: demo.id } })).toBe(1)
-		const customer = await repository.switchDemoPersona(demo.session.id, demo.id, 'customer')
-		await expect(repository.accessContext(demo.session.id)).rejects.toThrow(AccessDeniedError)
-		expect((await repository.accessContext(customer.id)).activeVendorId).toBeNull()
-		await expect(repository.readLocation(customer.id, owner.locationIds[0])).rejects.toThrow(AccessDeniedError)
-		await repository.db.demoWorkspace.updateMany({ where: { workspaceId: demo.id }, data: { expiresAt: new Date(0) } })
-		await expect(repository.accessContext(customer.id)).rejects.toThrow(AccessDeniedError)
-		expect(await repository.purgeExpiredDemoWorkspaces()).toEqual([demo.id])
-		expect(await repository.db.auditLog.count({ where: { workspaceId: demo.id } })).toBe(0)
-		expect(await repository.db.outboxEvent.count({ where: { workspaceId: demo.id } })).toBe(0)
-		expect(await repository.db.syntheticExternalEffect.count({ where: { workspaceId: demo.id } })).toBe(0)
-		expect(await repository.db.session.count({ where: { workspaceId: demo.id } })).toBe(0)
-		expect(await repository.db.demoPersona.count({ where: { workspaceId: demo.id } })).toBe(0)
-		expect(await repository.db.idempotencyRecord.count({ where: { workspaceId: demo.id } })).toBe(0)
-		expect(await repository.db.auditLog.count({ where: { workspaceId } })).toBeGreaterThan(0)
-		expect(await repository.purgeExpiredDemoWorkspaces()).toEqual([])
-	})
-	it('purges expired demo listings and their private media objects without orphaning records', async () => {
-		const deletedKeys: string[] = []
-		let failFirstDelete = true
-		const store: MediaStore = {
-			createUploadGrant: () => Promise.reject(new Error('Not used in demo purge test.')),
-			sealUpload: () => Promise.reject(new Error('Not used in demo purge test.')),
-			readPrivate: () => Promise.reject(new Error('Not used in demo purge test.')),
-			writePrivate: () => Promise.reject(new Error('Not used in demo purge test.')),
-			deletePrivate: (key) => {
-				if (failFirstDelete) {
-					failFirstDelete = false
-					return Promise.reject(new Error('Local object store is unavailable.'))
-				}
-				deletedKeys.push(key)
-				return Promise.resolve()
-			},
-			listPrivate: noMediaObjects,
-			createReadGrant: () => Promise.reject(new Error('Not used in demo purge test.')),
-		}
-		const purger = new PostgresFoundation(process.env['DATABASE_URL']!, undefined, store)
-		try {
-			const demo = await purger.createDemoWorkspace()
-			const vendor = await purger.db.vendor.findFirstOrThrow({ where: { workspaceId: demo.id } })
-			const listing = await purger.db.listing.create({
-				data: {
-					vendorId: vendor.id,
-					kind: 'product',
-					category: 'home',
-					title: 'Disposable demo item',
-					description: 'Temporary media purge fixture.',
-					priceCents: 100,
-				},
-			})
-			await purger.db.listingRevision.create({ data: { listingId: listing.id, version: 1, state: 'draft', risk: 'low', snapshot: {} } })
-			await purger.db.mediaAsset.create({
-				data: {
-					listingId: listing.id,
-					kind: 'short_video',
-					state: 'quarantined',
-					uploadKey: `quarantine/uploads/${demo.id}`,
-					sealedKey: `quarantine/sealed/${demo.id}`,
-					renditionKey: `private/processed/${demo.id}.mp4`,
-					posterKey: `private/processed/${demo.id}.jpg`,
-				},
-			})
-			await purger.db.demoWorkspace.updateMany({ where: { workspaceId: demo.id }, data: { expiresAt: new Date(0) } })
-			await expect(purger.purgeExpiredDemoWorkspaces()).rejects.toThrow('Local object store is unavailable.')
-			expect(await purger.db.listing.count({ where: { id: listing.id } })).toBe(1)
-			expect(await purger.db.demoWorkspace.findFirstOrThrow({ where: { workspaceId: demo.id } })).toMatchObject({ purgedAt: null })
-			expect(await purger.purgeExpiredDemoWorkspaces()).toEqual([demo.id])
-			expect(deletedKeys).toEqual(
-				expect.arrayContaining([
-					`quarantine/uploads/${demo.id}`,
-					`quarantine/sealed/${demo.id}`,
-					`private/processed/${demo.id}.mp4`,
-					`private/processed/${demo.id}.jpg`,
-				]),
-			)
-			expect(await purger.db.mediaAsset.count({ where: { listingId: listing.id } })).toBe(0)
-			expect(await purger.db.listing.count({ where: { id: listing.id } })).toBe(0)
-			expect(await purger.purgeExpiredDemoWorkspaces()).toEqual([])
-		} finally {
-			await purger.close()
-		}
 	})
 	it('reconciles only aged unreferenced media objects with a durable deletion audit and retry', async () => {
 		const now = new Date()
@@ -1435,39 +1185,8 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 			await repository.db.listing.delete({ where: { id: listing.id } })
 		}
 	})
-	it('bounds new fake provider callbacks in a demo workspace without charging a duplicate delivery', async () => {
-		const demo = await repository.createDemoWorkspace()
-		await repository.db.demoWorkspace.updateMany({ where: { workspaceId: demo.id }, data: { providerEventsLimit: 1 } })
-		const firstEventId = randomUUID()
-		const firstCallback = { providerReference: `demo-provider-${randomUUID()}`, outcome: 'confirmed' as const }
-		await expect(repository.receiveProviderWebhook(demo.id, 'fake-payment', firstEventId, firstCallback)).resolves.toEqual({
-			accepted: true,
-			duplicate: false,
-		})
-		await expect(repository.receiveProviderWebhook(demo.id, 'fake-payment', firstEventId, firstCallback)).resolves.toEqual({
-			accepted: true,
-			duplicate: true,
-		})
-		await expect(
-			repository.receiveProviderWebhook(demo.id, 'fake-payment', randomUUID(), {
-				providerReference: `demo-provider-${randomUUID()}`,
-				outcome: 'confirmed',
-			}),
-		).rejects.toThrow(AccessDeniedError)
-		expect((await repository.db.demoWorkspace.findFirstOrThrow({ where: { workspaceId: demo.id } })).providerEventsUsed).toBe(1)
-	})
-	it('bounds demo persona commands without charging an idempotent replay', async () => {
-		const demo = await repository.createDemoWorkspace()
-		const persona = await repository.db.demoPersona.findUniqueOrThrow({ where: { workspaceId_key: { workspaceId: demo.id, key: 'vendor_owner' } } })
-		await repository.db.demoPersona.update({ where: { id: persona.id }, data: { commandEventsLimit: 1 } })
-		const key = randomUUID()
-		await expect(repository.acceptAuditMarker(demo.session.id, key, { marker: 'first demo command' })).resolves.toMatchObject({ replayed: false })
-		await expect(repository.acceptAuditMarker(demo.session.id, key, { marker: 'first demo command' })).resolves.toMatchObject({ replayed: true })
-		await expect(repository.acceptAuditMarker(demo.session.id, randomUUID(), { marker: 'quota exceeded' })).rejects.toThrow(AccessDeniedError)
-		expect((await repository.db.demoPersona.findUniqueOrThrow({ where: { id: persona.id } })).commandEventsUsed).toBe(1)
-	})
 	it('denies real foreign resource IDs across Vendor and workspace command boundaries without writes', async () => {
-		const secondWorkspace = await repository.db.workspace.create({ data: { kind: 'synthetic' } })
+		const secondWorkspace = await repository.db.workspace.create({ data: { kind: 'real' } })
 		const sameWorkspaceVendor = await repository.db.vendor.create({ data: { workspaceId, applicationState: 'approved' } })
 		const foreignVendor = await repository.db.vendor.create({
 			data: { workspaceId: secondWorkspace.id, applicationState: 'approved', publishedAt: new Date() },
@@ -1489,10 +1208,7 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 				expiresAt: new Date(Date.now() + 3600000),
 			},
 		})
-		const reviewer = await repository.db.demoPersona.create({ data: { workspaceId, key: `isolation-${randomUUID()}`, role: 'trust', locationIds: [] } })
-		const reviewerSession = await repository.db.session.create({
-			data: { demoPersonaId: reviewer.id, workspaceId, activeRole: 'trust', expiresAt: new Date(Date.now() + 3600000) },
-		})
+		const reviewerSession = await createReviewerSession(repository, workspaceId)
 		const draft = {
 			kind: 'product',
 			category: 'goods',
@@ -1511,11 +1227,9 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		const foreignPublished = await repository.db.listing.create({
 			data: { vendorId: foreignVendor.id, ...draft, title: 'Published foreign basket', state: 'published' },
 		})
-		const foreignStaff = await repository.db.staff.create({ data: { vendorId: foreignVendor.id, userId: foreignOwner.id } })
 		const counts = async () => ({
 			audit: await repository.db.auditLog.count(),
 			outbox: await repository.db.outboxEvent.count(),
-			effects: await repository.db.syntheticExternalEffect.count(),
 			media: await repository.db.mediaAsset.count(),
 			idempotency: await repository.db.idempotencyRecord.count(),
 			revisions: await repository.db.listingRevision.count(),
@@ -1540,7 +1254,6 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		await expect(
 			repository.reviewVendorApplication(reviewerSession.id, randomUUID(), foreignVendor.id, { decision: 'restrict', note: 'foreign' }),
 		).rejects.toThrow(AccessDeniedError)
-		await expect(repository.revokeSyntheticStaff(sessionId, foreignStaff.id)).rejects.toThrow(AccessDeniedError)
 		await expect(repository.saveListing(sessionId, foreignPublished.id, true)).rejects.toThrow(AccessDeniedError)
 		await expect(repository.followVendor(sessionId, foreignVendor.id, true)).rejects.toThrow(AccessDeniedError)
 		await expect(repository.realtimeReplay(sessionId, (await repository.realtimeHighWaterCursor(foreignSession.id)) ?? undefined)).resolves.toMatchObject({
@@ -1551,7 +1264,6 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		expect(await counts()).toEqual(before)
 		expect(await repository.db.listing.findUniqueOrThrow({ where: { id: foreignPending.id } })).toMatchObject({ state: 'pending_review' })
 		expect(await repository.db.vendor.findUniqueOrThrow({ where: { id: foreignVendor.id } })).toMatchObject({ applicationState: 'approved' })
-		expect(await repository.db.staff.findUnique({ where: { id: foreignStaff.id } })).not.toBeNull()
 		expect(await repository.exportCatalogCsv(sessionId)).not.toContain('Foreign basket')
 	})
 	it('rechecks current membership, Vendor restriction, and resource ownership before idempotent replay', async () => {
@@ -1568,7 +1280,6 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		const before = {
 			audit: await repository.db.auditLog.count(),
 			outbox: await repository.db.outboxEvent.count(),
-			effects: await repository.db.syntheticExternalEffect.count(),
 			revisions: await repository.db.listingRevision.count(),
 		}
 		await repository.db.vendor.update({ where: { id: vendorId }, data: { applicationState: 'restricted' } })
@@ -1586,7 +1297,6 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		expect({
 			audit: await repository.db.auditLog.count(),
 			outbox: await repository.db.outboxEvent.count(),
-			effects: await repository.db.syntheticExternalEffect.count(),
 			revisions: await repository.db.listingRevision.count(),
 		}).toEqual(before)
 	})

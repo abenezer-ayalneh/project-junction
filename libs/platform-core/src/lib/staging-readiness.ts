@@ -57,7 +57,4 @@ export function assertStagingProviderConfiguration(env: NodeJS.ProcessEnv = proc
 	if (env['DIDIT_AGE_18_WORKFLOW_CONFIRMED'] && env['DIDIT_AGE_18_WORKFLOW_CONFIRMED'] !== 'true') {
 		throw new Error('DIDIT_AGE_18_WORKFLOW_CONFIRMED must be true or unset.')
 	}
-	for (const name of ['SYNTHETIC_ACCOUNT_PROVISIONING_SECRET', 'SYNTHETIC_DEMO_SESSION_SECRET', 'SYNTHETIC_WEBHOOK_WORKSPACE_ID']) {
-		if (env[name]) throw new Error(`${name} must be absent from private staging.`)
-	}
 }

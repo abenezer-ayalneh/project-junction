@@ -58,7 +58,7 @@ CI uses only test credentials and receives no application secrets [DEC-110]. Dep
 
 **Procedure status: Specified — Not Executed — Not Verified.**
 
-Deploy exact digests, acquire the environment migration lock, apply compatible migrations, restart in dependency-aware order, and run readiness plus synthetic journey smoke tests. Verify provider sandbox callbacks, outbox/worker, search, realtime, telemetry, and rollback compatibility. Failed gates stop promotion.
+Deploy exact digests, acquire the environment migration lock, apply compatible migrations, restart in dependency-aware order, and run readiness plus real provider-sandbox journeys. Verify provider sandbox callbacks, outbox/worker, search, realtime, telemetry, and rollback compatibility. Failed gates stop promotion.
 
 ## Portfolio-production promotion
 

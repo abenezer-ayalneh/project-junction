@@ -1,5 +1,4 @@
 export * from './lib/access.js'
-export * from './lib/demo-workspaces.js'
 export * from './lib/didit.js'
 export * from './lib/external-effects.js'
 export * from './lib/idempotency.js'

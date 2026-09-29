@@ -14,50 +14,25 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             "type": "string",
           },
           "actor": {
-            "oneOf": [
-              {
-                "additionalProperties": false,
-                "properties": {
-                  "kind": {
-                    "enum": [
-                      "user",
-                    ],
-                    "type": "string",
-                  },
-                  "userId": {
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-                    "type": "string",
-                  },
-                },
-                "required": [
-                  "kind",
-                  "userId",
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "enum": [
+                  "user",
                 ],
-                "type": "object",
+                "type": "string",
               },
-              {
-                "additionalProperties": false,
-                "properties": {
-                  "kind": {
-                    "enum": [
-                      "demo_persona",
-                    ],
-                    "type": "string",
-                  },
-                  "personaId": {
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-                    "type": "string",
-                  },
-                },
-                "required": [
-                  "kind",
-                  "personaId",
-                ],
-                "type": "object",
+              "userId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
               },
+            },
+            "required": [
+              "kind",
+              "userId",
             ],
+            "type": "object",
           },
           "capabilities": {
             "items": {

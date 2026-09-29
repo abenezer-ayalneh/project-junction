@@ -45,10 +45,7 @@ export const CommandOutcomeSchema = z.object({
 export type CommandOutcome = z.infer<typeof CommandOutcomeSchema>
 
 export const AccessContextResponseSchema = z.object({
-	actor: z.discriminatedUnion('kind', [
-		z.object({ kind: z.literal('user'), userId: z.string().uuid() }),
-		z.object({ kind: z.literal('demo_persona'), personaId: z.string().uuid() }),
-	]),
+	actor: z.object({ kind: z.literal('user'), userId: z.string().uuid() }),
 	workspaceId: z.string().uuid(),
 	activeVendorId: z.string().uuid().nullable(),
 	locationIds: z.array(z.string().uuid()),
@@ -438,68 +435,6 @@ export const ProviderWebhookReceiptSchema = z.object({
 })
 
 export type ProviderWebhookReceipt = z.infer<typeof ProviderWebhookReceiptSchema>
-
-export const SyntheticProviderCallbackSchema = z.object({
-	providerReference: z.string().trim().min(1).max(200),
-	outcome: z.enum(['confirmed', 'timed_out']),
-})
-
-export type SyntheticProviderCallback = z.infer<typeof SyntheticProviderCallbackSchema>
-
-export const DemoPersonaKeySchema = z.enum(['customer', 'vendor_owner', 'service_staff', 'support', 'trust', 'finance', 'platform_owner'])
-
-export type DemoPersonaKey = z.infer<typeof DemoPersonaKeySchema>
-
-export const DemoPersonaSchema = z.object({
-	key: DemoPersonaKeySchema,
-	role: z.string().min(1),
-})
-
-export type DemoPersona = z.infer<typeof DemoPersonaSchema>
-
-export const DemoSessionSchema = z.object({
-	id: z.string().uuid(),
-	personaKey: DemoPersonaKeySchema,
-	expiresAt: z.string().datetime(),
-})
-
-export type DemoSession = z.infer<typeof DemoSessionSchema>
-
-export const DemoWorkspaceSchema = z.object({
-	id: z.string().uuid(),
-	createdAt: z.string().datetime(),
-	expiresAt: z.string().datetime(),
-	state: z.enum(['active', 'purged']),
-	personas: z.array(DemoPersonaSchema).min(1),
-	session: DemoSessionSchema,
-})
-
-export type DemoWorkspace = z.infer<typeof DemoWorkspaceSchema>
-
-export const SyntheticAccountProvisionSchema = z.object({
-	email: z.string().email().endsWith('@example.invalid'),
-	adultVerificationState: z.enum(['verified', 'pending', 'rejected']),
-})
-
-export const SyntheticAccountSchema = z.object({
-	id: z.string().uuid(),
-	email: z.string().email(),
-	adultVerificationState: z.enum(['verified', 'pending', 'rejected']),
-})
-
-export const SyntheticStaffGrantSchema = z.object({
-	userId: z.string().uuid(),
-	locationIds: z.array(z.string().uuid()).min(1).max(100),
-})
-
-export const SyntheticStaffGrantResultSchema = z.object({
-	staffId: z.string().uuid(),
-	userId: z.string().uuid(),
-	sessionId: z.string().uuid(),
-	expiresAt: z.string().datetime(),
-})
-
-export const SyntheticStaffRevokeResultSchema = z.object({ revoked: z.literal(true) })
 
 export const RealtimeRoomSchema = z.discriminatedUnion('kind', [
 	z.object({ kind: z.literal('workspace'), workspaceId: z.string().uuid() }),

@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto'
 import { createRequire } from 'node:module'
 const require = createRequire(new URL('../libs/platform-core/package.json', import.meta.url))
 const { Pool } = require('pg')
-if (!process.env.DATABASE_URL) throw new Error('Set DATABASE_URL to a local synthetic PostgreSQL database.')
+if (!process.env.DATABASE_URL) throw new Error('Set DATABASE_URL to a local PostgreSQL database.')
 const base = new URL(process.env.DATABASE_URL)
 if (!['localhost', '127.0.0.1'].includes(base.hostname)) throw new Error('Integration tests require a loopback database.')
 const schema = `phase00_${randomUUID().replaceAll('-', '')}`

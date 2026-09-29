@@ -28,9 +28,6 @@ try {
 	if (required('BETTER_AUTH_SECRET').length < 32) throw new Error('BETTER_AUTH_SECRET must contain at least 32 characters.')
 	required('RESEND_API_KEY')
 	required('RESEND_FROM_EMAIL')
-	for (const name of ['SYNTHETIC_ACCOUNT_PROVISIONING_SECRET', 'SYNTHETIC_DEMO_SESSION_SECRET', 'SYNTHETIC_WEBHOOK_WORKSPACE_ID']) {
-		if (process.env[name]) throw new Error(`${name} must be absent from private staging.`)
-	}
 } catch (error) {
 	console.error(`Staging web preflight failed: ${error.message}`)
 	process.exitCode = 1

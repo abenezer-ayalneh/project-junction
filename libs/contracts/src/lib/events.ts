@@ -6,7 +6,6 @@ export const DomainEventSchema = z.object({
 		'FoundationCommandAccepted',
 		'ProviderCallbackReceived',
 		'ProviderTimeoutReconciled',
-		'DemoWorkspaceExpired',
 		'VendorApplicationSubmitted',
 		'VendorApplicationReviewed',
 		'ListingSubmittedForReview',

@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process'
 const require = createRequire(new URL('../libs/platform-core/package.json', import.meta.url))
 const { Pool } = require('pg')
 
-if (!process.env.DATABASE_URL) throw new Error('Set DATABASE_URL to a local synthetic PostgreSQL database.')
+if (!process.env.DATABASE_URL) throw new Error('Set DATABASE_URL to a local PostgreSQL database.')
 
 const databaseUrl = new URL(process.env.DATABASE_URL)
 if (!['localhost', '127.0.0.1'].includes(databaseUrl.hostname)) throw new Error('Populated upgrade checks require a loopback database.')
@@ -37,6 +37,7 @@ const migrations = [
 	'prisma/migrations/20260924010000_video_processing_and_moderation/migration.sql',
 	'prisma/migrations/20260925000000_real_platform_reviewer_grants/migration.sql',
 	'prisma/migrations/20260928000000_retire_legacy_adult_default/migration.sql',
+	'prisma/migrations/20260929000000_retire_synthetic_schema/migration.sql',
 ]
 
 try {
@@ -55,7 +56,7 @@ try {
 	}
 	// This fixture targets the pre-snake-case schema so the populated upgrade verifies the rename migration.
 	await client.query('INSERT INTO "User" (id, email, "verifiedAt") VALUES ($1::uuid, $2, now())', [ids.user, `${ids.user}@example.invalid`])
-	await client.query('INSERT INTO "Workspace" (id, kind) VALUES ($1::uuid, $2)', [ids.workspace, 'synthetic'])
+	await client.query('INSERT INTO "Workspace" (id, kind) VALUES ($1::uuid, $2)', [ids.workspace, 'real'])
 	await client.query('INSERT INTO "Vendor" (id, "workspaceId") VALUES ($1::uuid, $2::uuid)', [ids.vendor, ids.workspace])
 	await client.query('INSERT INTO "Location" (id, "vendorId") VALUES ($1::uuid, $2::uuid)', [ids.location, ids.vendor])
 	await client.query('INSERT INTO "Session" (id, "userId", "workspaceId", "expiresAt") VALUES ($1::uuid, $2::uuid, $3::uuid, now() + interval \'1 hour\')', [
@@ -65,7 +66,7 @@ try {
 	])
 	await client.query('INSERT INTO "ProviderInboxEvent" (id, provider, "providerEventId", "payloadHash", payload) VALUES ($1::uuid, $2, $3, $4, $5::jsonb)', [
 		ids.inbox,
-		'fake-payment',
+		'didit',
 		`legacy-${ids.inbox}`,
 		'legacy-hash',
 		JSON.stringify({ legacy: true }),
@@ -94,7 +95,7 @@ try {
 	assert.deepEqual(inbox.rows, [
 		{ workspaceId: null, providerReference: null, reconciliationState: 'reconciled', reconciledAt: null, payload: { legacy: true } },
 	])
-	assert.equal((await client.query('SELECT count(*)::int AS count FROM "demo_personas"')).rows[0].count, 0)
+	assert.deepEqual((await client.query("SELECT to_regclass('demo_personas') AS value")).rows, [{ value: null }])
 
 	const result = spawnSync('pnpm', ['exec', 'prisma', 'migrate', 'diff', '--exit-code', '--from-config-datasource', '--to-schema', 'prisma/schema.prisma'], {
 		env: { ...process.env, DATABASE_URL: databaseUrl.toString() },
