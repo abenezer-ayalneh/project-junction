@@ -19,5 +19,8 @@ RUN corepack enable && apt-get update && apt-get install -y --no-install-recomme
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=build --chown=node:node /app /app
+# The API file logger writes relative to /app. The copied application tree is
+# read-only at runtime, so create its only writable application directory now.
+RUN mkdir -p /app/logs && chown node:node /app/logs
 USER node
 ENTRYPOINT ["/app/ops/staging/load-secrets.sh"]
