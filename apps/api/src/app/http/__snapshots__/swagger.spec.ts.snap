@@ -423,7 +423,6 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
           "storage": {
             "enum": [
-              "in-memory-test-double",
               "postgresql",
             ],
             "type": "string",

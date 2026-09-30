@@ -22,7 +22,6 @@
 		"env:local:up": "docker compose up -d",
 		"env:local:status": "docker compose ps",
 		"env:local:down": "docker compose down",
-		"media:local:init": "node libs/platform-core/media-local-init.mjs",
 		"db:validate": "prisma validate",
 		"db:migrate:local": "prisma migrate deploy",
 		"db:auth:migrate": "node tools/apply-auth-migrations.mjs",

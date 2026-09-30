@@ -482,6 +482,6 @@ export const HealthResponseSchema = z.object({
 	status: z.literal('ok'),
 	service: z.literal('api'),
 	runtimeMode: z.literal('staging'),
-	storage: z.enum(['in-memory-test-double', 'postgresql']),
+	storage: z.literal('postgresql'),
 	requestId: z.string().uuid(),
 })

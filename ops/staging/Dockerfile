@@ -28,7 +28,6 @@ RUN rm -rf \
         /app/apps/web/src \
         /app/libs/contracts/src \
         /app/libs/platform-core/src \
-    && rm -f /app/libs/platform-core/media-local-init.mjs \
     && find /app/tools -maxdepth 1 -type f \
         ! -name apply-auth-migrations.mjs \
         ! -name staging-preflight.mjs \
