@@ -78,6 +78,8 @@ The staging database has no `demo_workspaces`, `demo_personas`, or `synthetic_ex
 
 The host health endpoint remains deliberately unready until `DIDIT_AGE_18_WORKFLOW_CONFIRMED=true` is set after a real age-18 workflow and signed callback reconciliation are inspected. Deployment records do not substitute for real Resend, Better Auth MFA, Didit, or MinIO acceptance journeys.
 
+Run `docker compose --env-file /home/deploy/.config/project-junction-staging/core.env -f ops/staging/compose.yaml run --rm minio-verify` on the VPS to exercise the scoped application credential through a presigned upload, download, and deletion. The verifier refuses local endpoints, creates a unique staging-only object, confirms that deletion makes the signed URL return `404`, and cleans up even on failure. It prints no credentials or object key.
+
 ## Provider mode
 
 - Phase 00 uses real Better Auth sessions, Resend delivery, Didit Sandbox checks, and a self-hosted MinIO bucket with invited staging accounts. No synthetic provider account or local mail/object-store substitute satisfies acceptance.

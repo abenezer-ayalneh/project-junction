@@ -146,6 +146,23 @@ services:
             postgres: { condition: service_healthy }
         networks: [backend]
 
+    minio-verify:
+        image: ${STAGING_APP_IMAGE:?}
+        profiles: [tools]
+        cpus: ${STAGING_TOOLS_CPUS:?}
+        mem_limit: ${STAGING_TOOLS_MEMORY:?}
+        pids_limit: 256
+        entrypoint: /app/ops/staging/load-secrets.sh
+        command: ['node', 'tools/verify-staging-minio.mjs']
+        environment:
+            <<: *runtime-env
+        secrets:
+            - { source: media_s3_access_key_id, target: MEDIA_S3_ACCESS_KEY_ID }
+            - { source: media_s3_secret_access_key, target: MEDIA_S3_SECRET_ACCESS_KEY }
+        depends_on:
+            minio-init: { condition: service_completed_successfully }
+        networks: [backend, egress]
+
     preflight:
         image: ${STAGING_APP_IMAGE:?}
         profiles: [tools]
