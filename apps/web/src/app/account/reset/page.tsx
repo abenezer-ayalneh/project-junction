@@ -32,7 +32,7 @@ export default function ResetPasswordPage() {
 
 	return (
 		<main className="mx-auto flex min-h-svh max-w-xl flex-col justify-center gap-6 px-5 py-12">
-			<Link href="/account" className="text-sm text-muted-foreground hover:text-foreground">
+			<Link prefetch={false} href="/account" className="text-sm text-muted-foreground hover:text-foreground">
 				← Back to your account
 			</Link>
 			<Card>
