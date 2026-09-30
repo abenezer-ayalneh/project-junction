@@ -1,7 +1,7 @@
 # Staging Deployment
 
 > **Document status:** specified procedure
-> **System claim:** **Ingress, core data, malware scanner, and application deployment verified — provider acceptance pending**
+> **System claim:** **Ingress, core data, malware scanner, application deployment, Resend mailbox lifecycle, configured Didit age gate, and MinIO object boundary verified — full provider acceptance pending**
 > **Decision coverage:** [`DEC-066`, `DEC-073`–`DEC-077`, `DEC-093`, `DEC-098`–`DEC-105`, `DEC-110`, `DEC-139`](../governance/DECISION-REGISTER.md)
 > **Normative owner:** private staging environment
 
@@ -72,11 +72,11 @@ If GHCR keeps the package private, give the VPS a read-only package credential t
 
 ## Current deployment record — 2026-09-30
 
-The API, worker, and web containers run the signed immutable application image `ghcr.io/abenezer-ayalneh/project-junction@sha256:fc92e08d82ce215189f2e9ca687cf8d852d148b6e41dbf28d44ce7a1920c9957`. GitHub Actions built, attested, signed, and verified this digest before host deployment. The VPS pulled that exact digest, ran the configuration preflight, applied Prisma migration `20260929000000_retire_synthetic_schema`, and recreated all three application services.
+The API, worker, and web containers run the signed immutable application image `ghcr.io/abenezer-ayalneh/project-junction@sha256:87e450bf4447cad7adf9053351dadb27c9278665fee54bf5042ca077297941f9`. GitHub Actions built, attested, signed, and verified this digest before host deployment. The VPS pulled that exact digest, ran the configuration preflight, applied Prisma migration `20260929000000_retire_synthetic_schema`, and recreated all three application services.
 
 The staging database has no `demo_workspaces`, `demo_personas`, or `synthetic_external_effects` relations. Its `sessions.user_id` column is required, `sessions.demo_persona_id` is absent, and the real-workspace, adult-verification-state, and inventory-user-actor constraints are validated. The 12 required host-protected Compose secret files were verified present and nonempty without printing their paths or contents. A direct forged-session request was denied with `403`; unauthenticated web access was denied with `401`; anonymous MinIO access was denied with `403`.
 
-The host health endpoint remains deliberately unready until `DIDIT_AGE_18_WORKFLOW_CONFIRMED=true` is set after a real age-18 workflow and signed callback reconciliation are inspected. Deployment records do not substitute for real Resend, Better Auth MFA, Didit, or MinIO acceptance journeys.
+The Didit age-18 workflow and signed callback endpoint were inspected and `DIDIT_AGE_18_WORKFLOW_CONFIRMED=true` is set, so the host health endpoint returns `200`. The scoped MinIO verifier completed a presigned upload, download, and deletion, and an invited mailbox completed Resend verification and password recovery. Deployment records do not substitute for fresh Better Auth MFA challenge, Didit approval/rejection/replay/reconciliation, reviewer grant/revocation, or realtime acceptance journeys.
 
 Run `docker compose --env-file /home/deploy/.config/project-junction-staging/core.env -f ops/staging/compose.yaml run --rm minio-verify` on the VPS to exercise the scoped application credential through a presigned upload, download, and deletion. The verifier refuses local endpoints, creates a unique staging-only object, confirms that deletion makes the signed URL return `404`, and cleans up even on failure. It prints no credentials or object key.
 
