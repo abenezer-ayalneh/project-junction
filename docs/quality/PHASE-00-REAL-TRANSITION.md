@@ -2,6 +2,12 @@
 
 Status: **in progress**. The earlier Phase 00 acceptance covered a local synthetic baseline. It is not evidence of private staging or real-provider acceptance.
 
+## VPS cutover record — 2026-09-30
+
+The private staging stack now runs the signed immutable image `ghcr.io/abenezer-ayalneh/project-junction@sha256:fc92e08d82ce215189f2e9ca687cf8d852d148b6e41dbf28d44ce7a1920c9957`, produced and signature-verified by the GitHub Actions release workflow. Migration `20260929000000_retire_synthetic_schema` applied successfully to the isolated staging database. Direct database checks confirmed that `demo_workspaces`, `demo_personas`, and `synthetic_external_effects` no longer exist; `sessions.user_id` is required; `sessions.demo_persona_id` is absent; and the real-workspace, adult-verification, and user-actor constraints are present.
+
+The API, worker, and web services were recreated on that digest. The protected configuration preflight passed and all 12 Compose-mounted secret files were present and nonempty without exposing their values. A forged session header received `403 ACCESS_DENIED`; the private web host returned `401` without its Basic-auth credentials; and anonymous access to the MinIO media host returned `403`. The health endpoint is deliberately `500 UNAVAILABLE` while `DIDIT_AGE_18_WORKFLOW_CONFIRMED` remains unset. This records deployment and negative-boundary evidence only. Real Resend, Better Auth MFA, Didit, and MinIO user journeys remain acceptance work.
+
 On 2026-09-26, a fresh isolated Compose project (`project-junction-phase00`) passed `COMPOSE_PROJECT_NAME=project-junction-phase00 pnpm test:integration` with the local fixture environment: both migration deploys, auth migrations, compatibility/upgrade/restore/lock/rollback checks, 49 PostgreSQL and media integration tests, and the built API/worker synthetic regression smoke. This proves the local regression path after the real-service code changes. It does not prove Better Auth, Resend, Didit, MinIO, VPS, or private HTTPS staging acceptance.
 
 On 2026-09-28, a new isolated Compose project passed the full integration runner with the actual Better Auth MFA endpoint probe, all 51 PostgreSQL/media tests, migration and rollback checks, and the built API/worker regression smoke. Its containers and volumes were removed afterward. The MFA probe used generated local credentials and sent no email; real Resend delivery and private-staging journeys remain unverified.

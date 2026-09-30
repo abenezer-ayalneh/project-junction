@@ -1,7 +1,7 @@
 # Staging Deployment
 
 > **Document status:** specified procedure
-> **System claim:** **Ingress, Core Data, and Malware Scanner Verified — Application and Providers Pending**
+> **System claim:** **Ingress, core data, malware scanner, and application deployment verified — provider acceptance pending**
 > **Decision coverage:** [`DEC-066`, `DEC-073`–`DEC-077`, `DEC-093`, `DEC-098`–`DEC-105`, `DEC-110`, `DEC-139`](../governance/DECISION-REGISTER.md)
 > **Normative owner:** private staging environment
 
@@ -69,6 +69,14 @@ These commands are not a deployment approval or evidence of a VPS run. The image
 The [staging image workflow](../../.github/workflows/publish-staging-image.yml) publishes on pushes to the exact `codex/phase-00-real-staging` branch and also supports manual runs from `main` after the workflow is merged. GitHub requires a manually dispatched workflow file to exist on the default branch, so branch pushes provide the pre-merge image path. The workflow waits for a passing GitGuardian check on its exact commit and fails closed if that check fails or never arrives. It then builds the Linux AMD64 application image, publishes a commit-tagged image to GHCR, adds BuildKit provenance and an SBOM, attests its digest, then signs and verifies that digest with GitHub OIDC. The job summary prints the immutable `ghcr.io/...@sha256:...` reference to put in `STAGING_APP_IMAGE`. It does not deploy to the VPS or read staging provider secrets. The host must verify the digest against the exact workflow branch identity that produced it before pulling; use the branch identity above for the draft staging image and `refs/heads/main` only for a later main image. No published workflow run has been accepted as staging evidence yet.
 
 If GHCR keeps the package private, give the VPS a read-only package credential through its protected secret store and log in before verification and Compose pull. The workflow's write-capable `GITHUB_TOKEN` is only for publishing from GitHub Actions and must not be copied to the VPS.
+
+## Current deployment record — 2026-09-30
+
+The API, worker, and web containers run the signed immutable application image `ghcr.io/abenezer-ayalneh/project-junction@sha256:fc92e08d82ce215189f2e9ca687cf8d852d148b6e41dbf28d44ce7a1920c9957`. GitHub Actions built, attested, signed, and verified this digest before host deployment. The VPS pulled that exact digest, ran the configuration preflight, applied Prisma migration `20260929000000_retire_synthetic_schema`, and recreated all three application services.
+
+The staging database has no `demo_workspaces`, `demo_personas`, or `synthetic_external_effects` relations. Its `sessions.user_id` column is required, `sessions.demo_persona_id` is absent, and the real-workspace, adult-verification-state, and inventory-user-actor constraints are validated. The 12 required host-protected Compose secret files were verified present and nonempty without printing their paths or contents. A direct forged-session request was denied with `403`; unauthenticated web access was denied with `401`; anonymous MinIO access was denied with `403`.
+
+The host health endpoint remains deliberately unready until `DIDIT_AGE_18_WORKFLOW_CONFIRMED=true` is set after a real age-18 workflow and signed callback reconciliation are inspected. Deployment records do not substitute for real Resend, Better Auth MFA, Didit, or MinIO acceptance journeys.
 
 ## Provider mode
 
