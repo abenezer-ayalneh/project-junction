@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { toDataURL } from 'qrcode'
+import { useEffect, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -20,8 +21,27 @@ export default function AccountPage() {
 	const [busy, setBusy] = useState(false)
 	const [message, setMessage] = useState('')
 	const [totpUri, setTotpUri] = useState('')
+	const [totpQrCode, setTotpQrCode] = useState('')
 	const [backupCodes, setBackupCodes] = useState<string[]>([])
 	const [totpCode, setTotpCode] = useState('')
+
+	useEffect(() => {
+		let cancelled = false
+		if (!totpUri) {
+			setTotpQrCode('')
+			return
+		}
+		void toDataURL(totpUri, { errorCorrectionLevel: 'M', margin: 1, width: 224 })
+			.then((value) => {
+				if (!cancelled) setTotpQrCode(value)
+			})
+			.catch(() => {
+				if (!cancelled) setTotpQrCode('')
+			})
+		return () => {
+			cancelled = true
+		}
+	}, [totpUri])
 
 	async function beginTotpEnrollment(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault()
@@ -130,7 +150,20 @@ export default function AccountPage() {
 							)}
 							{totpUri && (
 								<div className="space-y-3 rounded-md border p-4">
-									<p>Add this URI to your authenticator app. Treat it as a secret.</p>
+									<p>Scan this code with your authenticator app, or add the URI manually. Treat both as secrets.</p>
+									{totpQrCode ? (
+										<img
+											alt="Authenticator setup QR code"
+											className="h-56 w-56 rounded-md bg-white p-2"
+											height={224}
+											src={totpQrCode}
+											width={224}
+										/>
+									) : (
+										<p className="text-sm text-muted-foreground" role="status">
+											Generating QR code…
+										</p>
+									)}
 									<code className="block break-all text-xs">{totpUri}</code>
 									<form className="space-y-2" onSubmit={(event) => void confirmTotp(event)}>
 										<label className="block space-y-2 text-sm font-medium">
