@@ -42,7 +42,8 @@ RUN rm -rf \
     && test ! -d /app/apps/web/src \
     && test ! -d /app/libs/contracts/src \
     && test ! -d /app/libs/platform-core/src \
-    && node --input-type=module -e "await import('platform-core'); await import('platform-core/auth')" \
+    && node --input-type=module -e "await import('./libs/platform-core/dist/index.js'); await import('./libs/platform-core/dist/lib/auth.js')" \
+    && node -e "require.resolve('platform-core', { paths: ['/app/apps/api/dist'] }); require.resolve('platform-core', { paths: ['/app/apps/worker/dist'] })" \
     && node --check /app/apps/api/dist/main.js \
     && node --check /app/apps/worker/dist/main.js
 # The API file logger writes relative to /app. The copied application tree is
