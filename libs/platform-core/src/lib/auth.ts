@@ -6,6 +6,7 @@ import { PostgresDialect } from 'kysely'
 import { Pool } from 'pg'
 import { Resend } from 'resend'
 
+import { recoveryLink } from './auth-recovery.js'
 import { PostgresFoundation } from './postgres-foundation.js'
 
 function requiredEnvironment(name: string): string {
@@ -75,7 +76,7 @@ export function createAuth() {
 			enabled: true,
 			requireEmailVerification: true,
 			revokeSessionsOnPasswordReset: true,
-			sendResetPassword: ({ user, url }) => send(user.email, 'Reset your Project Junction password', url),
+			sendResetPassword: ({ user, url }) => send(user.email, 'Reset your Project Junction password', recoveryLink(url, baseURL)),
 		},
 		emailVerification: {
 			sendOnSignUp: true,
