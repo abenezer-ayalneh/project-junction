@@ -19,6 +19,32 @@ RUN corepack enable && apt-get update && apt-get install -y --no-install-recomme
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=build --chown=node:node /app /app
+# Keep the release image free of application source, local fixture helpers, and
+# test-only tooling. Runtime services resolve only compiled workspace packages,
+# generated Prisma client files, migrations, and the listed staging tools.
+RUN rm -rf \
+        /app/apps/api/src \
+        /app/apps/worker/src \
+        /app/apps/web/src \
+        /app/libs/contracts/src \
+        /app/libs/platform-core/src \
+    && rm -f /app/libs/platform-core/media-local-init.mjs \
+    && find /app/tools -maxdepth 1 -type f \
+        ! -name apply-auth-migrations.mjs \
+        ! -name staging-preflight.mjs \
+        ! -name staging-web-preflight.mjs \
+        ! -name verify-staging-minio.mjs \
+        -delete \
+    && find /app/apps/api/dist /app/apps/worker/dist -type f \
+        \( -name '*.d.ts' -o -name '*.d.ts.map' -o -name '*.js.map' -o -name '*.tsbuildinfo' \) -delete \
+    && test ! -d /app/apps/api/src \
+    && test ! -d /app/apps/worker/src \
+    && test ! -d /app/apps/web/src \
+    && test ! -d /app/libs/contracts/src \
+    && test ! -d /app/libs/platform-core/src \
+    && node --input-type=module -e "await import('platform-core'); await import('platform-core/auth')" \
+    && node --check /app/apps/api/dist/main.js \
+    && node --check /app/apps/worker/dist/main.js
 # The API file logger writes relative to /app. The copied application tree is
 # read-only at runtime, so create its only writable application directory now.
 RUN mkdir -p /app/logs && chown node:node /app/logs
