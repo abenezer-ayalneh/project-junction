@@ -6,12 +6,19 @@
 		path /v1/identity/didit-webhook
 		method POST
 	}
+	@auth_email_flow path /api/auth/verify-email /api/auth/reset-password /api/auth/reset-password/* /account/verified /account/reset
 	@api path /v1/* /socket.io/*
 
 	# Didit cannot supply the operator's browser credentials. The API verifies
 	# the signed callback and reconciles the session before changing access.
 	handle @didit_webhook {
 		reverse_proxy {$STAGING_API_UPSTREAM}
+	}
+
+	# Email links are signed, short-lived Better Auth capabilities. They must be
+	# reachable before a recipient has private-staging browser credentials.
+	handle @auth_email_flow {
+		reverse_proxy {$STAGING_WEB_UPSTREAM}
 	}
 
 	handle {

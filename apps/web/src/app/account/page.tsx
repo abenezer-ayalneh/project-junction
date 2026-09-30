@@ -71,7 +71,7 @@ export default function AccountPage() {
 				return
 			}
 			if (mode === 'sign-up') {
-				const result = await authClient.signUp.email({ name, email, password })
+				const result = await authClient.signUp.email({ name, email, password, callbackURL: `${window.location.origin}/account/verified` })
 				setMessage(
 					result.error
 						? 'Unable to create the account. Check the details and try again.'
