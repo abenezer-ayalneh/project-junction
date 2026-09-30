@@ -67,6 +67,12 @@ export const IdentityVerificationSessionSchema = z.object({
 	sessionId: z.string().min(1).max(200),
 })
 
+export const IdentityVerificationStatusSchema = z.object({
+	status: z.enum(['unverified', 'verified', 'rejected']),
+})
+
+export type IdentityVerificationStatus = z.infer<typeof IdentityVerificationStatusSchema>
+
 export const LocationReadSchema = z.object({
 	id: z.string().uuid(),
 	vendorId: z.string().uuid(),

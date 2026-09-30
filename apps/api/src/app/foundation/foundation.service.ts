@@ -8,6 +8,7 @@ import {
 	HealthResponseSchema,
 	IdempotencyKeySchema,
 	IdentityVerificationSessionSchema,
+	IdentityVerificationStatusSchema,
 	InventoryAvailabilityQuerySchema,
 	InventoryMovementCommandSchema,
 	ListingDraftSchema,
@@ -101,6 +102,10 @@ export class FoundationService {
 		return IdentityVerificationSessionSchema.parse(
 			await adapter.createSession(userId, this.configService.getOrThrow<string>('DIDIT_WORKFLOW_ID'), callbackUrl),
 		)
+	}
+
+	async identityVerificationStatus(sessionId: string | undefined) {
+		return IdentityVerificationStatusSchema.parse(await this.durable.identityVerificationStatus(sessionId))
 	}
 
 	async receiveDiditWebhook(rawBody: Buffer | undefined, signatureV2: string | undefined) {

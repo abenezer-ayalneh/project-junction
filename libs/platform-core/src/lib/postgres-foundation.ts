@@ -17,6 +17,7 @@ import {
 	DomainEventSchema,
 	EngagementMutationSchema,
 	IdempotencyKeySchema,
+	IdentityVerificationStatusSchema,
 	InventoryAvailabilityQuerySchema,
 	InventoryAvailabilitySchema,
 	InventoryMovementCommandSchema,
@@ -267,6 +268,15 @@ export class PostgresFoundation {
 		const session = await this.db.session.findUnique({ where: { id: sessionId }, include: { user: true, workspace: true } })
 		if (!session?.user || session.revokedAt || session.expiresAt <= new Date() || session.workspace.kind !== 'real') throw new AccessDeniedError()
 		return { userId: session.user.id, email: session.user.email }
+	}
+
+	async identityVerificationStatus(sessionId: string | undefined) {
+		const { userId } = await this.authenticatedIdentity(sessionId)
+		const user = await this.db.user.findUnique({ where: { id: userId }, select: { adultVerificationState: true } })
+		if (!user) throw new AccessDeniedError()
+		const status = user.adultVerificationState
+		if (status !== 'verified' && status !== 'rejected') return IdentityVerificationStatusSchema.parse({ status: 'unverified' })
+		return IdentityVerificationStatusSchema.parse({ status })
 	}
 
 	async recordDiditSessionUpdate(input: {

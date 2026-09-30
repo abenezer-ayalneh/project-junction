@@ -424,6 +424,15 @@ export class AppController {
 		return this.foundation.issueIdentityVerificationSession(sessionId)
 	}
 
+	@Get('identity/verification-status')
+	@ApiOperation({ summary: 'Read the authoritative Didit age-verification state for the authenticated account.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.identityVerificationStatus })
+	@ApiForbiddenResponse({ schema: OpenApiSchemaRefs.apiError })
+	identityVerificationStatus(@AuthenticatedSession() sessionId: string | undefined) {
+		return this.foundation.identityVerificationStatus(sessionId)
+	}
+
 	@Post('identity/didit-webhook')
 	@ApiOperation({ summary: 'Record a signed Didit sandbox status update for later age-level reconciliation.' })
 	@ApiHeader({ name: 'x-signature-v2', required: true })

@@ -457,6 +457,23 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
         "type": "object",
       },
+      "IdentityVerificationStatus": {
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "enum": [
+              "unverified",
+              "verified",
+              "rejected",
+            ],
+            "type": "string",
+          },
+        },
+        "required": [
+          "status",
+        ],
+        "type": "object",
+      },
       "InventoryAvailability": {
         "additionalProperties": false,
         "properties": {
@@ -2755,6 +2772,43 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
         ],
         "summary": "Create a Didit sandbox verification session for the authenticated account.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/identity/verification-status": {
+      "get": {
+        "operationId": "AppController_identityVerificationStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityVerificationStatus",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Read the authoritative Didit age-verification state for the authenticated account.",
         "tags": [
           "foundation",
         ],

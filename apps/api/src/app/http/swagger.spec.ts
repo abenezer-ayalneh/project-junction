@@ -28,6 +28,7 @@ describe('OpenAPI v1 contract', () => {
 		try {
 			const document = createSwaggerDocument(app)
 			expect(document.paths['/v1/identity/didit-webhook']).toBeDefined()
+			expect(document.paths['/v1/identity/verification-status']?.get?.security).toEqual([{ 'junction-auth-cookie': [] }])
 			expect(document.components?.securitySchemes?.['junction-session']).toBeUndefined()
 			expect(document.paths['/v1/access-context']?.get?.security).toEqual([{ 'junction-auth-cookie': [] }])
 			expect(JSON.stringify(document)).not.toContain('x-junction-session')
