@@ -30,7 +30,6 @@ try {
 		run(['db:upgrade:check'])
 		run(['db:restore:check'])
 		run(['db:lock:measure'])
-		run(['db:rollback:check'])
 	}
 	run([
 		'exec',

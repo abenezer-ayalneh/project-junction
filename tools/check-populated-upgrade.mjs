@@ -95,7 +95,7 @@ try {
 	assert.deepEqual(inbox.rows, [
 		{ workspaceId: null, providerReference: null, reconciliationState: 'reconciled', reconciledAt: null, payload: { legacy: true } },
 	])
-	assert.deepEqual((await client.query("SELECT to_regclass('demo_personas') AS value")).rows, [{ value: null }])
+	assert.deepEqual((await client.query('SELECT to_regclass($1) AS value', [`${schema}.demo_personas`])).rows, [{ value: null }])
 
 	const result = spawnSync('pnpm', ['exec', 'prisma', 'migrate', 'diff', '--exit-code', '--from-config-datasource', '--to-schema', 'prisma/schema.prisma'], {
 		env: { ...process.env, DATABASE_URL: databaseUrl.toString() },

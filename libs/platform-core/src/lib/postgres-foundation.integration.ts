@@ -74,6 +74,11 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		await repository.ensureAuthenticatedSession(authSession)
 		expect((await repository.db.session.findUniqueOrThrow({ where: { id: authSession.sessionId } })).activeRole).toBeNull()
 		await expect(repository.authenticatedIdentity(authSession.sessionId)).resolves.toEqual({ userId: authSession.userId, email: authSession.email })
+		await expect(repository.identityVerificationStatus(authSession.sessionId)).resolves.toEqual({ status: 'unverified' })
+		await repository.db.user.update({ where: { id: authSession.userId }, data: { adultVerificationState: 'verified', verifiedAt: new Date() } })
+		await expect(repository.identityVerificationStatus(authSession.sessionId)).resolves.toEqual({ status: 'verified' })
+		await repository.db.user.update({ where: { id: authSession.userId }, data: { adultVerificationState: 'rejected', verifiedAt: null } })
+		await expect(repository.identityVerificationStatus(authSession.sessionId)).resolves.toEqual({ status: 'rejected' })
 		await expect(repository.accessContext(authSession.sessionId)).rejects.toThrow(AccessDeniedError)
 	})
 	it('places separate authenticated accounts in one real review workspace', async () => {

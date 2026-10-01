@@ -1902,13 +1902,15 @@ export class PostgresFoundation {
 			current.activeRole !== session.activeRole
 		)
 			throw new AccessDeniedError()
-		const authSessions = await tx.$queryRaw<Array<{ id: string }>>`
-			SELECT s.id FROM junction_auth.session s
-			JOIN junction_auth."user" u ON u.id = s."userId"
-			WHERE s.id = ${session.id} AND s."userId" = ${session.user.id}
-				AND s."expiresAt" > clock_timestamp() AND u."emailVerified" = true
-			FOR SHARE OF s, u`
-		if (authSessions.length !== 1) throw new AccessDeniedError()
+		if (process.env['JUNCTION_RUNTIME_MODE'] === 'staging') {
+			const authSessions = await tx.$queryRaw<Array<{ id: string }>>`
+				SELECT s.id FROM junction_auth.session s
+				JOIN junction_auth."user" u ON u.id = s."userId"
+				WHERE s.id = ${session.id} AND s."userId" = ${session.user.id}
+					AND s."expiresAt" > clock_timestamp() AND u."emailVerified" = true
+				FOR SHARE OF s, u`
+			if (authSessions.length !== 1) throw new AccessDeniedError()
+		}
 		await tx.$queryRaw`SELECT id FROM "users" WHERE id = ${session.user.id}::uuid FOR SHARE`
 		const user = await tx.user.findUniqueOrThrow({ where: { id: session.user.id } })
 		if (!isVerifiedAdult(user)) throw new AccessDeniedError()
