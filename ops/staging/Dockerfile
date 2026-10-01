@@ -30,6 +30,7 @@ RUN rm -rf \
         /app/libs/platform-core/src \
     && find /app/tools -maxdepth 1 -type f \
         ! -name apply-auth-migrations.mjs \
+		! -name manage-staging-reviewer.mjs \
         ! -name staging-preflight.mjs \
         ! -name staging-web-preflight.mjs \
         ! -name verify-staging-minio.mjs \
