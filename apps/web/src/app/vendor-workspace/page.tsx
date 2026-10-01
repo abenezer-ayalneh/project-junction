@@ -13,6 +13,7 @@ import {
 import Link from 'next/link'
 import { type FormEvent, useEffect, useRef, useState } from 'react'
 
+import { RealtimeWorkspace } from '@/components/realtime-workspace'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 
@@ -79,6 +80,16 @@ export default function VendorWorkspace() {
 		const result = VendorMembershipsSchema.parse(await apiRequest('/account/vendor-memberships'))
 		setMemberships(result)
 		setSelectedVendorId(result.activeVendorId ?? '')
+	}
+
+	function refreshFromRealtime() {
+		if (!catalog) {
+			setMessage('A workspace update was received. Load your workspace to see the latest state.')
+			return
+		}
+		void loadCatalog()
+			.then(() => setMessage('Workspace updated from a live event.'))
+			.catch(() => setMessage('A workspace update was received. Reload your workspace to see the latest state.'))
 	}
 
 	function chooseVendor(event: FormEvent<HTMLFormElement>) {
@@ -296,6 +307,7 @@ export default function VendorWorkspace() {
 					</form>
 				)}
 				<p className="mt-2 text-xs text-muted-foreground">Selecting an Owner role requires MFA completed within the last 15 minutes.</p>
+				<RealtimeWorkspace onEvent={refreshFromRealtime} onRefetchRequired={refreshFromRealtime} />
 			</section>
 			<form
 				onSubmit={(event) => {
