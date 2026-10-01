@@ -1,6 +1,6 @@
 'use client'
 
-import { AccessContextSchema, type RealtimeFoundationEvent, RealtimeFoundationEventSchema, RealtimeJoinResultSchema } from 'contracts'
+import { AccessContextResponseSchema, type RealtimeFoundationEvent, RealtimeFoundationEventSchema, RealtimeJoinResultSchema } from 'contracts'
 import { useEffect, useRef, useState } from 'react'
 import { io } from 'socket.io-client'
 
@@ -29,7 +29,7 @@ export function RealtimeWorkspace({ onEvent, onRefetchRequired }: { onEvent: (ev
 			try {
 				const response = await fetch(`${apiBase}/access-context`, { cache: 'no-store' })
 				if (!response.ok) throw new Error('Access context is unavailable.')
-				const context = AccessContextSchema.parse(await response.json())
+				const context = AccessContextResponseSchema.parse(await response.json())
 				if (cancelled) return
 				const cursorKey = `junction:realtime-cursor:${context.workspaceId}`
 				socket = io({ transports: ['websocket'], withCredentials: true })
