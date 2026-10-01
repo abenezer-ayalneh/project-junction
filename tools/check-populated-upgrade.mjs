@@ -38,6 +38,7 @@ const migrations = [
 	'prisma/migrations/20260925000000_real_platform_reviewer_grants/migration.sql',
 	'prisma/migrations/20260928000000_retire_legacy_adult_default/migration.sql',
 	'prisma/migrations/20260929000000_retire_synthetic_schema/migration.sql',
+	'prisma/migrations/20261001000000_durable_didit_sessions/migration.sql',
 ]
 
 try {

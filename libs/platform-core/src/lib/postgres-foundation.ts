@@ -279,6 +279,25 @@ export class PostgresFoundation {
 		return IdentityVerificationStatusSchema.parse({ status })
 	}
 
+	async recordDiditSessionIssued(userId: string, providerReference: string) {
+		this.requireResourceId(userId)
+		if (!providerReference || providerReference.length > 200) throw new AccessDeniedError()
+		return this.db.$transaction(async (tx) => {
+			await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'didit-user:' + userId}, 0))`
+			const session = await tx.session.findFirst({ where: { userId, workspace: { kind: 'real' } }, orderBy: { createdAt: 'asc' } })
+			if (!session) throw new AccessDeniedError()
+			await tx.identityVerificationSession.updateMany({
+				where: { userId, provider: 'didit-sandbox', state: { in: ['issued', 'pending_review'] } },
+				data: { state: 'superseded', completedAt: new Date() },
+			})
+			return tx.identityVerificationSession.upsert({
+				where: { provider_providerReference: { provider: 'didit-sandbox', providerReference } },
+				create: { userId, workspaceId: session.workspaceId, provider: 'didit-sandbox', providerReference },
+				update: {},
+			})
+		})
+	}
+
 	async recordDiditSessionUpdate(input: {
 		eventId: string
 		sessionId: string
@@ -295,8 +314,10 @@ export class PostgresFoundation {
 				where: { provider_providerEventId: { provider: 'didit-sandbox', providerEventId: input.eventId } },
 			})
 			if (prior) return { accepted: true, duplicate: true }
-			const session = await tx.session.findFirst({ where: { userId: input.userId, workspace: { kind: 'real' } }, orderBy: { createdAt: 'asc' } })
-			if (!session) throw new AccessDeniedError()
+			const verificationSession = await tx.identityVerificationSession.findUnique({
+				where: { provider_providerReference: { provider: 'didit-sandbox', providerReference: input.sessionId } },
+			})
+			if (!verificationSession || verificationSession.userId !== input.userId || verificationSession.state === 'superseded') throw new AccessDeniedError()
 			const revocation = input.status !== 'Approved'
 			if (revocation) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'didit-user:' + input.userId}, 0))`
 			await tx.providerInboxEvent.create({
@@ -304,7 +325,7 @@ export class PostgresFoundation {
 					provider: 'didit-sandbox',
 					providerEventId: input.eventId,
 					providerReference: input.sessionId,
-					workspaceId: session.workspaceId,
+					workspaceId: verificationSession.workspaceId,
 					payloadHash: stableHash(input),
 					payload: json(input),
 					reconciliationState: 'pending_review',
@@ -314,7 +335,7 @@ export class PostgresFoundation {
 				await tx.user.update({ where: { id: input.userId }, data: { adultVerificationState: 'unverified', verifiedAt: null } })
 				await tx.auditLog.create({
 					data: {
-						workspaceId: session.workspaceId,
+						workspaceId: verificationSession.workspaceId,
 						actorId: null,
 						action: 'identity.didit-revoked',
 						correlationId: randomUUID(),
@@ -322,6 +343,10 @@ export class PostgresFoundation {
 					},
 				})
 			}
+			await tx.identityVerificationSession.update({
+				where: { id: verificationSession.id },
+				data: { state: 'pending_review', lastCheckedAt: new Date() },
+			})
 			return { accepted: true, duplicate: false }
 		})
 	}
@@ -331,7 +356,7 @@ export class PostgresFoundation {
 			where: { provider: 'didit-sandbox', reconciliationState: 'pending_review' },
 			orderBy: [{ receivedAt: 'asc' }, { id: 'asc' }],
 		})
-		if (!event) return { processed: false }
+		if (!event) return this.reconcileIssuedDiditSession(adapter)
 		const payload = event.payload as Record<string, unknown>
 		if (typeof payload['userId'] !== 'string' || typeof payload['sessionId'] !== 'string' || typeof payload['status'] !== 'string') {
 			throw new Error('Invalid stored Didit session update.')
@@ -346,6 +371,17 @@ export class PostgresFoundation {
 			await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'didit-user:' + userId}, 0))`
 			const pending = await tx.providerInboxEvent.findUniqueOrThrow({ where: { id: event.id } })
 			if (pending.reconciliationState !== 'pending_review') return null
+			const verificationSession = await tx.identityVerificationSession.findUnique({
+				where: { provider_providerReference: { provider: 'didit-sandbox', providerReference: sessionId } },
+			})
+			const now = new Date()
+			if (!verificationSession || verificationSession.userId !== userId || verificationSession.state !== 'pending_review') {
+				await tx.providerInboxEvent.update({
+					where: { id: event.id },
+					data: { reconciliationState: 'reconciled', reconciledAt: now, processedAt: now },
+				})
+				return 'unverified'
+			}
 			const laterRevocations = await tx.$queryRaw<Array<{ id: string }>>`
 				SELECT id FROM provider_inbox_events
 				WHERE provider = 'didit-sandbox'
@@ -360,8 +396,11 @@ export class PostgresFoundation {
 				where: { id: userId },
 				data: { adultVerificationState: reconciledState, verifiedAt: reconciledState === 'verified' ? new Date() : null },
 			})
-			const now = new Date()
 			await tx.providerInboxEvent.update({ where: { id: event.id }, data: { reconciliationState: 'reconciled', reconciledAt: now, processedAt: now } })
+			await tx.identityVerificationSession.updateMany({
+				where: { id: verificationSession.id, state: 'pending_review' },
+				data: { state: 'reconciled', lastCheckedAt: now, completedAt: now },
+			})
 			await tx.auditLog.create({
 				data: {
 					workspaceId: event.workspaceId,
@@ -379,6 +418,64 @@ export class PostgresFoundation {
 			return reconciledState
 		})
 		return { processed: outcome !== null, state: outcome ?? state }
+	}
+
+	private async reconcileIssuedDiditSession(adapter: DiditSandboxAdapter) {
+		const issued = await this.db.identityVerificationSession.findFirst({
+			where: { provider: 'didit-sandbox', state: 'issued' },
+			orderBy: [{ issuedAt: 'asc' }, { id: 'asc' }],
+		})
+		if (!issued) return { processed: false }
+		const current = await adapter.currentDecision(issued.providerReference)
+		const now = new Date()
+		if (current.status !== 'Approved' && current.status !== 'Declined') {
+			await this.db.identityVerificationSession.updateMany({
+				where: { id: issued.id, state: 'issued' },
+				data: { lastCheckedAt: now },
+			})
+			return { processed: false }
+		}
+		const providerEventId = `reconciliation:${issued.id}:${current.status}`
+		await this.db.$transaction(async (tx) => {
+			await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${'didit-user:' + issued.userId}, 0))`
+			const currentIssued = await tx.identityVerificationSession.findUniqueOrThrow({ where: { id: issued.id } })
+			if (currentIssued.state !== 'issued') return
+			await tx.providerInboxEvent.upsert({
+				where: { provider_providerEventId: { provider: 'didit-sandbox', providerEventId } },
+				create: {
+					provider: 'didit-sandbox',
+					providerEventId,
+					providerReference: issued.providerReference,
+					workspaceId: issued.workspaceId,
+					payloadHash: stableHash({
+						userId: issued.userId,
+						sessionId: issued.providerReference,
+						status: current.status,
+						source: 'provider_reconciliation',
+					}),
+					payload: json({
+						userId: issued.userId,
+						sessionId: issued.providerReference,
+						status: current.status,
+						observedAt: now.toISOString(),
+						source: 'provider_reconciliation',
+					}),
+					reconciliationState: 'pending_review',
+				},
+				update: {},
+			})
+			await tx.identityVerificationSession.update({ where: { id: issued.id }, data: { state: 'pending_review', lastCheckedAt: now } })
+			await tx.auditLog.create({
+				data: {
+					workspaceId: issued.workspaceId,
+					actorId: null,
+					action: 'identity.didit-reconciliation-queued',
+					correlationId: randomUUID(),
+					metadata: json({ sessionId: issued.providerReference, providerStatus: current.status }),
+				},
+			})
+		})
+		return { processed: true, state: 'unverified' }
 	}
 
 	async readLocation(sessionId: string | undefined, locationId: string) {

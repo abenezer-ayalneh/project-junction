@@ -21,6 +21,7 @@ model User {
   savedSearches          SavedSearch[]
   discoveryPreference    DiscoveryPreference?
   platformReviewerGrant  PlatformReviewerGrant?
+  identityVerificationSessions IdentityVerificationSession[]
 
   @@map("users")
 }
@@ -31,6 +32,7 @@ model Workspace {
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   vendors   Vendor[]
   sessions  Session[]
+  identityVerificationSessions IdentityVerificationSession[]
 
   @@map("workspaces")
 }
@@ -394,6 +396,25 @@ model ProviderInboxEvent {
   @@unique([provider, providerEventId])
   @@index([workspaceId, provider, providerReference, reconciliationState], map: "provider_inbox_events_reconciliation_idx")
   @@map("provider_inbox_events")
+}
+
+model IdentityVerificationSession {
+  id                String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  userId            String    @map("user_id") @db.Uuid
+  workspaceId       String    @map("workspace_id") @db.Uuid
+  provider          String
+  providerReference String    @map("provider_reference")
+  state             String    @default("issued")
+  issuedAt          DateTime  @default(now()) @map("issued_at") @db.Timestamptz(6)
+  lastCheckedAt     DateTime? @map("last_checked_at") @db.Timestamptz(6)
+  completedAt       DateTime? @map("completed_at") @db.Timestamptz(6)
+  user              User      @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  workspace         Workspace @relation(fields: [workspaceId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+
+  @@unique([provider, providerReference])
+  @@index([userId, provider, state, issuedAt], map: "identity_verification_sessions_user_state_idx")
+  @@index([workspaceId, provider, state, issuedAt], map: "identity_verification_sessions_workspace_state_idx")
+  @@map("identity_verification_sessions")
 }
 
 

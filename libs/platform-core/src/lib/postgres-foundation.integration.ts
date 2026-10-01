@@ -242,9 +242,11 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 	it('records a Didit status update once and grants adult access only after reconciliation', async () => {
 		const authSession = { sessionId: randomUUID(), userId: randomUUID(), email: `${randomUUID()}@example.com`, expiresAt: new Date(Date.now() + 3600000) }
 		await repository.ensureAuthenticatedSession(authSession)
+		const diditSessionId = `session-${randomUUID()}`
+		await repository.recordDiditSessionIssued(authSession.userId, diditSessionId)
 		const update = {
 			eventId: randomUUID(),
-			sessionId: `session-${randomUUID()}`,
+			sessionId: diditSessionId,
 			userId: authSession.userId,
 			eventType: 'status.updated',
 			status: 'Approved',
@@ -276,6 +278,63 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		user = await repository.db.user.findUniqueOrThrow({ where: { id: authSession.userId } })
 		expect(user.adultVerificationState).toBe('rejected')
 		expect(user.verifiedAt).toBeNull()
+	})
+
+	it('reconciles an issued Didit session when a signed callback is delayed or lost', async () => {
+		const authSession = { sessionId: randomUUID(), userId: randomUUID(), email: `${randomUUID()}@example.com`, expiresAt: new Date(Date.now() + 3600000) }
+		await repository.ensureAuthenticatedSession(authSession)
+		const diditSessionId = `session-${randomUUID()}`
+		await repository.recordDiditSessionIssued(authSession.userId, diditSessionId)
+		const request = jest.fn(() => Promise.resolve(new Response(JSON.stringify({ status: 'Approved' }), { status: 200 })))
+		const adapter = new DiditSandboxAdapter('didit-api-key', 'webhook-secret', request as typeof fetch)
+		await expect(repository.reconcileOneDiditSession(adapter)).resolves.toEqual({ processed: true, state: 'unverified' })
+		expect(
+			await repository.db.providerInboxEvent.count({
+				where: { provider: 'didit-sandbox', providerReference: diditSessionId, reconciliationState: 'pending_review' },
+			}),
+		).toBe(1)
+		await expect(repository.reconcileOneDiditSession(adapter)).resolves.toEqual({ processed: true, state: 'verified' })
+		expect(
+			await repository.db.identityVerificationSession.findUniqueOrThrow({
+				where: { provider_providerReference: { provider: 'didit-sandbox', providerReference: diditSessionId } },
+			}),
+		).toMatchObject({ state: 'reconciled' })
+		expect(await repository.db.user.findUniqueOrThrow({ where: { id: authSession.userId } })).toMatchObject({ adultVerificationState: 'verified' })
+	})
+
+	it('does not grant access from an older Didit session after a newer session is issued', async () => {
+		const authSession = { sessionId: randomUUID(), userId: randomUUID(), email: `${randomUUID()}@example.com`, expiresAt: new Date(Date.now() + 3600000) }
+		await repository.ensureAuthenticatedSession(authSession)
+		const olderSessionId = `session-${randomUUID()}`
+		await repository.recordDiditSessionIssued(authSession.userId, olderSessionId)
+		await repository.recordDiditSessionUpdate({
+			eventId: randomUUID(),
+			sessionId: olderSessionId,
+			userId: authSession.userId,
+			eventType: 'status.updated',
+			status: 'Approved',
+			observedAt: '2026-10-01T10:00:00.000Z',
+			sandboxMode: true,
+		})
+		const newerSessionId = `session-${randomUUID()}`
+		await repository.recordDiditSessionIssued(authSession.userId, newerSessionId)
+		const adapter = new DiditSandboxAdapter(
+			'didit-api-key',
+			'webhook-secret',
+			jest.fn(() => Promise.resolve(new Response(JSON.stringify({ status: 'Approved' }), { status: 200 }))) as typeof fetch,
+		)
+		await expect(repository.reconcileOneDiditSession(adapter)).resolves.toEqual({ processed: true, state: 'unverified' })
+		expect(await repository.db.user.findUniqueOrThrow({ where: { id: authSession.userId } })).toMatchObject({ adultVerificationState: 'unverified' })
+		expect(
+			await repository.db.identityVerificationSession.findUniqueOrThrow({
+				where: { provider_providerReference: { provider: 'didit-sandbox', providerReference: olderSessionId } },
+			}),
+		).toMatchObject({ state: 'superseded' })
+		expect(
+			await repository.db.identityVerificationSession.findUniqueOrThrow({
+				where: { provider_providerReference: { provider: 'didit-sandbox', providerReference: newerSessionId } },
+			}),
+		).toMatchObject({ state: 'issued' })
 	})
 
 	it('binds a verified second factor only to its matching real session', async () => {
