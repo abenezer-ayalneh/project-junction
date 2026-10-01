@@ -28,6 +28,12 @@ import {
 import { AccessDeniedError, DiditSandboxAdapter, PostgresFoundation } from 'platform-core'
 import { getAuth } from 'platform-core/auth'
 
+export function diditObservedAt(value: unknown): Date | undefined {
+	if (typeof value === 'string') return new Date(value)
+	if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return undefined
+	return new Date(value < 100_000_000_000 ? value * 1_000 : value)
+}
+
 @Injectable()
 export class FoundationService {
 	private readonly logger = new Logger(FoundationService.name)
@@ -125,10 +131,10 @@ export class FoundationService {
 		}
 		if (!payload || typeof payload !== 'object') return this.rejectDiditWebhook('payload-shape')
 		const event = payload as Record<string, unknown>
-		const createdAt = typeof event['created_at'] === 'string' ? new Date(event['created_at']) : undefined
+		const createdAt = diditObservedAt(event['created_at'])
 		if (
 			event['webhook_type'] !== 'status.updated' ||
-			event['environment'] !== 'sandbox' ||
+			(event['environment'] !== undefined && event['environment'] !== 'sandbox') ||
 			typeof event['session_id'] !== 'string' ||
 			!event['session_id'] ||
 			event['session_id'].length > 200 ||
