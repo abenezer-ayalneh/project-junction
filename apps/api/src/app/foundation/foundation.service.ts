@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto'
 
-import { Injectable } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import {
 	DiscoveryPreferenceUpdateSchema,
@@ -30,6 +30,7 @@ import { getAuth } from 'platform-core/auth'
 
 @Injectable()
 export class FoundationService {
+	private readonly logger = new Logger(FoundationService.name)
 	private readonly durable: PostgresFoundation
 
 	private databaseUrl(): string {
@@ -111,13 +112,18 @@ export class FoundationService {
 	}
 
 	async receiveDiditWebhook(rawBody: Buffer | undefined, signatureV2: string | undefined) {
-		if (!rawBody) throw new AccessDeniedError()
+		if (!rawBody) return this.rejectDiditWebhook('missing-body')
 		const adapter = new DiditSandboxAdapter(
 			this.configService.getOrThrow<string>('DIDIT_API_KEY'),
 			this.configService.getOrThrow<string>('DIDIT_WEBHOOK_SECRET'),
 		)
-		const payload = adapter.verifyWebhook(rawBody, signatureV2)
-		if (!payload || typeof payload !== 'object') throw new AccessDeniedError()
+		let payload: unknown
+		try {
+			payload = adapter.verifyWebhook(rawBody, signatureV2)
+		} catch {
+			return this.rejectDiditWebhook('signature')
+		}
+		if (!payload || typeof payload !== 'object') return this.rejectDiditWebhook('payload-shape')
 		const event = payload as Record<string, unknown>
 		const createdAt = typeof event['created_at'] === 'string' ? new Date(event['created_at']) : undefined
 		if (
@@ -134,16 +140,26 @@ export class FoundationService {
 			!createdAt ||
 			Number.isNaN(createdAt.valueOf())
 		)
-			throw new AccessDeniedError()
-		return this.durable.recordDiditSessionUpdate({
-			eventId: createHash('sha256').update(rawBody).digest('hex'),
-			sessionId: event['session_id'],
-			userId: event['vendor_data'],
-			eventType: event['webhook_type'],
-			status: event['status'],
-			observedAt: createdAt.toISOString(),
-			sandboxMode: true,
-		})
+			return this.rejectDiditWebhook('payload-shape')
+		try {
+			return await this.durable.recordDiditSessionUpdate({
+				eventId: createHash('sha256').update(rawBody).digest('hex'),
+				sessionId: event['session_id'],
+				userId: event['vendor_data'],
+				eventType: event['webhook_type'],
+				status: event['status'],
+				observedAt: createdAt.toISOString(),
+				sandboxMode: true,
+			})
+		} catch (error) {
+			if (error instanceof AccessDeniedError) return this.rejectDiditWebhook('session-correlation')
+			throw error
+		}
+	}
+
+	private rejectDiditWebhook(reason: 'missing-body' | 'signature' | 'payload-shape' | 'session-correlation'): never {
+		this.logger.warn(`Didit webhook rejected: ${reason}`)
+		throw new AccessDeniedError()
 	}
 
 	async readLocation(sessionId: string | undefined, locationId: string) {
