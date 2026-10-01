@@ -49,15 +49,23 @@ export function IdentityVerification() {
 
 	useEffect(() => {
 		let cancelled = false
-		void readVerificationStatus()
-			.then((value) => {
-				if (!cancelled) setStatus(value)
-			})
-			.catch(() => {
-				if (!cancelled) setStatus('unavailable')
-			})
+		let retry: ReturnType<typeof setTimeout> | undefined
+		const returnedFromDidit = new URLSearchParams(window.location.search).get('identity') === 'didit'
+		const refresh = () => {
+			void readVerificationStatus()
+				.then((value) => {
+					if (cancelled) return
+					setStatus(value)
+					if (returnedFromDidit && value === 'unverified') retry = setTimeout(refresh, 2_000)
+				})
+				.catch(() => {
+					if (!cancelled) setStatus('unavailable')
+				})
+		}
+		refresh()
 		return () => {
 			cancelled = true
+			if (retry) clearTimeout(retry)
 		}
 	}, [])
 

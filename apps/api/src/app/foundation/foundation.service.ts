@@ -98,7 +98,7 @@ export class FoundationService {
 			this.configService.getOrThrow<string>('DIDIT_API_KEY'),
 			this.configService.getOrThrow<string>('DIDIT_WEBHOOK_SECRET'),
 		)
-		const callbackUrl = new URL('/account', this.configService.getOrThrow<string>('BETTER_AUTH_URL')).toString()
+		const callbackUrl = new URL('/account?identity=didit', this.configService.getOrThrow<string>('BETTER_AUTH_URL')).toString()
 		const issued = IdentityVerificationSessionSchema.parse(
 			await adapter.createSession(userId, this.configService.getOrThrow<string>('DIDIT_WORKFLOW_ID'), callbackUrl),
 		)
