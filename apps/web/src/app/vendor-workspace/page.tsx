@@ -11,7 +11,7 @@ import {
 	VendorMembershipsSchema,
 } from 'contracts'
 import Link from 'next/link'
-import { type FormEvent, useEffect, useRef, useState } from 'react'
+import { type FormEvent, useRef, useState } from 'react'
 
 import { RealtimeWorkspace } from '@/components/realtime-workspace'
 import { Badge } from '@/components/ui/badge'
@@ -46,30 +46,7 @@ export default function VendorWorkspace() {
 	const [csv, setCsv] = useState('kind,category,title,description,priceCents,durationMinutes\n')
 	const [importResult, setImportResult] = useState<CatalogImportResult | null>(null)
 	const [editingListingId, setEditingListingId] = useState<string | null>(null)
-	const draftForm = useRef<HTMLFormElement>(null)
-	const draftStorageKey = catalog ? `junction:vendor-draft:${catalog.id}` : null
-
-	useEffect(() => {
-		if (!draftStorageKey || !draftForm.current) return
-		const saved = sessionStorage.getItem(draftStorageKey)
-		if (!saved) return
-		try {
-			const fields = JSON.parse(saved) as Record<string, string>
-			for (const [name, value] of Object.entries(fields)) {
-				const control = draftForm.current.elements.namedItem(name)
-				if (control instanceof HTMLInputElement || control instanceof HTMLTextAreaElement || control instanceof HTMLSelectElement) control.value = value
-			}
-		} catch {
-			sessionStorage.removeItem(draftStorageKey)
-		}
-	}, [draftStorageKey])
-
-	function savePrivateDraft(form: HTMLFormElement) {
-		if (!draftStorageKey) return
-		const fields = Object.fromEntries([...new FormData(form)].filter((entry): entry is [string, string] => typeof entry[1] === 'string'))
-		sessionStorage.setItem(draftStorageKey, JSON.stringify(fields))
-		sessionStorage.removeItem(`${draftStorageKey}:request-key`)
-	}
+	const createRetryKey = useRef<string | null>(null)
 
 	async function loadCatalog() {
 		setCatalog(VendorCatalogSchema.parse(await apiRequest('/vendor/catalog')))
@@ -144,9 +121,8 @@ export default function VendorWorkspace() {
 		const form = new FormData(formElement)
 		const kind = formValue(form, 'kind')
 		const price = Number(formValue(form, 'price'))
-		const retryStorageKey = draftStorageKey ? `${draftStorageKey}:request-key` : null
-		const requestKey = (retryStorageKey && sessionStorage.getItem(retryStorageKey)) || crypto.randomUUID()
-		if (retryStorageKey) sessionStorage.setItem(retryStorageKey, requestKey)
+		const requestKey = createRetryKey.current ?? crypto.randomUUID()
+		createRetryKey.current = requestKey
 		void run(async () => {
 			await apiRequest(
 				'/listings',
@@ -163,8 +139,7 @@ export default function VendorWorkspace() {
 			await loadCatalog()
 			setMessage('Private listing draft created. Submit it when ready for review.')
 			formElement.reset()
-			if (draftStorageKey) sessionStorage.removeItem(draftStorageKey)
-			if (retryStorageKey) sessionStorage.removeItem(retryStorageKey)
+			createRetryKey.current = null
 		})
 	}
 
@@ -610,14 +585,10 @@ export default function VendorWorkspace() {
 							<h2 id="new-listing-heading" className="text-2xl font-semibold">
 								Create a private draft
 							</h2>
-							<form
-								ref={draftForm}
-								onInput={(event) => savePrivateDraft(event.currentTarget)}
-								onSubmit={createListing}
-								className="mt-5 grid gap-4 sm:grid-cols-2">
+							<form onSubmit={createListing} className="mt-5 grid gap-4 sm:grid-cols-2">
 								<p className="text-xs text-muted-foreground sm:col-span-2">
-									This private draft stays in this browser tab through a reload. If the connection fails, reconnect with your Vendor session
-									and retry. It clears after successful creation or when the tab closes.
+									A listing is created only after this form is submitted. If the connection fails, retry in this open workspace session with
+									the same request key.
 								</p>
 								<label className="grid gap-1 text-sm">
 									Offering type

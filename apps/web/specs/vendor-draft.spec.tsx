@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 
 import VendorWorkspace from '../src/app/vendor-workspace/page'
 
@@ -12,7 +12,7 @@ const catalog = {
 	listings: [],
 }
 
-it('keeps an unsent private draft through reload and reuses the retry key after an ambiguous failure', async () => {
+it('reuses the retry key after an ambiguous failure in the open workspace session', async () => {
 	sessionStorage.clear()
 	const createKeys: string[] = []
 	let createAttempts = 0
@@ -30,7 +30,7 @@ it('keeps an unsent private draft through reload and reuses the retry key after 
 		throw new Error(`Unexpected request: ${input}`)
 	}) as typeof fetch
 	try {
-		const first = render(<VendorWorkspace />)
+		render(<VendorWorkspace />)
 		fireEvent.click(screen.getByRole('button', { name: 'Load workspace' }))
 		await screen.findByRole('heading', { name: 'Create a private draft' })
 		const draftSection = screen.getByRole('heading', { name: 'Create a private draft' }).closest('section')
@@ -38,18 +38,11 @@ it('keeps an unsent private draft through reload and reuses the retry key after 
 		fireEvent.input(within(draftSection).getByLabelText('Title'), { target: { value: 'Saved basket' } })
 		fireEvent.input(within(draftSection).getByLabelText('Description'), { target: { value: 'A handwoven basket saved before a network failure.' } })
 		fireEvent.input(within(draftSection).getByLabelText('Price (ETB)'), { target: { value: '125' } })
-		first.unmount()
-
-		render(<VendorWorkspace />)
-		fireEvent.click(screen.getByRole('button', { name: 'Load workspace' }))
-		await screen.findByRole('heading', { name: 'Create a private draft' })
-		await waitFor(() => expect((screen.getByLabelText('Title') as unknown as { value: string }).value).toBe('Saved basket'))
 		fireEvent.click(screen.getByRole('button', { name: 'Create draft' }))
 		await screen.findByText('Failed to fetch')
 		fireEvent.click(screen.getByRole('button', { name: 'Create draft' }))
 		await screen.findByText('Private listing draft created. Submit it when ready for review.')
 		expect(createKeys).toEqual(['retry-key', 'retry-key'])
-		expect(sessionStorage.getItem(`junction:vendor-draft:${catalog.id}`)).toBeNull()
 	} finally {
 		globalThis.fetch = originalFetch
 		Object.defineProperty(globalThis, 'crypto', { configurable: true, value: originalCrypto })
