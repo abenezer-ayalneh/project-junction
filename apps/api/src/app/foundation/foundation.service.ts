@@ -140,7 +140,7 @@ export class FoundationService {
 			!createdAt ||
 			Number.isNaN(createdAt.valueOf())
 		)
-			return this.rejectDiditWebhook('payload-shape')
+			return this.rejectDiditWebhook('payload-shape', this.diditWebhookShape(event))
 		try {
 			return await this.durable.recordDiditSessionUpdate({
 				eventId: createHash('sha256').update(rawBody).digest('hex'),
@@ -157,8 +157,20 @@ export class FoundationService {
 		}
 	}
 
-	private rejectDiditWebhook(reason: 'missing-body' | 'signature' | 'payload-shape' | 'session-correlation'): never {
-		this.logger.warn(`Didit webhook rejected: ${reason}`)
+	private diditWebhookShape(event: Record<string, unknown>): string {
+		const label = (value: unknown) => (typeof value === 'string' ? value.slice(0, 100) : typeof value)
+		return JSON.stringify({
+			webhookType: label(event['webhook_type']),
+			environment: label(event['environment']),
+			status: label(event['status']),
+			hasSessionId: typeof event['session_id'] === 'string' && event['session_id'].length > 0,
+			hasVendorData: typeof event['vendor_data'] === 'string' && event['vendor_data'].length > 0,
+			createdAt: label(event['created_at']),
+		})
+	}
+
+	private rejectDiditWebhook(reason: 'missing-body' | 'signature' | 'payload-shape' | 'session-correlation', detail?: string): never {
+		this.logger.warn(`Didit webhook rejected: ${reason}${detail ? ` (${detail})` : ''}`)
 		throw new AccessDeniedError()
 	}
 
