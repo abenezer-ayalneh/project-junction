@@ -146,6 +146,25 @@ services:
             postgres: { condition: service_healthy }
         networks: [backend]
 
+    reviewer-grant:
+        image: ${STAGING_APP_IMAGE:?}
+        profiles: [tools]
+        cpus: ${STAGING_TOOLS_CPUS:?}
+        mem_limit: ${STAGING_TOOLS_MEMORY:?}
+        pids_limit: 256
+        entrypoint: /app/ops/staging/load-secrets.sh
+        command: ['node', 'tools/manage-staging-reviewer.mjs']
+        environment:
+            NODE_ENV: production
+            JUNCTION_RUNTIME_MODE: staging
+            STAGING_REVIEWER_EMAIL: ${STAGING_REVIEWER_EMAIL:?}
+            STAGING_OPERATOR_LABEL: ${STAGING_OPERATOR_LABEL:?}
+        secrets:
+            - { source: database_url, target: DATABASE_URL }
+        depends_on:
+            postgres: { condition: service_healthy }
+        networks: [backend]
+
     minio-verify:
         image: ${STAGING_APP_IMAGE:?}
         profiles: [tools]
