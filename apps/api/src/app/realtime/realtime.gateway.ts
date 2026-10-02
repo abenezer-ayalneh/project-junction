@@ -6,6 +6,7 @@ import {
 	DomainEventSchema,
 	type RealtimeFoundationEvent,
 	RealtimeJoinRequestSchema,
+	RealtimeCursorAckSchema,
 	type RealtimeJoinResult,
 	RealtimeJoinResultSchema,
 	type RealtimeRoom,
@@ -55,6 +56,19 @@ export class RealtimeGateway implements OnGatewayInit {
 			this.crossProcessFanout = true
 			this.fanoutReady = this.configureRedisFanout(server, config.redisUrl)
 			void this.fanoutReady.catch(() => undefined)
+		}
+	}
+
+	@SubscribeMessage('room.ack')
+	@SkipThrottle()
+	async acknowledge(@ConnectedSocket() socket: RealtimeSocket, @MessageBody() input: unknown): Promise<void> {
+		const acknowledgement = RealtimeCursorAckSchema.safeParse(input)
+		const sessionId = socket.data['sessionId']
+		if (!acknowledgement.success || typeof sessionId !== 'string') return
+		try {
+			await this.foundation.acknowledgeRealtimeCursor(sessionId, acknowledgement.data.cursor)
+		} catch {
+			this.leaveScopedRooms(socket)
 		}
 	}
 
@@ -127,7 +141,7 @@ export class RealtimeGateway implements OnGatewayInit {
 			const context = await this.foundation.accessContext(sessionId)
 			if (!this.allowed(context, request.data.room)) return this.respond(socket, denied())
 			await socket.join(roomKey(request.data.room))
-			const replay = await this.foundation.realtimeReplay(sessionId, request.data.cursor)
+			const replay = await this.foundation.realtimeReplay(sessionId)
 			this.respond(
 				socket,
 				RealtimeJoinResultSchema.parse({

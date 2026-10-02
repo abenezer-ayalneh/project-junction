@@ -452,10 +452,12 @@ export type RealtimeRoom = z.infer<typeof RealtimeRoomSchema>
 
 export const RealtimeJoinRequestSchema = z.object({
 	room: RealtimeRoomSchema,
-	cursor: z.string().uuid().optional(),
 })
 
 export type RealtimeJoinRequest = z.infer<typeof RealtimeJoinRequestSchema>
+
+export const RealtimeCursorAckSchema = z.object({ cursor: z.string().uuid() })
+export type RealtimeCursorAck = z.infer<typeof RealtimeCursorAckSchema>
 
 export const RealtimeEventTypeSchema = DomainEventSchema.shape.type
 

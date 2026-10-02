@@ -57,6 +57,7 @@ model Session {
   recentAuthAt   DateTime? @map("recent_auth_at") @db.Timestamptz(6)
   activeVendorId String?   @map("active_vendor_id") @db.Uuid
   activeRole     String?   @map("active_role")
+  realtimeCursor String?   @map("realtime_cursor") @db.Uuid
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   user           User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   workspace      Workspace @relation(fields: [workspaceId], references: [id], onDelete: NoAction, onUpdate: NoAction)

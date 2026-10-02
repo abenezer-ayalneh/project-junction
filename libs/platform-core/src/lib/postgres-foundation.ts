@@ -1772,24 +1772,25 @@ export class PostgresFoundation {
 		})
 	}
 
-	async realtimeReplay(sessionId: string | undefined, cursor: string | undefined) {
-		if (cursor) this.requireResourceId(cursor)
+	async realtimeReplay(sessionId: string | undefined) {
 		return this.db.$transaction(async (tx) => {
 			const context = await this.derive(tx, sessionId)
+			const persisted = await tx.session.findUniqueOrThrow({ where: { id: context.session.id }, select: { realtimeCursor: true } })
+			const effectiveCursor = persisted.realtimeCursor ?? undefined
 			const publicTypes = { type: { in: [...publicRealtimeTypes] } }
 			const highWater = await tx.outboxEvent.findFirst({
 				where: { workspaceId: context.workspaceId, ...publicTypes },
 				orderBy: { id: 'desc' },
 				select: { id: true },
 			})
-			if (!cursor) return { cursor: highWater?.id ?? null, events: [], restRefetchRequired: false }
+			if (!effectiveCursor) return { cursor: highWater?.id ?? null, events: [], restRefetchRequired: false }
 			const cursorEvent = await tx.outboxEvent.findFirst({
-				where: { id: cursor, workspaceId: context.workspaceId, ...publicTypes },
+				where: { id: effectiveCursor, workspaceId: context.workspaceId, ...publicTypes },
 				select: { id: true },
 			})
 			if (!cursorEvent || !highWater) return { cursor: highWater?.id ?? null, events: [], restRefetchRequired: true }
 			const records = await tx.outboxEvent.findMany({
-				where: { workspaceId: context.workspaceId, id: { gt: cursor, lte: highWater.id }, ...publicTypes },
+				where: { workspaceId: context.workspaceId, id: { gt: effectiveCursor, lte: highWater.id }, ...publicTypes },
 				orderBy: { id: 'asc' },
 				take: realtimeReplayLimit + 1,
 				select: { id: true, eventId: true, type: true, payload: true, occurredAt: true },
@@ -1800,6 +1801,19 @@ export class PostgresFoundation {
 				events: records.map((record) => this.realtimeEvent(record, context.workspaceId)),
 				restRefetchRequired: false,
 			}
+		})
+	}
+
+	async acknowledgeRealtimeCursor(sessionId: string | undefined, cursor: string): Promise<void> {
+		this.requireResourceId(cursor)
+		await this.db.$transaction(async (tx) => {
+			const context = await this.derive(tx, sessionId)
+			const event = await tx.outboxEvent.findFirst({
+				where: { id: cursor, workspaceId: context.workspaceId, type: { in: [...publicRealtimeTypes] } },
+				select: { id: true },
+			})
+			if (!event) throw new AccessDeniedError()
+			await tx.session.update({ where: { id: context.session.id }, data: { realtimeCursor: cursor } })
 		})
 	}
 

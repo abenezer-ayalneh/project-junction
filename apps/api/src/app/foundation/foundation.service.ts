@@ -326,8 +326,12 @@ export class FoundationService {
 		return this.durable.realtimeHighWaterCursor(sessionId)
 	}
 
-	async realtimeReplay(sessionId: string | undefined, cursor: string | undefined) {
-		return this.durable.realtimeReplay(sessionId, cursor)
+	async realtimeReplay(sessionId: string | undefined) {
+		return this.durable.realtimeReplay(sessionId)
+	}
+
+	async acknowledgeRealtimeCursor(sessionId: string | undefined, cursor: string) {
+		return this.durable.acknowledgeRealtimeCursor(sessionId, cursor)
 	}
 
 	async realtimeFoundationEventForCommand(sessionId: string | undefined, commandId: string) {

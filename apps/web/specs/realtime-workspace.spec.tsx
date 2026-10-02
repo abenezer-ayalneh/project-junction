@@ -33,7 +33,6 @@ describe('RealtimeWorkspace', () => {
 		mockEmit.mockClear()
 		mockDisconnect.mockClear()
 		mockIo.mockClear()
-		sessionStorage.clear()
 		globalThis.fetch = jest.fn(
 			async () =>
 				({
@@ -67,13 +66,13 @@ describe('RealtimeWorkspace', () => {
 
 		await waitFor(() => expect(mockIo).toHaveBeenCalledWith({ transports: ['websocket'], withCredentials: true }))
 		act(() => mockHandlers.get('connect')?.())
-		expect(mockEmit).toHaveBeenCalledWith('room.join', { room: { kind: 'workspace', workspaceId }, cursor: undefined })
+		expect(mockEmit).toHaveBeenCalledWith('room.join', { room: { kind: 'workspace', workspaceId } })
 
 		act(() =>
 			mockHandlers.get('room.joined')?.({ joined: true, room: { kind: 'workspace', workspaceId }, cursor, events: [event], restRefetchRequired: false }),
 		)
 		expect(onEvent).toHaveBeenCalledWith(event)
-		expect(sessionStorage.getItem(`junction:realtime-cursor:${workspaceId}`)).toBe(cursor)
+		expect(mockEmit).toHaveBeenCalledWith('room.ack', { cursor })
 		expect(screen.getByRole('status').textContent).toContain('Live updates connected.')
 	})
 })

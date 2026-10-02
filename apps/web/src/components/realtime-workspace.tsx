@@ -31,7 +31,6 @@ export function RealtimeWorkspace({ onEvent, onRefetchRequired }: { onEvent: (ev
 				if (!response.ok) throw new Error('Access context is unavailable.')
 				const context = AccessContextResponseSchema.parse(await response.json())
 				if (cancelled) return
-				const cursorKey = `junction:realtime-cursor:${context.workspaceId}`
 				socket = io({ transports: ['websocket'], withCredentials: true })
 				socket.on('connect_error', () => {
 					if (!cancelled) setState('unavailable')
@@ -42,21 +41,23 @@ export function RealtimeWorkspace({ onEvent, onRefetchRequired }: { onEvent: (ev
 						if (!cancelled) setState('unavailable')
 						return
 					}
-					if (result.data.cursor) sessionStorage.setItem(cursorKey, result.data.cursor)
 					if (!cancelled) setState('connected')
 					for (const event of result.data.events) onEventRef.current(event)
-					if (result.data.restRefetchRequired) onRefetchRequiredRef.current()
+					if (result.data.restRefetchRequired) {
+						onRefetchRequiredRef.current()
+						return
+					}
+					if (result.data.cursor) socket?.emit('room.ack', { cursor: result.data.cursor })
 				})
 				socket.on('realtime.event', (input: unknown) => {
 					const event = RealtimeFoundationEventSchema.safeParse(input)
 					if (!event.success) return
-					sessionStorage.setItem(cursorKey, event.data.cursor)
 					onEventRef.current(event.data)
+					socket?.emit('room.ack', { cursor: event.data.cursor })
 				})
 				socket.on('connect', () => {
 					socket?.emit('room.join', {
 						room: { kind: 'workspace', workspaceId: context.workspaceId },
-						cursor: sessionStorage.getItem(cursorKey) ?? undefined,
 					})
 				})
 			} catch {

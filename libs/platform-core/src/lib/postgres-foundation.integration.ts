@@ -431,7 +431,8 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		process.env['JUNCTION_RUNTIME_MODE'] = 'staging'
 		try {
 			await expect(repository.realtimeHighWaterCursor(sessionId)).resolves.toBe(records[2].id)
-			await expect(repository.realtimeReplay(sessionId, records[0].id)).resolves.toMatchObject({
+			await repository.db.session.update({ where: { id: sessionId }, data: { realtimeCursor: records[0].id } })
+			await expect(repository.realtimeReplay(sessionId)).resolves.toMatchObject({
 				cursor: records[2].id,
 				restRefetchRequired: false,
 				events: [{ eventId: nextPublicEvent.eventId, type: 'ListingPublished' }],
@@ -1128,28 +1129,85 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 			}),
 		).toBe(2)
 	})
-	it('derives a workspace-only realtime high-water cursor from the current session', async () => {
-		const cursor = await repository.realtimeHighWaterCursor(sessionId)
-		const accepted = await repository.acceptAuditMarker(sessionId, randomUUID(), { marker: 'realtime high-water' })
-		const replay = await repository.realtimeReplay(sessionId, cursor ?? undefined)
-		expect(replay.cursor).not.toBeNull()
-		expect(replay.restRefetchRequired).toBe(false)
-		expect(replay.events).toHaveLength(1)
-		expect(replay.events[0]).toEqual(expect.objectContaining({ type: 'FoundationCommandAccepted', scope: { workspaceId }, payload: {} }))
-		const durableEvent = await repository.realtimeFoundationEventForCommand(sessionId, accepted.commandId)
-		expect(durableEvent).not.toBeNull()
-		expect(replay.events[0]?.eventId).toBe(durableEvent?.eventId)
-		expect(await repository.realtimeReplay(sessionId, replay.cursor ?? undefined)).toMatchObject({ events: [], restRefetchRequired: false })
+	it('persists a workspace-only realtime replay cursor on the authenticated session', async () => {
+		const addPublicEvent = async () => {
+			const event = DomainEventSchema.parse({
+				eventId: randomUUID(),
+				type: 'ListingPublished',
+				aggregateId: randomUUID(),
+				aggregateVersion: 1,
+				workspaceId,
+				causationId: randomUUID(),
+				correlationId: randomUUID(),
+				idempotencyKey: null,
+				occurredAt: new Date().toISOString(),
+				schemaVersion: 1,
+				payload: {},
+			})
+			return repository.db.outboxEvent.create({
+				data: {
+					eventId: event.eventId,
+					workspaceId,
+					type: event.type,
+					payload: event as Prisma.InputJsonValue,
+					occurredAt: new Date(event.occurredAt),
+				},
+			})
+		}
+		const baselineEvent = await addPublicEvent()
+		const baseline = await repository.realtimeReplay(sessionId)
+		expect(baseline).toMatchObject({ cursor: baselineEvent.id, events: [], restRefetchRequired: false })
+		await repository.acknowledgeRealtimeCursor(sessionId, baseline.cursor!)
+		expect(await repository.db.session.findUniqueOrThrow({ where: { id: sessionId }, select: { realtimeCursor: true } })).toEqual({
+			realtimeCursor: baselineEvent.id,
+		})
+		const nextEvent = await addPublicEvent()
+		const replay = await repository.realtimeReplay(sessionId)
+		expect(replay).toMatchObject({
+			cursor: nextEvent.id,
+			restRefetchRequired: false,
+			events: [{ eventId: expect.any(String), type: 'ListingPublished', scope: { workspaceId }, payload: {} }],
+		})
+		await repository.acknowledgeRealtimeCursor(sessionId, replay.cursor!)
+		expect(await repository.realtimeReplay(sessionId)).toMatchObject({ events: [], restRefetchRequired: false })
 		await repository.db.session.update({ where: { id: sessionId }, data: { revokedAt: new Date() } })
-		await expect(repository.realtimeHighWaterCursor(sessionId)).rejects.toThrow(AccessDeniedError)
+		await expect(repository.acknowledgeRealtimeCursor(sessionId, nextEvent.id)).rejects.toThrow(AccessDeniedError)
 		await repository.db.session.update({ where: { id: sessionId }, data: { revokedAt: null } })
 	})
+
 	it('bounds replay and requires a REST refetch for an unknown or over-limit cursor', async () => {
-		const cursor = await repository.realtimeHighWaterCursor(sessionId)
-		for (let index = 0; index <= 25; index++) await repository.acceptAuditMarker(sessionId, randomUUID(), { marker: `replay bound ${index}` })
-		await expect(repository.realtimeReplay(sessionId, cursor ?? undefined)).resolves.toMatchObject({ events: [], restRefetchRequired: true })
-		await expect(repository.realtimeReplay(sessionId, randomUUID())).resolves.toMatchObject({ events: [], restRefetchRequired: true })
+		const addPublicEvent = async () => {
+			const event = DomainEventSchema.parse({
+				eventId: randomUUID(),
+				type: 'ListingPublished',
+				aggregateId: randomUUID(),
+				aggregateVersion: 1,
+				workspaceId,
+				causationId: randomUUID(),
+				correlationId: randomUUID(),
+				idempotencyKey: null,
+				occurredAt: new Date().toISOString(),
+				schemaVersion: 1,
+				payload: {},
+			})
+			return repository.db.outboxEvent.create({
+				data: {
+					eventId: event.eventId,
+					workspaceId,
+					type: event.type,
+					payload: event as Prisma.InputJsonValue,
+					occurredAt: new Date(event.occurredAt),
+				},
+			})
+		}
+		const baseline = await addPublicEvent()
+		await repository.acknowledgeRealtimeCursor(sessionId, baseline.id)
+		for (let index = 0; index <= 25; index++) await addPublicEvent()
+		await expect(repository.realtimeReplay(sessionId)).resolves.toMatchObject({ events: [], restRefetchRequired: true })
+		await repository.db.session.update({ where: { id: sessionId }, data: { realtimeCursor: randomUUID() } })
+		await expect(repository.realtimeReplay(sessionId)).resolves.toMatchObject({ events: [], restRefetchRequired: true })
 	})
+
 	it('backs off failed attempts and dead-letters exhausted work', async () => {
 		await repository.db.outboxEvent.updateMany({
 			where: { workspaceId, state: { in: ['pending', 'in_flight'] } },
@@ -1320,7 +1378,8 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		).rejects.toThrow(AccessDeniedError)
 		await expect(repository.saveListing(sessionId, foreignPublished.id, true)).rejects.toThrow(AccessDeniedError)
 		await expect(repository.followVendor(sessionId, foreignVendor.id, true)).rejects.toThrow(AccessDeniedError)
-		await expect(repository.realtimeReplay(sessionId, (await repository.realtimeHighWaterCursor(foreignSession.id)) ?? undefined)).resolves.toMatchObject({
+		await repository.db.session.update({ where: { id: sessionId }, data: { realtimeCursor: await repository.realtimeHighWaterCursor(foreignSession.id) } })
+		await expect(repository.realtimeReplay(sessionId)).resolves.toMatchObject({
 			events: [],
 			restRefetchRequired: true,
 		})
