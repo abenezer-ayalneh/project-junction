@@ -785,6 +785,7 @@ export class PostgresFoundation {
 			)
 		return this.db.$transaction(async (tx) => {
 			const context = await this.derive(tx, sessionId)
+			if (context.capabilities.includes('platform:vendor:review')) throw new AccessDeniedError('Platform reviewers cannot create Vendor applications.')
 			const userId = this.customerId(context)
 			if (context.activeVendorId) {
 				const originalScopeHash = stableHash({ actorId: userId, workspaceId: context.workspaceId, vendorId: null })

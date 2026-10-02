@@ -212,6 +212,14 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		await repository.db.platformReviewerGrant.create({ data: { userId: reviewer.userId, grantedBy: 'integration-operator' } })
 		const queue = await repository.readPlatformReviewQueue(reviewer.sessionId, { limit: 100 })
 		expect(queue.applications.some((item) => item.id === vendor.id)).toBe(true)
+		await expect(
+			repository.createVendorApplication(reviewer.sessionId, randomUUID(), {
+				displayName: 'Reviewer Vendor',
+				slug: `reviewer-vendor-${randomUUID().slice(0, 8)}`,
+				description: 'A reviewer cannot also submit a Vendor application.',
+				location: { label: 'Main location', city: 'Addis Ababa', address: 'Bole, Addis Ababa, Ethiopia' },
+			}),
+		).rejects.toThrow('Platform reviewers cannot create Vendor applications.')
 		const before = {
 			audit: await repository.db.auditLog.count({ where: { workspaceId: applicantSession.workspaceId } }),
 			outbox: await repository.db.outboxEvent.count({ where: { workspaceId: applicantSession.workspaceId } }),

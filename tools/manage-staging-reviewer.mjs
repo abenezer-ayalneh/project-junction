@@ -28,6 +28,7 @@ try {
 		 JOIN workspaces w ON w.id = s.workspace_id AND w.kind = 'real'
 		 WHERE lower(u.email) = $1 AND a."emailVerified" = true
 		   AND u.adult_verification_state = 'verified' AND u.verified_at IS NOT NULL
+		   AND NOT EXISTS (SELECT 1 FROM vendor_memberships vm WHERE vm.user_id = u.id AND vm.revoked_at IS NULL)
 		 ORDER BY s.created_at ASC LIMIT 1`
 			: `SELECT u.id, s.workspace_id
 		 FROM users u
