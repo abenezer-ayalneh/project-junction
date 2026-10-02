@@ -72,7 +72,7 @@ If GHCR keeps the package private, give the VPS a read-only package credential t
 
 ## Current deployment record — 2026-09-30
 
-The API, worker, and web containers run the signed immutable application image `ghcr.io/abenezer-ayalneh/project-junction@sha256:87e450bf4447cad7adf9053351dadb27c9278665fee54bf5042ca077297941f9`. GitHub Actions built, attested, signed, and verified this digest before host deployment. The VPS pulled that exact digest, ran the configuration preflight, applied Prisma migration `20260929000000_retire_synthetic_schema`, and recreated all three application services.
+The API, worker, and web containers run the signed immutable application image `ghcr.io/abenezer-ayalneh/project-junction@sha256:5df804f2772c2aafbdab7772cb10aac77f34c99d776ae532d709ef0cf720b220`. GitHub Actions built, attested, signed, and verified this digest before host deployment. The VPS pulled that exact digest, ran the configuration preflight and migration check with no pending migrations, and recreated all three application services after a protected PostgreSQL backup.
 
 The staging database has no `demo_workspaces`, `demo_personas`, or `synthetic_external_effects` relations. Its `sessions.user_id` column is required, `sessions.demo_persona_id` is absent, and the real-workspace, adult-verification-state, and inventory-user-actor constraints are validated. The 12 required host-protected Compose secret files were verified present and nonempty without printing their paths or contents. A direct forged-session request was denied with `403`; unauthenticated web access was denied with `401`; anonymous MinIO access was denied with `403`.
 
