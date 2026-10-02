@@ -123,9 +123,7 @@ export default function AccountPage() {
 					) : session ? (
 						<div className="space-y-4">
 							<p>Signed in as {session.user.email}</p>
-							<p className="text-sm text-muted-foreground">
-								Identity verification is required before private Customer or Vendor actions are available.
-							</p>
+							<p className="text-sm text-muted-foreground">Private Customer and Vendor actions require an accepted identity and age check.</p>
 							{process.env.NEXT_PUBLIC_JUNCTION_RUNTIME_MODE === 'staging' && <IdentityVerification />}
 							{session.user.twoFactorEnabled ? (
 								<p>Authenticator sign-in is enabled.</p>
