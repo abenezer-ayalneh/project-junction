@@ -26,6 +26,7 @@ RUN rm -rf \
         /app/apps/api/src \
         /app/apps/worker/src \
         /app/apps/web/src \
+        /app/apps/web/specs \
         /app/libs/contracts/src \
         /app/libs/platform-core/src \
     && find /app/tools -maxdepth 1 -type f \
@@ -40,6 +41,7 @@ RUN rm -rf \
     && test ! -d /app/apps/api/src \
     && test ! -d /app/apps/worker/src \
     && test ! -d /app/apps/web/src \
+    && test ! -d /app/apps/web/specs \
     && test ! -d /app/libs/contracts/src \
     && test ! -d /app/libs/platform-core/src \
     && node --input-type=module -e "await import('./libs/platform-core/dist/index.js'); await import('./libs/platform-core/dist/lib/auth.js')" \
