@@ -116,7 +116,9 @@ export default function PlatformReview() {
 					Load queue
 				</Button>
 			</form>
-			<p className="mt-2 text-xs text-muted-foreground">Sign in with a verified, MFA-protected reviewer account before loading the queue.</p>
+			<p className="mt-2 text-xs text-muted-foreground">
+				A verified reviewer account can load the queue. Sign in again with your authenticator within 15 minutes before recording a decision.
+			</p>
 			{message && (
 				<p className="mt-5 rounded-lg border px-4 py-3 text-sm" role="status">
 					{message}
