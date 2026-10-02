@@ -4,6 +4,19 @@ on:
     push:
         branches:
             - codex/phase-00-real-staging
+        paths:
+            - '.dockerignore'
+            - '.github/workflows/publish-staging-image.yml'
+            - 'apps/**'
+            - 'libs/**'
+            - 'ops/staging/**'
+            - 'prisma/**'
+            - 'tools/**'
+            - 'package.json'
+            - 'pnpm-lock.yaml'
+            - 'pnpm-workspace.yaml'
+            - 'nx.json'
+            - 'tsconfig*.json'
     workflow_dispatch:
 
 permissions:
