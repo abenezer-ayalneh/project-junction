@@ -39,6 +39,7 @@ const migrations = [
 	'prisma/migrations/20260928000000_retire_legacy_adult_default/migration.sql',
 	'prisma/migrations/20260929000000_retire_synthetic_schema/migration.sql',
 	'prisma/migrations/20261001000000_durable_didit_sessions/migration.sql',
+	'prisma/migrations/20261002000000_durable_realtime_cursor/migration.sql',
 ]
 
 try {
@@ -76,10 +77,10 @@ try {
 	for (const migration of migrations.slice(1)) await client.query(await readFile(migration, 'utf8'))
 
 	const session = await client.query(
-		'SELECT "user_id" AS "userId", "workspace_id" AS "workspaceId", "active_vendor_id" AS "activeVendorId", "active_role" AS "activeRole" FROM "sessions" WHERE id = $1::uuid',
+		'SELECT "user_id" AS "userId", "workspace_id" AS "workspaceId", "active_vendor_id" AS "activeVendorId", "active_role" AS "activeRole", "realtime_cursor" AS "realtimeCursor" FROM "sessions" WHERE id = $1::uuid',
 		[ids.session],
 	)
-	assert.deepEqual(session.rows, [{ userId: ids.user, workspaceId: ids.workspace, activeVendorId: null, activeRole: null }])
+	assert.deepEqual(session.rows, [{ userId: ids.user, workspaceId: ids.workspace, activeVendorId: null, activeRole: null, realtimeCursor: null }])
 	assert.deepEqual((await client.query('SELECT "adult_verification_state" AS "adultVerificationState" FROM "users" WHERE id = $1::uuid', [ids.user])).rows, [
 		{ adultVerificationState: 'verified' },
 	])

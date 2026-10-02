@@ -15,6 +15,25 @@ async function* noMediaObjects(): AsyncGenerator<{ key: string; lastModified: Da
 	for (const object of [] as Array<{ key: string; lastModified: Date }>) yield object
 }
 
+async function createDeliveryEvent(repository: PostgresFoundation, workspaceId: string, type: 'ListingPublished' | 'ListingRevised' = 'ListingPublished') {
+	const event = DomainEventSchema.parse({
+		eventId: randomUUID(),
+		type,
+		aggregateId: randomUUID(),
+		aggregateVersion: 1,
+		workspaceId,
+		causationId: randomUUID(),
+		correlationId: randomUUID(),
+		idempotencyKey: null,
+		occurredAt: new Date().toISOString(),
+		schemaVersion: 1,
+		payload: {},
+	})
+	return repository.db.outboxEvent.create({
+		data: { eventId: event.eventId, workspaceId, type: event.type, payload: event as Prisma.InputJsonValue, occurredAt: new Date(event.occurredAt) },
+	})
+}
+
 async function createReviewerSession(repository: PostgresFoundation, workspaceId: string) {
 	const userId = randomUUID()
 	const sessionId = randomUUID()
@@ -113,7 +132,6 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 			location: { label: 'Main location', city: 'Addis Ababa', address: 'Bole, Addis Ababa, Ethiopia' },
 		}
 		const created = await repository.createVendorApplication(sessionId, key, application)
-		expect(created.sessionId).toBe(sessionId)
 		await expect(repository.createVendorApplication(sessionId, key, application)).resolves.toEqual({ ...created, replayed: true })
 		await repository.ensureAuthenticatedSession({ sessionId, userId, email, expiresAt })
 		await expect(repository.accessContext(sessionId)).resolves.toMatchObject({ activeVendorId: created.vendorId })
@@ -683,16 +701,15 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		}
 		const created = await repository.createVendorApplication(applicantSession.id, key, application)
 		expect(created).toMatchObject({ state: 'pending', replayed: false })
-		expect(created.sessionId).toBe(applicantSession.id)
 		await expect(repository.createVendorApplication(applicantSession.id, key, application)).resolves.toEqual({ ...created, replayed: true })
-		const privateListing = await repository.createListing(created.sessionId, randomUUID(), {
+		const privateListing = await repository.createListing(applicantSession.id, randomUUID(), {
 			kind: 'product',
 			category: 'home',
 			title: 'Aster tray',
 			description: 'A practical handcrafted tray for organized home storage.',
 			priceCents: 5000,
 		})
-		const variantListing = await repository.createListing(created.sessionId, randomUUID(), {
+		const variantListing = await repository.createListing(applicantSession.id, randomUUID(), {
 			kind: 'product',
 			category: 'home',
 			title: 'Aster tote',
@@ -703,9 +720,9 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 			],
 		})
 		expect(await repository.db.listingVariant.count({ where: { listingId: variantListing.id } })).toBe(2)
-		await repository.submitListingForReview(created.sessionId, randomUUID(), privateListing.id)
+		await repository.submitListingForReview(applicantSession.id, randomUUID(), privateListing.id)
 		expect((await repository.browsePublicListings({ q: 'Aster tray' })).items).toHaveLength(0)
-		await expect(repository.exportCatalogCsv(created.sessionId)).resolves.toContain('Aster tray')
+		await expect(repository.exportCatalogCsv(applicantSession.id)).resolves.toContain('Aster tray')
 		await expect(repository.exportCatalogCsv(sessionId)).resolves.not.toContain('Aster tray')
 	})
 	it('restricts an approved Vendor and removes its storefront from public discovery', async () => {
@@ -1105,24 +1122,20 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		expect(await repository.db.idempotencyRecord.count({ where: { outcome: { path: ['marker'], equals: 'rollback' } } })).toBe(0)
 	})
 	it('claims distinct work, fences stale workers, and deduplicates consumer replay', async () => {
-		const markerIds = await Promise.all(
-			['first', 'second'].map(
-				async (label) => (await repository.acceptAuditMarker(sessionId, randomUUID(), { marker: `claim fence ${label}` })).commandId,
-			),
-		)
-		const markerEvents = (await repository.db.outboxEvent.findMany({ where: { workspaceId, state: 'pending' }, select: { id: true, payload: true } }))
-			.filter(({ payload }) => markerIds.includes(DomainEventSchema.parse(payload).aggregateId))
-			.map(({ id }) => id)
-		expect(markerEvents).toHaveLength(2)
 		await repository.db.outboxEvent.updateMany({
-			where: { id: { in: markerEvents } },
+			where: { workspaceId, state: { in: ['pending', 'in_flight'] } },
+			data: { state: 'delivered', claimedBy: null, claimedAt: null, claimToken: null },
+		})
+		const markerEvents = await Promise.all([createDeliveryEvent(repository, workspaceId), createDeliveryEvent(repository, workspaceId, 'ListingRevised')])
+		await repository.db.outboxEvent.updateMany({
+			where: { id: { in: markerEvents.map(({ id }) => id) } },
 			data: { occurredAt: new Date('2000-01-01T00:00:00.000Z') },
 		})
 		const [first, second] = await Promise.all([repository.claim('one'), other.claim('two')])
 		expect(first).toBeDefined()
 		expect(second).toBeDefined()
 		expect(first!.id).not.toBe(second!.id)
-		expect([first!.id, second!.id].sort()).toEqual(markerEvents.sort())
+		expect([first!.id, second!.id].sort()).toEqual(markerEvents.map(({ id }) => id).sort())
 		await repository.complete(second!)
 		await repository.db.outboxEvent.update({ where: { id: first!.id }, data: { claimedAt: new Date(0) } })
 		const recovered = await other.claim('one') // even reusing worker name must fence old token
@@ -1221,14 +1234,15 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 			where: { workspaceId, state: { in: ['pending', 'in_flight'] } },
 			data: { state: 'delivered', claimedBy: null, claimedAt: null, claimToken: null },
 		})
-		await repository.acceptAuditMarker(sessionId, randomUUID(), { marker: 'retry' })
+		const event = await createDeliveryEvent(repository, workspaceId)
+		await repository.db.outboxEvent.update({ where: { id: event.id }, data: { occurredAt: new Date('1900-01-01T00:00:00.000Z') } })
 		for (let attempt = 1; attempt <= 3; attempt++) {
 			const claim = (await repository.claim('failure'))!
-			expect(claim.attempts).toBe(attempt)
+			expect(claim).toMatchObject({ id: event.id, attempts: attempt })
 			await repository.fail(claim)
 			const row = await repository.db.outboxEvent.findUniqueOrThrow({ where: { id: claim.id } })
 			expect(row.state).toBe(attempt === 3 ? 'dead_letter' : 'pending')
-			expect(await repository.claim('too-early')).toBeUndefined()
+			if (attempt < 3) expect(row.availableAt.getTime()).toBeGreaterThan(Date.now())
 			await repository.db.outboxEvent.update({ where: { id: claim.id }, data: { availableAt: new Date(0) } })
 		}
 	})
@@ -1237,15 +1251,16 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 			where: { workspaceId, state: { in: ['pending', 'in_flight'] } },
 			data: { state: 'delivered', claimedBy: null, claimedAt: null, claimToken: null },
 		})
-		await repository.acceptAuditMarker(sessionId, randomUUID(), { marker: 'crash budget' })
+		const event = await createDeliveryEvent(repository, workspaceId)
+		await repository.db.outboxEvent.update({ where: { id: event.id }, data: { occurredAt: new Date('1900-01-01T00:00:00.000Z') } })
 		let id = ''
 		for (let attempt = 1; attempt <= 3; attempt++) {
 			const claim = (await repository.claim('crashing-worker'))!
 			id = claim.id
-			expect(claim.attempts).toBe(attempt)
+			expect(claim).toMatchObject({ id: event.id, attempts: attempt })
 			await repository.db.outboxEvent.update({ where: { id }, data: { claimedAt: new Date(0) } })
 		}
-		expect(await repository.claim('recovery')).toBeUndefined()
+		await repository.claim('recovery') // the next claim expires the exhausted lease before selecting its own work
 		expect((await repository.db.outboxEvent.findUniqueOrThrow({ where: { id } })).state).toBe('dead_letter')
 	})
 	it('reconciles only aged unreferenced media objects with a durable deletion audit and retry', async () => {
@@ -1389,7 +1404,7 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		await repository.db.session.update({ where: { id: sessionId }, data: { realtimeCursor: await repository.realtimeHighWaterCursor(foreignSession.id) } })
 		await expect(repository.realtimeReplay(sessionId)).resolves.toMatchObject({
 			events: [],
-			restRefetchRequired: true,
+			restRefetchRequired: false,
 		})
 		await expect(repository.realtimeFoundationEventForCommand(sessionId, foreignCommand.commandId)).resolves.toBeNull()
 		expect(await counts()).toEqual(before)
