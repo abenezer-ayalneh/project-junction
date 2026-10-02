@@ -23,6 +23,7 @@ try {
 			? `SELECT u.id, s.workspace_id
 		 FROM users u
 		 JOIN junction_auth."user" a ON a.id = u.id::text AND lower(a.email) = lower(u.email)
+		 JOIN junction_auth."twoFactor" tf ON tf."userId" = a.id AND tf.verified = true
 		 JOIN sessions s ON s.user_id = u.id AND s.revoked_at IS NULL AND s.expires_at > now()
 		 JOIN workspaces w ON w.id = s.workspace_id AND w.kind = 'real'
 		 WHERE lower(u.email) = $1 AND a."emailVerified" = true
