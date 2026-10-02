@@ -1,5 +1,13 @@
 //@ts-check
 
+if (process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_JUNCTION_RUNTIME_MODE !== 'staging') {
+	throw new Error('Only private staging web builds are supported.')
+}
+
+if (process.env.NEXT_PUBLIC_JUNCTION_RUNTIME_MODE === 'staging' && process.env.NEXT_PUBLIC_JUNCTION_API_URL !== '/v1') {
+	throw new Error('Private staging web builds require NEXT_PUBLIC_JUNCTION_API_URL=/v1.')
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
 	// Next.js options go here

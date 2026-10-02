@@ -30,7 +30,7 @@ A verified User can request a self-service export [DEC-060]. The export is assem
 
 Deletion revokes sessions and provider links, stops optional processing, removes or anonymizes public/profile content, cleans derived search/analytics/notification/media copies, and pseudonymizes retained legal/audit/security/financial facts [DEC-060]. It cannot rewrite balanced ledger history or another party's legitimate transaction record. The UI must explain what is deleted, pseudonymized, retained, and why.
 
-Demo workspace expiry is stricter: Junction-owned records, R2 objects, search/analytics projections, notifications, and safe-to-delete sandbox provider objects are purged after the 24-hour TTL; cleanup failures remain visible and retry until reconciled.
+Demo workspace expiry is stricter: Junction-owned records, MinIO objects, search/analytics projections, notifications, and safe-to-delete sandbox provider objects are purged after the 24-hour TTL; cleanup failures remain visible and retry until reconciled.
 
 ## Retention registry
 

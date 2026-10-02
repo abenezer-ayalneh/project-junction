@@ -1,6 +1,6 @@
 ---
 name: Project Junction
-description: Stock shadcn/ui baseline for a synthetic-only platform foundation.
+description: Stock shadcn/ui baseline for private staging.
 colors:
     brand: '#e23247'
     background: 'shadcn neutral'

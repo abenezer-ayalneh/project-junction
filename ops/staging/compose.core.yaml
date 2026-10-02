@@ -1,0 +1,127 @@
+name: project-junction-staging
+
+# Bring up isolated state services before external provider credentials exist.
+# Keep these service definitions identical to compose.yaml so full deployment
+# reuses their volumes and credentials.
+services:
+    postgres:
+        image: ${STAGING_POSTGRES_IMAGE:?}
+        restart: unless-stopped
+        cpus: ${STAGING_POSTGRES_CPUS:?}
+        mem_limit: ${STAGING_POSTGRES_MEMORY:?}
+        pids_limit: 256
+        environment:
+            POSTGRES_DB: ${STAGING_DB_NAME:?}
+            POSTGRES_USER: ${STAGING_DB_USER:?}
+            POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_PASSWORD
+        secrets:
+            - { source: postgres_password, target: POSTGRES_PASSWORD }
+        volumes:
+            - postgres18_data:/var/lib/postgresql
+        networks: [backend]
+        healthcheck:
+            test:
+                [
+                    'CMD-SHELL',
+                    'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}" && psql -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}" -Atqc "SELECT uuidv7() IS NOT NULL AND postgis_version() IS NOT NULL" | grep -qx t',
+                ]
+            interval: 5s
+            timeout: 3s
+            retries: 20
+
+    redis:
+        image: ${STAGING_REDIS_IMAGE:?}
+        restart: unless-stopped
+        cpus: ${STAGING_REDIS_CPUS:?}
+        mem_limit: ${STAGING_REDIS_MEMORY:?}
+        pids_limit: 128
+        command: ['redis-server', '--aclfile', '/run/secrets/redis_acl', '--appendonly', 'yes', '--appendfsync', 'always']
+        secrets:
+            - { source: redis_acl, target: redis_acl }
+        volumes:
+            - redis_data:/data
+        networks: [backend]
+
+    clamav:
+        image: ${STAGING_CLAMAV_IMAGE:?}
+        restart: unless-stopped
+        cpus: ${STAGING_CLAMAV_CPUS:?}
+        mem_limit: ${STAGING_CLAMAV_MEMORY:?}
+        pids_limit: 256
+        volumes:
+            - clamav_data:/var/lib/clamav
+        networks: [backend, egress]
+
+    minio:
+        image: ${STAGING_MINIO_IMAGE:?}
+        restart: unless-stopped
+        cpus: ${STAGING_MINIO_CPUS:?}
+        mem_limit: ${STAGING_MINIO_MEMORY:?}
+        pids_limit: 256
+        command: ['server', '/data', '--console-address', ':9001']
+        environment:
+            MINIO_ROOT_USER_FILE: /run/secrets/MINIO_ROOT_USER
+            MINIO_ROOT_PASSWORD_FILE: /run/secrets/MINIO_ROOT_PASSWORD
+            MINIO_API_CORS_ALLOW_ORIGIN: https://${STAGING_HOSTNAME:?}
+            MINIO_API_CORS_ALLOW_CREDENTIALS_WITH_WILDCARD: 'off'
+        secrets:
+            - { source: minio_root_user, target: MINIO_ROOT_USER }
+            - { source: minio_root_password, target: MINIO_ROOT_PASSWORD }
+        volumes:
+            - minio_data:/data
+        ports:
+            - 127.0.0.1:${STAGING_MINIO_HOST_PORT:?}:9000
+        networks: [backend, proxy]
+
+    minio-init:
+        image: ${STAGING_MINIO_IMAGE:?}
+        restart: 'no'
+        cpus: ${STAGING_TOOLS_CPUS:?}
+        mem_limit: ${STAGING_TOOLS_MEMORY:?}
+        pids_limit: 128
+        environment:
+            MINIO_BUCKET: ${STAGING_MINIO_BUCKET:?}
+            STAGING_HOSTNAME: ${STAGING_HOSTNAME:?}
+        entrypoint: ['sh', '-ec']
+        command:
+            - |
+                until mc alias set junction http://minio:9000 "$$(cat /run/secrets/MINIO_ROOT_USER)" "$$(cat /run/secrets/MINIO_ROOT_PASSWORD)"; do sleep 2; done
+                mc mb --ignore-existing "junction/$${MINIO_BUCKET}"
+                if ! mc admin user info junction "$$(cat /run/secrets/MEDIA_S3_ACCESS_KEY_ID)" >/dev/null 2>&1; then
+                    mc admin user add junction "$$(cat /run/secrets/MEDIA_S3_ACCESS_KEY_ID)" "$$(cat /run/secrets/MEDIA_S3_SECRET_ACCESS_KEY)"
+                fi
+                cat >/tmp/junction-media-policy.json <<EOF
+                {"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["s3:GetBucketLocation","s3:ListBucket"],"Resource":["arn:aws:s3:::$${MINIO_BUCKET}" ]},{"Effect":"Allow","Action":["s3:GetObject","s3:PutObject","s3:DeleteObject"],"Resource":["arn:aws:s3:::$${MINIO_BUCKET}/*" ]}]}
+                EOF
+                if ! mc admin policy info junction junction-media-policy >/dev/null 2>&1; then
+                    mc admin policy create junction junction-media-policy /tmp/junction-media-policy.json
+                fi
+                mc admin policy attach junction junction-media-policy --user "$$(cat /run/secrets/MEDIA_S3_ACCESS_KEY_ID)"
+        secrets:
+            - { source: minio_root_user, target: MINIO_ROOT_USER }
+            - { source: minio_root_password, target: MINIO_ROOT_PASSWORD }
+            - { source: media_s3_access_key_id, target: MEDIA_S3_ACCESS_KEY_ID }
+            - { source: media_s3_secret_access_key, target: MEDIA_S3_SECRET_ACCESS_KEY }
+        depends_on:
+            minio: { condition: service_started }
+        networks: [backend]
+
+secrets:
+    postgres_password: { file: '${STAGING_POSTGRES_PASSWORD_FILE:?}' }
+    redis_acl: { file: '${STAGING_REDIS_ACL_FILE:?}' }
+    minio_root_user: { file: '${STAGING_MINIO_ROOT_USER_FILE:?}' }
+    minio_root_password: { file: '${STAGING_MINIO_ROOT_PASSWORD_FILE:?}' }
+    media_s3_access_key_id: { file: '${STAGING_MEDIA_S3_ACCESS_KEY_ID_FILE:?}' }
+    media_s3_secret_access_key: { file: '${STAGING_MEDIA_S3_SECRET_ACCESS_KEY_FILE:?}' }
+
+volumes:
+    postgres18_data:
+    redis_data:
+    clamav_data:
+    minio_data:
+
+networks:
+    backend:
+        internal: true
+    egress:
+    proxy:

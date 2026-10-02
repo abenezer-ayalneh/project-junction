@@ -27,11 +27,11 @@ The following are **configuration families**, not a created `.env` file or final
 | observability DSN/ingest, alert route, backup/B2, SOPS recovery references | restricted or secret         | staging, portfolio as applicable           | operations           | telemetry payload controls are separate from endpoint configuration           |
 | quota, retention, policy/version and synthetic seed selector               | runtime non-secret           | local, CI, staging, portfolio              | product/operations   | server validates safe bounds and records active version                       |
 
-The future `.env.example` may show safe names and explanatory placeholders only. It must not contain credential-shaped values, real email addresses, phone numbers, hostnames, account IDs, or recovery paths that could be mistaken for usable production configuration.
+The checked-in `.env.example` is the fail-closed private staging template: it names required values without usable credentials or a deployable hostname. `.env.integration.example` preserves the synthetic local test fixture and must never be loaded into staging.
 
 ## Local and CI
 
-Local defaults use ignored developer-only configuration and deterministic fake providers. CI uses job-scoped synthetic values. Neither receives staging/portfolio secrets. `.env.example` in the future repository documents names and safe examples only; no credential-shaped samples that might be mistaken for valid secrets.
+Local integration tests use the explicitly named `.env.integration.example` fixture and deterministic fake providers. CI uses job-scoped synthetic values. Neither receives staging/portfolio secrets. The default `.env.example` contains only staging variable names and safe non-secret mode settings.
 
 Local setup must make adapter mode and synthetic seed profile observable before application start. CI must reject a configuration that selects a non-fake provider or an environment identity other than test/CI. A secret supplied through a command-line argument, screenshot, issue, test fixture, client bundle, or generated artifact is a failed configuration practice even when the value is synthetic.
 

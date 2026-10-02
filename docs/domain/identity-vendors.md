@@ -56,7 +56,7 @@ MapTiler/MapLibre supplies map presentation and discovery assistance. Project Ju
 
 ## Verification posture
 
-Public demo Vendor verification is synthetic. It must not accept real documents, call real registries, or imply that a fictional Vendor passed KYB. Sumsub may be demonstrated only in a private sandbox and must be described as such. Smile ID is not an Ethiopian KYB provider for this plan. `[DEC-066]`
+Public demo Vendor verification is synthetic. It must not accept real documents, call real registries, or imply that a fictional Vendor passed KYB. Didit may be demonstrated only in a private sandbox and must be described as such. Smile ID is not an Ethiopian KYB provider for this plan. `[DEC-066]`
 
 A future real environment requires a new provider contract and legal/KYB determination; no portfolio state is portable proof. `[DEC-066, DEC-109]`
 

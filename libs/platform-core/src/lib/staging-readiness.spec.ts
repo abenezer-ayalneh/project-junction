@@ -1,0 +1,59 @@
+import { assertStagingProviderConfiguration } from './staging-readiness.js'
+
+const staging = (): NodeJS.ProcessEnv => ({
+	JUNCTION_RUNTIME_MODE: 'staging',
+	FOUNDATION_STORAGE: 'postgresql',
+	DATABASE_URL: 'postgresql://user:password@db.internal/junction',
+	REALTIME_REDIS_FANOUT: 'enabled',
+	REDIS_URL: 'redis://redis.internal:6379',
+	BETTER_AUTH_URL: 'https://staging.junction.test',
+	BETTER_AUTH_SECRET: 'a'.repeat(32),
+	RESEND_API_KEY: 'staging-key',
+	RESEND_FROM_EMAIL: 'verify@junction.test',
+	DIDIT_API_KEY: 'sandbox-key',
+	DIDIT_WEBHOOK_SECRET: 'sandbox-webhook-secret',
+	DIDIT_WORKFLOW_ID: 'sandbox-adult-workflow',
+	MEDIA_S3_ENDPOINT: 'https://objects.junction.test',
+	MEDIA_S3_REGION: 'auto',
+	MEDIA_S3_BUCKET: 'junction-staging',
+	MEDIA_S3_ACCESS_KEY_ID: 'staging-access-key',
+	MEDIA_S3_SECRET_ACCESS_KEY: 'staging-secret-key',
+	MEDIA_CLAMD_HOST: '127.0.0.1',
+	MEDIA_CLAMD_PORT: '3310',
+})
+
+describe('private staging provider readiness', () => {
+	it('refuses every non-staging runtime mode', () => {
+		expect(() => assertStagingProviderConfiguration({ JUNCTION_RUNTIME_MODE: 'development', NODE_ENV: 'test' })).toThrow()
+		expect(() => assertStagingProviderConfiguration({ JUNCTION_RUNTIME_MODE: 'development', NODE_ENV: 'production' })).toThrow()
+		expect(() => assertStagingProviderConfiguration({ NODE_ENV: 'production' })).toThrow()
+	})
+
+	it('allows the Didit rehearsal before adult grants are enabled', () => {
+		expect(() => assertStagingProviderConfiguration(staging())).not.toThrow()
+	})
+
+	it('refuses placeholder origins', () => {
+		expect(() => assertStagingProviderConfiguration({ ...staging(), BETTER_AUTH_URL: 'https://staging.example.com' })).toThrow()
+	})
+
+	it('refuses staging without a real email or identity adapter configuration', () => {
+		expect(() => assertStagingProviderConfiguration({ ...staging(), RESEND_API_KEY: '' })).toThrow()
+		expect(() => assertStagingProviderConfiguration({ ...staging(), DIDIT_WEBHOOK_SECRET: '' })).toThrow()
+	})
+
+	it('refuses local object-store fixtures and missing malware scanning', () => {
+		expect(() => assertStagingProviderConfiguration({ ...staging(), MEDIA_S3_ENDPOINT: 'http://127.0.0.1:59000' })).toThrow()
+		expect(() => assertStagingProviderConfiguration({ ...staging(), MEDIA_CLAMD_HOST: '' })).toThrow()
+	})
+
+	it('refuses single-process realtime and the local Redis fixture', () => {
+		expect(() => assertStagingProviderConfiguration({ ...staging(), REALTIME_REDIS_FANOUT: 'disabled' })).toThrow()
+		expect(() => assertStagingProviderConfiguration({ ...staging(), REDIS_URL: 'redis://127.0.0.1:6379' })).toThrow()
+		expect(() => assertStagingProviderConfiguration({ ...staging(), REDIS_URL: 'redis://localhost:6380' })).toThrow()
+		expect(() => assertStagingProviderConfiguration({ ...staging(), REDIS_URL: 'redis://cache.localhost:6379' })).toThrow()
+		expect(() => assertStagingProviderConfiguration({ ...staging(), REDIS_URL: 'redis://127.0.0.2:6379' })).toThrow()
+		expect(() => assertStagingProviderConfiguration({ ...staging(), DATABASE_URL: 'postgresql://user:password@127.0.0.1:5433/junction' })).toThrow()
+		expect(() => assertStagingProviderConfiguration({ ...staging(), DATABASE_URL: 'postgresql://user:password@localhost:5432/junction' })).toThrow()
+	})
+})

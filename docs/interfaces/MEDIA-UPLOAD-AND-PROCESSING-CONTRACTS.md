@@ -2,6 +2,8 @@
 
 **Status:** Specified — Not Executed — Not Verified
 
+**Local implementation status:** A Vendor-scoped signed PUT intent, checksum-sealed completion, ClamAV scan, bounded FFmpeg transform, private reviewer preview, moderation decision, and publication-gated delivery are implemented with a local S3-compatible bucket. PostgreSQL and object-store integration checks cover ownership, replay, expiry, checksum, EICAR rejection, processing, stale moderation decisions, and public access revocation. Target MinIO, operational cleanup, and independent accessibility checks remain open.
+
 1. Authorized actor requests scoped upload intent for owned resource and declared media purpose.
 2. API returns short-lived quarantine-only signed upload contract with allowed size/type/checksum constraints; it grants no public access.
 3. Client uploads directly to quarantine and reports immutable object/checksum reference.

@@ -2,7 +2,9 @@
 
 ## Current reality
 
-Project Junction has a local synthetic Phase 00 foundation and Phase 01 Vendor supply/discovery slice: Nx Next/Nest/worker applications, public contracts, Prisma migrations, Compose PostgreSQL/PostGIS, and durable repositories. Phase 00 is not complete; Phase 01 is locally verified only. See [Phase 00 durability evidence and remaining gates](./quality/PHASE-00-DURABILITY-EVIDENCE.md) and [Phase 01 local evidence](./requirements/PHASE-01-VENDOR-SUPPLY-AND-DISCOVERY.md#local-implementation-evidence). No real provider integration, identity topology, VPS deployment, commerce or public service is claimed.
+The local synthetic Phase 01 Vendor supply/discovery milestone is accepted against its [requirement-linked evidence](./quality/PHASE-01-ACCEPTANCE-EVIDENCE.md). It is regression evidence while Phase 00 transitions to [real private staging](./quality/PHASE-00-REAL-TRANSITION.md). Target MinIO, independent accessibility, and non-demo retention gates remain open.
+
+Project Junction has an accepted local synthetic Phase 00 foundation and a Phase 01 Vendor supply/discovery API and PostgreSQL slice with local evidence. Public catalog search and storefront navigation have been exercised in a served local browser with temporary synthetic data. The synthetic Vendor workspace supports application, private catalog read, draft creation, review submission, and CSV preview/commit/export; private catalog read and draft creation were browser-verified, and CSV preview, commit, and row-error feedback were browser-verified with a disposable fixture. Storefront editing, versioned rejected-listing revision, and public unpublish reversal were browser-verified with a disposable fixture. A scoped Platform review page was browser-verified for application and listing approval through public discovery. Customer save/follow controls, persisted opt-in, and explained recommendations were also browser-verified with a disposable fixture. The accepted media profile has local signed upload, sealed quarantine, ClamAV scan, FFmpeg transform, scoped moderation, and publication-gated delivery evidence. Served browser journeys verified Vendor upload, reviewer preview/approval, silent and captioned public playback, keyboard video use, narrow viewport captions, and unpublish revocation. Expired upload, demo workspace, and orphan-object cleanup have tested local paths. Independent accessibility review and non-demo retention policy remain open. The first Phase 02 inventory-ledger seam is locally verified in the synthetic PostgreSQL and built API runtime; checkout, fulfillment, returns, customer availability, and the Phase 02 exit remain unimplemented. See [Phase 00 acceptance evidence](./quality/PHASE-00-DURABILITY-EVIDENCE.md), [Phase 01 local evidence](./requirements/PHASE-01-VENDOR-SUPPLY-AND-DISCOVERY.md#local-implementation-evidence), and [Phase 02 goods commerce](./requirements/PHASE-02-GOODS-COMMERCE.md#local-implementation-notes). Better Auth, Resend, Didit Sandbox, and MinIO adapters are implemented for private staging, but no live provider flow, VPS deployment, commerce, or public service has been accepted.
 
 ## Claim labels
 
@@ -14,12 +16,12 @@ Project Junction has a local synthetic Phase 00 foundation and Phase 01 Vendor s
 
 ## Environments
 
-| Environment                           | Status                                     | Permitted reality                                                                     |
-| ------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------- |
-| Local development                     | Partially implemented and locally verified | Synthetic applications, PostgreSQL integration tests, and Git history.                |
-| Private staging                       | Specified only                             | No Project Junction provider configuration, infrastructure, or deployment exists yet. |
-| Portfolio production/demo             | Specified only                             | No public demo or deployment exists yet.                                              |
-| Future Dire Dawa commercial operation | Unapproved                                 | Requires the gates in `docs/future/`.                                                 |
+| Environment                           | Status                                     | Permitted reality                                                                                       |
+| ------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| Local development                     | Partially implemented and locally verified | Synthetic applications, PostgreSQL integration tests, and Git history.                                  |
+| Private staging                       | Implementation in progress                 | Real-service code exists; provider accounts, isolated infrastructure, and deployment remain unverified. |
+| Portfolio production/demo             | Specified only                             | No public demo or deployment exists yet.                                                                |
+| Future Dire Dawa commercial operation | Unapproved                                 | Requires the gates in `docs/future/`.                                                                   |
 
 ## Documentation-authoring baseline
 

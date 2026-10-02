@@ -6,7 +6,7 @@ import { createRequire } from 'node:module'
 const require = createRequire(new URL('../libs/platform-core/package.json', import.meta.url))
 const { Pool } = require('pg')
 
-if (!process.env.DATABASE_URL) throw new Error('Set DATABASE_URL to the local synthetic PostgreSQL database.')
+if (!process.env.DATABASE_URL) throw new Error('Set DATABASE_URL to the local PostgreSQL database.')
 
 const databaseUrl = new URL(process.env.DATABASE_URL)
 if (!['localhost', '127.0.0.1'].includes(databaseUrl.hostname)) throw new Error('Restore rehearsal requires a loopback database.')
@@ -39,12 +39,9 @@ async function fixtureCounts() {
 		SELECT
 			(SELECT count(*)::int FROM "workspaces") AS "workspaceCount",
 			(SELECT count(*)::int FROM "sessions") AS "sessionCount",
-			(SELECT count(*)::int FROM "demo_personas") AS "personaCount",
 			(SELECT count(*)::int FROM "provider_inbox_events") AS "inboxCount",
 			(SELECT count(*)::int FROM "outbox_events") AS "outboxCount",
-			(SELECT count(*)::int FROM "audit_logs") AS "auditCount",
-			(SELECT "command_events_used" FROM "demo_personas" LIMIT 1) AS "commandEventsUsed",
-			(SELECT "command_events_limit" FROM "demo_personas" LIMIT 1) AS "commandEventsLimit"
+			(SELECT count(*)::int FROM "audit_logs") AS "auditCount"
 	`)
 	return result.rows[0]
 }
@@ -54,20 +51,14 @@ try {
 	run('pnpm', ['exec', 'prisma', 'migrate', 'deploy'], { ...process.env, DATABASE_URL: schemaUrl.toString() })
 
 	const ids = {
-		demo: randomUUID(),
 		event: randomUUID(),
 		location: randomUUID(),
-		persona: randomUUID(),
 		session: randomUUID(),
 		user: randomUUID(),
 		vendor: randomUUID(),
 		workspace: randomUUID(),
 	}
-	await pool.query('INSERT INTO "workspaces" (id, kind) VALUES ($1::uuid, $2)', [ids.workspace, 'demo'])
-	await pool.query('INSERT INTO "demo_workspaces" (id, "workspace_id", "expires_at") VALUES ($1::uuid, $2::uuid, now() + interval \'1 hour\')', [
-		ids.demo,
-		ids.workspace,
-	])
+	await pool.query('INSERT INTO "workspaces" (id, kind) VALUES ($1::uuid, $2)', [ids.workspace, 'real'])
 	await pool.query('INSERT INTO "users" (id, email, "adult_verification_state", "verified_at") VALUES ($1::uuid, $2, $3, now())', [
 		ids.user,
 		`${ids.user}@example.invalid`,
@@ -76,28 +67,21 @@ try {
 	await pool.query('INSERT INTO "vendors" (id, "workspace_id") VALUES ($1::uuid, $2::uuid)', [ids.vendor, ids.workspace])
 	await pool.query('INSERT INTO "locations" (id, "vendor_id") VALUES ($1::uuid, $2::uuid)', [ids.location, ids.vendor])
 	await pool.query(
-		'INSERT INTO "demo_personas" (id, "workspace_id", key, role, "vendor_id", "location_ids", "command_events_used", "command_events_limit") VALUES ($1::uuid, $2::uuid, $3, $4, $5::uuid, ARRAY[$6::uuid], 7, 9)',
-		[ids.persona, ids.workspace, 'vendor_owner', 'vendor_owner', ids.vendor, ids.location],
-	)
-	await pool.query(
 		'INSERT INTO "sessions" (id, "user_id", "workspace_id", "expires_at", "active_vendor_id", "active_role") VALUES ($1::uuid, $2::uuid, $3::uuid, now() + interval \'1 hour\', $4::uuid, $5)',
 		[ids.session, ids.user, ids.workspace, ids.vendor, 'vendor_owner'],
 	)
 	await pool.query(
 		'INSERT INTO "provider_inbox_events" ("workspace_id", provider, "provider_event_id", "payload_hash", payload) VALUES ($1::uuid, $2, $3, $4, $5::jsonb)',
-		[ids.workspace, 'fake-payment', `restore-${ids.event}`, 'fixture-hash', JSON.stringify({ fixture: true })],
+		[ids.workspace, 'didit', `restore-${ids.event}`, 'fixture-hash', JSON.stringify({ fixture: true })],
 	)
 	await pool.query(
 		'INSERT INTO "outbox_events" ("event_id", "workspace_id", type, payload, "occurred_at") VALUES ($1::uuid, $2::uuid, $3, $4::jsonb, now())',
 		[ids.event, ids.workspace, 'FoundationCommandAccepted', JSON.stringify({ fixture: true })],
 	)
-	await pool.query('INSERT INTO "audit_logs" ("workspace_id", "actor_id", action, "correlation_id", metadata) VALUES ($1::uuid, $2::uuid, $3, $4::uuid, $5::jsonb)', [
-		ids.workspace,
-		ids.user,
-		'restore.fixture',
-		ids.event,
-		JSON.stringify({ fixture: true }),
-	])
+	await pool.query(
+		'INSERT INTO "audit_logs" ("workspace_id", "actor_id", action, "correlation_id", metadata) VALUES ($1::uuid, $2::uuid, $3, $4::uuid, $5::jsonb)',
+		[ids.workspace, ids.user, 'restore.fixture', ids.event, JSON.stringify({ fixture: true })],
+	)
 
 	const expected = await fixtureCounts()
 	run('docker', [

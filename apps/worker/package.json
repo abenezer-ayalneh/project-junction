@@ -4,6 +4,7 @@
 	"private": true,
 	"dependencies": {
 		"contracts": "workspace:*",
-		"platform-core": "workspace:*"
+		"platform-core": "workspace:*",
+		"redis": "^4.7.1"
 	}
 }

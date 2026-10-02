@@ -1,0 +1,49 @@
+# Import this site block into the existing VPS Caddy configuration.
+# STAGING_HOSTNAME is the DNS name pointing at the VPS. Keep all upstreams
+# bound to loopback; do not publish the application ports directly.
+{$STAGING_HOSTNAME} {
+	@didit_webhook {
+		path /v1/identity/didit-webhook
+		method POST
+	}
+	@auth_email_flow path /api/auth/verify-email /api/auth/reset-password /api/auth/reset-password/* /account/verified /account/reset
+	@api path /v1/*
+	@realtime path /socket.io/*
+
+	# Didit cannot supply the operator's browser credentials. The API verifies
+	# the signed callback and reconciles the session before changing access.
+	handle @didit_webhook {
+		reverse_proxy {$STAGING_API_UPSTREAM}
+	}
+
+	# Email links are signed, short-lived Better Auth capabilities. They must be
+	# reachable before a recipient has private-staging browser credentials.
+	handle @auth_email_flow {
+		reverse_proxy {$STAGING_WEB_UPSTREAM}
+	}
+
+	# Socket.IO upgrades cannot carry the browser's HTTP Basic-auth challenge
+	# reliably. The gateway requires the same Better Auth session cookie and
+	# rechecks its scoped access context before a socket can join a room.
+	handle @realtime {
+		reverse_proxy {$STAGING_API_UPSTREAM}
+	}
+
+	handle {
+		basicauth {
+			{$STAGING_BASIC_AUTH_USER} {$STAGING_BASIC_AUTH_HASH}
+		}
+		handle @api {
+			reverse_proxy {$STAGING_API_UPSTREAM}
+		}
+		handle {
+			reverse_proxy {$STAGING_WEB_UPSTREAM}
+		}
+	}
+}
+
+# The S3 endpoint stays private by bucket policy and signed requests. It has
+# no Basic authentication because presigned PUT/GET calls need their exact URL.
+{$STAGING_MINIO_HOSTNAME} {
+	reverse_proxy {$STAGING_MINIO_UPSTREAM}
+}

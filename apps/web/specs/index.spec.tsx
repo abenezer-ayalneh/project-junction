@@ -5,6 +5,12 @@ import Page from '../src/app/page'
 import { ThemeProvider } from '../src/components/theme-provider'
 import { ThemeToggle } from '../src/components/theme-toggle'
 
+jest.mock('../src/lib/marketplace', () => ({
+	getPublicListings: async () => ({ items: [], nextCursor: null }),
+	getPublicVendors: async () => ({ items: [], nextCursor: null }),
+	formatPrice: () => 'ETB 0',
+}))
+
 type MatchMediaListener = (event: { matches: boolean }) => void
 
 let systemIsDark = false
@@ -16,20 +22,20 @@ function updateSystemTheme(matches: boolean) {
 }
 
 describe('Page', () => {
-	it('discloses the synthetic-only boundary', () => {
-		render(<Page />)
+	it('identifies the private staging environment', async () => {
+		render(await Page({ searchParams: Promise.resolve({}) }))
 
-		expect(screen.getByRole('status').textContent).toContain('Synthetic runtime only')
-		expect(screen.getByRole('heading', { name: /build the boundaries/i })).toBeTruthy()
+		expect(screen.getByText('Private staging')).toBeTruthy()
+		expect(screen.getByRole('heading', { name: /find the good work happening nearby/i })).toBeTruthy()
 	})
 
-	it('preserves the Phase 00 accessibility baseline', () => {
-		render(<Page />)
+	it('preserves the discovery accessibility baseline', async () => {
+		render(await Page({ searchParams: Promise.resolve({}) }))
 
 		expect(screen.getByRole('main')).toBeTruthy()
 		expect(screen.getByRole('banner')).toBeTruthy()
-		const skipLink = screen.getByRole('link', { name: /skip to platform foundation/i })
-		expect(skipLink.getAttribute('href')).toBe('#foundation')
+		const skipLink = screen.getByRole('link', { name: /skip to discovery/i })
+		expect(skipLink.getAttribute('href')).toBe('#discover')
 		skipLink.focus()
 		expect(globalThis.document.activeElement).toBe(skipLink)
 		expect(screen.getByRole('button', { name: /choose color theme/i })).toBeTruthy()

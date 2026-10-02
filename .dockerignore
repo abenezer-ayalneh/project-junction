@@ -1,0 +1,15 @@
+.git
+.github
+.idea
+.nx
+.next
+**/.next
+node_modules
+**/node_modules
+dist
+**/dist
+**/generated
+test-output
+.env
+.env.*
+*.log
