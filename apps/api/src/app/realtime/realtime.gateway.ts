@@ -73,11 +73,11 @@ export class RealtimeGateway implements OnGatewayInit {
 	}
 
 	async ready(): Promise<void> {
-		if (process.env['JUNCTION_RUNTIME_MODE'] === 'staging' && !this.crossProcessFanout) {
+		if (getApiRuntimeConfig(this.configService).runtimeMode === 'staging' && !this.crossProcessFanout) {
 			throw new Error('Staging realtime Redis fanout is not initialized.')
 		}
 		await this.fanoutReady
-		if (process.env['JUNCTION_RUNTIME_MODE'] === 'staging' && this.redisClients.some((client) => !client.isReady)) {
+		if (getApiRuntimeConfig(this.configService).runtimeMode === 'staging' && this.redisClients.some((client) => !client.isReady)) {
 			throw new Error('Staging realtime Redis clients are disconnected.')
 		}
 	}
@@ -194,7 +194,8 @@ export class RealtimeGateway implements OnGatewayInit {
 	private async configureRedisFanout(server: Server, redisUrl: string): Promise<void> {
 		const publisher = createClient({ url: redisUrl })
 		const subscriber = publisher.duplicate()
-		const domainSubscriber = process.env['JUNCTION_RUNTIME_MODE'] === 'staging' ? publisher.duplicate() : undefined
+		const runtimeMode = getApiRuntimeConfig(this.configService).runtimeMode
+		const domainSubscriber = publisher.duplicate()
 		for (const client of [publisher, subscriber, domainSubscriber]) {
 			client?.on('error', () => process.stderr.write(`${JSON.stringify({ type: 'realtime.redis-error' })}\n`))
 		}
@@ -202,7 +203,7 @@ export class RealtimeGateway implements OnGatewayInit {
 			await Promise.all([publisher.connect(), subscriber.connect(), domainSubscriber?.connect()])
 			server.adapter(createAdapter(publisher, subscriber))
 			if (domainSubscriber) {
-				await domainSubscriber.subscribe('junction:staging:domain-events-live', (message) => {
+				await domainSubscriber.subscribe(`junction:${runtimeMode}:domain-events-live`, (message) => {
 					try {
 						const event = DomainEventSchema.safeParse(JSON.parse(message))
 						if (event.success) void this.publishDomainEvent(server, event.data.eventId).catch(() => undefined)

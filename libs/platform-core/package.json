@@ -29,11 +29,13 @@
 		"better-auth": "^1.7.6",
 		"contracts": "workspace:*",
 		"kysely": "^0.29.6",
+		"nodemailer": "^10.0.14",
 		"pg": "^8.23.0",
 		"resend": "^6.29.0",
 		"tslib": "^2.3.0"
 	},
 	"devDependencies": {
+		"@types/nodemailer": "^8.0.2",
 		"@types/pg": "^8.23.1"
 	}
 }

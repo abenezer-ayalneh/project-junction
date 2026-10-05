@@ -4,6 +4,17 @@ import { AppModule } from '../app.module'
 import { createSwaggerDocument } from './swagger'
 
 describe('OpenAPI v1 contract', () => {
+	const priorRuntimeMode = process.env['JUNCTION_RUNTIME_MODE']
+
+	beforeAll(() => {
+		process.env['JUNCTION_RUNTIME_MODE'] = 'local'
+	})
+
+	afterAll(() => {
+		if (priorRuntimeMode === undefined) delete process.env['JUNCTION_RUNTIME_MODE']
+		else process.env['JUNCTION_RUNTIME_MODE'] = priorRuntimeMode
+	})
+
 	it('publishes a stable, persistence-free public contract', async () => {
 		const module = await Test.createTestingModule({ imports: [AppModule] }).compile()
 		const app = module.createNestApplication()

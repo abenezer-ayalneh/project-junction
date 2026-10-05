@@ -27,6 +27,8 @@ services:
             interval: 5s
             timeout: 3s
             retries: 20
+        volumes:
+            - junction_redis:/data
 
     meilisearch:
         image: getmeili/meilisearch:v1.16
@@ -42,6 +44,7 @@ services:
         image: axllent/mailpit:v1.28
         ports:
             - '127.0.0.1:8025:8025'
+            - '127.0.0.1:1025:1025'
 
     minio:
         image: minio/minio:latest
@@ -56,6 +59,23 @@ services:
         volumes:
             - junction_minio:/data
 
+    minio-init:
+        image: minio/minio:latest
+        depends_on:
+            minio:
+                condition: service_started
+        entrypoint: /bin/sh
+        command:
+            - -ec
+            - |
+                until mc alias set junction http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD"; do sleep 1; done
+                mc mb --ignore-existing junction/"$$MINIO_BUCKET"
+        environment:
+            MINIO_BUCKET: junction-media-local
+            MINIO_ROOT_USER: junction-local
+            MINIO_ROOT_PASSWORD: junction-local-secret
+        restart: 'no'
+
     clamav:
         image: clamav/clamav:stable
         platform: linux/amd64
@@ -69,3 +89,4 @@ volumes:
     junction_meilisearch:
     junction_minio:
     junction_clamav:
+    junction_redis:

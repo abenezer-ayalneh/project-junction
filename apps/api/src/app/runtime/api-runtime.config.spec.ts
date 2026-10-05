@@ -9,27 +9,28 @@ function configService(environment: Record<string, string | undefined>) {
 }
 
 describe('API runtime configuration', () => {
-	it('uses local origins and safe throttling defaults when no environment overrides exist', () => {
-		expect(getApiRuntimeConfig(configService({}))).toEqual({
+	it('uses local origins and safe throttling defaults in local mode', () => {
+		expect(getApiRuntimeConfig(configService({ JUNCTION_RUNTIME_MODE: 'local' }))).toEqual({
 			bindAddress: '127.0.0.1',
 			corsAllowedOrigins: ['http://localhost:3000', 'http://127.0.0.1:3000'],
 			logLevel: 'info',
 			port: 3001,
 			realtimeRedisFanout: false,
 			redisUrl: undefined,
+			runtimeMode: 'local',
 			throttleLimit: 100,
 			throttleTtlMs: 60_000,
 		})
 	})
 
 	it('uses API_PORT before the backwards-compatible PORT fallback', () => {
-		expect(getApiRuntimeConfig(configService({ API_PORT: '3002', PORT: '3003' })).port).toBe(3002)
-		expect(getApiRuntimeConfig(configService({ PORT: '3003' })).port).toBe(3003)
+		expect(getApiRuntimeConfig(configService({ JUNCTION_RUNTIME_MODE: 'local', API_PORT: '3002', PORT: '3003' })).port).toBe(3002)
+		expect(getApiRuntimeConfig(configService({ JUNCTION_RUNTIME_MODE: 'local', PORT: '3003' })).port).toBe(3003)
 	})
 
 	it('binds all container interfaces only when explicitly configured', () => {
-		expect(getApiRuntimeConfig(configService({ API_BIND_ADDRESS: '0.0.0.0' })).bindAddress).toBe('0.0.0.0')
-		expect(() => getApiRuntimeConfig(configService({ API_BIND_ADDRESS: 'example.com' }))).toThrow('API_BIND_ADDRESS')
+		expect(getApiRuntimeConfig(configService({ JUNCTION_RUNTIME_MODE: 'local', API_BIND_ADDRESS: '0.0.0.0' })).bindAddress).toBe('0.0.0.0')
+		expect(() => getApiRuntimeConfig(configService({ JUNCTION_RUNTIME_MODE: 'local', API_BIND_ADDRESS: 'example.com' }))).toThrow('API_BIND_ADDRESS')
 	})
 
 	it('deduplicates explicit allowed origins', () => {
@@ -57,12 +58,16 @@ describe('API runtime configuration', () => {
 	})
 
 	it('requires a valid Redis URL when realtime fanout is enabled', () => {
-		expect(() => getApiRuntimeConfig(configService({ REALTIME_REDIS_FANOUT: 'enabled' }))).toThrow('REDIS_URL is required')
-		expect(() => getApiRuntimeConfig(configService({ REALTIME_REDIS_FANOUT: 'enabled', REDIS_URL: 'https://redis.example' }))).toThrow('redis or rediss')
-		expect(getApiRuntimeConfig(configService({ REALTIME_REDIS_FANOUT: 'enabled', REDIS_URL: 'redis://127.0.0.1:6379' }))).toMatchObject({
+		expect(() => getApiRuntimeConfig(configService({ JUNCTION_RUNTIME_MODE: 'local', REALTIME_REDIS_FANOUT: 'enabled' }))).toThrow('REDIS_URL is required')
+		expect(() => getApiRuntimeConfig(configService({ JUNCTION_RUNTIME_MODE: 'local', REALTIME_REDIS_FANOUT: 'enabled', REDIS_URL: 'https://redis.example' }))).toThrow('redis or rediss')
+		expect(getApiRuntimeConfig(configService({ JUNCTION_RUNTIME_MODE: 'local', REALTIME_REDIS_FANOUT: 'enabled', REDIS_URL: 'redis://127.0.0.1:6379' }))).toMatchObject({
 			realtimeRedisFanout: true,
 			redisUrl: 'redis://127.0.0.1:6379',
 		})
+	})
+
+	it('refuses an unspecified runtime mode', () => {
+		expect(() => getApiRuntimeConfig(configService({ JUNCTION_RUNTIME_MODE: 'synthetic' }))).toThrow('JUNCTION_RUNTIME_MODE must be local or staging')
 	})
 
 	it('rejects empty and path-based CORS origins', () => {

@@ -1,14 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { toDataURL } from 'qrcode'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { authClient } from '@/lib/auth-client'
-
-import { IdentityVerification } from './identity-verification'
 
 type Mode = 'sign-in' | 'sign-up' | 'recover'
 
@@ -20,66 +17,6 @@ export default function AccountPage() {
 	const [password, setPassword] = useState('')
 	const [busy, setBusy] = useState(false)
 	const [message, setMessage] = useState('')
-	const [totpUri, setTotpUri] = useState('')
-	const [totpQrCode, setTotpQrCode] = useState('')
-	const [backupCodes, setBackupCodes] = useState<string[]>([])
-	const [totpCode, setTotpCode] = useState('')
-
-	useEffect(() => {
-		let cancelled = false
-		if (!totpUri) {
-			setTotpQrCode('')
-			return
-		}
-		void toDataURL(totpUri, { errorCorrectionLevel: 'M', margin: 1, width: 224 })
-			.then((value) => {
-				if (!cancelled) setTotpQrCode(value)
-			})
-			.catch(() => {
-				if (!cancelled) setTotpQrCode('')
-			})
-		return () => {
-			cancelled = true
-		}
-	}, [totpUri])
-
-	async function beginTotpEnrollment(event: React.FormEvent<HTMLFormElement>) {
-		event.preventDefault()
-		setBusy(true)
-		setMessage('')
-		try {
-			const result = await authClient.twoFactor.enable({ password, method: 'totp' })
-			if (result.error || !result.data || result.data.method !== 'totp') {
-				setMessage('Unable to start authenticator setup. Check your password and try again.')
-				return
-			}
-			setTotpUri(result.data.totpURI)
-			setBackupCodes(result.data.backupCodes)
-			setPassword('')
-		} catch {
-			setMessage('The identity service is unavailable. Please try again.')
-		} finally {
-			setBusy(false)
-		}
-	}
-
-	async function confirmTotp(event: React.FormEvent<HTMLFormElement>) {
-		event.preventDefault()
-		setBusy(true)
-		try {
-			const result = await authClient.twoFactor.verifyTotp({ code: totpCode, trustDevice: false })
-			setMessage(result.error ? 'Invalid authenticator code. Try the current code.' : 'Authenticator enabled. Store your backup codes securely.')
-			if (!result.error) {
-				setTotpUri('')
-				setTotpCode('')
-			}
-		} catch {
-			setMessage('The identity service is unavailable. Please try again.')
-		} finally {
-			setBusy(false)
-		}
-	}
-
 	async function submit(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault()
 		setBusy(true)
@@ -95,7 +32,7 @@ export default function AccountPage() {
 				setMessage(
 					result.error
 						? 'Unable to create the account. Check the details and try again.'
-						: 'Check your email for a verification link before signing in.',
+						: 'If this is a new email/password account, check Mailpit for a verification link. If you already have an account, sign in with its existing method.',
 				)
 				return
 			}
@@ -104,6 +41,17 @@ export default function AccountPage() {
 		} catch {
 			setMessage('The identity service is unavailable. Please try again.')
 		} finally {
+			setBusy(false)
+		}
+	}
+
+	async function signInWithGoogle() {
+		setBusy(true)
+		setMessage('')
+		try {
+			await authClient.signIn.social({ provider: 'google', callbackURL: `${window.location.origin}/account` })
+		} catch {
+			setMessage('Google sign-in is unavailable. Check the local OAuth configuration and try again.')
 			setBusy(false)
 		}
 	}
@@ -123,74 +71,7 @@ export default function AccountPage() {
 					) : session ? (
 						<div className="space-y-4">
 							<p>Signed in as {session.user.email}</p>
-							<p className="text-sm text-muted-foreground">Private Customer and Vendor actions require an accepted identity and age check.</p>
-							{process.env.NEXT_PUBLIC_JUNCTION_RUNTIME_MODE === 'staging' && <IdentityVerification />}
-							{session.user.twoFactorEnabled ? (
-								<p>Authenticator sign-in is enabled.</p>
-							) : (
-								<form className="space-y-3" onSubmit={(event) => void beginTotpEnrollment(event)}>
-									<p>Add an authenticator app for a second sign-in factor.</p>
-									<label className="block space-y-2 text-sm font-medium">
-										<span>Current password</span>
-										<input
-											className="w-full rounded-md border bg-background px-3 py-2"
-											type="password"
-											autoComplete="current-password"
-											required
-											value={password}
-											onChange={(event) => setPassword(event.target.value)}
-										/>
-									</label>
-									<Button disabled={busy} type="submit">
-										Set up authenticator
-									</Button>
-								</form>
-							)}
-							{totpUri && (
-								<div className="space-y-3 rounded-md border p-4">
-									<p>Scan this code with your authenticator app, or add the URI manually. Treat both as secrets.</p>
-									{totpQrCode ? (
-										<img
-											alt="Authenticator setup QR code"
-											className="h-56 w-56 rounded-md bg-white p-2"
-											height={224}
-											src={totpQrCode}
-											width={224}
-										/>
-									) : (
-										<p className="text-sm text-muted-foreground" role="status">
-											Generating QR code…
-										</p>
-									)}
-									<code className="block break-all text-xs">{totpUri}</code>
-									<form className="space-y-2" onSubmit={(event) => void confirmTotp(event)}>
-										<label className="block space-y-2 text-sm font-medium">
-											<span>Authenticator code</span>
-											<input
-												className="w-full rounded-md border bg-background px-3 py-2"
-												inputMode="numeric"
-												autoComplete="one-time-code"
-												required
-												value={totpCode}
-												onChange={(event) => setTotpCode(event.target.value)}
-											/>
-										</label>
-										<Button disabled={busy} type="submit">
-											Confirm authenticator
-										</Button>
-									</form>
-								</div>
-							)}
-							{backupCodes.length > 0 && (
-								<div className="space-y-2 rounded-md border p-4">
-									<p>Save these backup codes now. Each code can be used once.</p>
-									<ul className="grid grid-cols-2 gap-2 font-mono text-sm">
-										{backupCodes.map((code) => (
-											<li key={code}>{code}</li>
-										))}
-									</ul>
-								</div>
-							)}
+							<p className="text-sm text-muted-foreground">This local development account uses verified email or Google sign-in. Multi-factor and identity verification return before public release.</p>
 							<Button type="button" variant="outline" onClick={() => void authClient.signOut()}>
 								Sign out
 							</Button>
@@ -212,6 +93,9 @@ export default function AccountPage() {
 									</Button>
 								))}
 							</div>
+							<Button className="mb-4" disabled={busy} type="button" variant="outline" onClick={() => void signInWithGoogle()}>
+								Continue with Google
+							</Button>
 							<form className="space-y-4" onSubmit={(event) => void submit(event)}>
 								{mode === 'sign-up' && (
 									<label className="block space-y-2 text-sm font-medium">

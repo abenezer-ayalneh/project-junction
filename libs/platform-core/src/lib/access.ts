@@ -1,5 +1,7 @@
 import { type AccessContext, type OwnershipScope } from 'contracts'
 
+import { applicationRuntimeMode } from './runtime.js'
+
 export class AccessDeniedError extends Error {
 	readonly code = 'ACCESS_DENIED'
 
@@ -31,7 +33,7 @@ export function assertElevatedSession(context: AccessContext, now = new Date()):
 		!context.memberships.some((membership) => membership.active && membership.role === 'vendor_owner')
 	)
 		throw new AccessDeniedError()
-	assertRecentMfa(context, now)
+	assertRequiredMfa(context, now)
 }
 
 export function assertRecentMfa(context: AccessContext, now = new Date()): void {
@@ -48,4 +50,10 @@ export function assertRecentMfa(context: AccessContext, now = new Date()): void 
 		recentAuthAt.getTime() < oldestAllowed
 	)
 		throw new AccessDeniedError('Recent multi-factor authentication is required.')
+}
+
+/** MFA is deliberately deferred only for the explicit local development runtime. */
+export function assertRequiredMfa(context: AccessContext, now = new Date()): void {
+	if (applicationRuntimeMode() === 'local') return
+	assertRecentMfa(context, now)
 }

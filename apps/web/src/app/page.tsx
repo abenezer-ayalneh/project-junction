@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { formatPrice, getPublicListings, getPublicVendors } from '@/lib/marketplace'
+import { isLocalDevelopment, runtimeLabel } from '@/lib/runtime-label'
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>
 
@@ -57,7 +58,7 @@ export default async function Index({ searchParams }: { searchParams: SearchPara
 					<Link className="text-sm text-muted-foreground transition-colors hover:text-foreground" href="/account">
 						Account
 					</Link>
-					<Badge variant="outline">Private staging</Badge>
+					<Badge variant="outline">{runtimeLabel}</Badge>
 					<ThemeToggle />
 				</nav>
 			</header>
@@ -171,9 +172,9 @@ export default async function Index({ searchParams }: { searchParams: SearchPara
 
 					{listingPage === null ? (
 						<div className="mt-5 rounded-xl border border-dashed bg-background px-6 py-10" role="status">
-							<h4 className="font-medium">The staging catalog is unavailable</h4>
+							<h4 className="font-medium">The catalog is unavailable</h4>
 							<p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-								The catalog could not be reached. Please try again after the staging service is restored.
+								The catalog could not be reached. Please try again when the {isLocalDevelopment ? 'local API' : 'staging service'} is available.
 							</p>
 						</div>
 					) : listingPage.items.length === 0 ? (
@@ -231,7 +232,7 @@ export default async function Index({ searchParams }: { searchParams: SearchPara
 				</div>
 				{vendorPage === null ? (
 					<p className="mt-6 rounded-xl border border-dashed px-5 py-6 text-sm text-muted-foreground" role="status">
-						Storefronts are unavailable while the staging catalog is offline.
+						Storefronts are unavailable while the catalog service is offline.
 					</p>
 				) : vendorPage.items.length === 0 ? (
 					<p className="mt-6 rounded-xl border border-dashed px-5 py-6 text-sm text-muted-foreground">No published storefronts are available yet.</p>

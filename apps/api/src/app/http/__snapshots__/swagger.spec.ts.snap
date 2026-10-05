@@ -405,6 +405,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
           "runtimeMode": {
             "enum": [
+              "local",
               "staging",
             ],
             "type": "string",

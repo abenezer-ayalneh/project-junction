@@ -16,6 +16,7 @@ import { type FormEvent, useRef, useState } from 'react'
 import { RealtimeWorkspace } from '@/components/realtime-workspace'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { runtimeLabel } from '@/lib/runtime-label'
 
 const apiBase = '/v1'
 const categories = ['goods', 'home', 'fashion', 'beauty', 'appointment', 'education', 'repair'] as const
@@ -248,7 +249,7 @@ export default function VendorWorkspace() {
 				<Link href="/" className="text-sm font-semibold">
 					Junction
 				</Link>
-				<Badge variant="outline">Private staging workspace</Badge>
+				<Badge variant="outline">{runtimeLabel} workspace</Badge>
 			</header>
 			<div className="py-10">
 				<h1 className="text-4xl font-semibold tracking-tight">Your Vendor workspace</h1>

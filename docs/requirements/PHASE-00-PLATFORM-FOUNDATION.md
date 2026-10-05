@@ -1,18 +1,18 @@
 # Phase 00 — Platform Foundation
 
-**Target status:** Specified — Not Executed — Not Verified. **Local status:** Accepted synthetic foundation on 2026-09-23; real private-staging transition in progress and not accepted.
+**Target status:** Specified — Not Executed — Not Verified. **Local status:** Accepted synthetic foundation on 2026-09-23; PostgreSQL-backed local authentication now replaces further staging development. Advanced verification remains a pre-public-release gate.
 **Objective:** establish the future system’s safe, traceable foundation before any market capability.  
 **Owner:** platform foundation / architecture  
-**Entry:** documentation baseline accepted. **Exit:** `TST-P00-001`–`TST-P00-005` regression evidence plus a verified private-staging run of real account, email, MFA, adult-identity, reviewer, webhook, outbox, and revocation paths. Phase 06 retains the public-release gates.
+**Entry:** documentation baseline accepted. **Local exit:** `TST-P00-001`–`TST-P00-005`, local real-account/email/Google evidence, reviewer authorization, outbox, and revocation paths. **Public-release gate:** MFA, adult identity verification, provider webhook/reconciliation, deployment, recovery, and capacity acceptance. Phase 06 retains the public-release gates.
 **Decision coverage:** `DEC-067`–`DEC-073`, `DEC-107`, `DEC-117`–`DEC-125`, `DEC-129`, `DEC-153`
 
 ## Included / excluded
 
-Includes target Nx modular-monolith boundaries, Next/Nest/worker contracts, identity/access context, API/event conventions, database ownership, auth/session topology, outbox/inbox, observability baseline, and design system foundation. The current exit also includes Better Auth accounts, Resend delivery, Didit sandbox age checks, real reviewer grants, and deployment to a private staging origin with invited test users. Public onboarding, live payments, and commercial release remain outside this phase.
+Includes target Nx modular-monolith boundaries, Next/Nest/worker contracts, identity/access context, API/event conventions, database ownership, auth/session topology, outbox/inbox, observability baseline, and design system foundation. Current development uses local Better Auth accounts, Mailpit delivery, Google OAuth, and explicit reviewer grants. MFA, Didit sandbox age checks, private staging deployment, public onboarding, live payments, and commercial release are deferred.
 
 ## Actors and journey
 
-An invited user signs up through Better Auth, verifies email through Resend, completes MFA and the Didit sandbox age check, and gains only the capabilities justified by current provider state and a revocable membership or operator grant. A separate invited reviewer can approve or reject a Vendor application after recent MFA. Every accepted command remains traceable through audit, outbox, and reconciliation records. No Customer transaction exists yet.
+A local user signs up through Better Auth, verifies email through Mailpit or signs in with Google, and gains only capabilities justified by a revocable membership or explicit operator grant. A separate local reviewer can approve or reject a Vendor application. Every accepted command remains traceable through audit, outbox, and reconciliation records. Before public release, that journey must add MFA and adult identity verification without weakening authorization. No Customer transaction exists yet.
 
 ## Functional requirements
 
@@ -33,7 +33,7 @@ Expired/revoked/mismatched scope denies safely; duplicate command resolves to or
 
 ## Acceptance and deferrals
 
-`TST-P00-001`: stale role, cross-Vendor/Location/workspace ID substitution, replayed command, and WebSocket room attempt all fail without leakage. `TST-P00-002`: the historical synthetic demo boundary is independently purged and cannot be entered in staging. `TST-P00-003`: public contracts and compatible migration paths stay isolated from persistence types. `TST-P00-004`: outbox/webhook replay and retry create no duplicate business effect or false delivery receipt. `TST-P00-005`: a documentation/status review finds no unlabeled target claim or unlinked requirement. Phase 00 exit additionally requires private HTTPS staging evidence for real mailbox delivery, Better Auth login and recovery, recent MFA, Didit signed approval/rejection/status replay, reviewer grant and revocation, and safe denial with unchanged resource, audit, and outbox state. Native apps, live payments, and commercial access are deferred.
+`TST-P00-001`: stale role, cross-Vendor/Location/workspace ID substitution, replayed command, and WebSocket room attempt all fail without leakage. `TST-P00-002`: the historical synthetic demo boundary is independently purged and cannot be entered in local or deployment runtime. `TST-P00-003`: public contracts and compatible migration paths stay isolated from persistence types. `TST-P00-004`: outbox replay and retry create no duplicate business effect or false delivery receipt. `TST-P00-005`: a documentation/status review finds no unlabeled target claim or unlinked requirement. Local Phase 00 additionally requires Mailpit verification/recovery, Google configuration and callback evidence, reviewer grant/revocation, and safe denial with unchanged resource, audit, and outbox state. Pre-public-release acceptance requires MFA, Didit signed approval/rejection/status replay, provider reconciliation, deployment/recovery, and capacity evidence. Native apps, live payments, and commercial access are deferred.
 
 ## Implementation evidence
 

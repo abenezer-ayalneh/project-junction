@@ -13,6 +13,7 @@ import { type FormEvent, useState } from 'react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { runtimeLabel } from '@/lib/runtime-label'
 
 const apiBase = '/v1'
 
@@ -98,7 +99,7 @@ export default function PlatformReview() {
 				<Link href="/" className="text-sm font-semibold">
 					Junction
 				</Link>
-				<Badge variant="outline">Private staging review</Badge>
+				<Badge variant="outline">{runtimeLabel} review</Badge>
 			</header>
 			<div className="py-10">
 				<h1 className="text-4xl font-semibold tracking-tight">Review queue</h1>

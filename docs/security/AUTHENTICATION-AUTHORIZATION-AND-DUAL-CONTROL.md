@@ -6,7 +6,7 @@
 
 ## Authentication
 
-Public browse requires no account. Checkout, saved actions, Support Cases, Vendor work, and Platform operations require a verified adult User account. A Customer may supply optional attendee details for a minor only; the adult remains the contracting account holder. The planned Better Auth topology and providers are architectural defaults, not live configuration. Authentication failures are generic, rate limited, audited, and never disclose account existence beyond a deliberately selected recovery flow.
+Public browse requires no account. Local development uses verified email/password or Google authentication and retains server-derived authorization, membership, grant, revocation, and audit controls. Adult identity verification and MFA are deliberately deferred from local development and are mandatory pre-public-release gates; email or Google verification never substitutes for them. A Customer may supply optional attendee details for a minor only; the adult remains the contracting account holder. Authentication failures are generic, rate limited, audited, and never disclose account existence beyond a deliberately selected recovery flow.
 
 ## Authorization contract
 

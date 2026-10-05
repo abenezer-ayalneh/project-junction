@@ -114,65 +114,68 @@ This is the authoritative inventory. `Owner` means normative owner, not a person
 
 ## Architecture, environments, and deployment
 
-| Document                                                         | Status  | Purpose                      | Owner        | Deps                  |
-| ---------------------------------------------------------------- | ------- | ---------------------------- | ------------ | --------------------- |
-| `docs/architecture/TARGET-SYSTEM-DESCRIPTION.md`                 | S/NE/NV | overall target system        | architecture | component model       |
-| `docs/architecture/PRODUCTION-SYSTEM-DESCRIPTION.md`             | S/NE/NV | deployed portfolio target    | architecture | deployment/operations |
-| `docs/architecture/COMPONENT-AND-DEPENDENCY-MODEL.md`            | S/NE/NV | component boundaries         | architecture | context/data          |
-| `docs/architecture/FRONTEND-ARCHITECTURE.md`                     | S/NE/NV | Next PWA design              | architecture | UX/API                |
-| `docs/architecture/BACKEND-CONTEXT-AND-DATA-ARCHITECTURE.md`     | S/NE/NV | Nest/context/data design     | architecture | data/domain           |
-| `docs/architecture/BACKGROUND-JOBS-OUTBOX-AND-RECONCILIATION.md` | S/NE/NV | async/recovery design        | architecture | events/providers      |
-| `docs/architecture/SEARCH-REALTIME-AND-ANALYTICS.md`             | S/NE/NV | projections design           | architecture | events/privacy        |
-| `docs/architecture/PROVIDER-INTEGRATION-CONTRACTS.md`            | S/NE/NV | adapter boundaries           | architecture | research/interfaces   |
-| `docs/architecture/MEDIA-STORAGE-AND-PROCESSING.md`              | S/NE/NV | media design                 | architecture | security/interfaces   |
-| `docs/architecture/MEDIA-LIMIT-REGISTRY.md`                      | S/NE/NV | proposed short-video limits  | architecture | media/accessibility   |
-| `docs/architecture/MAPS-ADDRESSES-AND-POSTGIS.md`                | S/NE/NV | map/spatial design           | architecture | location model        |
-| `docs/architecture/DEMO-ISOLATION-ARCHITECTURE.md`               | S/NE/NV | demo boundary design         | architecture | demo/security         |
-| `docs/environments/ENVIRONMENT-MATRIX.md`                        | S/NE/NV | environment purpose matrix   | environments | deployment/demo       |
-| `docs/environments/LOCAL-DEVELOPMENT-PREREQUISITES.md`           | S/NE/NV | intended local prerequisites | environments | tool research         |
-| `docs/environments/LOCAL-DEVELOPMENT-SETUP.md`                   | S/NE/NV | intended local commands      | environments | prerequisites/config  |
-| `docs/environments/LOCAL-SERVICES-PORTS-AND-DEPENDENCIES.md`     | S/NE/NV | local service plan           | environments | target architecture   |
-| `docs/environments/CONFIGURATION-SECRETS-AND-SEED-DATA.md`       | S/NE/NV | config/seed rules            | environments | security/demo         |
-| `docs/environments/PROVIDER-SANDBOX-AND-FAKE-ADAPTERS.md`        | S/NE/NV | fake/sandbox plan            | environments | provider contracts    |
-| `docs/environments/DEVELOPER-WORKFLOWS-AND-TROUBLESHOOTING.md`   | S/NE/NV | prospective workflows        | environments | setup/runbooks        |
-| `docs/deployment/INFRASTRUCTURE-AND-NETWORK-TOPOLOGY.md`         | S/NE/NV | VPS/network target           | deployment   | system description    |
-| `docs/deployment/ENVIRONMENT-SEPARATION.md`                      | S/NE/NV | environment isolation        | deployment   | future/demo           |
-| `docs/deployment/STAGING-DEPLOYMENT.md`                          | S/NE/NV | private staging procedure    | deployment   | CI/security           |
-| `docs/deployment/PORTFOLIO-PRODUCTION-DEPLOYMENT.md`             | S/NE/NV | public portfolio procedure   | deployment   | gates/runbooks        |
-| `docs/deployment/CI-CD-AND-RELEASE-PROMOTION.md`                 | S/NE/NV | target promotion design      | deployment   | gates/evidence        |
-| `docs/deployment/SECRETS-TLS-AND-ORIGIN-SECURITY.md`             | S/NE/NV | secrets/origin target        | deployment   | security/source refs  |
-| `docs/deployment/DATABASE-MIGRATIONS-ROLLOUT-AND-ROLLBACK.md`    | S/NE/NV | data rollout target          | deployment   | migration/runbooks    |
-| `docs/deployment/BACKUP-RESTORE-AND-DISASTER-RECOVERY.md`        | S/NE/NV | recovery target              | deployment   | operations/quality    |
-| `docs/deployment/CAPACITY-COST-AND-SCALING.md`                   | S/NE/NV | capacity/cost target         | deployment   | research/SLO          |
+| Document                                                         | Status      | Purpose                        | Owner        | Deps                  |
+| ---------------------------------------------------------------- | ----------- | ------------------------------ | ------------ | --------------------- |
+| `docs/architecture/TARGET-SYSTEM-DESCRIPTION.md`                 | S/NE/NV     | overall target system          | architecture | component model       |
+| `docs/architecture/PRODUCTION-SYSTEM-DESCRIPTION.md`             | S/NE/NV     | deployed portfolio target      | architecture | deployment/operations |
+| `docs/architecture/COMPONENT-AND-DEPENDENCY-MODEL.md`            | S/NE/NV     | component boundaries           | architecture | context/data          |
+| `docs/architecture/FRONTEND-ARCHITECTURE.md`                     | S/NE/NV     | Next PWA design                | architecture | UX/API                |
+| `docs/architecture/BACKEND-CONTEXT-AND-DATA-ARCHITECTURE.md`     | S/NE/NV     | Nest/context/data design       | architecture | data/domain           |
+| `docs/architecture/BACKGROUND-JOBS-OUTBOX-AND-RECONCILIATION.md` | S/NE/NV     | async/recovery design          | architecture | events/providers      |
+| `docs/architecture/SEARCH-REALTIME-AND-ANALYTICS.md`             | S/NE/NV     | projections design             | architecture | events/privacy        |
+| `docs/architecture/PROVIDER-INTEGRATION-CONTRACTS.md`            | S/NE/NV     | adapter boundaries             | architecture | research/interfaces   |
+| `docs/architecture/MEDIA-STORAGE-AND-PROCESSING.md`              | S/NE/NV     | media design                   | architecture | security/interfaces   |
+| `docs/architecture/MEDIA-LIMIT-REGISTRY.md`                      | S/NE/NV     | proposed short-video limits    | architecture | media/accessibility   |
+| `docs/architecture/MAPS-ADDRESSES-AND-POSTGIS.md`                | S/NE/NV     | map/spatial design             | architecture | location model        |
+| `docs/architecture/DEMO-ISOLATION-ARCHITECTURE.md`               | S/NE/NV     | demo boundary design           | architecture | demo/security         |
+| `docs/environments/ENVIRONMENT-MATRIX.md`                        | S/NE/NV     | environment purpose matrix     | environments | deployment/demo       |
+| `docs/environments/LOCAL-DEVELOPMENT-PREREQUISITES.md`           | S/NE/NV     | intended local prerequisites   | environments | tool research         |
+| `docs/environments/LOCAL-DEVELOPMENT-SETUP.md`                   | Implemented | local bootstrap/auth procedure | environments | local auth decision   |
+| `docs/environments/LOCAL-SERVICES-PORTS-AND-DEPENDENCIES.md`     | Implemented | local service contract         | environments | Compose/runtime       |
+| `docs/environments/CONFIGURATION-SECRETS-AND-SEED-DATA.md`       | S/NE/NV     | config/seed rules              | environments | security/demo         |
+| `docs/environments/PROVIDER-SANDBOX-AND-FAKE-ADAPTERS.md`        | S/NE/NV     | fake/sandbox plan              | environments | provider contracts    |
+| `docs/environments/DEVELOPER-WORKFLOWS-AND-TROUBLESHOOTING.md`   | S/NE/NV     | prospective workflows          | environments | setup/runbooks        |
+| `docs/deployment/INFRASTRUCTURE-AND-NETWORK-TOPOLOGY.md`         | S/NE/NV     | VPS/network target             | deployment   | system description    |
+| `docs/deployment/ENVIRONMENT-SEPARATION.md`                      | S/NE/NV     | environment isolation          | deployment   | future/demo           |
+| `docs/deployment/STAGING-DEPLOYMENT.md`                          | S/NE/NV     | private staging procedure      | deployment   | CI/security           |
+| `docs/deployment/PORTFOLIO-PRODUCTION-DEPLOYMENT.md`             | S/NE/NV     | public portfolio procedure     | deployment   | gates/runbooks        |
+| `docs/deployment/CI-CD-AND-RELEASE-PROMOTION.md`                 | S/NE/NV     | target promotion design        | deployment   | gates/evidence        |
+| `docs/deployment/SECRETS-TLS-AND-ORIGIN-SECURITY.md`             | S/NE/NV     | secrets/origin target          | deployment   | security/source refs  |
+| `docs/deployment/DATABASE-MIGRATIONS-ROLLOUT-AND-ROLLBACK.md`    | S/NE/NV     | data rollout target            | deployment   | migration/runbooks    |
+| `docs/deployment/BACKUP-RESTORE-AND-DISASTER-RECOVERY.md`        | S/NE/NV     | recovery target                | deployment   | operations/quality    |
+| `docs/deployment/CAPACITY-COST-AND-SCALING.md`                   | S/NE/NV     | capacity/cost target           | deployment   | research/SLO          |
 
 ## Security, quality, and operations
 
-| Document                                                         | Status      | Purpose                    | Owner      | Deps                |
-| ---------------------------------------------------------------- | ----------- | -------------------------- | ---------- | ------------------- |
-| `docs/security/THREAT-MODEL.md`                                  | S/NE/NV     | threat/control intent      | security   | architecture/data   |
-| `docs/security/ASVS-5-LEVEL-2-MATRIX.md`                         | S/NE/NV     | ASVS mapping               | security   | source/evidence     |
-| `docs/security/AUTHENTICATION-AUTHORIZATION-AND-DUAL-CONTROL.md` | S/NE/NV     | access/approval control    | security   | role model          |
-| `docs/security/WORKSPACE-VENDOR-AND-LOCATION-ISOLATION.md`       | S/NE/NV     | scope isolation            | security   | AccessContext/data  |
-| `docs/security/PHASE-00-RESOURCE-ID-INVENTORY.md`                | Evidence    | implemented ID scope map   | security   | Phase 00 evidence   |
-| `docs/security/APPLICATION-UPLOAD-AND-PROVIDER-SECURITY.md`      | S/NE/NV     | provider/upload controls   | security   | media/adapters      |
-| `docs/security/PRIVACY-DATA-SUBJECT-RIGHTS-AND-RETENTION.md`     | S/NE/NV     | privacy control            | security   | data/future law     |
-| `docs/security/ABUSE-MODERATION-AND-APPEALS.md`                  | S/NE/NV     | abuse/enforcement          | security   | trust policy        |
-| `docs/security/SECURITY-VERIFICATION-AND-RELEASE-GATES.md`       | S/NE/NV     | security release proof     | security   | quality/gates       |
-| `docs/quality/TEST-STRATEGY.md`                                  | S/NE/NV     | verification strategy      | quality    | requirements        |
-| `docs/quality/PHASE-ACCEPTANCE-CATALOG.md`                       | S/NE/NV     | scenario index             | quality    | phase requirements  |
-| `docs/quality/CONCURRENCY-AND-FINANCIAL-CORRECTNESS.md`          | S/NE/NV     | correctness test intent    | quality    | states/ledger       |
-| `docs/quality/PROVIDER-CONTRACT-AND-FAILURE-TESTING.md`          | S/NE/NV     | provider test plan         | quality    | provider contracts  |
-| `docs/quality/ACCESSIBILITY-I18N-AND-LOW-CONNECTIVITY.md`        | S/NE/NV     | inclusive quality proof    | quality    | product UX          |
-| `docs/quality/PERFORMANCE-RELIABILITY-AND-SLO.md`                | S/NE/NV     | performance/SLO target     | quality    | deployment          |
-| `docs/quality/DEPLOYMENT-AND-RECOVERY-TESTING.md`                | S/NE/NV     | recovery proof             | quality    | runbooks            |
-| `docs/quality/EVIDENCE-INDEX.md`                                 | Baseline    | evidence schema/index      | quality    | all `EVD-*`         |
-| `docs/quality/PHASE-01-ACCEPTANCE-EVIDENCE.md`                   | Evidence    | Phase 01 gate assessment   | quality    | Phase 01 scenarios  |
-| `docs/quality/PHASE-00-REAL-TRANSITION.md`                       | In progress | real-service staging gates | quality    | Phase 00 transition |
-| `docs/operations/PRODUCTION-OPERATING-MODEL.md`                  | S/NE/NV     | human operations           | operations | roles/runbooks      |
-| `docs/operations/MONITORING-ALERTING-AND-STATUS-PAGE.md`         | S/NE/NV     | observability/status       | operations | deployment/runbooks |
-| `docs/operations/RECONCILIATION-AND-FINANCIAL-OPERATIONS.md`     | S/NE/NV     | finance operations         | operations | ledger/policy       |
-| `docs/operations/SUPPORT-TRUST-FINANCE-AND-VENDOR-OPERATIONS.md` | S/NE/NV     | operating lanes            | operations | cases/policy        |
-| `docs/operations/RUNBOOK-INDEX.md`                               | S/NE/NV     | runbook index              | operations | runbooks            |
+| Document                                                         | Status      | Purpose                                | Owner      | Deps                               |
+| ---------------------------------------------------------------- | ----------- | -------------------------------------- | ---------- | ---------------------------------- |
+| `docs/security/THREAT-MODEL.md`                                  | S/NE/NV     | threat/control intent                  | security   | architecture/data                  |
+| `docs/security/ASVS-5-LEVEL-2-MATRIX.md`                         | S/NE/NV     | ASVS mapping                           | security   | source/evidence                    |
+| `docs/security/AUTHENTICATION-AUTHORIZATION-AND-DUAL-CONTROL.md` | S/NE/NV     | access/approval control                | security   | role model                         |
+| `docs/security/WORKSPACE-VENDOR-AND-LOCATION-ISOLATION.md`       | S/NE/NV     | scope isolation                        | security   | AccessContext/data                 |
+| `docs/security/PHASE-00-RESOURCE-ID-INVENTORY.md`                | Evidence    | implemented ID scope map               | security   | Phase 00 evidence                  |
+| `docs/security/APPLICATION-UPLOAD-AND-PROVIDER-SECURITY.md`      | S/NE/NV     | provider/upload controls               | security   | media/adapters                     |
+| `docs/security/PRIVACY-DATA-SUBJECT-RIGHTS-AND-RETENTION.md`     | S/NE/NV     | privacy control                        | security   | data/future law                    |
+| `docs/security/ABUSE-MODERATION-AND-APPEALS.md`                  | S/NE/NV     | abuse/enforcement                      | security   | trust policy                       |
+| `docs/security/SECURITY-VERIFICATION-AND-RELEASE-GATES.md`       | S/NE/NV     | security release proof                 | security   | quality/gates                      |
+| `docs/quality/TEST-STRATEGY.md`                                  | S/NE/NV     | verification strategy                  | quality    | requirements                       |
+| `docs/quality/PHASE-ACCEPTANCE-CATALOG.md`                       | S/NE/NV     | scenario index                         | quality    | phase requirements                 |
+| `docs/quality/CONCURRENCY-AND-FINANCIAL-CORRECTNESS.md`          | S/NE/NV     | correctness test intent                | quality    | states/ledger                      |
+| `docs/quality/PROVIDER-CONTRACT-AND-FAILURE-TESTING.md`          | S/NE/NV     | provider test plan                     | quality    | provider contracts                 |
+| `docs/quality/ACCESSIBILITY-I18N-AND-LOW-CONNECTIVITY.md`        | S/NE/NV     | inclusive quality proof                | quality    | product UX                         |
+| `docs/quality/PERFORMANCE-RELIABILITY-AND-SLO.md`                | S/NE/NV     | performance/SLO target                 | quality    | deployment                         |
+| `docs/quality/DEPLOYMENT-AND-RECOVERY-TESTING.md`                | S/NE/NV     | recovery proof                         | quality    | runbooks                           |
+| `docs/quality/EVIDENCE-INDEX.md`                                 | Baseline    | evidence schema/index                  | quality    | all `EVD-*`                        |
+| `docs/quality/PHASE-01-ACCEPTANCE-EVIDENCE.md`                   | Evidence    | Phase 01 gate assessment               | quality    | Phase 01 scenarios                 |
+| `docs/quality/PHASE-00-REAL-TRANSITION.md`                       | In progress | real-service staging gates             | quality    | Phase 00 transition                |
+| `docs/quality/AUTH-SIMPLIFICATION-DECISIONS.md`                  | Governance  | local auth/staging suspension decision | quality    | `DEC-190`/ADR-0017                 |
+| `docs/quality/PHASE-00-MANUAL-ACCEPTANCE.md`                     | In progress | local manual acceptance checklist      | quality    | local evidence/Phase 00 transition |
+| `docs/quality/PHASE-00-LOCAL-ACCEPTANCE-EVIDENCE.md`             | Evidence    | dated local Phase 00 results           | quality    | local manual acceptance            |
+| `docs/operations/PRODUCTION-OPERATING-MODEL.md`                  | S/NE/NV     | human operations                       | operations | roles/runbooks                     |
+| `docs/operations/MONITORING-ALERTING-AND-STATUS-PAGE.md`         | S/NE/NV     | observability/status                   | operations | deployment/runbooks                |
+| `docs/operations/RECONCILIATION-AND-FINANCIAL-OPERATIONS.md`     | S/NE/NV     | finance operations                     | operations | ledger/policy                      |
+| `docs/operations/SUPPORT-TRUST-FINANCE-AND-VENDOR-OPERATIONS.md` | S/NE/NV     | operating lanes                        | operations | cases/policy                       |
+| `docs/operations/RUNBOOK-INDEX.md`                               | S/NE/NV     | runbook index                          | operations | runbooks                           |
 
 ## Runbooks
 
@@ -194,39 +197,40 @@ This is the authoritative inventory. `Owner` means normative owner, not a person
 
 ## Demo, research, future, and ADRs
 
-| Document                                                             | Status               | Purpose                   | Owner                | Deps                                  |
-| -------------------------------------------------------------------- | -------------------- | ------------------------- | -------------------- | ------------------------------------- |
-| `docs/demo/PUBLIC-DEMO-DESCRIPTION.md`                               | S/NE/NV              | demo promise              | demo                 | claims/isolation                      |
-| `docs/demo/PERSONA-AND-ROLE-SWITCHING-MATRIX.md`                     | S/NE/NV              | safe roles                | demo                 | access model                          |
-| `docs/demo/SYNTHETIC-SCENARIOS-AND-REVIEWER-GUIDE.md`                | S/NE/NV              | reviewer journeys         | demo                 | requirements/evidence                 |
-| `docs/demo/ISOLATION-QUOTAS-EXPIRY-AND-CLEANUP.md`                   | S/NE/NV              | demo boundary             | demo                 | architecture/runbook                  |
-| `docs/demo/SANDBOX-PAYMENTS-AND-PROVIDER-SUBSTITUTES.md`             | S/NE/NV              | fake/sandbox disclosure   | demo                 | provider contracts                    |
-| `docs/demo/PORTFOLIO-CLAIMS-AND-EVIDENCE.md`                         | S/NE/NV              | claim rules               | demo                 | Evidence Index                        |
-| `docs/research/AUTHORITATIVE-SOURCE-REGISTER.md`                     | Research             | dated/refreshed refs      | research             | external sources                      |
-| `docs/research/PROVIDER-CAPABILITY-COST-AND-LIMITATION-REGISTER.md`  | Research             | provider/cost matrix      | research             | `REF-*`                               |
-| `docs/future/DEFERRED-CAPABILITY-BACKLOG.md`                         | Deferred             | re-entry backlog          | future               | scope                                 |
-| `docs/future/DIRE-DAWA-RESEARCH-PLAN.md`                             | Future validation    | market research plan      | future               | source register                       |
-| `docs/future/DIRE-DAWA-COMMERCIAL-LAUNCH-GATES.md`                   | Unapproved           | commercial gates          | future               | all future docs                       |
-| `docs/future/REGULATORY-PAYMENT-TAX-KYB-AND-INVOICING-VALIDATION.md` | Future validation    | legal/payment validation  | future               | authoritative sources                 |
-| `docs/future/VENDOR-DEMAND-LOGISTICS-AND-UNIT-ECONOMICS.md`          | Future validation    | economics/demand research | future               | research plan                         |
-| `docs/future/BOUNDED-PILOT-AND-GO-NO-GO.md`                          | Future authorization | pilot gate                | future               | commercial gates                      |
-| `docs/future/ENVIRONMENT-SEPARATION-AND-NO-DATA-PROMOTION.md`        | S/NE/NV              | commercial boundary       | future               | deployment/demo                       |
-| `docs/adr/ADR-0001-SEPARATE-PARKED-VENTURE.md`                       | Accepted ADR         | venture separation        | architecture/product | `DEC-001`                             |
-| `docs/adr/ADR-0002-PORTFOLIO-FIRST-EVIDENCE-POSTURE.md`              | Accepted ADR         | evidence posture          | product              | `DEC-003/004`                         |
-| `docs/adr/ADR-0003-MODULAR-MONOLITH-AND-WORKER.md`                   | Accepted ADR         | module/worker choice      | architecture         | `DEC-080–082`                         |
-| `docs/adr/ADR-0004-ORDERING-AND-BOOKING-SEPARATION.md`               | Accepted ADR         | aggregate split           | domain               | `DEC-019/082`                         |
-| `docs/adr/ADR-0005-ONE-NEXT-CLIENT-AUTHORITATIVE-NEST-API.md`        | Accepted ADR         | web/API topology          | architecture         | `DEC-079/119/127`                     |
-| `docs/adr/ADR-0006-TYPED-ACCESS-CONTEXT.md`                          | Accepted ADR         | access topology           | security             | `DEC-010/071/129`                     |
-| `docs/adr/ADR-0007-ATOMIC-MIXED-CHECKOUT-AND-HOLDS.md`               | Accepted ADR         | atomic Cart               | checkout             | `DEC-018/019/022/023/125/157/158/182` |
-| `docs/adr/ADR-0008-PROVIDER-NEUTRAL-SANDBOX-PAYMENTS.md`             | Accepted ADR         | payment boundary          | payments             | `DEC-025/075/077/103/154/155`         |
-| `docs/adr/ADR-0009-IMMUTABLE-DOUBLE-ENTRY-LEDGER.md`                 | Accepted ADR         | ledger choice             | finance              | `DEC-038/140/187/188`                 |
-| `docs/adr/ADR-0010-POSTGRES-POSTGIS-PRISMA-AUDITED-SQL.md`           | Accepted ADR         | data access               | architecture         | `DEC-079/084/085/095/121/128`         |
-| `docs/adr/ADR-0011-OUTBOX-REBUILDABLE-PROJECTIONS.md`                | Accepted ADR         | asynchronous design       | architecture         | `DEC-081/086/087/123/124`             |
-| `docs/adr/ADR-0012-SYNTHETIC-PUBLIC-DEMO-ISOLATION.md`               | Accepted ADR         | demo boundary             | demo                 | `DEC-107/109/139/172/177/178`         |
-| `docs/adr/ADR-0013-MEDIA-QUARANTINE.md`                              | Accepted ADR         | media safety              | security             | `DEC-047/088/175/176`                 |
-| `docs/adr/ADR-0014-VPS-STAGING-PORTFOLIO-RECOVERY-MODEL.md`          | Accepted ADR         | deploy topology           | deployment           | `DEC-089–097/110/111`                 |
-| `docs/adr/ADR-0015-ASVS-L2-SECURITY-TARGET.md`                       | Accepted ADR         | security target           | security             | `DEC-153`                             |
-| `docs/adr/ADR-0016-PUBLIC-REPOSITORY-NO-OPEN-SOURCE-LICENSE.md`      | Accepted ADR         | public posture            | governance           | `DEC-112/113`                         |
+| Document                                                             | Status               | Purpose                    | Owner                | Deps                                  |
+| -------------------------------------------------------------------- | -------------------- | -------------------------- | -------------------- | ------------------------------------- |
+| `docs/demo/PUBLIC-DEMO-DESCRIPTION.md`                               | S/NE/NV              | demo promise               | demo                 | claims/isolation                      |
+| `docs/demo/PERSONA-AND-ROLE-SWITCHING-MATRIX.md`                     | S/NE/NV              | safe roles                 | demo                 | access model                          |
+| `docs/demo/SYNTHETIC-SCENARIOS-AND-REVIEWER-GUIDE.md`                | S/NE/NV              | reviewer journeys          | demo                 | requirements/evidence                 |
+| `docs/demo/ISOLATION-QUOTAS-EXPIRY-AND-CLEANUP.md`                   | S/NE/NV              | demo boundary              | demo                 | architecture/runbook                  |
+| `docs/demo/SANDBOX-PAYMENTS-AND-PROVIDER-SUBSTITUTES.md`             | S/NE/NV              | fake/sandbox disclosure    | demo                 | provider contracts                    |
+| `docs/demo/PORTFOLIO-CLAIMS-AND-EVIDENCE.md`                         | S/NE/NV              | claim rules                | demo                 | Evidence Index                        |
+| `docs/research/AUTHORITATIVE-SOURCE-REGISTER.md`                     | Research             | dated/refreshed refs       | research             | external sources                      |
+| `docs/research/PROVIDER-CAPABILITY-COST-AND-LIMITATION-REGISTER.md`  | Research             | provider/cost matrix       | research             | `REF-*`                               |
+| `docs/future/DEFERRED-CAPABILITY-BACKLOG.md`                         | Deferred             | re-entry backlog           | future               | scope                                 |
+| `docs/future/DIRE-DAWA-RESEARCH-PLAN.md`                             | Future validation    | market research plan       | future               | source register                       |
+| `docs/future/DIRE-DAWA-COMMERCIAL-LAUNCH-GATES.md`                   | Unapproved           | commercial gates           | future               | all future docs                       |
+| `docs/future/REGULATORY-PAYMENT-TAX-KYB-AND-INVOICING-VALIDATION.md` | Future validation    | legal/payment validation   | future               | authoritative sources                 |
+| `docs/future/VENDOR-DEMAND-LOGISTICS-AND-UNIT-ECONOMICS.md`          | Future validation    | economics/demand research  | future               | research plan                         |
+| `docs/future/BOUNDED-PILOT-AND-GO-NO-GO.md`                          | Future authorization | pilot gate                 | future               | commercial gates                      |
+| `docs/future/ENVIRONMENT-SEPARATION-AND-NO-DATA-PROMOTION.md`        | S/NE/NV              | commercial boundary        | future               | deployment/demo                       |
+| `docs/adr/ADR-0001-SEPARATE-PARKED-VENTURE.md`                       | Accepted ADR         | venture separation         | architecture/product | `DEC-001`                             |
+| `docs/adr/ADR-0002-PORTFOLIO-FIRST-EVIDENCE-POSTURE.md`              | Accepted ADR         | evidence posture           | product              | `DEC-003/004`                         |
+| `docs/adr/ADR-0003-MODULAR-MONOLITH-AND-WORKER.md`                   | Accepted ADR         | module/worker choice       | architecture         | `DEC-080–082`                         |
+| `docs/adr/ADR-0004-ORDERING-AND-BOOKING-SEPARATION.md`               | Accepted ADR         | aggregate split            | domain               | `DEC-019/082`                         |
+| `docs/adr/ADR-0005-ONE-NEXT-CLIENT-AUTHORITATIVE-NEST-API.md`        | Accepted ADR         | web/API topology           | architecture         | `DEC-079/119/127`                     |
+| `docs/adr/ADR-0006-TYPED-ACCESS-CONTEXT.md`                          | Accepted ADR         | access topology            | security             | `DEC-010/071/129`                     |
+| `docs/adr/ADR-0007-ATOMIC-MIXED-CHECKOUT-AND-HOLDS.md`               | Accepted ADR         | atomic Cart                | checkout             | `DEC-018/019/022/023/125/157/158/182` |
+| `docs/adr/ADR-0008-PROVIDER-NEUTRAL-SANDBOX-PAYMENTS.md`             | Accepted ADR         | payment boundary           | payments             | `DEC-025/075/077/103/154/155`         |
+| `docs/adr/ADR-0009-IMMUTABLE-DOUBLE-ENTRY-LEDGER.md`                 | Accepted ADR         | ledger choice              | finance              | `DEC-038/140/187/188`                 |
+| `docs/adr/ADR-0010-POSTGRES-POSTGIS-PRISMA-AUDITED-SQL.md`           | Accepted ADR         | data access                | architecture         | `DEC-079/084/085/095/121/128`         |
+| `docs/adr/ADR-0011-OUTBOX-REBUILDABLE-PROJECTIONS.md`                | Accepted ADR         | asynchronous design        | architecture         | `DEC-081/086/087/123/124`             |
+| `docs/adr/ADR-0012-SYNTHETIC-PUBLIC-DEMO-ISOLATION.md`               | Accepted ADR         | demo boundary              | demo                 | `DEC-107/109/139/172/177/178`         |
+| `docs/adr/ADR-0013-MEDIA-QUARANTINE.md`                              | Accepted ADR         | media safety               | security             | `DEC-047/088/175/176`                 |
+| `docs/adr/ADR-0014-VPS-STAGING-PORTFOLIO-RECOVERY-MODEL.md`          | Accepted ADR         | deploy topology            | deployment           | `DEC-089–097/110/111`                 |
+| `docs/adr/ADR-0015-ASVS-L2-SECURITY-TARGET.md`                       | Accepted ADR         | security target            | security             | `DEC-153`                             |
+| `docs/adr/ADR-0016-PUBLIC-REPOSITORY-NO-OPEN-SOURCE-LICENSE.md`      | Accepted ADR         | public posture             | governance           | `DEC-112/113`                         |
+| `docs/adr/ADR-0017-LOCAL-ONLY-DEVELOPMENT-AUTHENTICATION.md`         | Accepted ADR         | local auth/staging posture | security             | `DEC-190`                             |
 
 ## Legacy working papers (non-normative)
 

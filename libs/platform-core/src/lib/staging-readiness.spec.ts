@@ -24,6 +24,7 @@ const staging = (): NodeJS.ProcessEnv => ({
 
 describe('private staging provider readiness', () => {
 	it('refuses every non-staging runtime mode', () => {
+		expect(() => assertStagingProviderConfiguration({ ...staging(), JUNCTION_RUNTIME_MODE: 'local' })).toThrow()
 		expect(() => assertStagingProviderConfiguration({ JUNCTION_RUNTIME_MODE: 'development', NODE_ENV: 'test' })).toThrow()
 		expect(() => assertStagingProviderConfiguration({ JUNCTION_RUNTIME_MODE: 'development', NODE_ENV: 'production' })).toThrow()
 		expect(() => assertStagingProviderConfiguration({ NODE_ENV: 'production' })).toThrow()

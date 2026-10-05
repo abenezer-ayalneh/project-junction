@@ -58,12 +58,13 @@ import {
 } from 'contracts'
 
 import { Prisma, PrismaClient } from '../../generated/prisma/index.js'
-import { AccessDeniedError, assertElevatedSession, assertRecentMfa, assertScope } from './access.js'
+import { AccessDeniedError, assertElevatedSession, assertRequiredMfa, assertScope } from './access.js'
 import { CATALOG_CSV_HEADER, decodeCatalogCsvText, encodeCatalogCsvField, parseCatalogCsv } from './catalog-csv.js'
 import { DiditSandboxAdapter } from './didit.js'
 import { type ExternalEffectAdapter, UnconfiguredExternalEffectAdapter } from './external-effects.js'
 import { IdempotencyConflictError, stableHash } from './idempotency.js'
 import { type MediaStore, S3MediaStore } from './media-store.js'
+import { applicationRuntimeMode } from './runtime.js'
 import { MediaRejectedError, VideoProcessor } from './video-processor.js'
 
 type Transaction = Prisma.TransactionClient
@@ -96,6 +97,10 @@ const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{1
 const json = (value: unknown) => JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue
 function isVerifiedAdult(user: { adultVerificationState: string; verifiedAt: Date | null }): boolean {
 	return Boolean(user.verifiedAt) && user.adultVerificationState === 'verified'
+}
+
+function hasRequiredIdentity(user: { adultVerificationState: string; verifiedAt: Date | null }): boolean {
+	return applicationRuntimeMode() === 'local' || isVerifiedAdult(user)
 }
 
 /** Prisma owns CRUD; parameterized SQL below is restricted to concurrency locks/claims. */
@@ -165,7 +170,7 @@ export class PostgresFoundation {
 			const context = await this.derive(tx, sessionId)
 			if (context.actor.kind !== 'user') throw new AccessDeniedError()
 			if (vendorId) {
-				assertRecentMfa(context)
+				assertRequiredMfa(context)
 				await tx.$queryRaw`SELECT id FROM "vendor_memberships" WHERE "user_id" = ${context.actor.userId}::uuid AND "vendor_id" = ${vendorId}::uuid FOR SHARE`
 				await tx.$queryRaw`SELECT id FROM "vendors" WHERE id = ${vendorId}::uuid FOR SHARE`
 				const membership = await tx.vendorMembership.findUnique({
@@ -845,7 +850,7 @@ export class PostgresFoundation {
 		return this.db.$transaction(async (tx) => {
 			const context = await this.derive(tx, sessionId)
 			if (!context.capabilities.includes('platform:vendor:review')) throw new AccessDeniedError()
-			if (context.actor.kind === 'user') assertRecentMfa(context)
+			if (context.actor.kind === 'user') assertRequiredMfa(context)
 			const target = await tx.vendor.findFirst({ where: { id: vendorId, workspaceId: context.workspaceId } })
 			if (!target) throw new AccessDeniedError()
 			const result = await this.replayOrCreate(tx, context, key, 'POST /v1/vendor-applications/:vendorId/review', { vendorId, review }, async () => {
@@ -1036,7 +1041,7 @@ export class PostgresFoundation {
 		return this.db.$transaction(async (tx) => {
 			const context = await this.derive(tx, sessionId)
 			if (!context.capabilities.includes('platform:vendor:review')) throw new AccessDeniedError()
-			if (context.actor.kind === 'user') assertRecentMfa(context)
+			if (context.actor.kind === 'user') assertRequiredMfa(context)
 			const target = await tx.listing.findFirst({
 				where: { id: listingId, vendor: { workspaceId: context.workspaceId, applicationState: 'approved' } },
 			})
@@ -1380,7 +1385,7 @@ export class PostgresFoundation {
 		return this.db.$transaction(async (tx) => {
 			const context = await this.derive(tx, sessionId)
 			if (!context.capabilities.includes('platform:vendor:review')) throw new AccessDeniedError()
-			if (context.actor.kind === 'user') assertRecentMfa(context)
+			if (context.actor.kind === 'user') assertRequiredMfa(context)
 			const media = await tx.mediaAsset.findFirst({ where: { id: mediaId, listing: { vendor: { workspaceId: context.workspaceId } } } })
 			if (!media) throw new AccessDeniedError()
 			const result = await this.replayOrCreate(tx, context, key, 'POST /v1/platform/media/:mediaId/review', { mediaId, command }, async () => {
@@ -2000,7 +2005,7 @@ export class PostgresFoundation {
 		this.requireResourceId(sessionId)
 		const session = await tx.session.findUnique({ where: { id: sessionId }, include: { user: true } })
 		if (!session || session.revokedAt || session.expiresAt <= new Date() || !session.user) throw new AccessDeniedError()
-		if (!isVerifiedAdult(session.user)) throw new AccessDeniedError()
+		if (!hasRequiredIdentity(session.user)) throw new AccessDeniedError()
 		await this.workspaceLock(tx, session.workspaceId)
 		// Lock identity/session/membership rows so revocation cannot race an accepted write.
 		await tx.$queryRaw`SELECT id FROM "sessions" WHERE id = ${session.id}::uuid FOR UPDATE`
@@ -2025,7 +2030,7 @@ export class PostgresFoundation {
 		}
 		await tx.$queryRaw`SELECT id FROM "users" WHERE id = ${session.user.id}::uuid FOR SHARE`
 		const user = await tx.user.findUniqueOrThrow({ where: { id: session.user.id } })
-		if (!isVerifiedAdult(user)) throw new AccessDeniedError()
+		if (!hasRequiredIdentity(user)) throw new AccessDeniedError()
 		let memberships: AccessContext['memberships'] = []
 		if (session.activeVendorId) {
 			await tx.$queryRaw`SELECT id FROM "vendor_memberships" WHERE "user_id" = ${session.user.id}::uuid AND "vendor_id" = ${session.activeVendorId}::uuid FOR SHARE`

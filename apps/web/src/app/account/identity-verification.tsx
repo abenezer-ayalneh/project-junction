@@ -43,11 +43,16 @@ async function readVerificationStatus(): Promise<Exclude<VerificationStatus, 'lo
 }
 
 export function IdentityVerification() {
+	const identityVerificationDeferred = process.env.NEXT_PUBLIC_JUNCTION_RUNTIME_MODE === 'local'
 	const [busy, setBusy] = useState(false)
 	const [message, setMessage] = useState('')
 	const [status, setStatus] = useState<VerificationStatus>('loading')
 
 	useEffect(() => {
+		if (identityVerificationDeferred) {
+			setStatus('unverified')
+			return
+		}
 		let cancelled = false
 		let retry: ReturnType<typeof setTimeout> | undefined
 		const returnedFromDidit = new URLSearchParams(window.location.search).get('identity') === 'didit'
@@ -67,7 +72,9 @@ export function IdentityVerification() {
 			cancelled = true
 			if (retry) clearTimeout(retry)
 		}
-	}, [])
+	}, [identityVerificationDeferred])
+
+	if (identityVerificationDeferred) return null
 
 	async function start() {
 		setBusy(true)

@@ -4,7 +4,7 @@ function apiBaseUrl(): string {
 	return (
 		process.env.JUNCTION_API_URL ??
 		(() => {
-			throw new Error('JUNCTION_API_URL is required for the private staging catalog.')
+			throw new Error('JUNCTION_API_URL is required for the catalog.')
 		})()
 	)
 }

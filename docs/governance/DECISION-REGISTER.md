@@ -415,6 +415,8 @@ _Normative owners: architecture, security, environments, deployment, and demo._
 - `DEC-179` — External services target free tiers plus a US$25/month ceiling, excluding VPS/domain. [Capacity](../deployment/CAPACITY-COST-AND-SCALING.md)
   <a id="dec-189"></a>
 - `DEC-189` — Pending Vendors may prepare privately before approval but cannot publish/transact. [Roles](../product/ROLES-PERMISSIONS-AND-RESPONSIBILITIES.md)
+  <a id="dec-190"></a>
+- `DEC-190` — Current development is local-only with fresh local accounts/database, email/password and Google authentication, and Mailpit delivery; MFA/Didit and private staging acceptance are deferred until pre-public-release restoration. [Local authentication decision record](../quality/AUTH-SIMPLIFICATION-DECISIONS.md)
 
 ## Release and supersession
 

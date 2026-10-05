@@ -1,6 +1,12 @@
 # Phase 00 real-service transition
 
-Status: **in progress**. The earlier Phase 00 acceptance covered a local synthetic baseline. It is not evidence of private staging or real-provider acceptance.
+Status: **suspended on 2026-10-05; preserved for pre-public-release restoration**. The earlier Phase 00 acceptance covered a local synthetic baseline. It is not evidence of private staging or real-provider acceptance.
+
+## Suspension record — 2026-10-05
+
+Active development moved to an isolated local runtime under [`DEC-190`](../governance/DECISION-REGISTER.md#dec-190). Junction's running staging containers were stopped without deleting volumes. The retained volumes are the PostgreSQL, Redis, MinIO, and ClamAV volumes owned by the `project-junction-staging` Compose project. The Junction Caddy site configuration was preserved in the owner-only staging configuration directory, then replaced with a `503 Project Junction staging is suspended` response for the application and media hostnames. Caddy validation/reload succeeded, and the unrelated portfolio hostname returned HTTP `200` afterward. No Junction systemd unit, timer, or cron restart mechanism was found during the shutdown inspection.
+
+This historical record must not be used for ongoing development acceptance. MFA/Didit/provider and staging recovery cases are now deferred to the pre-public-release milestone; the current local cases are in [the revised manual checklist](PHASE-00-MANUAL-ACCEPTANCE.md).
 
 ## Private staging deployment record — 2026-10-02
 
@@ -49,6 +55,8 @@ The staging Docker image was published, attested, signature-verified, and deploy
 5. After applying `prisma/migrations/20260925000000_real_platform_reviewer_grants`, sign in the invited reviewer, verify email, complete Didit, and enroll a verified TOTP factor. Set `STAGING_REVIEWER_EMAIL` and `STAGING_OPERATOR_LABEL` in the host's protected environment. On the VPS, run `docker compose --env-file /home/deploy/.config/project-junction-staging/core.env -f ops/staging/compose.yaml run --rm reviewer-grant grant`; use `revoke` to remove access. The CLI refuses an account that lacks verified email, Didit approval, a real staging session, a verified Better Auth TOTP factor, or clean separation from active Vendor memberships. A reviewer grant also prevents that account from creating a Vendor application. The command mounts `DATABASE_URL` only as a Compose secret and fixes `JUNCTION_RUNTIME_MODE=staging`; do not run it against the portfolio or local database. Verify queue access and a fresh MFA challenge; then revoke and verify denial without changing application, audit, or outbox state.
 
 ## Open acceptance gates
+
+Execute the [manual acceptance runbook](PHASE-00-MANUAL-ACCEPTANCE.md) in order and attach dated evidence before closing these gates. Its execution log distinguishes fresh checks from unexecuted journeys; preparing the runbook does not accept the transition.
 
 - The release that deployed the current image passed its GitGuardian gate. Require the same fresh passing security check before every later image publication or staging release.
 - Exercise a Didit declined decision, signed webhook retry/replay, delayed-callback reconciliation, and adult-access revocation. The configured age-18 workflow and one approval are not enough to accept those failure paths.

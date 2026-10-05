@@ -4,10 +4,12 @@ import { betterAuth } from 'better-auth'
 import { twoFactor } from 'better-auth/plugins'
 import { PostgresDialect } from 'kysely'
 import { Pool } from 'pg'
-import { Resend } from 'resend'
 
+import { GoogleAccountLinkingConfiguration, isMfaPluginEnabled, localGoogleProvider } from './auth-policy.js'
 import { recoveryLink } from './auth-recovery.js'
+import { createAuthenticationEmailDelivery } from './email-delivery.js'
 import { PostgresFoundation } from './postgres-foundation.js'
+import { applicationRuntimeMode } from './runtime.js'
 
 function requiredEnvironment(name: string): string {
 	const value = process.env[name]
@@ -16,6 +18,7 @@ function requiredEnvironment(name: string): string {
 }
 
 export function createAuth() {
+	const runtimeMode = applicationRuntimeMode()
 	const baseURL = requiredEnvironment('BETTER_AUTH_URL')
 	const secret = requiredEnvironment('BETTER_AUTH_SECRET')
 	if (secret.length < 32) throw new Error('BETTER_AUTH_SECRET must contain at least 32 characters.')
@@ -23,16 +26,19 @@ export function createAuth() {
 		throw new Error('BETTER_AUTH_URL must use HTTPS in staging.')
 	}
 	const databaseUrl = requiredEnvironment('DATABASE_URL')
-	const resend = new Resend(requiredEnvironment('RESEND_API_KEY'))
-	const from = requiredEnvironment('RESEND_FROM_EMAIL')
+	if (runtimeMode === 'local' && baseURL !== 'http://localhost:3000') throw new Error('Local Better Auth must use http://localhost:3000.')
+	const emailDelivery = createAuthenticationEmailDelivery(runtimeMode)
 	const send = async (to: string, subject: string, url: string) => {
-		const { error } = await resend.emails.send({ from, to, subject, text: `${subject}: ${url}` })
-		if (error) throw new Error(`Authentication email delivery failed: ${error.message}`)
+		await emailDelivery.send({ to, subject, text: `${subject}: ${url}` })
 	}
+	const google = localGoogleProvider()
 
 	return betterAuth({
 		appName: 'Project Junction',
-		plugins: [twoFactor({ issuer: 'Project Junction' })],
+		plugins: isMfaPluginEnabled(runtimeMode) ? [twoFactor({ issuer: 'Project Junction' })] : [],
+		account: {
+			accountLinking: GoogleAccountLinkingConfiguration,
+		},
 		databaseHooks: {
 			session: {
 				create: {
@@ -82,6 +88,7 @@ export function createAuth() {
 			sendOnSignUp: true,
 			sendVerificationEmail: ({ user, url }) => send(user.email, 'Verify your Project Junction email', url),
 		},
+		...(google ? { socialProviders: { google } } : {}),
 	})
 }
 

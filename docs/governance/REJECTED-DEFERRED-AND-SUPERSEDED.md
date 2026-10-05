@@ -15,6 +15,7 @@
 - Non-cash expiring loyalty points.
 - Chapa after Stripe sandbox/Connect.
 - Generalized resource reservations, calendar write/sync, video/recording products beyond the selected public-media scope, and real commercial launch.
+- MFA enrollment/challenge and Didit adult-identity journeys during the current local-only development interval. They remain mandatory pre-public-release acceptance work under `DEC-190`.
 
 ## Superseded
 

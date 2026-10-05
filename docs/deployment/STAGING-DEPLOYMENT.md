@@ -1,11 +1,15 @@
 # Staging Deployment
 
-> **Document status:** specified procedure
-> **System claim:** **Ingress, core data, malware scanner, application deployment, Resend mailbox lifecycle, configured Didit age gate, and MinIO object boundary verified — full provider acceptance pending**
+> **Document status:** suspended historical procedure; restore only for pre-public-release verification
+> **System claim:** **Junction services and ingress were suspended on 2026-10-05 with data/configuration retained. Historical provider evidence is preserved; no active staging acceptance is underway.**
 > **Decision coverage:** [`DEC-066`, `DEC-073`–`DEC-077`, `DEC-093`, `DEC-098`–`DEC-105`, `DEC-110`, `DEC-139`](../governance/DECISION-REGISTER.md)
 > **Normative owner:** private staging environment
 
-## Purpose and boundary
+## Suspension boundary — 2026-10-05
+
+Do not use this environment for active development. Junction's services are stopped and its application/media Caddy routes return `503`; Compose volumes, protected configuration, backups, and provider records were deliberately retained. The staging image workflow remains manually dispatchable for later restoration, but automatic branch-push publication is disabled. Restore the strict runtime only when the pre-public-release milestone begins, then re-run fresh deployment/provider/recovery acceptance rather than relying on historical results.
+
+## Historical purpose and boundary
 
 Staging is a private, production-shaped, resource-limited deployment on the existing VPS [DEC-093]. Phase 00 now requires real sign-up, email delivery, MFA, and identity-provider sandbox exchanges with invited test users. The previous synthetic-only acceptance is historical regression evidence; it cannot satisfy this gate. Staging must not accept live payments or public onboarding.
 

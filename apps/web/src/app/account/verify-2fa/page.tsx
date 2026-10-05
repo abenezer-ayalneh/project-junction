@@ -7,7 +7,9 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { authClient } from '@/lib/auth-client'
 
-export default function VerifyTwoFactorPage() {
+const mfaDeferred = process.env.NEXT_PUBLIC_JUNCTION_RUNTIME_MODE === 'local'
+
+function VerifyTwoFactorForm() {
 	const [code, setCode] = useState('')
 	const [backup, setBackup] = useState(false)
 	const [busy, setBusy] = useState(false)
@@ -75,4 +77,25 @@ export default function VerifyTwoFactorPage() {
 			</Card>
 		</main>
 	)
+}
+
+export default function VerifyTwoFactorPage() {
+	if (mfaDeferred) {
+		return (
+			<main className="mx-auto flex min-h-svh max-w-xl flex-col justify-center gap-6 px-5 py-12">
+				<Link href="/account" className="text-sm text-muted-foreground hover:text-foreground">
+					← Back to account
+				</Link>
+				<Card>
+					<CardHeader>
+						<CardTitle>Multi-factor authentication is deferred</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<p className="text-sm text-muted-foreground">Local development uses verified email or Google sign-in. Multi-factor authentication returns before public release.</p>
+					</CardContent>
+				</Card>
+			</main>
+		)
+	}
+	return <VerifyTwoFactorForm />
 }

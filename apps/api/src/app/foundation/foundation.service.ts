@@ -25,7 +25,7 @@ import {
 	VendorApplicationReviewSchema,
 	VendorFollowMutationSchema,
 } from 'contracts'
-import { AccessDeniedError, DiditSandboxAdapter, PostgresFoundation } from 'platform-core'
+import { AccessDeniedError, DiditSandboxAdapter, PostgresFoundation, applicationRuntimeMode } from 'platform-core'
 import { getAuth } from 'platform-core/auth'
 
 export function diditObservedAt(value: unknown): Date | undefined {
@@ -55,13 +55,14 @@ export class FoundationService {
 
 	async health(requestId?: string) {
 		await this.durable.health()
-		if (this.configService.get<string>('JUNCTION_RUNTIME_MODE') === 'staging' && process.env['DIDIT_AGE_18_WORKFLOW_CONFIRMED'] !== 'true') {
+		const runtimeMode = applicationRuntimeMode()
+		if (runtimeMode === 'staging' && process.env['DIDIT_AGE_18_WORKFLOW_CONFIRMED'] !== 'true') {
 			throw new Error('The Didit age-18 sandbox workflow has not been confirmed.')
 		}
 		return HealthResponseSchema.parse({
 			status: 'ok',
 			service: 'api',
-			runtimeMode: 'staging',
+			runtimeMode,
 			storage: 'postgresql',
 			requestId: requestId ?? randomUUID(),
 		})
@@ -100,6 +101,7 @@ export class FoundationService {
 	}
 
 	async issueIdentityVerificationSession(sessionId: string | undefined) {
+		if (applicationRuntimeMode() !== 'staging') throw new AccessDeniedError('Identity verification is deferred until public release.')
 		const { userId } = await this.durable.authenticatedIdentity(sessionId)
 		const adapter = new DiditSandboxAdapter(
 			this.configService.getOrThrow<string>('DIDIT_API_KEY'),
@@ -114,10 +116,12 @@ export class FoundationService {
 	}
 
 	async identityVerificationStatus(sessionId: string | undefined) {
+		if (applicationRuntimeMode() !== 'staging') throw new AccessDeniedError('Identity verification is deferred until public release.')
 		return IdentityVerificationStatusSchema.parse(await this.durable.identityVerificationStatus(sessionId))
 	}
 
 	async receiveDiditWebhook(rawBody: Buffer | undefined, signatureV2: string | undefined) {
+		if (applicationRuntimeMode() !== 'staging') throw new AccessDeniedError('Identity verification is deferred until public release.')
 		if (!rawBody) return this.rejectDiditWebhook('missing-body')
 		const adapter = new DiditSandboxAdapter(
 			this.configService.getOrThrow<string>('DIDIT_API_KEY'),

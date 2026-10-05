@@ -10,6 +10,7 @@ export interface ApiRuntimeConfig {
 	port: number
 	realtimeRedisFanout: boolean
 	redisUrl: string | undefined
+	runtimeMode: 'local' | 'staging'
 	throttleLimit: number
 	throttleTtlMs: number
 }
@@ -19,7 +20,11 @@ interface ConfigReader {
 }
 
 export function getApiRuntimeConfig(configService: ConfigReader): ApiRuntimeConfig {
-	const staging = configService.get<string>('JUNCTION_RUNTIME_MODE') === 'staging'
+	// Nest unit tests instantiate this module without the process-level bootstrap.
+	// Actual API startup validates an explicit runtime before this configuration is read.
+	const runtimeMode = configService.get<string>('JUNCTION_RUNTIME_MODE') ?? 'local'
+	if (runtimeMode !== 'local' && runtimeMode !== 'staging') throw new Error('JUNCTION_RUNTIME_MODE must be local or staging.')
+	const staging = runtimeMode === 'staging'
 	const stagingOrigin = staging ? configService.get<string>('BETTER_AUTH_URL') : undefined
 	if (staging && !stagingOrigin) throw new Error('BETTER_AUTH_URL is required for staging CORS.')
 	const corsAllowedOrigins = staging
@@ -36,6 +41,7 @@ export function getApiRuntimeConfig(configService: ConfigReader): ApiRuntimeConf
 		logLevel: configService.get<string>('LOG_LEVEL') ?? 'info',
 		port: parsePort(configService.get<string>('API_PORT') ?? configService.get<string>('PORT')),
 		...redisFanout,
+		runtimeMode,
 		throttleLimit: parsePositiveInteger(configService.get<string>('THROTTLE_LIMIT'), DEFAULT_THROTTLE_LIMIT, 'THROTTLE_LIMIT'),
 		throttleTtlMs: parsePositiveInteger(configService.get<string>('THROTTLE_TTL_MS'), DEFAULT_THROTTLE_TTL_MS, 'THROTTLE_TTL_MS'),
 	}

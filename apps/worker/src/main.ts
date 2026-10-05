@@ -1,12 +1,12 @@
 import { randomUUID } from 'node:crypto'
 
-import { assertStagingProviderConfiguration, DiditSandboxAdapter, PostgresFoundation } from 'platform-core'
+import { assertApplicationRuntimeConfiguration, DiditSandboxAdapter, PostgresFoundation } from 'platform-core'
 import { createClient } from 'redis'
 
 import { RedisEventStreamAdapter } from './redis-event-stream'
 
 const workerId = randomUUID()
-assertStagingProviderConfiguration()
+const runtimeMode = assertApplicationRuntimeConfiguration()
 if (process.env['FOUNDATION_STORAGE'] !== 'postgresql') throw new Error('FOUNDATION_STORAGE=postgresql is required for the worker runtime.')
 const databaseUrl = process.env['DATABASE_URL']
 if (!databaseUrl) throw new Error('DATABASE_URL is required.')
@@ -15,8 +15,8 @@ const redis = createClient({
 	socket: { reconnectStrategy: (retries) => (retries >= 5 ? new Error('Redis is unavailable.') : Math.min(1000 * retries, 5000)) },
 })
 redis?.on('error', () => process.stderr.write(`${JSON.stringify({ type: 'worker.redis-error' })}\n`))
-const repository = new PostgresFoundation(databaseUrl, redis ? new RedisEventStreamAdapter(redis) : undefined)
-const diditReady = process.env['DIDIT_AGE_18_WORKFLOW_CONFIRMED'] === 'true'
+const repository = new PostgresFoundation(databaseUrl, redis ? new RedisEventStreamAdapter(redis, `junction:${runtimeMode}`) : undefined)
+const diditReady = runtimeMode === 'staging' && process.env['DIDIT_AGE_18_WORKFLOW_CONFIRMED'] === 'true'
 const didit = diditReady ? new DiditSandboxAdapter(process.env['DIDIT_API_KEY'] ?? '', process.env['DIDIT_WEBHOOK_SECRET'] ?? '') : undefined
 let stopping = false
 let timer: ReturnType<typeof setTimeout>
@@ -59,7 +59,7 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const)
 void (async () => {
 	if (redis) await redis.connect()
 	if (stopping) return shutdown()
-	process.stdout.write(`${JSON.stringify({ type: 'worker.started', runtimeMode: 'staging', storage: 'postgresql' })}\n`)
+	process.stdout.write(`${JSON.stringify({ type: 'worker.started', runtimeMode, storage: 'postgresql' })}\n`)
 	await tick()
 })().catch(() => {
 	process.stderr.write(`${JSON.stringify({ type: 'worker.startup-failed' })}\n`)
