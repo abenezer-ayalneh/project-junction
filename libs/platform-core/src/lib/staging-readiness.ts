@@ -1,0 +1,60 @@
+function required(env: NodeJS.ProcessEnv, name: string): string {
+	const value = env[name]?.trim()
+	if (!value) throw new Error(`${name} is required in private staging.`)
+	return value
+}
+
+function localHost(hostname: string): boolean {
+	const normalized = hostname.toLowerCase()
+	return normalized === 'localhost' || normalized === '[::1]' || normalized.endsWith('.localhost') || /^127(?:\.\d{1,3}){3}$/.test(normalized)
+}
+
+export function assertStagingProviderConfiguration(env: NodeJS.ProcessEnv = process.env): void {
+	if (env['JUNCTION_RUNTIME_MODE'] !== 'staging') {
+		throw new Error('Running API and worker processes require JUNCTION_RUNTIME_MODE=staging.')
+	}
+	if (env['FOUNDATION_STORAGE'] !== 'postgresql') throw new Error('FOUNDATION_STORAGE=postgresql is required in private staging.')
+	const databaseUrl = new URL(required(env, 'DATABASE_URL'))
+	if (!['postgres:', 'postgresql:'].includes(databaseUrl.protocol) || localHost(databaseUrl.hostname)) {
+		throw new Error('DATABASE_URL must target the separate staging PostgreSQL service, not a local fixture.')
+	}
+	if (env['REALTIME_REDIS_FANOUT'] !== 'enabled') throw new Error('REALTIME_REDIS_FANOUT=enabled is required in private staging.')
+	const redisUrl = new URL(required(env, 'REDIS_URL'))
+	if (!['redis:', 'rediss:'].includes(redisUrl.protocol) || localHost(redisUrl.hostname)) {
+		throw new Error('REDIS_URL must target a separate staging Redis service, not the local fixture.')
+	}
+	const origin = new URL(required(env, 'BETTER_AUTH_URL'))
+	if (
+		origin.protocol !== 'https:' ||
+		origin.origin !== origin.href.replace(/\/$/, '') ||
+		origin.hostname === 'example.com' ||
+		origin.hostname.endsWith('.example.com')
+	) {
+		throw new Error('BETTER_AUTH_URL must be the actual private staging HTTPS origin.')
+	}
+	if (required(env, 'BETTER_AUTH_SECRET').length < 32) throw new Error('BETTER_AUTH_SECRET must contain at least 32 characters.')
+	required(env, 'RESEND_API_KEY')
+	required(env, 'RESEND_FROM_EMAIL')
+	required(env, 'DIDIT_API_KEY')
+	required(env, 'DIDIT_WEBHOOK_SECRET')
+	required(env, 'DIDIT_WORKFLOW_ID')
+	const mediaEndpoint = new URL(required(env, 'MEDIA_S3_ENDPOINT'))
+	if (
+		mediaEndpoint.protocol !== 'https:' ||
+		mediaEndpoint.origin !== mediaEndpoint.href.replace(/\/$/, '') ||
+		['localhost', '127.0.0.1', '[::1]'].includes(mediaEndpoint.hostname) ||
+		mediaEndpoint.hostname.endsWith('.local')
+	) {
+		throw new Error('MEDIA_S3_ENDPOINT must be the private staging HTTPS MinIO origin.')
+	}
+	required(env, 'MEDIA_S3_REGION')
+	required(env, 'MEDIA_S3_BUCKET')
+	required(env, 'MEDIA_S3_ACCESS_KEY_ID')
+	required(env, 'MEDIA_S3_SECRET_ACCESS_KEY')
+	required(env, 'MEDIA_CLAMD_HOST')
+	const clamdPort = Number(required(env, 'MEDIA_CLAMD_PORT'))
+	if (!Number.isInteger(clamdPort) || clamdPort < 1 || clamdPort > 65535) throw new Error('MEDIA_CLAMD_PORT must be a valid TCP port.')
+	if (env['DIDIT_AGE_18_WORKFLOW_CONFIRMED'] && env['DIDIT_AGE_18_WORKFLOW_CONFIRMED'] !== 'true') {
+		throw new Error('DIDIT_AGE_18_WORKFLOW_CONFIRMED must be true or unset.')
+	}
+}

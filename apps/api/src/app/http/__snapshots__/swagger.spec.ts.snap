@@ -14,50 +14,25 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             "type": "string",
           },
           "actor": {
-            "oneOf": [
-              {
-                "additionalProperties": false,
-                "properties": {
-                  "kind": {
-                    "enum": [
-                      "user",
-                    ],
-                    "type": "string",
-                  },
-                  "userId": {
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-                    "type": "string",
-                  },
-                },
-                "required": [
-                  "kind",
-                  "userId",
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "enum": [
+                  "user",
                 ],
-                "type": "object",
+                "type": "string",
               },
-              {
-                "additionalProperties": false,
-                "properties": {
-                  "kind": {
-                    "enum": [
-                      "demo_persona",
-                    ],
-                    "type": "string",
-                  },
-                  "personaId": {
-                    "format": "uuid",
-                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-                    "type": "string",
-                  },
-                },
-                "required": [
-                  "kind",
-                  "personaId",
-                ],
-                "type": "object",
+              "userId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
               },
+            },
+            "required": [
+              "kind",
+              "userId",
             ],
+            "type": "object",
           },
           "capabilities": {
             "items": {
@@ -85,6 +60,36 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           "activeVendorId",
           "locationIds",
           "capabilities",
+        ],
+        "type": "object",
+      },
+      "ActiveVendorSelection": {
+        "additionalProperties": false,
+        "properties": {
+          "vendorId": {
+            "format": "uuid",
+            "nullable": true,
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "vendorId",
+        ],
+        "type": "object",
+      },
+      "ActiveVendorSelectionResult": {
+        "additionalProperties": false,
+        "properties": {
+          "activeVendorId": {
+            "format": "uuid",
+            "nullable": true,
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "activeVendorId",
         ],
         "type": "object",
       },
@@ -143,41 +148,86 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
         "type": "object",
       },
-      "AuditMarkerCommand": {
+      "CatalogHealth": {
         "additionalProperties": false,
         "properties": {
-          "marker": {
-            "maxLength": 120,
-            "minLength": 1,
+          "checkedAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
             "type": "string",
           },
-          "scope": {
-            "additionalProperties": false,
-            "properties": {
-              "locationId": {
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-                "type": "string",
-              },
-              "vendorId": {
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-                "type": "string",
-              },
-              "workspaceId": {
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-                "type": "string",
-              },
-            },
-            "required": [
-              "workspaceId",
-            ],
-            "type": "object",
+          "importDryRuns": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "importJobs": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "laggingListings": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "mediaDeadLetters": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "mediaPending": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "oldestImportDryRunSeconds": {
+            "minimum": 0,
+            "type": "number",
+          },
+          "oldestLagSeconds": {
+            "minimum": 0,
+            "type": "number",
+          },
+          "oldestReviewLagSeconds": {
+            "minimum": 0,
+            "type": "number",
+          },
+          "pendingReviews": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "projectedListings": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "publishedListings": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "reviewEvents": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
           },
         },
         "required": [
-          "marker",
+          "publishedListings",
+          "projectedListings",
+          "laggingListings",
+          "oldestLagSeconds",
+          "reviewEvents",
+          "pendingReviews",
+          "oldestReviewLagSeconds",
+          "importJobs",
+          "importDryRuns",
+          "oldestImportDryRunSeconds",
+          "mediaPending",
+          "mediaDeadLetters",
+          "checkedAt",
         ],
         "type": "object",
       },
@@ -251,6 +301,45 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             },
             "type": "array",
           },
+          "rows": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "errors": {
+                  "items": {
+                    "type": "string",
+                  },
+                  "type": "array",
+                },
+                "preview": {
+                  "additionalProperties": {},
+                  "type": "object",
+                },
+                "rowNumber": {
+                  "exclusiveMinimum": true,
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+                "status": {
+                  "enum": [
+                    "valid",
+                    "error",
+                    "committed",
+                  ],
+                  "type": "string",
+                },
+              },
+              "required": [
+                "rowNumber",
+                "status",
+                "preview",
+                "errors",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
           "state": {
             "enum": [
               "dry_run",
@@ -271,168 +360,38 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           "rowCount",
           "validRowCount",
           "rowErrors",
+          "rows",
           "replayed",
         ],
         "type": "object",
       },
-      "CommandOutcome": {
+      "CustomerDiscoveryState": {
         "additionalProperties": false,
         "properties": {
-          "commandId": {
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-            "type": "string",
-          },
-          "marker": {
-            "type": "string",
-          },
-          "replayed": {
-            "type": "boolean",
-          },
-          "status": {
-            "enum": [
-              "accepted",
-            ],
-            "type": "string",
-          },
-        },
-        "required": [
-          "commandId",
-          "status",
-          "marker",
-          "replayed",
-        ],
-        "type": "object",
-      },
-      "DemoSession": {
-        "additionalProperties": false,
-        "properties": {
-          "expiresAt": {
-            "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
-            "type": "string",
-          },
-          "id": {
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-            "type": "string",
-          },
-          "personaKey": {
-            "enum": [
-              "customer",
-              "vendor_owner",
-              "service_staff",
-              "support",
-              "trust",
-              "finance",
-              "platform_owner",
-            ],
-            "type": "string",
-          },
-        },
-        "required": [
-          "id",
-          "personaKey",
-          "expiresAt",
-        ],
-        "type": "object",
-      },
-      "DemoWorkspace": {
-        "additionalProperties": false,
-        "properties": {
-          "createdAt": {
-            "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
-            "type": "string",
-          },
-          "expiresAt": {
-            "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
-            "type": "string",
-          },
-          "id": {
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-            "type": "string",
-          },
-          "personas": {
+          "followedVendorIds": {
             "items": {
-              "additionalProperties": false,
-              "properties": {
-                "key": {
-                  "enum": [
-                    "customer",
-                    "vendor_owner",
-                    "service_staff",
-                    "support",
-                    "trust",
-                    "finance",
-                    "platform_owner",
-                  ],
-                  "type": "string",
-                },
-                "role": {
-                  "minLength": 1,
-                  "type": "string",
-                },
-              },
-              "required": [
-                "key",
-                "role",
-              ],
-              "type": "object",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
             },
-            "minItems": 1,
             "type": "array",
           },
-          "session": {
-            "additionalProperties": false,
-            "properties": {
-              "expiresAt": {
-                "format": "date-time",
-                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
-                "type": "string",
-              },
-              "id": {
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-                "type": "string",
-              },
-              "personaKey": {
-                "enum": [
-                  "customer",
-                  "vendor_owner",
-                  "service_staff",
-                  "support",
-                  "trust",
-                  "finance",
-                  "platform_owner",
-                ],
-                "type": "string",
-              },
-            },
-            "required": [
-              "id",
-              "personaKey",
-              "expiresAt",
-            ],
-            "type": "object",
+          "personalizationOptIn": {
+            "type": "boolean",
           },
-          "state": {
-            "enum": [
-              "active",
-              "purged",
-            ],
-            "type": "string",
+          "savedListingIds": {
+            "items": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            "type": "array",
           },
         },
         "required": [
-          "id",
-          "createdAt",
-          "expiresAt",
-          "state",
-          "personas",
-          "session",
+          "personalizationOptIn",
+          "savedListingIds",
+          "followedVendorIds",
         ],
         "type": "object",
       },
@@ -446,7 +405,8 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
           "runtimeMode": {
             "enum": [
-              "synthetic",
+              "local",
+              "staging",
             ],
             "type": "string",
           },
@@ -464,7 +424,6 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
           "storage": {
             "enum": [
-              "in-memory-test-double",
               "postgresql",
             ],
             "type": "string",
@@ -476,6 +435,199 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           "runtimeMode",
           "storage",
           "requestId",
+        ],
+        "type": "object",
+      },
+      "IdentityVerificationSession": {
+        "additionalProperties": false,
+        "properties": {
+          "sessionId": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string",
+          },
+          "url": {
+            "format": "uri",
+            "maxLength": 2048,
+            "type": "string",
+          },
+        },
+        "required": [
+          "url",
+          "sessionId",
+        ],
+        "type": "object",
+      },
+      "IdentityVerificationStatus": {
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "enum": [
+              "unverified",
+              "verified",
+              "rejected",
+            ],
+            "type": "string",
+          },
+        },
+        "required": [
+          "status",
+        ],
+        "type": "object",
+      },
+      "InventoryAvailability": {
+        "additionalProperties": false,
+        "properties": {
+          "available": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "listingId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "locationId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "onHand": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "reserved": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "sku": {
+            "nullable": true,
+            "type": "string",
+          },
+        },
+        "required": [
+          "locationId",
+          "listingId",
+          "sku",
+          "onHand",
+          "reserved",
+          "available",
+        ],
+        "type": "object",
+      },
+      "InventoryMovementCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "listingId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "locationId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "note": {
+            "maxLength": 500,
+            "minLength": 5,
+            "type": "string",
+          },
+          "quantityDelta": {
+            "maximum": 2147483647,
+            "minimum": -2147483648,
+            "type": "integer",
+          },
+          "reason": {
+            "enum": [
+              "received",
+              "adjusted",
+              "damaged",
+            ],
+            "type": "string",
+          },
+          "sku": {
+            "maxLength": 80,
+            "minLength": 1,
+            "type": "string",
+          },
+        },
+        "required": [
+          "locationId",
+          "listingId",
+          "reason",
+          "quantityDelta",
+        ],
+        "type": "object",
+      },
+      "InventoryMovementResult": {
+        "additionalProperties": false,
+        "properties": {
+          "available": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "listingId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "locationId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "movementId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "onHand": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "quantityDelta": {
+            "maximum": 9007199254740991,
+            "minimum": -9007199254740991,
+            "type": "integer",
+          },
+          "reason": {
+            "enum": [
+              "received",
+              "adjusted",
+              "damaged",
+            ],
+            "type": "string",
+          },
+          "replayed": {
+            "type": "boolean",
+          },
+          "reserved": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "sku": {
+            "nullable": true,
+            "type": "string",
+          },
+        },
+        "required": [
+          "locationId",
+          "listingId",
+          "sku",
+          "onHand",
+          "reserved",
+          "available",
+          "movementId",
+          "reason",
+          "quantityDelta",
+          "replayed",
         ],
         "type": "object",
       },
@@ -524,6 +676,29 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
           "replayed": {
             "type": "boolean",
+          },
+          "shortVideo": {
+            "additionalProperties": false,
+            "properties": {
+              "description": {
+                "nullable": true,
+                "type": "string",
+              },
+              "hasCaptions": {
+                "type": "boolean",
+              },
+              "id": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+            },
+            "required": [
+              "id",
+              "description",
+              "hasCaptions",
+            ],
+            "type": "object",
           },
           "state": {
             "enum": [
@@ -685,6 +860,12 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             ],
             "type": "string",
           },
+          "expectedVersion": {
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
           "note": {
             "maxLength": 1000,
             "minLength": 3,
@@ -693,6 +874,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         },
         "required": [
           "decision",
+          "expectedVersion",
           "note",
         ],
         "type": "object",
@@ -720,6 +902,12 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           "durationMinutes": {
             "maximum": 480,
             "minimum": 15,
+            "type": "integer",
+          },
+          "expectedVersion": {
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0,
             "type": "integer",
           },
           "kind": {
@@ -778,6 +966,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           "category",
           "title",
           "description",
+          "expectedVersion",
         ],
         "type": "object",
       },
@@ -817,7 +1006,9 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
           "state": {
             "enum": [
+              "pending_upload",
               "quarantined",
+              "needs_moderation",
               "ready",
               "rejected",
             ],
@@ -830,12 +1021,54 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
         "type": "object",
       },
+      "MediaPreview": {
+        "additionalProperties": false,
+        "properties": {
+          "captionText": {
+            "nullable": true,
+            "type": "string",
+          },
+          "description": {
+            "nullable": true,
+            "type": "string",
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "mediaId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "noSpeechDeclared": {
+            "type": "boolean",
+          },
+          "posterUrl": {
+            "format": "uri",
+            "type": "string",
+          },
+          "videoUrl": {
+            "format": "uri",
+            "type": "string",
+          },
+        },
+        "required": [
+          "mediaId",
+          "videoUrl",
+          "posterUrl",
+          "captionText",
+          "noSpeechDeclared",
+          "description",
+          "expiresAt",
+        ],
+        "type": "object",
+      },
       "MediaProcessingCommand": {
         "additionalProperties": false,
         "properties": {
           "captionText": {
-            "maxLength": 20000,
-            "minLength": 1,
             "type": "string",
           },
           "description": {
@@ -853,22 +1086,485 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
         "type": "object",
       },
-      "ProviderWebhookReceipt": {
+      "MediaReviewCommand": {
         "additionalProperties": false,
         "properties": {
-          "accepted": {
+          "decision": {
             "enum": [
-              true,
+              "approve",
+              "reject",
             ],
-            "type": "boolean",
+            "type": "string",
           },
-          "duplicate": {
-            "type": "boolean",
+          "expectedVersion": {
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "note": {
+            "maxLength": 1000,
+            "minLength": 3,
+            "type": "string",
           },
         },
         "required": [
-          "accepted",
-          "duplicate",
+          "decision",
+          "expectedVersion",
+          "note",
+        ],
+        "type": "object",
+      },
+      "MediaReviewQueue": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "captioned": {
+                  "type": "boolean",
+                },
+                "description": {
+                  "nullable": true,
+                  "type": "string",
+                },
+                "durationSeconds": {
+                  "exclusiveMinimum": true,
+                  "minimum": 0,
+                  "type": "number",
+                },
+                "id": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "listingId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "listingTitle": {
+                  "type": "string",
+                },
+                "noSpeechDeclared": {
+                  "type": "boolean",
+                },
+                "outputHeight": {
+                  "exclusiveMinimum": true,
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+                "outputWidth": {
+                  "exclusiveMinimum": true,
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+                "vendorName": {
+                  "nullable": true,
+                  "type": "string",
+                },
+                "version": {
+                  "exclusiveMinimum": true,
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+              },
+              "required": [
+                "id",
+                "listingId",
+                "listingTitle",
+                "vendorName",
+                "version",
+                "durationSeconds",
+                "outputWidth",
+                "outputHeight",
+                "captioned",
+                "noSpeechDeclared",
+                "description",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "nextCursor": {
+            "format": "uuid",
+            "nullable": true,
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "items",
+          "nextCursor",
+        ],
+        "type": "object",
+      },
+      "MediaReviewResult": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "replayed": {
+            "type": "boolean",
+          },
+          "state": {
+            "enum": [
+              "ready",
+              "rejected",
+            ],
+            "type": "string",
+          },
+          "version": {
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "id",
+          "state",
+          "version",
+          "replayed",
+        ],
+        "type": "object",
+      },
+      "MediaUploadCompleteCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "sha256",
+        ],
+        "type": "object",
+      },
+      "MediaUploadIntent": {
+        "additionalProperties": false,
+        "properties": {
+          "expiresAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "headers": {
+            "additionalProperties": {
+              "type": "string",
+            },
+            "type": "object",
+          },
+          "mediaId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "method": {
+            "enum": [
+              "PUT",
+            ],
+            "type": "string",
+          },
+          "replayed": {
+            "type": "boolean",
+          },
+          "state": {
+            "enum": [
+              "pending_upload",
+            ],
+            "type": "string",
+          },
+          "url": {
+            "format": "uri",
+            "type": "string",
+          },
+        },
+        "required": [
+          "mediaId",
+          "state",
+          "url",
+          "method",
+          "headers",
+          "expiresAt",
+          "replayed",
+        ],
+        "type": "object",
+      },
+      "MediaUploadIntentCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "bytes": {
+            "maximum": 26214400,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "captionText": {
+            "type": "string",
+          },
+          "description": {
+            "maxLength": 1000,
+            "minLength": 10,
+            "type": "string",
+          },
+          "noSpeechDeclared": {
+            "default": false,
+            "type": "boolean",
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "noSpeechDeclared",
+          "bytes",
+          "sha256",
+        ],
+        "type": "object",
+      },
+      "PlatformReviewQueue": {
+        "additionalProperties": false,
+        "properties": {
+          "applications": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "description": {
+                  "nullable": true,
+                  "type": "string",
+                },
+                "displayName": {
+                  "nullable": true,
+                  "type": "string",
+                },
+                "id": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "locations": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "address": {
+                        "nullable": true,
+                        "type": "string",
+                      },
+                      "city": {
+                        "nullable": true,
+                        "type": "string",
+                      },
+                      "label": {
+                        "nullable": true,
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "label",
+                      "city",
+                      "address",
+                    ],
+                    "type": "object",
+                  },
+                  "type": "array",
+                },
+                "slug": {
+                  "nullable": true,
+                  "type": "string",
+                },
+              },
+              "required": [
+                "id",
+                "slug",
+                "displayName",
+                "description",
+                "locations",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "applicationsNextCursor": {
+            "format": "uuid",
+            "nullable": true,
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "listings": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "listing": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "category": {
+                      "enum": [
+                        "goods",
+                        "home",
+                        "fashion",
+                        "beauty",
+                        "appointment",
+                        "education",
+                        "repair",
+                      ],
+                      "type": "string",
+                    },
+                    "description": {
+                      "maxLength": 4000,
+                      "minLength": 10,
+                      "type": "string",
+                    },
+                    "durationMinutes": {
+                      "maximum": 480,
+                      "minimum": 15,
+                      "type": "integer",
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "kind": {
+                      "enum": [
+                        "product",
+                        "service",
+                      ],
+                      "type": "string",
+                    },
+                    "priceCents": {
+                      "exclusiveMinimum": true,
+                      "maximum": 100000000,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "shortVideo": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "description": {
+                          "nullable": true,
+                          "type": "string",
+                        },
+                        "hasCaptions": {
+                          "type": "boolean",
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string",
+                        },
+                      },
+                      "required": [
+                        "id",
+                        "description",
+                        "hasCaptions",
+                      ],
+                      "type": "object",
+                    },
+                    "state": {
+                      "enum": [
+                        "draft",
+                        "pending_review",
+                        "published",
+                        "rejected",
+                        "unpublished",
+                      ],
+                      "type": "string",
+                    },
+                    "title": {
+                      "maxLength": 160,
+                      "minLength": 3,
+                      "type": "string",
+                    },
+                    "variants": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "label": {
+                            "maxLength": 120,
+                            "minLength": 1,
+                            "type": "string",
+                          },
+                          "priceCents": {
+                            "exclusiveMinimum": true,
+                            "maximum": 100000000,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                          "sku": {
+                            "maxLength": 80,
+                            "minLength": 1,
+                            "type": "string",
+                          },
+                        },
+                        "required": [
+                          "sku",
+                          "label",
+                          "priceCents",
+                        ],
+                        "type": "object",
+                      },
+                      "maxItems": 100,
+                      "minItems": 2,
+                      "type": "array",
+                    },
+                    "version": {
+                      "exclusiveMinimum": true,
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                  },
+                  "required": [
+                    "kind",
+                    "category",
+                    "title",
+                    "description",
+                    "id",
+                    "state",
+                    "version",
+                  ],
+                  "type": "object",
+                },
+                "vendorId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "vendorName": {
+                  "nullable": true,
+                  "type": "string",
+                },
+              },
+              "required": [
+                "vendorId",
+                "vendorName",
+                "listing",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "listingsNextCursor": {
+            "format": "uuid",
+            "nullable": true,
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "applications",
+          "listings",
+          "applicationsNextCursor",
+          "listingsNextCursor",
         ],
         "type": "object",
       },
@@ -918,6 +1614,29 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
                   "maximum": 100000000,
                   "minimum": 0,
                   "type": "integer",
+                },
+                "shortVideo": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "description": {
+                      "nullable": true,
+                      "type": "string",
+                    },
+                    "hasCaptions": {
+                      "type": "boolean",
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "id",
+                    "description",
+                    "hasCaptions",
+                  ],
+                  "type": "object",
                 },
                 "state": {
                   "enum": [
@@ -1060,6 +1779,29 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
                   "maximum": 100000000,
                   "minimum": 0,
                   "type": "integer",
+                },
+                "shortVideo": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "description": {
+                      "nullable": true,
+                      "type": "string",
+                    },
+                    "hasCaptions": {
+                      "type": "boolean",
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "id",
+                    "description",
+                    "hasCaptions",
+                  ],
+                  "type": "object",
                 },
                 "state": {
                   "enum": [
@@ -1252,161 +1994,6 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
         "type": "object",
       },
-      "SyntheticAccount": {
-        "additionalProperties": false,
-        "properties": {
-          "adultVerificationState": {
-            "enum": [
-              "verified",
-              "pending",
-              "rejected",
-            ],
-            "type": "string",
-          },
-          "email": {
-            "format": "email",
-            "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
-            "type": "string",
-          },
-          "id": {
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-            "type": "string",
-          },
-        },
-        "required": [
-          "id",
-          "email",
-          "adultVerificationState",
-        ],
-        "type": "object",
-      },
-      "SyntheticAccountProvision": {
-        "additionalProperties": false,
-        "properties": {
-          "adultVerificationState": {
-            "enum": [
-              "verified",
-              "pending",
-              "rejected",
-            ],
-            "type": "string",
-          },
-          "email": {
-            "allOf": [
-              {
-                "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
-                "type": "string",
-              },
-              {
-                "pattern": ".*@example\\.invalid$",
-                "type": "string",
-              },
-            ],
-            "format": "email",
-            "type": "string",
-          },
-        },
-        "required": [
-          "email",
-          "adultVerificationState",
-        ],
-        "type": "object",
-      },
-      "SyntheticProviderCallback": {
-        "additionalProperties": false,
-        "properties": {
-          "outcome": {
-            "enum": [
-              "confirmed",
-              "timed_out",
-            ],
-            "type": "string",
-          },
-          "providerReference": {
-            "maxLength": 200,
-            "minLength": 1,
-            "type": "string",
-          },
-        },
-        "required": [
-          "providerReference",
-          "outcome",
-        ],
-        "type": "object",
-      },
-      "SyntheticStaffGrant": {
-        "additionalProperties": false,
-        "properties": {
-          "locationIds": {
-            "items": {
-              "format": "uuid",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-              "type": "string",
-            },
-            "maxItems": 100,
-            "minItems": 1,
-            "type": "array",
-          },
-          "userId": {
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-            "type": "string",
-          },
-        },
-        "required": [
-          "userId",
-          "locationIds",
-        ],
-        "type": "object",
-      },
-      "SyntheticStaffGrantResult": {
-        "additionalProperties": false,
-        "properties": {
-          "expiresAt": {
-            "format": "date-time",
-            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
-            "type": "string",
-          },
-          "sessionId": {
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-            "type": "string",
-          },
-          "staffId": {
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-            "type": "string",
-          },
-          "userId": {
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
-            "type": "string",
-          },
-        },
-        "required": [
-          "staffId",
-          "userId",
-          "sessionId",
-          "expiresAt",
-        ],
-        "type": "object",
-      },
-      "SyntheticStaffRevokeResult": {
-        "additionalProperties": false,
-        "properties": {
-          "revoked": {
-            "enum": [
-              true,
-            ],
-            "type": "boolean",
-          },
-        },
-        "required": [
-          "revoked",
-        ],
-        "type": "object",
-      },
       "VendorApplicationCommand": {
         "additionalProperties": false,
         "properties": {
@@ -1502,7 +2089,6 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         "required": [
           "vendorId",
           "locationId",
-          "sessionId",
           "state",
           "replayed",
         ],
@@ -1554,19 +2140,268 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
         "type": "object",
       },
+      "VendorCatalog": {
+        "additionalProperties": false,
+        "properties": {
+          "applicationState": {
+            "enum": [
+              "pending",
+              "approved",
+              "rejected",
+              "restricted",
+            ],
+            "type": "string",
+          },
+          "description": {
+            "nullable": true,
+            "type": "string",
+          },
+          "displayName": {
+            "nullable": true,
+            "type": "string",
+          },
+          "id": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "listings": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "category": {
+                  "enum": [
+                    "goods",
+                    "home",
+                    "fashion",
+                    "beauty",
+                    "appointment",
+                    "education",
+                    "repair",
+                  ],
+                  "type": "string",
+                },
+                "description": {
+                  "maxLength": 4000,
+                  "minLength": 10,
+                  "type": "string",
+                },
+                "durationMinutes": {
+                  "maximum": 480,
+                  "minimum": 15,
+                  "type": "integer",
+                },
+                "id": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "kind": {
+                  "enum": [
+                    "product",
+                    "service",
+                  ],
+                  "type": "string",
+                },
+                "priceCents": {
+                  "exclusiveMinimum": true,
+                  "maximum": 100000000,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+                "shortVideo": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "description": {
+                      "nullable": true,
+                      "type": "string",
+                    },
+                    "hasCaptions": {
+                      "type": "boolean",
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "id",
+                    "description",
+                    "hasCaptions",
+                  ],
+                  "type": "object",
+                },
+                "state": {
+                  "enum": [
+                    "draft",
+                    "pending_review",
+                    "published",
+                    "rejected",
+                    "unpublished",
+                  ],
+                  "type": "string",
+                },
+                "title": {
+                  "maxLength": 160,
+                  "minLength": 3,
+                  "type": "string",
+                },
+                "variants": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "label": {
+                        "maxLength": 120,
+                        "minLength": 1,
+                        "type": "string",
+                      },
+                      "priceCents": {
+                        "exclusiveMinimum": true,
+                        "maximum": 100000000,
+                        "minimum": 0,
+                        "type": "integer",
+                      },
+                      "sku": {
+                        "maxLength": 80,
+                        "minLength": 1,
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "sku",
+                      "label",
+                      "priceCents",
+                    ],
+                    "type": "object",
+                  },
+                  "maxItems": 100,
+                  "minItems": 2,
+                  "type": "array",
+                },
+                "version": {
+                  "exclusiveMinimum": true,
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+              },
+              "required": [
+                "kind",
+                "category",
+                "title",
+                "description",
+                "id",
+                "state",
+                "version",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "locations": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "address": {
+                  "nullable": true,
+                  "type": "string",
+                },
+                "city": {
+                  "nullable": true,
+                  "type": "string",
+                },
+                "id": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "label": {
+                  "nullable": true,
+                  "type": "string",
+                },
+              },
+              "required": [
+                "id",
+                "label",
+                "city",
+                "address",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "slug": {
+            "nullable": true,
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+          "applicationState",
+          "slug",
+          "displayName",
+          "description",
+          "locations",
+          "listings",
+        ],
+        "type": "object",
+      },
+      "VendorMemberships": {
+        "additionalProperties": false,
+        "properties": {
+          "activeVendorId": {
+            "format": "uuid",
+            "nullable": true,
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "items": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "active": {
+                  "type": "boolean",
+                },
+                "displayName": {
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "vendorId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "vendorId",
+                "displayName",
+                "active",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+        },
+        "required": [
+          "activeVendorId",
+          "items",
+        ],
+        "type": "object",
+      },
     },
     "securitySchemes": {
-      "junction-session": {
-        "description": "Synthetic session identifier used by the current foundation endpoints.",
-        "in": "header",
-        "name": "x-junction-session",
+      "junction-auth-cookie": {
+        "description": "Better Auth session cookie for private staging identity.",
+        "in": "cookie",
+        "name": "__Secure-junction-auth.session_token",
         "type": "apiKey",
       },
     },
   },
   "info": {
     "contact": {},
-    "description": "Synthetic-runtime API for the Project Junction platform foundation. Every response declares X-API-Version: v1 and X-API-Lifecycle: active.",
+    "description": "Private staging API backed by real account and provider integrations. Every response declares X-API-Version: v1 and X-API-Lifecycle: active.",
     "title": "Project Junction API",
     "version": "v1",
   },
@@ -1575,17 +2410,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
     "/v1/access-context": {
       "get": {
         "operationId": "AppController_accessContext",
-        "parameters": [
-          {
-            "description": "Synthetic session identifier.",
-            "in": "header",
-            "name": "x-junction-session",
-            "required": true,
-            "schema": {
-              "type": "string",
-            },
-          },
-        ],
+        "parameters": [],
         "responses": {
           "200": {
             "content": {
@@ -1610,7 +2435,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         },
         "security": [
           {
-            "junction-session": [],
+            "junction-auth-cookie": [],
           },
         ],
         "summary": "Derive the current scoped access context.",
@@ -1619,19 +2444,94 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
       },
     },
+    "/v1/account/active-vendor": {
+      "post": {
+        "operationId": "AppController_selectActiveVendor",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActiveVendorSelection",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActiveVendorSelectionResult",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Select an eligible Vendor Owner membership after recent MFA, or return to the Customer scope.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/account/vendor-memberships": {
+      "get": {
+        "operationId": "AppController_listOwnerMemberships",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorMemberships",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "List the signed-in adult account’s eligible Vendor Owner memberships.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
     "/v1/catalog-exports/v1": {
       "get": {
         "operationId": "AppController_exportCatalog",
-        "parameters": [
-          {
-            "in": "header",
-            "name": "x-junction-session",
-            "required": true,
-            "schema": {
-              "type": "string",
-            },
-          },
-        ],
+        "parameters": [],
         "responses": {
           "200": {
             "description": "",
@@ -1639,7 +2539,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         },
         "security": [
           {
-            "junction-session": [],
+            "junction-auth-cookie": [],
           },
         ],
         "summary": "Export only the active Vendor catalog in the versioned CSV template.",
@@ -1655,14 +2555,6 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           {
             "in": "header",
             "name": "idempotency-key",
-            "required": true,
-            "schema": {
-              "type": "string",
-            },
-          },
-          {
-            "in": "header",
-            "name": "x-junction-session",
             "required": true,
             "schema": {
               "type": "string",
@@ -1693,7 +2585,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         },
         "security": [
           {
-            "junction-session": [],
+            "junction-auth-cookie": [],
           },
         ],
         "summary": "Dry-run or idempotently commit the versioned Vendor catalog CSV template.",
@@ -1702,94 +2594,16 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
       },
     },
-    "/v1/demo/workspaces": {
-      "post": {
-        "operationId": "AppController_createDemoWorkspace",
+    "/v1/customer/discovery": {
+      "get": {
+        "operationId": "AppController_readCustomerDiscoveryState",
         "parameters": [],
         "responses": {
-          "201": {
+          "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DemoWorkspace",
-                },
-              },
-            },
-            "description": "",
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError",
-                },
-              },
-            },
-            "description": "",
-          },
-        },
-        "summary": "Create an isolated synthetic workspace that expires after 24 hours.",
-        "tags": [
-          "foundation",
-        ],
-      },
-    },
-    "/v1/demo/workspaces/{workspaceId}/personas/{personaKey}/sessions": {
-      "post": {
-        "operationId": "AppController_switchDemoPersona",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "workspaceId",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string",
-            },
-          },
-          {
-            "in": "path",
-            "name": "personaKey",
-            "required": true,
-            "schema": {
-              "enum": [
-                "customer",
-                "vendor_owner",
-                "service_staff",
-                "support",
-                "trust",
-                "finance",
-                "platform_owner",
-              ],
-              "type": "string",
-            },
-          },
-          {
-            "description": "The current demo session identifier. It is revoked after switching.",
-            "in": "header",
-            "name": "x-junction-session",
-            "required": true,
-            "schema": {
-              "type": "string",
-            },
-          },
-        ],
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DemoSession",
-                },
-              },
-            },
-            "description": "",
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError",
+                  "$ref": "#/components/schemas/CustomerDiscoveryState",
                 },
               },
             },
@@ -1798,10 +2612,10 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         },
         "security": [
           {
-            "junction-session": [],
+            "junction-auth-cookie": [],
           },
         ],
-        "summary": "Switch the active synthetic demo persona and issue a fresh scoped session.",
+        "summary": "Read the current Customer saved listings, followed Vendors, and personalization preference.",
         "tags": [
           "foundation",
         ],
@@ -1810,16 +2624,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
     "/v1/discovery/preference": {
       "post": {
         "operationId": "AppController_setDiscoveryPreference",
-        "parameters": [
-          {
-            "in": "header",
-            "name": "x-junction-session",
-            "required": true,
-            "schema": {
-              "type": "string",
-            },
-          },
-        ],
+        "parameters": [],
         "responses": {
           "201": {
             "description": "",
@@ -1827,142 +2632,10 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         },
         "security": [
           {
-            "junction-session": [],
+            "junction-auth-cookie": [],
           },
         ],
         "summary": "Set an explicit, revocable personalization preference.",
-        "tags": [
-          "foundation",
-        ],
-      },
-    },
-    "/v1/foundation/audit-markers": {
-      "post": {
-        "operationId": "AppController_auditMarker",
-        "parameters": [
-          {
-            "description": "A 16-200 character URL-safe request key.",
-            "in": "header",
-            "name": "idempotency-key",
-            "required": true,
-            "schema": {
-              "type": "string",
-            },
-          },
-          {
-            "description": "Synthetic session identifier.",
-            "in": "header",
-            "name": "x-junction-session",
-            "required": true,
-            "schema": {
-              "type": "string",
-            },
-          },
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AuditMarkerCommand",
-              },
-            },
-          },
-          "required": true,
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CommandOutcome",
-                },
-              },
-            },
-            "description": "",
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError",
-                },
-              },
-            },
-            "description": "",
-          },
-        },
-        "security": [
-          {
-            "junction-session": [],
-          },
-        ],
-        "summary": "Record an idempotent synthetic foundation audit marker.",
-        "tags": [
-          "foundation",
-        ],
-      },
-    },
-    "/v1/foundation/elevated-audit-markers": {
-      "post": {
-        "operationId": "AppController_elevatedAuditMarker",
-        "parameters": [
-          {
-            "description": "A 16-200 character URL-safe request key.",
-            "in": "header",
-            "name": "idempotency-key",
-            "required": true,
-            "schema": {
-              "type": "string",
-            },
-          },
-          {
-            "description": "A current Vendor Owner session with MFA and recent authentication.",
-            "in": "header",
-            "name": "x-junction-session",
-            "required": true,
-            "schema": {
-              "type": "string",
-            },
-          },
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AuditMarkerCommand",
-              },
-            },
-          },
-          "required": true,
-        },
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CommandOutcome",
-                },
-              },
-            },
-            "description": "",
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError",
-                },
-              },
-            },
-            "description": "",
-          },
-        },
-        "security": [
-          {
-            "junction-session": [],
-          },
-        ],
-        "summary": "Record an elevated synthetic audit marker with Vendor Owner MFA and recent authentication.",
         "tags": [
           "foundation",
         ],
@@ -1978,15 +2651,6 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             "required": true,
             "schema": {
               "format": "uuid",
-              "type": "string",
-            },
-          },
-          {
-            "description": "Synthetic session identifier.",
-            "in": "header",
-            "name": "x-junction-session",
-            "required": true,
-            "schema": {
               "type": "string",
             },
           },
@@ -2015,103 +2679,10 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         },
         "security": [
           {
-            "junction-session": [],
+            "junction-auth-cookie": [],
           },
         ],
         "summary": "Read an active Vendor Location within the derived access scope.",
-        "tags": [
-          "foundation",
-        ],
-      },
-    },
-    "/v1/foundation/staff": {
-      "post": {
-        "operationId": "AppController_grantSyntheticStaff",
-        "parameters": [
-          {
-            "description": "Current synthetic Vendor Owner session.",
-            "in": "header",
-            "name": "x-junction-session",
-            "required": true,
-            "schema": {
-              "type": "string",
-            },
-          },
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SyntheticStaffGrant",
-              },
-            },
-          },
-          "required": true,
-        },
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SyntheticStaffGrantResult",
-                },
-              },
-            },
-            "description": "",
-          },
-        },
-        "security": [
-          {
-            "junction-session": [],
-          },
-        ],
-        "summary": "Grant a verified synthetic account a scoped Vendor Staff session.",
-        "tags": [
-          "foundation",
-        ],
-      },
-    },
-    "/v1/foundation/staff/{staffId}": {
-      "delete": {
-        "operationId": "AppController_revokeSyntheticStaff",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "staffId",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "type": "string",
-            },
-          },
-          {
-            "description": "Current synthetic Vendor Owner session.",
-            "in": "header",
-            "name": "x-junction-session",
-            "required": true,
-            "schema": {
-              "type": "string",
-            },
-          },
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SyntheticStaffRevokeResult",
-                },
-              },
-            },
-            "description": "",
-          },
-        },
-        "security": [
-          {
-            "junction-session": [],
-          },
-        ],
-        "summary": "Revoke a synthetic Vendor Staff binding and its active scoped sessions.",
         "tags": [
           "foundation",
         ],
@@ -2133,7 +2704,212 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             "description": "",
           },
         },
-        "summary": "Read synthetic API health.",
+        "summary": "Read private staging API health.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/identity/didit-webhook": {
+      "post": {
+        "operationId": "AppController_diditWebhook",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-signature-v2",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "summary": "Record a signed Didit sandbox status update for later age-level reconciliation.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/identity/verification-session": {
+      "post": {
+        "operationId": "AppController_identityVerificationSession",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityVerificationSession",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Create a Didit sandbox verification session for the authenticated account.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/identity/verification-status": {
+      "get": {
+        "operationId": "AppController_identityVerificationStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityVerificationStatus",
+                },
+              },
+            },
+            "description": "",
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Read the authoritative Didit age-verification state for the authenticated account.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/inventory/listings/{listingId}/availability": {
+      "get": {
+        "operationId": "AppController_readInventoryAvailability",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "listingId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+          {
+            "in": "query",
+            "name": "sku",
+            "required": false,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "in": "query",
+            "name": "locationId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryAvailability",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Read derived stock availability for a Product at an assigned Vendor Location.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/inventory/movements": {
+      "post": {
+        "operationId": "AppController_createInventoryMovement",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InventoryMovementCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryMovementResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Append an idempotent received, adjustment, or damage movement for a Vendor Product.",
         "tags": [
           "foundation",
         ],
@@ -2146,14 +2922,6 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           {
             "in": "header",
             "name": "idempotency-key",
-            "required": true,
-            "schema": {
-              "type": "string",
-            },
-          },
-          {
-            "in": "header",
-            "name": "x-junction-session",
             "required": true,
             "schema": {
               "type": "string",
@@ -2184,7 +2952,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         },
         "security": [
           {
-            "junction-session": [],
+            "junction-auth-cookie": [],
           },
         ],
         "summary": "Create a private Vendor-owned fixed-price listing.",
@@ -2208,14 +2976,6 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           {
             "in": "header",
             "name": "idempotency-key",
-            "required": true,
-            "schema": {
-              "type": "string",
-            },
-          },
-          {
-            "in": "header",
-            "name": "x-junction-session",
             "required": true,
             "schema": {
               "type": "string",
@@ -2246,7 +3006,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         },
         "security": [
           {
-            "junction-session": [],
+            "junction-auth-cookie": [],
           },
         ],
         "summary": "Approve or reject a pending listing after policy review.",
@@ -2270,14 +3030,6 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           {
             "in": "header",
             "name": "idempotency-key",
-            "required": true,
-            "schema": {
-              "type": "string",
-            },
-          },
-          {
-            "in": "header",
-            "name": "x-junction-session",
             "required": true,
             "schema": {
               "type": "string",
@@ -2308,7 +3060,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         },
         "security": [
           {
-            "junction-session": [],
+            "junction-auth-cookie": [],
           },
         ],
         "summary": "Revise a draft, rejected, or unpublished listing before resubmission.",
@@ -2329,14 +3081,6 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
               "type": "string",
             },
           },
-          {
-            "in": "header",
-            "name": "x-junction-session",
-            "required": true,
-            "schema": {
-              "type": "string",
-            },
-          },
         ],
         "responses": {
           "201": {
@@ -2345,7 +3089,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         },
         "security": [
           {
-            "junction-session": [],
+            "junction-auth-cookie": [],
           },
         ],
         "summary": "Save or remove a published listing for the current Customer.",
@@ -2361,14 +3105,6 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           {
             "in": "path",
             "name": "listingId",
-            "required": true,
-            "schema": {
-              "type": "string",
-            },
-          },
-          {
-            "in": "header",
-            "name": "x-junction-session",
             "required": true,
             "schema": {
               "type": "string",
@@ -2399,10 +3135,10 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         },
         "security": [
           {
-            "junction-session": [],
+            "junction-auth-cookie": [],
           },
         ],
-        "summary": "Process a quarantined short video; captioning or an explicit no-speech description is required before it is ready.",
+        "summary": "Create quarantined short-video metadata; upload, scanning, and processing are required before publication.",
         "tags": [
           "foundation",
         ],
@@ -2428,14 +3164,6 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
               "type": "string",
             },
           },
-          {
-            "in": "header",
-            "name": "x-junction-session",
-            "required": true,
-            "schema": {
-              "type": "string",
-            },
-          },
         ],
         "responses": {
           "201": {
@@ -2451,7 +3179,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         },
         "security": [
           {
-            "junction-session": [],
+            "junction-auth-cookie": [],
           },
         ],
         "summary": "Submit a private listing for Platform publication review.",
@@ -2480,14 +3208,6 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
               "type": "string",
             },
           },
-          {
-            "in": "header",
-            "name": "x-junction-session",
-            "required": true,
-            "schema": {
-              "type": "string",
-            },
-          },
         ],
         "responses": {
           "200": {
@@ -2503,10 +3223,332 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         },
         "security": [
           {
-            "junction-session": [],
+            "junction-auth-cookie": [],
           },
         ],
         "summary": "Unpublish a Vendor listing and remove its public search projection.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/listings/{listingId}/video-upload-intents": {
+      "post": {
+        "operationId": "AppController_createVideoUploadIntent",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "listingId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaUploadIntentCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaUploadIntent",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Create a scoped, ten-minute signed PUT grant for a private quarantine object.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/media/{mediaId}/complete-upload": {
+      "post": {
+        "operationId": "AppController_completeVideoUpload",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mediaId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaUploadCompleteCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaAsset",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Verify and seal an uploaded MP4 in private quarantine; safe processing is still required.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/platform/catalog-health": {
+      "get": {
+        "operationId": "AppController_readPlatformCatalogHealth",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogHealth",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Read scoped catalog review, import, media, and search projection health.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/platform/media-review-queue": {
+      "get": {
+        "operationId": "AppController_readPlatformMediaQueue",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer",
+            },
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaReviewQueue",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Read processed, private videos awaiting scoped Platform media moderation.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/platform/media/{mediaId}/preview": {
+      "get": {
+        "operationId": "AppController_previewMediaForReview",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mediaId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaPreview",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Issue short-lived private processed-video and poster preview grants to a scoped reviewer.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/platform/media/{mediaId}/review": {
+      "post": {
+        "operationId": "AppController_reviewMedia",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mediaId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaReviewCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaReviewResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Approve or reject a scanned, processed media version after Platform moderation.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/platform/review-queue": {
+      "get": {
+        "operationId": "AppController_readPlatformReviewQueue",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer",
+            },
+          },
+          {
+            "in": "query",
+            "name": "listingCursor",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+          {
+            "in": "query",
+            "name": "applicationCursor",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformReviewQueue",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Read scoped pending Vendor applications and approved-Vendor listings awaiting Platform review.",
         "tags": [
           "foundation",
         ],
@@ -2529,6 +3571,79 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
         },
         "summary": "Browse approved, published Product and Service listings from the rebuildable search projection.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/public/media/{mediaId}/captions.vtt": {
+      "get": {
+        "operationId": "AppController_publicCaptions",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mediaId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+          },
+        },
+        "summary": "Read reviewed WebVTT captions for a currently published video.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/public/media/{mediaId}/poster": {
+      "get": {
+        "operationId": "AppController_publicPoster",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mediaId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+          },
+        },
+        "summary": "Read a moderated poster only while its listing and Vendor remain published.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/public/media/{mediaId}/video": {
+      "get": {
+        "operationId": "AppController_publicVideo",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mediaId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+          },
+        },
+        "summary": "Stream a moderated video only while its listing and Vendor remain published.",
         "tags": [
           "foundation",
         ],
@@ -2586,7 +3701,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             "description": "",
           },
         },
-        "summary": "Browse explicitly published synthetic Vendor summaries without a session.",
+        "summary": "Browse published Vendor summaries.",
         "tags": [
           "foundation",
         ],
@@ -2623,48 +3738,6 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
       },
     },
-    "/v1/synthetic/accounts": {
-      "post": {
-        "operationId": "AppController_createSyntheticAccount",
-        "parameters": [
-          {
-            "description": "Local-only synthetic provisioning secret.",
-            "in": "header",
-            "name": "x-synthetic-provisioning-secret",
-            "required": true,
-            "schema": {
-              "type": "string",
-            },
-          },
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SyntheticAccountProvision",
-              },
-            },
-          },
-          "required": true,
-        },
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SyntheticAccount",
-                },
-              },
-            },
-            "description": "",
-          },
-        },
-        "summary": "Provision a local synthetic account for foundation verification.",
-        "tags": [
-          "foundation",
-        ],
-      },
-    },
     "/v1/vendor-applications": {
       "post": {
         "operationId": "AppController_createVendorApplication",
@@ -2672,14 +3745,6 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           {
             "in": "header",
             "name": "idempotency-key",
-            "required": true,
-            "schema": {
-              "type": "string",
-            },
-          },
-          {
-            "in": "header",
-            "name": "x-junction-session",
             "required": true,
             "schema": {
               "type": "string",
@@ -2710,7 +3775,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         },
         "security": [
           {
-            "junction-session": [],
+            "junction-auth-cookie": [],
           },
         ],
         "summary": "Create a private Vendor application, structured storefront, basic Location, and scoped Owner session.",
@@ -2734,14 +3799,6 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           {
             "in": "header",
             "name": "idempotency-key",
-            "required": true,
-            "schema": {
-              "type": "string",
-            },
-          },
-          {
-            "in": "header",
-            "name": "x-junction-session",
             "required": true,
             "schema": {
               "type": "string",
@@ -2772,7 +3829,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         },
         "security": [
           {
-            "junction-session": [],
+            "junction-auth-cookie": [],
           },
         ],
         "summary": "Approve, reject, or restrict a Vendor application before public publication is enabled.",
@@ -2788,14 +3845,6 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           {
             "in": "header",
             "name": "idempotency-key",
-            "required": true,
-            "schema": {
-              "type": "string",
-            },
-          },
-          {
-            "in": "header",
-            "name": "x-junction-session",
             "required": true,
             "schema": {
               "type": "string",
@@ -2826,10 +3875,37 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         },
         "security": [
           {
-            "junction-session": [],
+            "junction-auth-cookie": [],
           },
         ],
         "summary": "Update the active Vendor structured storefront before or after approval.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/vendor/catalog": {
+      "get": {
+        "operationId": "AppController_readVendorCatalog",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorCatalog",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Read the active Vendor private storefront, locations, and listings across all publication states.",
         "tags": [
           "foundation",
         ],
@@ -2847,14 +3923,6 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
               "type": "string",
             },
           },
-          {
-            "in": "header",
-            "name": "x-junction-session",
-            "required": true,
-            "schema": {
-              "type": "string",
-            },
-          },
         ],
         "responses": {
           "201": {
@@ -2863,82 +3931,10 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         },
         "security": [
           {
-            "junction-session": [],
+            "junction-auth-cookie": [],
           },
         ],
         "summary": "Follow or unfollow an approved Vendor for the current Customer.",
-        "tags": [
-          "foundation",
-        ],
-      },
-    },
-    "/v1/webhooks/{provider}": {
-      "post": {
-        "operationId": "AppController_providerWebhook",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "provider",
-            "required": true,
-            "schema": {
-              "enum": [
-                "fake-payment",
-              ],
-              "type": "string",
-            },
-          },
-          {
-            "description": "HMAC-SHA256 of the raw request body, prefixed with sha256=.",
-            "in": "header",
-            "name": "x-provider-signature",
-            "required": true,
-            "schema": {
-              "type": "string",
-            },
-          },
-          {
-            "description": "Provider event identifier.",
-            "in": "header",
-            "name": "x-provider-event-id",
-            "required": true,
-            "schema": {
-              "type": "string",
-            },
-          },
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SyntheticProviderCallback",
-              },
-            },
-          },
-          "required": true,
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProviderWebhookReceipt",
-                },
-              },
-            },
-            "description": "",
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiError",
-                },
-              },
-            },
-            "description": "",
-          },
-        },
-        "summary": "Accept a synthetic provider callback into the durable inbox.",
         "tags": [
           "foundation",
         ],

@@ -4,11 +4,13 @@ const DEFAULT_THROTTLE_TTL_MS = 60_000
 const DEFAULT_THROTTLE_LIMIT = 100
 
 export interface ApiRuntimeConfig {
+	bindAddress: string
 	corsAllowedOrigins: string[]
 	logLevel: string
 	port: number
 	realtimeRedisFanout: boolean
 	redisUrl: string | undefined
+	runtimeMode: 'local' | 'staging'
 	throttleLimit: number
 	throttleTtlMs: number
 }
@@ -18,14 +20,37 @@ interface ConfigReader {
 }
 
 export function getApiRuntimeConfig(configService: ConfigReader): ApiRuntimeConfig {
+	// Nest unit tests instantiate this module without the process-level bootstrap.
+	// Actual API startup validates an explicit runtime before this configuration is read.
+	const runtimeMode = configService.get<string>('JUNCTION_RUNTIME_MODE') ?? 'local'
+	if (runtimeMode !== 'local' && runtimeMode !== 'staging') throw new Error('JUNCTION_RUNTIME_MODE must be local or staging.')
+	const staging = runtimeMode === 'staging'
+	const stagingOrigin = staging ? configService.get<string>('BETTER_AUTH_URL') : undefined
+	if (staging && !stagingOrigin) throw new Error('BETTER_AUTH_URL is required for staging CORS.')
+	const corsAllowedOrigins = staging
+		? parseCorsAllowedOrigins(configService.get<string>('CORS_ALLOWED_ORIGINS') ?? stagingOrigin)
+		: parseCorsAllowedOrigins(configService.get<string>('CORS_ALLOWED_ORIGINS'))
+	if (staging && (corsAllowedOrigins.length !== 1 || corsAllowedOrigins[0] !== stagingOrigin || !stagingOrigin?.startsWith('https://'))) {
+		throw new Error('Staging CORS must allow only the BETTER_AUTH_URL HTTPS origin.')
+	}
+	const redisFanout = parseRealtimeRedisFanout(configService.get<string>('REALTIME_REDIS_FANOUT'), configService.get<string>('REDIS_URL'))
+	if (staging && !redisFanout.realtimeRedisFanout) throw new Error('Staging realtime requires Redis fanout.')
 	return {
-		corsAllowedOrigins: parseCorsAllowedOrigins(configService.get<string>('CORS_ALLOWED_ORIGINS')),
+		bindAddress: parseBindAddress(configService.get<string>('API_BIND_ADDRESS')),
+		corsAllowedOrigins,
 		logLevel: configService.get<string>('LOG_LEVEL') ?? 'info',
 		port: parsePort(configService.get<string>('API_PORT') ?? configService.get<string>('PORT')),
-		...parseRealtimeRedisFanout(configService.get<string>('REALTIME_REDIS_FANOUT'), configService.get<string>('REDIS_URL')),
+		...redisFanout,
+		runtimeMode,
 		throttleLimit: parsePositiveInteger(configService.get<string>('THROTTLE_LIMIT'), DEFAULT_THROTTLE_LIMIT, 'THROTTLE_LIMIT'),
 		throttleTtlMs: parsePositiveInteger(configService.get<string>('THROTTLE_TTL_MS'), DEFAULT_THROTTLE_TTL_MS, 'THROTTLE_TTL_MS'),
 	}
+}
+
+function parseBindAddress(value: string | undefined): string {
+	if (value === undefined) return '127.0.0.1'
+	if (value === '127.0.0.1' || value === '0.0.0.0') return value
+	throw new Error('API_BIND_ADDRESS must be 127.0.0.1 or 0.0.0.0.')
 }
 
 function parseRealtimeRedisFanout(value: string | undefined, redisUrl: string | undefined) {

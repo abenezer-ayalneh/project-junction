@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { Geist } from 'next/font/google'
 
 import { ThemeProvider } from '@/components/theme-provider'
+import { runtimeLabel } from '@/lib/runtime-label'
 
 const geist = Geist({
 	subsets: ['latin'],
@@ -11,8 +12,8 @@ const geist = Geist({
 })
 
 export const metadata: Metadata = {
-	title: 'Project Junction | Platform Foundation',
-	description: 'Synthetic-only platform foundation for Project Junction.',
+	title: `Junction | ${runtimeLabel}`,
+	description: `Browse approved Vendor offerings in ${runtimeLabel.toLowerCase()}.`,
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

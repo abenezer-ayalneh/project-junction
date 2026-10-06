@@ -5,7 +5,8 @@
 
 | Term                  | Meaning                                                                                      | Avoid                                         |
 | --------------------- | -------------------------------------------------------------------------------------------- | --------------------------------------------- |
-| User                  | durable adult account identity; may act as Customer and hold memberships                     | “customer account” when the role is not known |
+| User                  | durable account identity, authenticated by verified email or an approved identity provider; may act as Customer and hold memberships | “customer account” when the role is not known |
+| Adult verification    | separate identity and age-assurance state for a User; required before public release, not implied by email or Google verification | verified email, Google sign-in                  |
 | Customer              | User acting for their own Cart/Purchase/Booking                                              | “buyer” for every actor                       |
 | Vendor                | business seller entity that owns a Storefront and can contract on its components             | “merchant account” for a User                 |
 | Vendor member         | User with a preset role in one Vendor                                                        | “Vendor” when a membership is meant           |

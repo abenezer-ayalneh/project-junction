@@ -2,7 +2,15 @@ import { ConfigService } from '@nestjs/config'
 import { SkipThrottle } from '@nestjs/throttler'
 import { ConnectedSocket, MessageBody, OnGatewayInit, SubscribeMessage, WebSocketGateway } from '@nestjs/websockets'
 import { createAdapter } from '@socket.io/redis-adapter'
-import { RealtimeJoinRequestSchema, type RealtimeJoinResult, RealtimeJoinResultSchema, type RealtimeRoom } from 'contracts'
+import {
+	DomainEventSchema,
+	RealtimeCursorAckSchema,
+	type RealtimeFoundationEvent,
+	RealtimeJoinRequestSchema,
+	type RealtimeJoinResult,
+	RealtimeJoinResultSchema,
+	type RealtimeRoom,
+} from 'contracts'
 import { createClient } from 'redis'
 import type { DefaultEventsMap, Server, Socket } from 'socket.io'
 
@@ -21,14 +29,6 @@ function roomKey(room: RealtimeRoom): string {
 	return `location:${room.workspaceId}:${room.vendorId}:${room.locationId}`
 }
 
-function sessionFrom(socket: RealtimeSocket): string | undefined {
-	const auth = socket.handshake.auth as unknown
-	if (typeof auth === 'object' && auth && 'sessionId' in auth && typeof (auth as Record<string, unknown>)['sessionId'] === 'string')
-		return (auth as Record<string, string>)['sessionId']
-	const headerSession = socket.handshake.headers['x-junction-session']
-	return typeof headerSession === 'string' ? headerSession : undefined
-}
-
 function storedSessionFrom(data: unknown): string | undefined {
 	return typeof data === 'object' && data && 'sessionId' in data && typeof data.sessionId === 'string' ? data.sessionId : undefined
 }
@@ -37,6 +37,7 @@ function storedSessionFrom(data: unknown): string | undefined {
 export class RealtimeGateway implements OnGatewayInit {
 	private crossProcessFanout = false
 	private fanoutReady: Promise<void> = Promise.resolve()
+	private redisClients: Array<{ readonly isReady: boolean }> = []
 	private server: Server | undefined
 
 	constructor(
@@ -55,6 +56,29 @@ export class RealtimeGateway implements OnGatewayInit {
 			this.crossProcessFanout = true
 			this.fanoutReady = this.configureRedisFanout(server, config.redisUrl)
 			void this.fanoutReady.catch(() => undefined)
+		}
+	}
+
+	@SubscribeMessage('room.ack')
+	@SkipThrottle()
+	async acknowledge(@ConnectedSocket() socket: RealtimeSocket, @MessageBody() input: unknown): Promise<void> {
+		const acknowledgement = RealtimeCursorAckSchema.safeParse(input)
+		const sessionId = socket.data['sessionId']
+		if (!acknowledgement.success || typeof sessionId !== 'string') return
+		try {
+			await this.foundation.acknowledgeRealtimeCursor(sessionId, acknowledgement.data.cursor)
+		} catch {
+			this.leaveScopedRooms(socket)
+		}
+	}
+
+	async ready(): Promise<void> {
+		if (getApiRuntimeConfig(this.configService).runtimeMode === 'staging' && !this.crossProcessFanout) {
+			throw new Error('Staging realtime Redis fanout is not initialized.')
+		}
+		await this.fanoutReady
+		if (getApiRuntimeConfig(this.configService).runtimeMode === 'staging' && this.redisClients.some((client) => !client.isReady)) {
+			throw new Error('Staging realtime Redis clients are disconnected.')
 		}
 	}
 
@@ -86,6 +110,27 @@ export class RealtimeGateway implements OnGatewayInit {
 		)
 	}
 
+	private async publishDomainEvent(server: Server, eventId: string): Promise<void> {
+		const event = await this.foundation.realtimeDomainEventForEventId(eventId)
+		if (!event) return
+		const room = roomKey({ kind: 'workspace', workspaceId: event.scope.workspaceId })
+		const candidates = [...server.sockets.sockets.values()].filter((socket) => socket.rooms.has(room))
+		await Promise.all(candidates.map((candidate) => this.emitIfAuthorized(candidate as RealtimeSocket, event, room)))
+	}
+
+	private async emitIfAuthorized(socket: RealtimeSocket, event: RealtimeFoundationEvent, room: string): Promise<void> {
+		try {
+			const current = await this.foundation.accessContext(socket.data.sessionId)
+			if (current.workspaceId !== event.scope.workspaceId) {
+				await socket.leave(room)
+				return
+			}
+			socket.emit('realtime.event', event)
+		} catch {
+			await socket.leave(room)
+		}
+	}
+
 	@SubscribeMessage('room.join')
 	@SkipThrottle()
 	async join(@ConnectedSocket() socket: RealtimeSocket, @MessageBody() input: unknown): Promise<void> {
@@ -95,8 +140,8 @@ export class RealtimeGateway implements OnGatewayInit {
 		try {
 			const context = await this.foundation.accessContext(sessionId)
 			if (!this.allowed(context, request.data.room)) return this.respond(socket, denied())
-			const replay = await this.foundation.realtimeReplay(sessionId, request.data.cursor)
 			await socket.join(roomKey(request.data.room))
+			const replay = await this.foundation.realtimeReplay(sessionId)
 			this.respond(
 				socket,
 				RealtimeJoinResultSchema.parse({
@@ -121,8 +166,8 @@ export class RealtimeGateway implements OnGatewayInit {
 	}
 
 	private async authorize(socket: RealtimeSocket, next: (error?: Error) => void): Promise<void> {
-		const sessionId = this.foundation.resolveSessionId(sessionFrom(socket), socket.handshake.headers.cookie)
 		try {
+			const sessionId = await this.foundation.authenticateFromCookie(socket.handshake.headers.cookie)
 			await this.fanoutReady
 			await this.foundation.accessContext(sessionId)
 			socket.data.sessionId = sessionId
@@ -149,11 +194,31 @@ export class RealtimeGateway implements OnGatewayInit {
 	private async configureRedisFanout(server: Server, redisUrl: string): Promise<void> {
 		const publisher = createClient({ url: redisUrl })
 		const subscriber = publisher.duplicate()
+		const runtimeMode = getApiRuntimeConfig(this.configService).runtimeMode
+		const domainSubscriber = publisher.duplicate()
+		for (const client of [publisher, subscriber, domainSubscriber]) {
+			client?.on('error', () => process.stderr.write(`${JSON.stringify({ type: 'realtime.redis-error' })}\n`))
+		}
 		try {
-			await Promise.all([publisher.connect(), subscriber.connect()])
+			await Promise.all([publisher.connect(), subscriber.connect(), domainSubscriber?.connect()])
 			server.adapter(createAdapter(publisher, subscriber))
+			if (domainSubscriber) {
+				await domainSubscriber.subscribe(`junction:${runtimeMode}:domain-events-live`, (message) => {
+					try {
+						const event = DomainEventSchema.safeParse(JSON.parse(message))
+						if (event.success) void this.publishDomainEvent(server, event.data.eventId).catch(() => undefined)
+					} catch {
+						// Malformed internal messages are ignored; clients can replay from PostgreSQL.
+					}
+				})
+			}
+			this.redisClients = [publisher, subscriber, ...(domainSubscriber ? [domainSubscriber] : [])]
 		} catch (error) {
-			await Promise.all([publisher.disconnect().catch(() => undefined), subscriber.disconnect().catch(() => undefined)])
+			await Promise.all([
+				publisher.disconnect().catch(() => undefined),
+				subscriber.disconnect().catch(() => undefined),
+				domainSubscriber?.disconnect().catch(() => undefined),
+			])
 			throw error
 		}
 	}

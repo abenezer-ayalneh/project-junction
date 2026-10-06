@@ -1,3 +1,10 @@
+# Development environment policy
+
+- Perform all development and testing on the user's local machine.
+- Do not use staging or remote hosts for development, routine verification, or acceptance testing, and do not deploy to staging unless the user explicitly requests it.
+- If a check cannot be completed locally, report the limitation instead of falling back to staging. Historical staging runbooks and acceptance plans do not authorize remote work.
+- Include this policy in delegated agent instructions and handoffs so every agent working on this project follows it.
+
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->
 

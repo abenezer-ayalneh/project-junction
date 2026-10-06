@@ -19,16 +19,21 @@ function percentile(samples, value) {
 }
 
 try {
-	const workspace = await repository.db.workspace.create({ data: { kind: 'synthetic' } })
+	const workspace = await repository.db.workspace.create({ data: { kind: 'real' } })
 	const user = await repository.db.user.create({
 		data: { email: `${randomUUID()}@example.invalid`, adultVerificationState: 'verified', verifiedAt: new Date() },
 	})
 	const vendor = await repository.db.vendor.create({ data: { workspaceId: workspace.id } })
 	const location = await repository.db.location.create({ data: { vendorId: vendor.id } })
 	await repository.db.vendorMembership.create({ data: { userId: user.id, vendorId: vendor.id, role: 'vendor_owner', locationIds: [location.id] } })
+	const expiresAt = new Date(Date.now() + 3600000)
 	const session = await repository.db.session.create({
-		data: { userId: user.id, workspaceId: workspace.id, activeVendorId: vendor.id, activeRole: 'vendor_owner', expiresAt: new Date(Date.now() + 3600000) },
+		data: { userId: user.id, workspaceId: workspace.id, activeVendorId: vendor.id, activeRole: 'vendor_owner', expiresAt },
 	})
+	await repository.db
+		.$executeRaw`INSERT INTO junction_auth."user" (id, name, email, "emailVerified") VALUES (${user.id}, ${'Workspace lock measurement'}, ${user.email}, true)`
+	await repository.db
+		.$executeRaw`INSERT INTO junction_auth.session (id, "expiresAt", token, "updatedAt", "userId") VALUES (${session.id}, ${expiresAt}, ${randomUUID()}, now(), ${user.id})`
 	fixture = { userId: user.id, workspaceId: workspace.id }
 
 	const startedAt = performance.now()

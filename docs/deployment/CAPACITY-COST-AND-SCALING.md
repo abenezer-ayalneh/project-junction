@@ -29,7 +29,7 @@ Before adding infrastructure:
 
 ## Cost register
 
-Track VPS, domain, R2 storage/operations/egress, B2 storage/transactions, Sentry, Better Stack, MapTiler, Resend, SMS staging tests, Stripe sandbox (normally non-billed but revalidate), Turnstile/Cloudflare features, and backup growth. For each, record current plan/tier, hard quota, alert threshold, overage behavior, owner, and fallback.
+Track VPS, domain, MinIO disk/IOPS/egress, B2 storage/transactions, Sentry, Better Stack, MapTiler, Resend, Didit Sandbox usage, SMS staging tests, Stripe sandbox (normally non-billed but revalidate), Turnstile/Cloudflare features, and backup growth. For each, record current plan/tier, hard quota, alert threshold, overage behavior, owner, and fallback.
 
 No subscription, tier selection, quota increase, or spend has been made by this documentation work. A source-backed cost review precedes each commitment and records retrieval date, currency/tax caveat, plan assumptions, expected usage, ceiling impact, cancellation path, and refresh trigger. The US$25 ceiling applies only to third-party services and excludes VPS/domain; it is a portfolio planning constraint, not a spend authorization or a commercial unit-economics model.
 

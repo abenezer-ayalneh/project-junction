@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="NxAngularConfigService" workspaceLocation="file://$PROJECT_DIR$/nx.json">
+    <projects>
+      <project name="api" file="file://$PROJECT_DIR$/apps/api/project.json" />
+      <project name="contracts" file="file://$PROJECT_DIR$/libs/contracts/project.json" />
+      <project name="platform-core" file="file://$PROJECT_DIR$/libs/platform-core/project.json" />
+      <project name="web" file="file://$PROJECT_DIR$/apps/web/project.json" />
+      <project name="worker" file="file://$PROJECT_DIR$/apps/worker/project.json" />
+    </projects>
+  </component>
+</project>

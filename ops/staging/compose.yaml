@@ -1,0 +1,312 @@
+name: project-junction-staging
+
+x-runtime-env: &runtime-env
+    NODE_ENV: production
+    JUNCTION_RUNTIME_MODE: staging
+    FOUNDATION_STORAGE: postgresql
+    REALTIME_REDIS_FANOUT: enabled
+    BETTER_AUTH_URL: ${BETTER_AUTH_URL:?}
+    RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:?}
+    DIDIT_WORKFLOW_ID: ${DIDIT_WORKFLOW_ID:?}
+    DIDIT_AGE_18_WORKFLOW_CONFIRMED: ${DIDIT_AGE_18_WORKFLOW_CONFIRMED:-}
+    MEDIA_S3_ENDPOINT: https://${STAGING_MINIO_HOSTNAME:?}
+    MEDIA_S3_REGION: us-east-1
+    MEDIA_S3_BUCKET: ${STAGING_MINIO_BUCKET:?}
+    MEDIA_CLAMD_HOST: clamav
+    MEDIA_CLAMD_PORT: '3310'
+
+x-runtime-secrets: &runtime-secrets
+    - { source: database_url, target: DATABASE_URL }
+    - { source: redis_url, target: REDIS_URL }
+    - { source: better_auth_secret, target: BETTER_AUTH_SECRET }
+    - { source: resend_api_key, target: RESEND_API_KEY }
+    - { source: didit_api_key, target: DIDIT_API_KEY }
+    - { source: didit_webhook_secret, target: DIDIT_WEBHOOK_SECRET }
+    - { source: media_s3_access_key_id, target: MEDIA_S3_ACCESS_KEY_ID }
+    - { source: media_s3_secret_access_key, target: MEDIA_S3_SECRET_ACCESS_KEY }
+
+services:
+    postgres:
+        image: ${STAGING_POSTGRES_IMAGE:?}
+        restart: unless-stopped
+        cpus: ${STAGING_POSTGRES_CPUS:?}
+        mem_limit: ${STAGING_POSTGRES_MEMORY:?}
+        pids_limit: 256
+        environment:
+            POSTGRES_DB: ${STAGING_DB_NAME:?}
+            POSTGRES_USER: ${STAGING_DB_USER:?}
+            POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_PASSWORD
+        secrets:
+            - { source: postgres_password, target: POSTGRES_PASSWORD }
+        volumes:
+            - postgres18_data:/var/lib/postgresql
+        networks: [backend]
+        healthcheck:
+            test:
+                [
+                    'CMD-SHELL',
+                    'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}" && psql -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}" -Atqc "SELECT uuidv7() IS NOT NULL AND postgis_version() IS NOT NULL" | grep -qx t',
+                ]
+            interval: 5s
+            timeout: 3s
+            retries: 20
+
+    redis:
+        image: ${STAGING_REDIS_IMAGE:?}
+        restart: unless-stopped
+        cpus: ${STAGING_REDIS_CPUS:?}
+        mem_limit: ${STAGING_REDIS_MEMORY:?}
+        pids_limit: 128
+        command: ['redis-server', '--aclfile', '/run/secrets/redis_acl', '--appendonly', 'yes', '--appendfsync', 'always']
+        secrets:
+            - { source: redis_acl, target: redis_acl }
+        volumes:
+            - redis_data:/data
+        networks: [backend]
+
+    clamav:
+        image: ${STAGING_CLAMAV_IMAGE:?}
+        restart: unless-stopped
+        cpus: ${STAGING_CLAMAV_CPUS:?}
+        mem_limit: ${STAGING_CLAMAV_MEMORY:?}
+        pids_limit: 256
+        volumes:
+            - clamav_data:/var/lib/clamav
+        networks: [backend, egress]
+
+    minio:
+        image: ${STAGING_MINIO_IMAGE:?}
+        restart: unless-stopped
+        cpus: ${STAGING_MINIO_CPUS:?}
+        mem_limit: ${STAGING_MINIO_MEMORY:?}
+        pids_limit: 256
+        command: ['server', '/data', '--console-address', ':9001']
+        environment:
+            MINIO_ROOT_USER_FILE: /run/secrets/MINIO_ROOT_USER
+            MINIO_ROOT_PASSWORD_FILE: /run/secrets/MINIO_ROOT_PASSWORD
+            MINIO_API_CORS_ALLOW_ORIGIN: https://${STAGING_HOSTNAME:?}
+            MINIO_API_CORS_ALLOW_CREDENTIALS_WITH_WILDCARD: 'off'
+        secrets:
+            - { source: minio_root_user, target: MINIO_ROOT_USER }
+            - { source: minio_root_password, target: MINIO_ROOT_PASSWORD }
+        volumes:
+            - minio_data:/data
+        ports:
+            - 127.0.0.1:${STAGING_MINIO_HOST_PORT:?}:9000
+        networks: [backend, proxy]
+
+    minio-init:
+        image: ${STAGING_MINIO_IMAGE:?}
+        restart: 'no'
+        cpus: ${STAGING_TOOLS_CPUS:?}
+        mem_limit: ${STAGING_TOOLS_MEMORY:?}
+        pids_limit: 128
+        environment:
+            MINIO_BUCKET: ${STAGING_MINIO_BUCKET:?}
+            STAGING_HOSTNAME: ${STAGING_HOSTNAME:?}
+        entrypoint: ['sh', '-ec']
+        command:
+            - |
+                until mc alias set junction http://minio:9000 "$$(cat /run/secrets/MINIO_ROOT_USER)" "$$(cat /run/secrets/MINIO_ROOT_PASSWORD)"; do sleep 2; done
+                mc mb --ignore-existing "junction/$${MINIO_BUCKET}"
+                if ! mc admin user info junction "$$(cat /run/secrets/MEDIA_S3_ACCESS_KEY_ID)" >/dev/null 2>&1; then
+                    mc admin user add junction "$$(cat /run/secrets/MEDIA_S3_ACCESS_KEY_ID)" "$$(cat /run/secrets/MEDIA_S3_SECRET_ACCESS_KEY)"
+                fi
+                cat >/tmp/junction-media-policy.json <<EOF
+                {"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["s3:GetBucketLocation","s3:ListBucket"],"Resource":["arn:aws:s3:::$${MINIO_BUCKET}" ]},{"Effect":"Allow","Action":["s3:GetObject","s3:PutObject","s3:DeleteObject"],"Resource":["arn:aws:s3:::$${MINIO_BUCKET}/*" ]}]}
+                EOF
+                if ! mc admin policy info junction junction-media-policy >/dev/null 2>&1; then
+                    mc admin policy create junction junction-media-policy /tmp/junction-media-policy.json
+                fi
+                mc admin policy attach junction junction-media-policy --user "$$(cat /run/secrets/MEDIA_S3_ACCESS_KEY_ID)"
+        secrets:
+            - { source: minio_root_user, target: MINIO_ROOT_USER }
+            - { source: minio_root_password, target: MINIO_ROOT_PASSWORD }
+            - { source: media_s3_access_key_id, target: MEDIA_S3_ACCESS_KEY_ID }
+            - { source: media_s3_secret_access_key, target: MEDIA_S3_SECRET_ACCESS_KEY }
+        depends_on:
+            minio: { condition: service_started }
+        networks: [backend]
+
+    migrate:
+        image: ${STAGING_APP_IMAGE:?}
+        profiles: [tools]
+        cpus: ${STAGING_TOOLS_CPUS:?}
+        mem_limit: ${STAGING_TOOLS_MEMORY:?}
+        pids_limit: 256
+        entrypoint: /app/ops/staging/load-secrets.sh
+        # The release image contains its production dependencies. Do not invoke
+        # Corepack here: it attempts a registry download when its cache is empty.
+        command: ['sh', '-c', './node_modules/.bin/prisma migrate deploy && node tools/apply-auth-migrations.mjs']
+        environment:
+            NODE_ENV: production
+        secrets:
+            - { source: database_url, target: DATABASE_URL }
+        depends_on:
+            postgres: { condition: service_healthy }
+        networks: [backend]
+
+    reviewer-grant:
+        image: ${STAGING_APP_IMAGE:?}
+        profiles: [tools]
+        cpus: ${STAGING_TOOLS_CPUS:?}
+        mem_limit: ${STAGING_TOOLS_MEMORY:?}
+        pids_limit: 256
+        entrypoint: /app/ops/staging/load-secrets.sh
+        command: ['node', 'tools/manage-staging-reviewer.mjs']
+        environment:
+            NODE_ENV: production
+            JUNCTION_RUNTIME_MODE: staging
+            STAGING_REVIEWER_EMAIL: ${STAGING_REVIEWER_EMAIL:?}
+            STAGING_OPERATOR_LABEL: ${STAGING_OPERATOR_LABEL:?}
+        secrets:
+            - { source: database_url, target: DATABASE_URL }
+        depends_on:
+            postgres: { condition: service_healthy }
+        networks: [backend]
+
+    minio-verify:
+        image: ${STAGING_APP_IMAGE:?}
+        profiles: [tools]
+        cpus: ${STAGING_TOOLS_CPUS:?}
+        mem_limit: ${STAGING_TOOLS_MEMORY:?}
+        pids_limit: 256
+        entrypoint: /app/ops/staging/load-secrets.sh
+        command: ['node', 'tools/verify-staging-minio.mjs']
+        environment:
+            <<: *runtime-env
+        secrets:
+            - { source: media_s3_access_key_id, target: MEDIA_S3_ACCESS_KEY_ID }
+            - { source: media_s3_secret_access_key, target: MEDIA_S3_SECRET_ACCESS_KEY }
+        depends_on:
+            minio-init: { condition: service_completed_successfully }
+        networks: [backend, egress]
+
+    preflight:
+        image: ${STAGING_APP_IMAGE:?}
+        profiles: [tools]
+        cpus: ${STAGING_TOOLS_CPUS:?}
+        mem_limit: ${STAGING_TOOLS_MEMORY:?}
+        pids_limit: 256
+        entrypoint: /app/ops/staging/load-secrets.sh
+        command: ['node', 'tools/staging-preflight.mjs']
+        environment:
+            <<: *runtime-env
+            NEXT_PUBLIC_JUNCTION_RUNTIME_MODE: staging
+            NEXT_PUBLIC_JUNCTION_API_URL: /v1
+            STAGING_HOSTNAME: ${STAGING_HOSTNAME:?}
+            STAGING_BASIC_AUTH_USER: ${STAGING_BASIC_AUTH_USER:?}
+            STAGING_API_UPSTREAM: 127.0.0.1:${STAGING_API_HOST_PORT:?}
+            STAGING_WEB_UPSTREAM: 127.0.0.1:${STAGING_WEB_HOST_PORT:?}
+            STAGING_API_HOST_PORT: ${STAGING_API_HOST_PORT:?}
+            STAGING_WEB_HOST_PORT: ${STAGING_WEB_HOST_PORT:?}
+            STAGING_APP_IMAGE: ${STAGING_APP_IMAGE:?}
+            STAGING_POSTGRES_IMAGE: ${STAGING_POSTGRES_IMAGE:?}
+            STAGING_REDIS_IMAGE: ${STAGING_REDIS_IMAGE:?}
+            STAGING_CLAMAV_IMAGE: ${STAGING_CLAMAV_IMAGE:?}
+            STAGING_MINIO_IMAGE: ${STAGING_MINIO_IMAGE:?}
+            STAGING_MINIO_HOSTNAME: ${STAGING_MINIO_HOSTNAME:?}
+            STAGING_MINIO_HOST_PORT: ${STAGING_MINIO_HOST_PORT:?}
+            STAGING_MINIO_UPSTREAM: 127.0.0.1:${STAGING_MINIO_HOST_PORT:?}
+        secrets:
+            - { source: database_url, target: DATABASE_URL }
+            - { source: redis_url, target: REDIS_URL }
+            - { source: better_auth_secret, target: BETTER_AUTH_SECRET }
+            - { source: resend_api_key, target: RESEND_API_KEY }
+            - { source: didit_api_key, target: DIDIT_API_KEY }
+            - { source: didit_webhook_secret, target: DIDIT_WEBHOOK_SECRET }
+            - { source: media_s3_access_key_id, target: MEDIA_S3_ACCESS_KEY_ID }
+            - { source: media_s3_secret_access_key, target: MEDIA_S3_SECRET_ACCESS_KEY }
+            - { source: staging_basic_auth_hash, target: STAGING_BASIC_AUTH_HASH }
+        networks: [backend, egress]
+
+    api:
+        image: ${STAGING_APP_IMAGE:?}
+        restart: unless-stopped
+        cpus: ${STAGING_API_CPUS:?}
+        mem_limit: ${STAGING_API_MEMORY:?}
+        pids_limit: 256
+        command: ['node', 'apps/api/dist/main.js']
+        environment:
+            <<: *runtime-env
+            API_PORT: '3001'
+            API_BIND_ADDRESS: 0.0.0.0
+        secrets: *runtime-secrets
+        depends_on:
+            postgres: { condition: service_healthy }
+            redis: { condition: service_started }
+            clamav: { condition: service_healthy }
+            minio-init: { condition: service_completed_successfully }
+        ports:
+            - 127.0.0.1:${STAGING_API_HOST_PORT:?}:3001
+        networks: [backend, egress]
+
+    worker:
+        image: ${STAGING_APP_IMAGE:?}
+        restart: unless-stopped
+        cpus: ${STAGING_WORKER_CPUS:?}
+        mem_limit: ${STAGING_WORKER_MEMORY:?}
+        pids_limit: 256
+        command: ['node', 'apps/worker/dist/main.js']
+        environment:
+            <<: *runtime-env
+        secrets: *runtime-secrets
+        depends_on:
+            postgres: { condition: service_healthy }
+            redis: { condition: service_started }
+            clamav: { condition: service_healthy }
+            minio-init: { condition: service_completed_successfully }
+        networks: [backend, egress]
+
+    web:
+        image: ${STAGING_APP_IMAGE:?}
+        restart: unless-stopped
+        cpus: ${STAGING_WEB_CPUS:?}
+        mem_limit: ${STAGING_WEB_MEMORY:?}
+        pids_limit: 256
+        command: ['sh', '-c', 'node tools/staging-web-preflight.mjs && exec ./node_modules/.bin/next start apps/web -H 0.0.0.0 -p 3000']
+        environment:
+            NODE_ENV: production
+            JUNCTION_RUNTIME_MODE: staging
+            NEXT_PUBLIC_JUNCTION_RUNTIME_MODE: staging
+            NEXT_PUBLIC_JUNCTION_API_URL: /v1
+            JUNCTION_API_URL: http://api:3001/v1
+            BETTER_AUTH_URL: ${BETTER_AUTH_URL:?}
+            RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:?}
+        secrets:
+            - { source: database_url, target: DATABASE_URL }
+            - { source: better_auth_secret, target: BETTER_AUTH_SECRET }
+            - { source: resend_api_key, target: RESEND_API_KEY }
+        depends_on:
+            postgres: { condition: service_healthy }
+            api: { condition: service_started }
+        ports:
+            - 127.0.0.1:${STAGING_WEB_HOST_PORT:?}:3000
+        networks: [backend, egress]
+
+secrets:
+    database_url: { file: '${STAGING_DATABASE_URL_FILE:?}' }
+    postgres_password: { file: '${STAGING_POSTGRES_PASSWORD_FILE:?}' }
+    redis_url: { file: '${STAGING_REDIS_URL_FILE:?}' }
+    redis_acl: { file: '${STAGING_REDIS_ACL_FILE:?}' }
+    better_auth_secret: { file: '${STAGING_BETTER_AUTH_SECRET_FILE:?}' }
+    resend_api_key: { file: '${STAGING_RESEND_API_KEY_FILE:?}' }
+    didit_api_key: { file: '${STAGING_DIDIT_API_KEY_FILE:?}' }
+    didit_webhook_secret: { file: '${STAGING_DIDIT_WEBHOOK_SECRET_FILE:?}' }
+    minio_root_user: { file: '${STAGING_MINIO_ROOT_USER_FILE:?}' }
+    minio_root_password: { file: '${STAGING_MINIO_ROOT_PASSWORD_FILE:?}' }
+    media_s3_access_key_id: { file: '${STAGING_MEDIA_S3_ACCESS_KEY_ID_FILE:?}' }
+    media_s3_secret_access_key: { file: '${STAGING_MEDIA_S3_SECRET_ACCESS_KEY_FILE:?}' }
+    staging_basic_auth_hash: { file: '${STAGING_BASIC_AUTH_HASH_FILE:?}' }
+
+volumes:
+    postgres18_data:
+    redis_data:
+    clamav_data:
+    minio_data:
+
+networks:
+    backend:
+        internal: true
+    egress:
+    proxy:

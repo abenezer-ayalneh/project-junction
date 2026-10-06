@@ -1,6 +1,6 @@
 # Phase 02 — Goods Commerce
 
-**Status:** Specified — Not Executed — Not Verified  
+**Target status:** Specified — Not Executed — Not Verified. **Local status:** First inventory-ledger seam verified in the synthetic PostgreSQL and built API runtime; the Phase 02 exit remains open.
 **Objective:** prove correct single/multi-Vendor goods behavior privately before unifying with Booking.  
 **Owner:** inventory, ordering, and fulfillment contexts  
 **Entry:** Phase 00–01. **Exit:** no-oversell goods, fulfillment, return, and policy proof.  
@@ -31,3 +31,7 @@ Uses `POL-GOOD-001`–`POL-GOOD-004`, `INV-INV-001`, `INV-FUL-001`, `INV-ORD-001
 ## Failure/quality/acceptance
 
 Expiry/payment race refunds late success; retry is idempotent; failed delivery/pickup expiration preserves evidence; provider/outbox failure reconciles. Stock/fulfillment mutation requires live authority; safe drafts may survive offline. Tests prove concurrency, price/zones, handoff fallback, partial cancellation, 7/14/30 eligibility, pickup grace, failed-delivery retry, and product earning release after its 7/14 window (`TST-P02-001`, `TST-P02-002`, `TST-P02-003`). Booking and atomic mixed payment remain Phase 03–04.
+
+## Local implementation notes
+
+The first Phase 02 chunk adds an append-only PostgreSQL inventory-movement table and private API operations to record received, adjusted, and damaged stock for simple or variant Products at an assigned Vendor Location, then read on-hand, reserved, and derived available quantities. Variant movements are keyed by SKU; revisions cannot remove or convert an item while it has nonzero stock. The command checks that availability stays non-negative and writes audit, outbox, and idempotency records in the same transaction. Expired demo-workspace purge removes its inventory rows. A fresh local PostgreSQL integration run verifies idempotent receive, concurrent damage denial before negative availability, SKU-preserving revisions, and cross-workspace denial; the built API smoke verifies the same private HTTP receive/replay/read/negative/foreign-resource paths. This is local evidence for the inventory seam only: checkout holds, sales, returns, stock transfers, customer availability, and the `TST-P02-*` evidence remain unimplemented.

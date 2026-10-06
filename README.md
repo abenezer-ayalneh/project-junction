@@ -1,10 +1,10 @@
 # Project Junction
 
-Project Junction is a documentation-first specification for a portfolio-grade marketplace that combines physical goods with fixed-duration appointments. It is intended to demonstrate production-minded product design and engineering decisions; it now includes a local synthetic Phase 00 foundation and Phase 01 Vendor supply/discovery slice. It is not a live marketplace or an Ethiopian payment operation.
+Project Junction is a marketplace project for physical goods and fixed-duration appointments. Phase 00 is being moved from local synthetic proof to private staging with real account and provider integrations. It is not yet a live marketplace or an Ethiopian payment operation.
 
 ## Current status
 
-**Phase 00 is partially implemented and Phase 01 is locally implemented in the synthetic PostgreSQL runtime.** The Nx web/API/worker workspace has synthetic in-memory and PostgreSQL paths. Local durability evidence and remaining acceptance gaps are recorded in [Phase 00 evidence](./docs/quality/PHASE-00-DURABILITY-EVIDENCE.md) and the [Phase 01 requirements](./docs/requirements/PHASE-01-VENDOR-SUPPLY-AND-DISCOVERY.md). No public deployment, real provider integration, live money movement or real identity verification exists.
+**Phase 00 real-service transition is in progress.** The staging code uses Better Auth, Resend, Didit Sandbox, PostgreSQL, Redis fanout, and self-hosted MinIO. It has not been deployed to the VPS or accepted through live provider flows. The earlier synthetic Phase 00 and Phase 01 evidence remains local regression evidence only; see the [real transition tracker](./docs/quality/PHASE-00-REAL-TRANSITION.md) and [Phase 01 evidence](./docs/quality/PHASE-01-ACCEPTANCE-EVIDENCE.md). No public deployment, live money movement, or verified real identity flow is claimed.
 
 The intended system is Ethiopia-first and globally adaptable: it uses synthetic Dire Dawa context, ETB, Ethiopian address/phone conventions, and `Africa/Addis_Ababa` as its initial configuration. It makes no claim of cross-border support, lawful Ethiopian payment operations, tax compliance, or commercial readiness.
 
@@ -21,13 +21,15 @@ The intended system is Ethiopia-first and globally adaptable: it uses synthetic 
 
 ## Scope boundary
 
-The documentation describes a future portfolio system. Phase 00 and the local synthetic Phase 01 supply/discovery slice are implemented; later market capabilities remain outside this work. Operational procedures use the label **Specified — Not Executed — Not Verified** until a future implementation and evidence pass prove them.
+The documentation describes the target system and the evidence gates for each environment. Local synthetic fixtures remain available for regression tests; staging startup requires the real-service configuration. Later market capabilities and operational procedures remain unverified until their own implementation and evidence pass.
 
 ## API local tooling
 
-The API serves OpenAPI/Swagger documentation at `/v1/docs`. Configure browser access with the
-comma-separated `CORS_ALLOWED_ORIGINS` variable (local defaults are listed in `.env.example`);
-do not use a wildcard when credentials are enabled. It applies Helmet, a global rate limit, JSON
+The API serves OpenAPI/Swagger documentation at `/v1/docs`. In staging, CORS allows only the
+HTTPS origin in `BETTER_AUTH_URL`, and the served contract omits synthetic routes. Use
+[.env.example](./.env.example) as the fail-closed staging configuration template;
+[.env.integration.example](./.env.integration.example) contains local test fixtures only. Do not
+use a wildcard when credentials are enabled. The API applies Helmet, a global rate limit, JSON
 Winston logging, and a global exception filter at startup.
 
 Prettier, ESLint, Conventional Commit linting, and root-level Husky hooks are configured for the
