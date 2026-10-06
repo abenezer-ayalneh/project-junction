@@ -25,6 +25,8 @@ A verified adult Customer chooses a Service Option, eligible Location/mode, name
 - `REQ-P03-MTG-001`: public demo uses DemoMeet; private staging tests assigned-Staff Google Meet REST; failure retries/reconciles then protected replacement or auto-cancel/full-refund by safety cutoff.
 - `REQ-P03-ATT-001`: in-person completion needs code/QR and Staff confirmation; online uses Junction join action and Staff confirmation; no-show is evidence-backed and contestable.
 
+`REQ-P03-UX-001`: Service details expose Option/add-on price and duration, Location/online mode, named/any-qualified Staff, timezone, and authoritative slots before adding a Booking intent; slot loss and failed availability refresh preserve safe selections without claiming a confirmed Booking (`DEC-191`; `TST-P03-004`). The [Marketplace UI/UX specification](../product/MARKETPLACE-UI-UX-SPECIFICATION.md) owns presentation details. This addition remains **Specified — Not Executed — Not Verified**.
+
 ## Policies, objects, and state
 
 Uses `POL-BKG-001`–`POL-BKG-005`, `INV-BOOK-001`; objects Service, ServiceOption, StaffProfile, Schedule, Booking, BookingHold, BookingAmendment, MeetingProvisioning, WaitlistEntry. Applies `STATE-BKG-001`/`STATE-MTG-001`; emits `EVT-BOOKING-*`, `EVT-MEETING-*`. Earnings remain unavailable for 48 hours after completion/no-show contest.

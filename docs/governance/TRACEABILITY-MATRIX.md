@@ -25,9 +25,18 @@ The complete chain is: `SRC-CHAT-*` → `DEC-*` → Decision Register link to on
 | `SRC-CHAT-0171`–`0178` / `DEC-171`–`178`                                                         | product, demo, security                        | P03/P05/P06                       | `INV-DEMO-*`, `POL-BKG/TRUST-*`, media contract                                  | `TST-P03-002`, `TST-P05-002`, `TST-P06-001/004`        |
 | `SRC-CHAT-0179`–`0189` / `DEC-179`–`189`                                                         | research, seed, policy catalog                 | P01–P06                           | `POL-GOOD/BKG/FIN-*`, `STATE-ORD/BKG/EARN-*`                                     | `TST-P01-*`, `TST-P02-*`, `TST-P03-*`, `TST-P04-*`     |
 
+## 2026-10-06 marketplace presentation
+
+The marketplace additions have these chains; all acceptance evidence remains future work:
+
+| Chat source / decision                                      | Primary normative home                                                           | Phase requirements                                                                                               | Policies/invariants/interfaces/states                                                                      | Acceptance/evidence                                                                                                |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `SRC-CHAT-0196`, `0198`, `0199` / `DEC-191`–`193`           | [Marketplace UI/UX specification](../product/MARKETPLACE-UI-UX-SPECIFICATION.md) | `REQ-P01-UX-001`–`003`, `REQ-P02-UX-001`, `REQ-P03-UX-001`, `REQ-P04-UX-001`, `REQ-P05-UX-001`, `REQ-P06-UX-001` | existing catalog/publication, access, availability, policy snapshots, hold/payment states; `REF-023`–`031` | `TST-P01-005`–`007`, `TST-P02-004`, `TST-P03-004`, `TST-P04-004`, `TST-P05-005`, `TST-P06-006`; future `EVD-REQ-*` |
+| `SRC-CHAT-0197` / reaffirmed `DEC-117`, `118`, `126`, `130` | UX design system; Storefront catalog                                             | existing design/quality requirements                                                                             | neutral component grammar and structured Vendor identity                                                   | no supersession; component/accessibility evidence remains required                                                 |
+
 ## Audit invariants
 
-- Each `DEC-001`–`DEC-189` appears in [Decision Register](./DECISION-REGISTER.md) and has one primary normative link.
+- Each `DEC-001`–`DEC-193` appears in [Decision Register](./DECISION-REGISTER.md) and has one primary normative link.
 - `DEC-138` is classified `SUPERSEDED`; no active requirement derives public release from it.
 - `SRC-CHAT-0195` is the current design grammar source for `DEC-117`, `DEC-118`, `DEC-126`, and `DEC-130`; the four earlier visual sources are `SUPERSEDED`.
 - Every `REQ-P##-*` has a phase owner and acceptance family in the phase/quality suite.

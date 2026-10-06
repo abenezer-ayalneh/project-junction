@@ -23,6 +23,8 @@ A release operator promotes a previously evidenced artifact from private staging
 - `REQ-P06-REL-002`: staging and portfolio production remain isolated; artifact promotion is controlled, data/secret/provider identity promotion is forbidden.
 - `REQ-P06-DR-001`: release requires deployment/rollback, backup/PITR, clean-host restore, provider outage, queue/outbox, search/media/security incident runbook drills.
 
+`REQ-P06-UX-001`: the complete supported marketplace journey meets the [Marketplace UI/UX specification](../product/MARKETPLACE-UI-UX-SPECIFICATION.md) across narrow/wide viewports, Light/Dark/System themes, zoom/pseudo-localization, keyboard/screen-reader operation, missing content, reduced motion, and low-connectivity recovery (`DEC-191`–`DEC-193`; `TST-P06-006`, existing `TST-P06-004`). Acceptance uses served local interfaces plus authoritative contract/state evidence; screenshots cannot prove transactions or provider behavior. This addition remains **Specified — Not Executed — Not Verified**.
+
 ## Quality and acceptance
 
 `TST-P06-001` demo isolation/purge, `TST-P06-002` clean-host RPO/RTO, `TST-P06-003` 100-user/10-checkout-minute capacity, `TST-P06-004` WCAG/pseudo-locale/low-connectivity, `TST-P06-005` release/rollback/ASVS gate. All require `EVD-*` results. Any missing proof blocks public claim/release; it does not lower the bar. Commercial research/pilot begins only under future gates.

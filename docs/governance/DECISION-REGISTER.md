@@ -418,6 +418,18 @@ _Normative owners: architecture, security, environments, deployment, and demo._
   <a id="dec-190"></a>
 - `DEC-190` — Current development is local-only with fresh local accounts/database, email/password and Google authentication, and Mailpit delivery; MFA/Didit and private staging acceptance are deferred until pre-public-release restoration. [Local authentication decision record](../quality/AUTH-SIMPLIFICATION-DECISIONS.md)
 
+## Marketplace presentation
+
+_Normative owner: Marketplace UI/UX specification. These selections do not supersede component styling, business policies, local authentication, or phase/release gates._
+
+<a id="dec-191"></a>
+
+- `DEC-191` — Customer-facing marketplace composition and interactions have an authoritative research-backed specification using the dated Amazon, Temu, and eBay website benchmarks, phase-owned capabilities, and future local acceptance; benchmark popularity is not causal UX evidence. [Marketplace UI/UX](../product/MARKETPLACE-UI-UX-SPECIFICATION.md)
+  <a id="dec-192"></a>
+- `DEC-192` — Products and Services have equal prominence in marketplace navigation and homepage entry, with separate image-led discovery and distinct detail/selection flows. [Marketplace UI/UX](../product/MARKETPLACE-UI-UX-SPECIFICATION.md)
+  <a id="dec-193"></a>
+- `DEC-193` — Categories and Listings lead marketplace merchandising; legitimate promotions are secondary and personalization retains the existing explicit opt-in rule. [Marketplace UI/UX](../product/MARKETPLACE-UI-UX-SPECIFICATION.md)
+
 ## Release and supersession
 
 <a id="dec-106"></a>

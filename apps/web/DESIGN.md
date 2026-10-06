@@ -42,6 +42,8 @@ Use the shadcn/ui type scale with Geist. Let semantic headings establish hierarc
 
 Use responsive, mobile-first layouts and stock shadcn/ui spacing, border, radius, Card, Badge, Button, Separator, and menu primitives. Pages can be editorially structured but must not introduce a competing component aesthetic.
 
+For public and Customer shopping surfaces, follow the [Marketplace UI/UX specification](../../docs/product/MARKETPLACE-UI-UX-SPECIFICATION.md). It owns marketplace composition and interactions; this file retains the neutral component grammar. The specification is a target with phase-dependent capabilities and future local acceptance, not evidence that a shopping flow is available.
+
 ## Components
 
 Use shadcn/ui components directly from `src/components/ui`, with their default neutral variants unless semantic meaning calls for a state variant. Use Lucide icons instead of bespoke iconography.

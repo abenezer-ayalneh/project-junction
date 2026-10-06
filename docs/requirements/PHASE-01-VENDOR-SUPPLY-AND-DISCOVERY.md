@@ -1,14 +1,19 @@
 # Phase 01 — Vendor Supply and Discovery
 
 **Target status:** Specified — Not Executed — Not Verified. **Local status:** the Vendor/catalog API and PostgreSQL slice has integration and served-browser evidence. The linked [Phase 01 record](../quality/PHASE-01-ACCEPTANCE-EVIDENCE.md) documents historical disposable-fixture journeys; the retired synthetic workspace flow is not part of current local development. The private Vendor workspace, scoped Platform review, CSV preview/commit/export, public discovery/storefront, Customer saved/followed state, and opt-in recommendations have integration and served-browser evidence. The media profile has local signed upload, sealed quarantine, scan, transcode, private moderation, silent and captioned public playback, keyboard/narrow-viewport checks, and unpublish revocation. Historical fixture tests also covered expired upload, demo-workspace, and orphan-object cleanup. Target MinIO acceptance, independent accessibility review, and validated non-demo retention durations remain open. Production, provider, and commercial acceptance remain open.
+
+**Marketplace redesign follow-up:** Specified — Not Executed — Not Verified. The new presentation requirements need their own local acceptance evidence; they are not covered by the earlier accepted scope.
+
 **Objective:** demonstrate safe business Vendor supply and discoverability without buyer commitment.  
 **Owner:** Vendor supply and catalog/discovery contexts  
 **Entry:** Phase 00 access/API/event boundaries. **Exit:** reviewed catalog/discovery acceptance.  
-**Decision coverage:** `DEC-016`, `DEC-042`–`DEC-048`, `DEC-051`–`DEC-053`, `DEC-066`, `DEC-102`, `DEC-123`, `DEC-130`, `DEC-148`, `DEC-162`, `DEC-175`, `DEC-176`, `DEC-180`, `DEC-189`
+**Decision coverage:** `DEC-016`, `DEC-042`–`DEC-048`, `DEC-051`–`DEC-053`, `DEC-066`, `DEC-102`, `DEC-123`, `DEC-130`, `DEC-148`, `DEC-162`, `DEC-175`, `DEC-176`, `DEC-180`, `DEC-189`, `DEC-191`–`DEC-193`
 
 ## Included / excluded
 
 Includes self-service Vendor application, private pre-approval setup, approval/rejection/restricted states, structured hybrid Storefronts, Location basics, vendor-owned product/service listings, typed taxonomy/search, low-risk publication review, CSV import/export, public browse, saved/follow actions, rule-based opt-in recommendation signals, and media/video. Excludes live KYB, real documents, a public Vendor API, C2C, regulated categories, and public social Q&A/feed.
+
+Phase 01 also owns the core marketplace redesign: shopping navigation, category-led homepage, image-led Product and Service discovery, search/results interactions, public Listing details, and structured Vendor Storefront presentation. The delivery sequence and capability boundaries are specified below.
 
 ## Actors and proof journey
 
@@ -22,6 +27,41 @@ A prospective Vendor applies and can prepare permitted private content but canno
 - `REQ-P01-CSV-001`: CSV uses versioned template, dry-run, preview, row errors, idempotent commit, and safe export.
 - `REQ-P01-DSC-001`: public discovery separates Product/Service verticals; PostgreSQL truth can rebuild search projection.
 - `REQ-P01-MEDIA-001`: public short video needs caption or no-speech declaration/description and quarantined processing path.
+- `REQ-P01-UX-001`: the marketplace shell/home makes Products and Services equally discoverable, leads with categories and image-led Listings, and exposes only supported destinations (`DEC-191`–`DEC-193`; `TST-P01-005`).
+- `REQ-P01-UX-002`: public results preserve supported query/filter/sort/pagination state through URL sharing, reload, and return navigation; selected filters, full-result ordering, feedback, and recovery remain clear on desktop and mobile (`TST-P01-006`).
+- `REQ-P01-UX-003`: public cards, dedicated Listing details, and structured Vendor Storefronts present approved imagery, honest prices, Vendor attribution, and available evidence without private-data leakage or fabricated reputation (`TST-P01-007`).
+
+The [Marketplace UI/UX specification](../product/MARKETPLACE-UI-UX-SPECIFICATION.md) owns composition and interaction details for these presentation requirements. They remain **Specified — Not Executed — Not Verified**; the dated local acceptance record does not claim these additions. Transaction selectors/actions and reputation follow their owning phases.
+
+## Marketplace redesign follow-up
+
+**Recorded:** 2026-10-06. Introduce the marketplace presentation during Phase 01 as a discovery follow-up, with fresh acceptance evidence. This addition preserves the earlier dated local acceptance record and does not claim that the redesign is implemented. The linked marketplace specification remains the presentation authority; the [UX design-system specification](../product/UX-DESIGN-SYSTEM-AND-RESPONSIVENESS.md) retains component styling and theme ownership.
+
+### Delivery sequence
+
+| Step                               | Deliverable and dependency                                                                                                                                                                                                                                                                                                                                            | Requirement / acceptance                                                              |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| 1. Public data and media           | Supply approved Listing photographs/gallery, structured Storefront logo/cover, public Vendor identity, and published Listing detail reads. Extend authoritative discovery criteria/order and Vendor-scoped queries as needed. Preserve publication, quarantine, ownership, and media-revocation boundaries; define shared contracts through existing API conventions. | Enables `REQ-P01-UX-001`–`003`; contract/media evidence supports `TST-P01-005`–`007`. |
+| 2. Marketplace shell and homepage  | Introduce prominent search, equally visible Products/Services and category entry, separate image-led discovery sections, then Vendor discovery. Retain the neutral design system, supported saved/account destinations, and honest environment disclosure.                                                                                                            | `REQ-P01-UX-001` → `TST-P01-005`.                                                     |
+| 3. Search and category results     | Implement shareable query/filter/sort/pagination state, removable selected filters, desktop sidebar/mobile filter sheet, explicit pagination, and distinct empty/unavailable/retry feedback. Ordering must apply to the full queried set; display totals only when authoritative.                                                                                     | `REQ-P01-UX-002` → `TST-P01-006`.                                                     |
+| 4. Cards, details, and Storefronts | Present genuine imagery or honest missing-media fallback, meaningful titles, accurate price/from-price, and Vendor attribution. Add dedicated public Product/Service detail destinations and structured Storefront catalog sections with duration/mode information when known.                                                                                        | `REQ-P01-UX-003` → `TST-P01-007`.                                                     |
+| 5. Local acceptance                | Exercise the complete supported discovery journey in the served local application, including both verticals, navigation/reload state, publication revocation, content failures, themes, keyboard operation, zoom, and narrow viewports. Record browser plus relevant contract/media evidence before accepting the follow-up.                                          | `TST-P01-005`–`007`; future `EVD-REQ-*`.                                              |
+
+Deliver the dependency with its interface. Unsupported controls remain absent until their capability is available; neither placeholder transactions nor client-generated business truth satisfy this follow-up. The [implementation-gap inventory](../product/MARKETPLACE-UI-UX-SPECIFICATION.md#current-implementation-gaps-and-phase-ownership) identifies the currently missing information without prescribing API wire formats.
+
+### Later-phase boundaries
+
+Phase 01 introduces browse/detail presentation without buyer commitment. Product purchase selection, live stock and fulfillment belong to Phase 02; Service Options, Staff/slot allocation, and Booking selection belong to Phase 03; unified Cart/quote/hold/payment and Purchase confirmation belong to Phase 04. Public review aggregates, entitlement, support/returns, and transactional aftercare belong to Phase 05. Existing supported save/follow/preferences remain usable. Implement responsive, accessible, and recoverable behavior with each surface; Phase 06 verifies the complete supported journey and release gates.
+
+### Follow-up exit evidence
+
+The redesign follow-up requires evidence for all three presentation requirements, using the existing scenario identifiers in the [acceptance catalog](../quality/PHASE-ACCEPTANCE-CATALOG.md) and the specification's concrete local checks:
+
+- `TST-P01-005`: both Products and Services are equally discoverable on desktop and phone, including an empty vertical and supported navigation.
+- `TST-P01-006`: search/filter/sort/pagination survives sharing, Listing navigation, back navigation, and reload; empty results, outages, retry, and mobile filtering remain distinct and operable.
+- `TST-P01-007`: imagery, simple/variant prices, Vendor identity, Listing details, and Storefront presentation remain clear with missing media/reviews and revoked publication; no fabricated price or reputation appears.
+
+Development and acceptance testing run only on the User's local machine. These scenarios remain **Specified — Not Executed — Not Verified** until new evidence is recorded. Earlier Vendor supply/media acceptance and later transaction or public-release gates retain their separate scope.
 
 ## Policies, objects, and state
 

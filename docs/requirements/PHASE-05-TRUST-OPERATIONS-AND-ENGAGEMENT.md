@@ -24,6 +24,8 @@ A Customer or Vendor opens a SupportCase, ReturnCase, or Dispute only for a perm
 - `REQ-P05-PRV-001`: export/deletion/pseudonymization preserves minimum transaction, ledger, dispute, and security record integrity.
 - `REQ-P05-OPS-001`: Finance reconciles provider/inbox/Purchase/ledger/payout and opens exceptions instead of editing records.
 
+`REQ-P05-UX-001`: Purchase aftercare displays independent Order/Booking outcomes and only entitled support/cancellation/return/amendment/join/review actions; public reputation derives from eligible moderated reviews and personalization remains explicit opt-in (`DEC-191`, `DEC-193`; `TST-P05-005`). The [Marketplace UI/UX specification](../product/MARKETPLACE-UI-UX-SPECIFICATION.md) owns presentation details. This addition remains **Specified — Not Executed — Not Verified**.
+
 ## Objects/state/events
 
 ReturnCase, Dispute, SupportCase, Review, ModerationCase, Appeal, Notification, Preference, AnalyticsEvent, ExportRequest, DeletionRequest. Uses `STATE-RET-001`, `STATE-TRUST-001`, `STATE-DEMO-001`; `EVT-CASE-*`, `EVT-REVIEW-*`, `EVT-MODERATION-*`, `EVT-NOTIFICATION-*`. Policies `POL-TRUST-*`, `POL-GOOD-*`, `POL-BKG-*`, `POL-FIN-*` apply.

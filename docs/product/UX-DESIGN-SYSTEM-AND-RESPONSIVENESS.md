@@ -10,3 +10,7 @@ The target component basis is Tailwind plus stock shadcn/ui primitives and seman
 Tailwind utilities are the default styling mechanism for every page and component. Prefer responsive, state, data-attribute, and arbitrary-value utilities before authoring CSS. Shared CSS is limited to Tailwind and shadcn imports, semantic theme tokens required by stock components and Light/Dark/System modes, and behavior utilities that Tailwind cannot express cleanly. Review changes for this boundary; no automated CSS restriction is required.
 
 Responsive design, keyboard/focus, reduced motion, accessible dialogs, durable form drafts, and visible low-connectivity/retry status are functional requirements. Public video controls/captions/no-speech metadata are first-class content requirements, not an afterthought.
+
+## Marketplace composition
+
+The [Marketplace UI/UX specification](MARKETPLACE-UI-UX-SPECIFICATION.md) owns customer-facing shopping composition and interactions (`DEC-191`–`DEC-193`). This document remains the normative component-styling and theme authority. The marketplace specification maps presentation requirements to the capability-owning phases and future local acceptance; it does not claim that the target screens are implemented.

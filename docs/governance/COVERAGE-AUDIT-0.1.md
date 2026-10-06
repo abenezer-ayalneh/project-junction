@@ -40,11 +40,19 @@ unlabeled implementation claims = 0
 
 ## 2026-09-22 design grammar alignment
 
-The baseline counters above record the 2026-08-28 audit. The current provenance record adds `SRC-CHAT-0195` as a direct selection and classifies the four conflicting visual sources—`SRC-CHAT-0117`, `0118`, `0126`, and `0130`—as `SUPERSEDED`. The current ledger therefore contains 195 classified sources: 190 direct selections and 5 non-decision sources, with 0 unclassified sources. `SRC-CHAT-0195` is normalized through `DEC-117`, `DEC-118`, `DEC-126`, and `DEC-130`.
+The baseline counters above record the 2026-08-28 audit. The provenance record at this alignment added `SRC-CHAT-0195` as a direct selection and classified the four conflicting visual sources—`SRC-CHAT-0117`, `0118`, `0126`, and `0130`—as `SUPERSEDED`. The ledger then contained 195 classified sources: 190 direct selections and 5 non-decision sources, with 0 unclassified sources. `SRC-CHAT-0195` is normalized through `DEC-117`, `DEC-118`, `DEC-126`, and `DEC-130`.
 
 ## 2026-09-22 Phase 00 implementation-claim follow-up
 
 `pnpm docs:check` now validates the current manifest instead of relying only on the documentation-only baseline: all 169 listed document paths exist; all 128 `S/NE/NV` target documents carry the explicit `Specified — Not Executed — Not Verified` label; all 16 Phase 00 functional and cross-phase nonfunctional requirements appear in the acceptance mapping; and all five `TST-P00-*` scenarios are present in both the Phase 00 requirement and acceptance catalog. This static result confirms claim labeling and traceability only. It does not validate ASVS, WCAG, runtime behavior, provider availability, or release readiness.
+
+## 2026-10-06 marketplace specification addition
+
+The [Marketplace UI/UX specification](../product/MARKETPLACE-UI-UX-SPECIFICATION.md) adds four direct-source rows (`SRC-CHAT-0196`–`0199`), three decisions (`DEC-191`–`193`), nine dated external references (`REF-023`–`031`), eight phase-owned presentation requirements, and eight future local acceptance scenarios. `SRC-CHAT-0197` reaffirms the existing styling decisions; it does not supersede them. Detailed layout defaults remain `DERIVED-PLAN-DEFAULT`.
+
+Local static verification passed: `pnpm docs:check` reports 16 Phase 00 requirement mappings, five Phase 00 scenarios, 178 manifest documents, and 128 target-status labels. A separate local link/provenance scan found 0 broken links across 727 relative links in 179 documents (the manifest plus changed web design guidance), 65 phase/cross-phase requirements with scenario mappings, 35 indexed scenarios, 31 unique external references, 199 classified source rows (194 direct, including retained superseded selections, plus five non-decision sources), and 193 unique decision anchors. These counts extend the historical snapshots above; they do not rewrite their dates or claim new runtime acceptance.
+
+All repository changes in this addition are Markdown documentation. The new marketplace scenarios are **Specified — Not Executed — Not Verified**. No UI/API behavior, provider integration, transactional capability, or release readiness was implemented or verified by this documentation work. Development and acceptance remain local-only.
 
 ## Audit limits
 

@@ -3,6 +3,7 @@
 ## Read by purpose
 
 - **Understand the product:** [Product description](./product/PRODUCT-DESCRIPTION.md), [audience and personas](./product/AUDIENCE-PERSONAS-AND-JOBS.md), [scope](./product/SCOPE-AND-EXCLUSIONS.md), and [journeys](./product/END-TO-END-USER-JOURNEYS.md).
+- **Design the marketplace:** [Marketplace UI/UX specification](./product/MARKETPLACE-UI-UX-SPECIFICATION.md) for shopping layouts and interactions, and [UX design system](./product/UX-DESIGN-SYSTEM-AND-RESPONSIVENESS.md) for component appearance.
 - **Understand future delivery:** [multiphase requirements](./requirements/MULTIPHASE-REQUIREMENTS.md) and [release gates](./requirements/PHASE-AND-RELEASE-GATES.md).
 - **Find a decision:** [Decision register](./governance/DECISION-REGISTER.md) and [traceability matrix](./governance/TRACEABILITY-MATRIX.md).
 - **Understand business rules:** the [policy catalog](./domain/POLICY-CATALOG-AND-SNAPSHOTS.md), [invariants](./domain/CROSS-CONTEXT-INVARIANTS.md), and [state-machine index](./state-machines/STATE-MACHINE-INDEX.md).

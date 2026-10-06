@@ -24,6 +24,8 @@ A verified Customer submits a Cart with several Vendor goods groups and up to fi
 - `REQ-P04-PRM-001`: max one Vendor coupon then one Platform campaign; funding, budget reservation, commission rate/basis, rounding, and receipt context snapshot.
 - `REQ-P04-PYO-001`: Product earnings release after its 7/14 policy window; Booking earnings after 48-hour contest; disputes freeze only affected value; weekly payout batches are idempotent/reconciled.
 
+`REQ-P04-UX-001`: unified Cart/checkout/confirmation makes Vendor goods groups and independent appointment intents, merge/repricing conflicts, verification requirements, policy/totals, hold expiry, and uncertain payment outcomes explicit; commitment and recovery reflect authoritative coordinated state (`DEC-191`; `TST-P04-004`). The [Marketplace UI/UX specification](../product/MARKETPLACE-UI-UX-SPECIFICATION.md) owns presentation details and preserves the local authentication exception in `DEC-190` plus its public-release restoration gate. This addition remains **Specified — Not Executed — Not Verified**.
+
 ## Policies, objects, and state
 
 `POL-FIN-001`–`POL-FIN-005`, `INV-PAY-001`, `INV-CHK-001`; CheckoutQuote, CheckoutHold, Purchase, PaymentAttempt, LedgerTransaction/Posting, Earning, Transfer, PayoutBatch, PromotionReservation. `STATE-CHK-001`, `STATE-PAY-001`, `STATE-EARN-001`; `EVT-CHECKOUT-*`, `EVT-PAYMENT-*`, `EVT-LEDGER-*`, `EVT-PAYOUT-*`.

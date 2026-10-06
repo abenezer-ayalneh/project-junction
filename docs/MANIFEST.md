@@ -28,19 +28,20 @@ This is the authoritative inventory. `Owner` means normative owner, not a person
 
 ## Product and experience
 
-| Document                                                  | Status  | Purpose                           | Owner        | Deps                   |
-| --------------------------------------------------------- | ------- | --------------------------------- | ------------ | ---------------------- |
-| `docs/product/PRODUCT-DESCRIPTION.md`                     | S/NE/NV | product/actor experience          | product      | decisions, scope       |
-| `docs/product/VISION-OUTCOMES-AND-SUCCESS.md`             | S/NE/NV | portfolio vision and success      | product      | claims/evidence        |
-| `docs/product/AUDIENCE-PERSONAS-AND-JOBS.md`              | S/NE/NV | audience and jobs                 | product      | role model             |
-| `docs/product/ROLES-PERMISSIONS-AND-RESPONSIBILITIES.md`  | S/NE/NV | product role responsibilities     | product      | access/security        |
-| `docs/product/SCOPE-AND-EXCLUSIONS.md`                    | S/NE/NV | inclusion/exclusion boundary      | product      | deferred backlog       |
-| `docs/product/FEATURE-CATALOG.md`                         | S/NE/NV | public capability inventory       | product      | requirements           |
-| `docs/product/END-TO-END-USER-JOURNEYS.md`                | S/NE/NV | Customer/Vendor/Platform journeys | product      | policies/states        |
-| `docs/product/PORTFOLIO-POSITIONING-AND-CLAIMS.md`        | S/NE/NV | truthful public positioning       | product      | evidence/demo          |
-| `docs/product/UX-DESIGN-SYSTEM-AND-RESPONSIVENESS.md`     | S/NE/NV | target UX/design basis            | product UX   | accessibility/frontend |
-| `docs/product/ACCESSIBILITY-I18N-AND-LOW-CONNECTIVITY.md` | S/NE/NV | inclusive/connectedness behavior  | product UX   | quality/security       |
-| `docs/product/SEED-CATEGORIES-AND-SYNTHETIC-CONTENT.md`   | S/NE/NV | synthetic seed boundary           | product/demo | future research        |
+| Document                                                  | Status  | Purpose                                  | Owner          | Deps                            |
+| --------------------------------------------------------- | ------- | ---------------------------------------- | -------------- | ------------------------------- |
+| `docs/product/PRODUCT-DESCRIPTION.md`                     | S/NE/NV | product/actor experience                 | product        | decisions, scope                |
+| `docs/product/VISION-OUTCOMES-AND-SUCCESS.md`             | S/NE/NV | portfolio vision and success             | product        | claims/evidence                 |
+| `docs/product/AUDIENCE-PERSONAS-AND-JOBS.md`              | S/NE/NV | audience and jobs                        | product        | role model                      |
+| `docs/product/ROLES-PERMISSIONS-AND-RESPONSIBILITIES.md`  | S/NE/NV | product role responsibilities            | product        | access/security                 |
+| `docs/product/SCOPE-AND-EXCLUSIONS.md`                    | S/NE/NV | inclusion/exclusion boundary             | product        | deferred backlog                |
+| `docs/product/FEATURE-CATALOG.md`                         | S/NE/NV | public capability inventory              | product        | requirements                    |
+| `docs/product/END-TO-END-USER-JOURNEYS.md`                | S/NE/NV | Customer/Vendor/Platform journeys        | product        | policies/states                 |
+| `docs/product/PORTFOLIO-POSITIONING-AND-CLAIMS.md`        | S/NE/NV | truthful public positioning              | product        | evidence/demo                   |
+| `docs/product/UX-DESIGN-SYSTEM-AND-RESPONSIVENESS.md`     | S/NE/NV | target UX/design basis                   | product UX     | accessibility/frontend          |
+| `docs/product/MARKETPLACE-UI-UX-SPECIFICATION.md`         | S/NE/NV | marketplace composition and interactions | marketplace UX | design system, phases, research |
+| `docs/product/ACCESSIBILITY-I18N-AND-LOW-CONNECTIVITY.md` | S/NE/NV | inclusive/connectedness behavior         | product UX     | quality/security                |
+| `docs/product/SEED-CATEGORIES-AND-SYNTHETIC-CONTENT.md`   | S/NE/NV | synthetic seed boundary                  | product/demo   | future research                 |
 
 ## Requirements
 

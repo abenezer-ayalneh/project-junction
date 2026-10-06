@@ -39,6 +39,8 @@ The UI uses stock shadcn/ui components and Lucide icons over Tailwind 4 and sema
 
 Pages and components express layout and appearance through Tailwind utilities. The global stylesheet owns Tailwind/shadcn setup and the semantic token bridge for color modes; it does not own page or component presentation. Use Tailwind variants and reusable components before introducing focused CSS for behavior utilities that cannot be represented clearly in markup.
 
+The [Marketplace UI/UX specification](../product/MARKETPLACE-UI-UX-SPECIFICATION.md) owns public/Customer shopping hierarchy and interactions, including the public-contract gaps and phase-dependent affordances. Implement it within the rendering/state boundaries above; its target requirements do not imply that new routes, reads, or commands already exist.
+
 ## Accessibility, i18n, and connectivity
 
 - WCAG 2.2 AA is a release criterion.

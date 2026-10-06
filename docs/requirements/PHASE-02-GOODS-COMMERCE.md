@@ -24,6 +24,8 @@ A verified Customer selects a Vendor Location and pickup or Vendor-managed deliv
 - `REQ-P02-POL-001`: pickup is 72 hours plus a 48-hour grace, then return/inspection/refund treatment; it is not a Booking.
 - `REQ-P02-RET-001`: unused-goods change-of-mind templates are Standard 7 calendar days or Flexible 14 calendar days from verified handoff with no restocking fee; fault/wrong-item/material-misdescription protection is 30 days; policies snapshot per line.
 
+`REQ-P02-UX-001`: Customer Product details make SKU/variant, quantity, Location, price, fulfillment eligibility, and policy context explicit before Add to Cart; missing selections, stock conflicts, and failed reads have safe recovery (`DEC-191`; `TST-P02-004`). The [Marketplace UI/UX specification](../product/MARKETPLACE-UI-UX-SPECIFICATION.md) owns presentation details. This addition remains **Specified — Not Executed — Not Verified** and is not covered by the local inventory-seam evidence below.
+
 ## Policies, objects, and state
 
 Uses `POL-GOOD-001`–`POL-GOOD-004`, `INV-INV-001`, `INV-FUL-001`, `INV-ORD-001`. Objects: InventoryMovement, CheckoutQuote/Hold, Purchase, VendorOrder, Fulfillment, AddressSnapshot, ReturnCase. States: `STATE-INV-001`, `STATE-CHK-001`, `STATE-ORD-001`, `STATE-FUL-001`, `STATE-RET-001`. Events: `EVT-STOCK-*`, `EVT-HOLD-*`, `EVT-ORDER-*`, `EVT-FULFILLMENT-*`.
