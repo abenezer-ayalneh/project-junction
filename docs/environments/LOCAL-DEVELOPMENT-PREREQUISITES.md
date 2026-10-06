@@ -9,14 +9,14 @@ No prerequisite has been installed or verified by this documentation work.
 
 ## Required tool families
 
-| Tool                  | Target                                           | Purpose                                                                                  |
-| --------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------- |
-| Git                   | Current supported stable                         | Source history and review                                                                |
-| Node.js               | 24 LTS [DEC-121]                                 | Next/Nest/Nx runtime                                                                     |
-| pnpm/Corepack         | Stable major pinned at repository initialization | Dependency and workspace commands                                                        |
-| Docker Engine/Desktop | Compose v2 capable                               | PostgreSQL/PostGIS, Redis, Meilisearch, object service, mail/test services               |
-| POSIX shell           | macOS zsh is primary developer context           | Documented task wrappers                                                                 |
-| `age` and SOPS        | Pinned supported versions                        | Optional local encrypted-secret workflow; never required for ordinary synthetic defaults |
+| Tool                  | Target                                           | Purpose                                                                    |
+| --------------------- | ------------------------------------------------ | -------------------------------------------------------------------------- |
+| Git                   | Current supported stable                         | Source history and review                                                  |
+| Node.js               | 24 LTS [DEC-121]                                 | Next/Nest/Nx runtime                                                       |
+| pnpm/Corepack         | Stable major pinned at repository initialization | Dependency and workspace commands                                          |
+| Docker Engine/Desktop | Compose v2 capable                               | PostgreSQL/PostGIS, Redis, Meilisearch, object service, mail/test services |
+| POSIX shell           | macOS zsh is primary developer context           | Documented task wrappers                                                   |
+| `age` and SOPS        | Pinned supported versions                        | Optional encrypted-secret workflow; not required for local account setup   |
 
 Optional diagnostic clients include PostgreSQL client tools matching server major, Redis CLI, `curl`, an S3 client, and browser accessibility/dev tools. Exact patch versions are recorded only when the repository is initialized; they are not invented here.
 
@@ -26,7 +26,7 @@ Optional diagnostic clients include PostgreSQL client tools matching server majo
 - Ports are configurable so Junction does not require stopping unrelated local projects.
 - Source checkout resides on a case-sensitive-safe path and supports long filenames.
 - Clock and time zone are correct; scheduling tests explicitly cover `Africa/Addis_Ababa` and UTC.
-- Local development uses synthetic identities and media. Real identity documents, production keys, or customer data are prohibited.
+- Local development uses Better Auth accounts in the local database, with email delivered to Mailpit and Google OAuth configured for local use. Do not use real identity documents, production keys, or customer data.
 
 ## Future verification checklist
 

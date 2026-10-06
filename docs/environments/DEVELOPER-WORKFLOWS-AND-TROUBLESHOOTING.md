@@ -14,7 +14,7 @@
 3. Regenerate contracts only through the repository task; inspect generated diffs.
 4. Work within one bounded context and update its requirements/ADR/contracts when behavior changes.
 5. Run affected lint, type, unit, integration, authorization, and contract checks.
-6. Exercise the changed journey in a synthetic persona.
+6. Exercise the changed journey with a real local account and its persisted role or membership.
 7. Inspect exact diff and update traceability/evidence before review.
 
 Proposed future task names include `pnpm check`, `pnpm test:affected`, `pnpm test:integration`, `pnpm test:e2e`, `pnpm contracts:check`, and `pnpm docs:check`. They are **DERIVED-PLAN-DEFAULTS**, not existing commands.
@@ -28,7 +28,7 @@ Proposed future task names include `pnpm check`, `pnpm test:affected`, `pnpm tes
 3. Check API readiness, worker heartbeat, queue lag, and database migration head.
 4. Check whether failure belongs to authoritative PostgreSQL state or a derived Redis/search/realtime view.
 5. Correlate request, outbox, job, provider, inbox, and reconciliation IDs.
-6. Reproduce with a minimal synthetic workspace and preserve non-secret evidence.
+6. Reproduce with a fresh local account and disposable local records; use controlled fixtures only inside isolated integration tests.
 
 ## Failure guide
 

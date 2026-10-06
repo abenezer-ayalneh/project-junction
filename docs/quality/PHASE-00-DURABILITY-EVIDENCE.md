@@ -2,32 +2,15 @@
 
 Status: historical evidence only. The 2026-09-29 real-runtime cutover removed the documented demo, fixture-account, fake-provider, and in-process effect paths; migration `20260929000000_retire_synthetic_schema` also removes their database structures. The sections below record prior evidence and must not be treated as supported behavior.
 
-## Scope and reproduction
+## Historical scope
 
 This evidence concerns the Phase 00 continuation of the in-memory prototype. PostgreSQL 18/PostGIS runs in the project Compose service on loopback port 55432. The image requires AMD64 emulation on this ARM Mac. No external provider, real identity, public deployment, or commerce is involved. The repository now has Git history; the source checksums below describe the original pre-commit evidence snapshot.
 
-Use Node 24 and pnpm 10.32.1. Install dependencies with `pnpm install`, then run:
+The synthetic runtime described below was retired by the 2026-09-29 cutover. Do not use this record as a setup or reproduction guide. Current local development and acceptance procedures are in [Local Development Setup](../environments/LOCAL-DEVELOPMENT-SETUP.md) and [Phase 00 Local Acceptance Evidence](./PHASE-00-LOCAL-ACCEPTANCE-EVIDENCE.md).
 
-For reproducing this historical local synthetic evidence, use `.env.integration.example` as the source for a new ignored `.env`. The current `.env.example` is the private staging template. Preserve any existing ignored `.env` rather than overwriting it.
+In this historical implementation, `FOUNDATION_STORAGE=postgresql` selected durable synthetic storage, while unit-test doubles remained available in the other mode. Tests created scoped, short-lived synthetic sessions. The retired fake callback route required `SYNTHETIC_WEBHOOK_WORKSPACE_ID` and `SYNTHETIC_WEBHOOK_SECRET`; those settings do not configure the current local runtime.
 
-```sh
-pnpm env:local:up
-# Create .env from .env.integration.example only if no local .env already exists.
-# Export its local settings into the current shell without printing them.
-set -a
-. ./.env
-set +a
-pnpm db:generate
-pnpm db:migrate:local
-pnpm db:compat:check
-pnpm check
-pnpm test:integration
-pnpm dev
-```
-
-`FOUNDATION_STORAGE=postgresql` selects durable synthetic storage and requires `DATABASE_URL`. Without that mode, existing unit-test doubles remain available and health labels them accordingly. Durable mode never seeds the prototype's fixed session. Tests create scoped, short-lived synthetic sessions explicitly. `SYNTHETIC_WEBHOOK_WORKSPACE_ID` must identify a synthetic workspace before the fake callback route is accepted. `SYNTHETIC_WEBHOOK_SECRET` supplies the local HMAC key; this adapter is not provider-specific signature verification.
-
-`db:compat:check` applies the migration history to a uniquely named disposable schema, then compares that exact database schema with `prisma/schema.prisma`. It drops only that generated schema in `finally`. `db:restore:check` verifies that `DATABASE_URL` is the configured loopback Compose PostgreSQL port, creates a separately generated schema, migrates and seeds it, takes a custom-format `pg_dump` inside the PostgreSQL container, drops only that generated schema, restores it with `pg_restore`, verifies the persisted fixture counts and per-persona quota fields, then removes both the restored generated schema and the container-local temporary dump in `finally`. `test:integration` runs these checks through Nx after applying the migration chain twice, then executes PostgreSQL tests and the cross-process smoke in a separate uniquely named schema. Use the project's synthetic database. It requires schema/extension creation privileges. No shared schema is reset or truncated. Logs must not contain environment values, tokens, or provider payloads.
+In the historical run, `db:compat:check` applied migration history to a uniquely named disposable schema and compared it with `prisma/schema.prisma`; it dropped only that generated schema. `db:restore:check` used a loopback Compose PostgreSQL endpoint, created and seeded a generated schema, performed a custom-format dump/restore rehearsal, checked persisted fixture counts and per-persona quota fields, and removed generated schemas and the temporary dump. The old `test:integration` flow ran those checks through Nx and then executed PostgreSQL tests and a cross-process smoke in another generated schema. These commands and fixture setup record past evidence only; they are not instructions for the current local runtime. No shared schema was reset or truncated. Historical logs must not contain environment values, tokens, or provider payloads.
 
 ## Requirement-to-evidence boundary
 

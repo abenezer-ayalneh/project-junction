@@ -7,12 +7,12 @@
 
 No Project Junction environment, DNS record, provider configuration, secret, Compose project, or infrastructure resource has been created. This document defines the target separation rule; it does not authorize provisioning or data movement.
 
-| Environment               | Purpose                                       | Data/provider boundary                        | Promotion allowed                      |
-| ------------------------- | --------------------------------------------- | --------------------------------------------- | -------------------------------------- |
-| Local                     | individual development/tests                  | synthetic fixtures/fakes                      | code/schema only through reviewed flow |
-| Private staging           | provider sandbox and pre-release verification | isolated sandbox data/keys                    | immutable artifact/schema after gate   |
-| Portfolio production/demo | public synthetic reviewer experience          | synthetic data/fakes/sandbox-labeled behavior | immutable artifact/schema only         |
-| Future commercial         | separate unapproved operation                 | real data/providers only after gates          | never demo/staging data or credentials |
+| Environment               | Purpose                                              | Data/provider boundary                            | Promotion allowed                      |
+| ------------------------- | ---------------------------------------------------- | ------------------------------------------------- | -------------------------------------- |
+| Local                     | development with real local accounts; isolated tests | fresh local records; fakes only in isolated tests | code/schema only through reviewed flow |
+| Private staging           | provider sandbox and pre-release verification        | isolated sandbox data/keys                        | immutable artifact/schema after gate   |
+| Portfolio production/demo | public synthetic reviewer experience                 | synthetic data/fakes/sandbox-labeled behavior     | immutable artifact/schema only         |
+| Future commercial         | separate unapproved operation                        | real data/providers only after gates              | never demo/staging data or credentials |
 
 Databases, object prefixes, secrets, provider accounts, DNS/origins, telemetry projects, queues, caches, access groups, and backups are unique per environment. No data, session, identity document, provider object, demo workspace, or secret is promoted between them. A code/schema artifact may move only via controlled gate with compatibility/rollback plan. Exception requires an explicit new approved decision.
 

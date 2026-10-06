@@ -39,4 +39,4 @@ Expired/revoked/mismatched scope denies safely; duplicate command resolves to or
 
 See [Phase 00 durability evidence](../quality/PHASE-00-DURABILITY-EVIDENCE.md) for the dated, requirement-linked local regression record. That evidence does not prove the new private-staging exit or close Phase 06 release gates.
 
-The [real-service transition tracker](../quality/PHASE-00-REAL-TRANSITION.md) records the subsequent private-staging work and its open acceptance gates. The local synthetic acceptance does not satisfy those gates.
+The [real-service transition tracker](../quality/PHASE-00-REAL-TRANSITION.md) records the subsequent private-staging work and its open acceptance gates. The earlier synthetic-flow acceptance is historical and does not satisfy those gates or describe current local development.

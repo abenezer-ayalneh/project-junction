@@ -1,6 +1,6 @@
 # Phase 01 — Vendor Supply and Discovery
 
-**Target status:** Specified — Not Executed — Not Verified. **Local synthetic status:** Accepted against the [Phase 01 evidence record](../quality/PHASE-01-ACCEPTANCE-EVIDENCE.md). The Vendor/catalog API and PostgreSQL slice, private Vendor workspace, scoped Platform review, CSV preview/commit/export, public discovery/storefront, Customer saved/followed state, and opt-in recommendations have integration and served-browser evidence. The accepted media profile has local signed upload, sealed quarantine, scan, transcode, private moderation, silent and captioned public playback, keyboard/narrow-viewport checks, and unpublish revocation. Expired upload, demo workspace, and orphan-object cleanup have tested local paths. Target MinIO acceptance, independent accessibility review, and validated non-demo retention durations remain open. Production, provider, and commercial acceptance remain open.
+**Target status:** Specified — Not Executed — Not Verified. **Local status:** the Vendor/catalog API and PostgreSQL slice has integration and served-browser evidence. The linked [Phase 01 record](../quality/PHASE-01-ACCEPTANCE-EVIDENCE.md) documents historical disposable-fixture journeys; the retired synthetic workspace flow is not part of current local development. The private Vendor workspace, scoped Platform review, CSV preview/commit/export, public discovery/storefront, Customer saved/followed state, and opt-in recommendations have integration and served-browser evidence. The media profile has local signed upload, sealed quarantine, scan, transcode, private moderation, silent and captioned public playback, keyboard/narrow-viewport checks, and unpublish revocation. Historical fixture tests also covered expired upload, demo-workspace, and orphan-object cleanup. Target MinIO acceptance, independent accessibility review, and validated non-demo retention durations remain open. Production, provider, and commercial acceptance remain open.
 **Objective:** demonstrate safe business Vendor supply and discoverability without buyer commitment.  
 **Owner:** Vendor supply and catalog/discovery contexts  
 **Entry:** Phase 00 access/API/event boundaries. **Exit:** reviewed catalog/discovery acceptance.  
@@ -8,7 +8,7 @@
 
 ## Included / excluded
 
-Includes self-service Vendor application, private pre-approval setup, approval/rejection/restricted states, structured hybrid Storefronts, Location basics, vendor-owned product/service listings, typed taxonomy/search, low-risk publication review, CSV import/export, public browse, saved/follow actions, rule-based opt-in recommendation signals, and synthetic media/video. Excludes live KYB, real documents, a public Vendor API, C2C, regulated categories, and public social Q&A/feed.
+Includes self-service Vendor application, private pre-approval setup, approval/rejection/restricted states, structured hybrid Storefronts, Location basics, vendor-owned product/service listings, typed taxonomy/search, low-risk publication review, CSV import/export, public browse, saved/follow actions, rule-based opt-in recommendation signals, and media/video. Excludes live KYB, real documents, a public Vendor API, C2C, regulated categories, and public social Q&A/feed.
 
 ## Actors and proof journey
 

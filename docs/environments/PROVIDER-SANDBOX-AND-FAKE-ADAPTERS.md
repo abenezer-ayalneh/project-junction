@@ -9,7 +9,7 @@ No Project Junction provider configuration, key, webhook endpoint, sandbox test 
 
 ## Adapter modes and hard boundaries
 
-| Capability                   | Deterministic local fake                                        | Private staging target                                                    | Portfolio-demo mode                                                 | Hard boundary                                              |
+| Capability                   | Isolated integration-test fixture                               | Private staging target                                                    | Portfolio-demo mode                                                 | Hard boundary                                              |
 | ---------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------- |
 | payments, refunds, transfers | `FakePayment`: scripted success/failure/duplicate/late callback | Stripe sandbox/Connect                                                    | quota-limited Stripe sandbox with shared synthetic Connect accounts | no real money, settlement, escrow, or merchant/legal claim |
 | identity/KYB                 | synthetic verification-state fixture                            | Didit Sandbox only                                                        | synthetic verification fixture only                                 | no real documents or public-demo verification              |
@@ -19,7 +19,7 @@ No Project Junction provider configuration, key, webhook endpoint, sandbox test 
 | media                        | quarantine/scan/process fixture                                 | self-hosted MinIO and separate bucket/namespace                           | MinIO synthetic media only                                          | no public raw upload or cross-environment object reuse     |
 | telemetry                    | sanitized local sink                                            | separate Sentry/Better Stack projects                                     | separate portfolio projects/status checks                           | no sensitive payloads or shared project                    |
 
-`local-fake`, `staging-sandbox`, and `portfolio-demo` are explicit configuration modes. A failed adapter must fail closed in its selected mode; it may not silently fall back to a live, staging, or different-provider adapter. `future-commercial` is not an allowed runtime mode until the future launch gates are approved.
+The application has explicit `local`, `staging-sandbox`, and `portfolio-demo` modes. Deterministic fakes are test-only and are not a local application runtime mode. A failed adapter must fail closed in its selected mode; it may not silently fall back to a live, staging, or different-provider adapter. `future-commercial` is not an allowed runtime mode until the future launch gates are approved.
 
 ## Contract and callback requirements
 
@@ -39,7 +39,7 @@ pnpm providers:contract --adapter=meeting --scenario=provisioning-timeout
 pnpm providers:contract --adapter=notification --scenario=duplicate-callback
 ```
 
-These are **DERIVED-PLAN-DEFAULT** command shapes, not existing scripts. They must use synthetic identities, capture evidence without secret values, and leave no real communication, financial operation, identity submission, or provider object outside the designated test boundary.
+These are **DERIVED-PLAN-DEFAULT** command shapes, not existing scripts. They must use disposable identities inside isolated tests, capture evidence without secret values, and leave no real communication, financial operation, identity submission, or provider object outside the designated test boundary.
 
 ## Selection, cost, and ownership
 

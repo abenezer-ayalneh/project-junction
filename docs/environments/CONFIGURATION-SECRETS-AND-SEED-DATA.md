@@ -3,7 +3,7 @@
 > **Document status:** specified
 > **System claim:** **Specified — Not Executed — Not Verified**
 > **Decision coverage:** [`DEC-011`, `DEC-066`, `DEC-073`–`DEC-077`, `DEC-094`–`DEC-105`, `DEC-107`–`DEC-110`, `DEC-139`, `DEC-172`, `DEC-177`–`DEC-180`](../governance/DECISION-REGISTER.md)
-> **Normative owner:** configuration classification and synthetic-data rules
+> **Normative owner:** configuration classification, test fixtures, and demo seed rules
 
 ## Configuration classes
 
@@ -18,22 +18,22 @@ The API validates all required configuration at startup, rejects unknown environ
 
 The following are **configuration families**, not a created `.env` file or final variable names. At repository initialization, a typed configuration schema must assign exact names, validation, default behavior, owner, and environment availability without placing values in this document.
 
-| Configuration family                                                       | Sensitivity                  | Allowed environments                       | Owning boundary      | Notes                                                                         |
-| -------------------------------------------------------------------------- | ---------------------------- | ------------------------------------------ | -------------------- | ----------------------------------------------------------------------------- |
-| environment identity, public origins, build revision, feature visibility   | public/runtime non-secret    | local, CI, staging, portfolio              | platform delivery    | browser-visible values must not imply trust or contain keys                   |
-| database, Redis, search, object endpoint/namespace                         | secret or restricted runtime | local, staging, portfolio                  | platform/data        | environment-specific endpoint and namespace; never copied across environments |
-| session, token, encryption, VAPID private material                         | secret                       | local synthetic values, staging, portfolio | identity/security    | rotate with overlap where protocol requires; never browser-visible            |
-| provider API, webhook, OAuth, SMTP/SMS credentials                         | secret                       | matching adapter environment only          | provider integration | adapter mode and credential project must agree                                |
-| observability DSN/ingest, alert route, backup/B2, SOPS recovery references | restricted or secret         | staging, portfolio as applicable           | operations           | telemetry payload controls are separate from endpoint configuration           |
-| quota, retention, policy/version and synthetic seed selector               | runtime non-secret           | local, CI, staging, portfolio              | product/operations   | server validates safe bounds and records active version                       |
+| Configuration family                                                       | Sensitivity                  | Allowed environments              | Owning boundary      | Notes                                                                         |
+| -------------------------------------------------------------------------- | ---------------------------- | --------------------------------- | -------------------- | ----------------------------------------------------------------------------- |
+| environment identity, public origins, build revision, feature visibility   | public/runtime non-secret    | local, CI, staging, portfolio     | platform delivery    | browser-visible values must not imply trust or contain keys                   |
+| database, Redis, search, object endpoint/namespace                         | secret or restricted runtime | local, staging, portfolio         | platform/data        | environment-specific endpoint and namespace; never copied across environments |
+| session, token, encryption, VAPID private material                         | secret                       | local, staging, portfolio         | identity/security    | rotate with overlap where protocol requires; never browser-visible            |
+| provider API, webhook, OAuth, SMTP/SMS credentials                         | secret                       | matching adapter environment only | provider integration | adapter mode and credential project must agree                                |
+| observability DSN/ingest, alert route, backup/B2, SOPS recovery references | restricted or secret         | staging, portfolio as applicable  | operations           | telemetry payload controls are separate from endpoint configuration           |
+| quota, retention, policy/version and synthetic seed selector               | runtime non-secret           | CI, portfolio                     | product/operations   | server validates safe bounds and records active version                       |
 
-The checked-in `.env.example` is the fail-closed private staging template: it names required values without usable credentials or a deployable hostname. `.env.integration.example` preserves the synthetic local test fixture and must never be loaded into staging.
+The checked-in `.env.local.example` configures local development with real local accounts and loopback services. `.env.example` is the fail-closed private staging template: it names required values without usable credentials or a deployable hostname. `.env.integration.example` is for isolated regression tests only and must not be used to run the local application or loaded into staging.
 
 ## Local and CI
 
-Local integration tests use the explicitly named `.env.integration.example` fixture and deterministic fake providers. CI uses job-scoped synthetic values. Neither receives staging/portfolio secrets. The default `.env.example` contains only staging variable names and safe non-secret mode settings.
+The local application uses the explicit local runtime configuration, fresh Better Auth accounts, and Mailpit. Integration tests use disposable identities and deterministic provider fixtures through the isolated test harness; they do not provide a synthetic application runtime. CI uses job-scoped test values. Neither local tests nor CI receive staging/portfolio secrets. The default `.env.example` contains only staging variable names and safe non-secret mode settings.
 
-Local setup must make adapter mode and synthetic seed profile observable before application start. CI must reject a configuration that selects a non-fake provider or an environment identity other than test/CI. A secret supplied through a command-line argument, screenshot, issue, test fixture, client bundle, or generated artifact is a failed configuration practice even when the value is synthetic.
+Local startup must identify the local runtime and reject test-only configuration. Test evidence records any controlled provider fixture and scenario. CI must reject an environment identity other than test/CI. A secret supplied through a command-line argument, screenshot, issue, test fixture, client bundle, or generated artifact is a failed configuration practice, including when the value is synthetic.
 
 ## Staging and portfolio
 
@@ -41,9 +41,9 @@ SOPS+age encrypted source material is decrypted on the target host into Compose 
 
 Configuration change is a release input: it records the target environment, owner, reason, validation result, dependent release digest, and rotation/rollback plan. It may not be "tested" by pointing staging at portfolio data, secrets, buckets, provider webhooks, or telemetry projects.
 
-## Synthetic seed contract
+## Portfolio-demo seed contract
 
-The seed set uses ETB, `Africa/Addis_Ababa`, Ethiopian address/phone conventions, and clearly synthetic Dire Dawa content [DEC-011]. Categories are apparel/accessories, phone/computer accessories, home/everyday goods, grooming, tutoring/coaching, and photography/creative appointments [DEC-180].
+This contract applies only to the separately specified portfolio demo. It does not seed or define local development accounts or data. Demo content uses ETB, `Africa/Addis_Ababa`, Ethiopian address/phone conventions, and clearly synthetic Dire Dawa context [DEC-011]. Categories are apparel/accessories, phone/computer accessories, home/everyday goods, grooming, tutoring/coaching, and photography/creative appointments [DEC-180].
 
 Seeds must cover:
 

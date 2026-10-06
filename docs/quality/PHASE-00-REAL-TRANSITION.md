@@ -1,6 +1,6 @@
 # Phase 00 real-service transition
 
-Status: **suspended on 2026-10-05; preserved for pre-public-release restoration**. The earlier Phase 00 acceptance covered a local synthetic baseline. It is not evidence of private staging or real-provider acceptance.
+Status: **suspended on 2026-10-05; preserved for pre-public-release restoration**. The earlier Phase 00 acceptance covered a local synthetic baseline. It is not evidence of private staging or real-provider acceptance. This is a historical transition record; use [current documentation status](../STATUS.md) and [local acceptance evidence](./PHASE-00-LOCAL-ACCEPTANCE-EVIDENCE.md) for the current local account flow.
 
 ## Suspension record — 2026-10-05
 

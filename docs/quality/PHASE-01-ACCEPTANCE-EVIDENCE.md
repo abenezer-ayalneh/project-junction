@@ -2,9 +2,9 @@
 
 **Assessment date:** 2026-09-25
 
-**Scope:** local synthetic private milestone only
+**Scope:** historical local milestone verified with disposable fixtures; this is not the current local development flow
 
-**Local synthetic phase exit:** verified
+**Historical fixture-based phase exit:** verified
 
 **Target phase exit:** open
 
