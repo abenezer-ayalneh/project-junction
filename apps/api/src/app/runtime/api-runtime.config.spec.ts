@@ -59,8 +59,12 @@ describe('API runtime configuration', () => {
 
 	it('requires a valid Redis URL when realtime fanout is enabled', () => {
 		expect(() => getApiRuntimeConfig(configService({ JUNCTION_RUNTIME_MODE: 'local', REALTIME_REDIS_FANOUT: 'enabled' }))).toThrow('REDIS_URL is required')
-		expect(() => getApiRuntimeConfig(configService({ JUNCTION_RUNTIME_MODE: 'local', REALTIME_REDIS_FANOUT: 'enabled', REDIS_URL: 'https://redis.example' }))).toThrow('redis or rediss')
-		expect(getApiRuntimeConfig(configService({ JUNCTION_RUNTIME_MODE: 'local', REALTIME_REDIS_FANOUT: 'enabled', REDIS_URL: 'redis://127.0.0.1:6379' }))).toMatchObject({
+		expect(() =>
+			getApiRuntimeConfig(configService({ JUNCTION_RUNTIME_MODE: 'local', REALTIME_REDIS_FANOUT: 'enabled', REDIS_URL: 'https://redis.example' })),
+		).toThrow('redis or rediss')
+		expect(
+			getApiRuntimeConfig(configService({ JUNCTION_RUNTIME_MODE: 'local', REALTIME_REDIS_FANOUT: 'enabled', REDIS_URL: 'redis://127.0.0.1:6379' })),
+		).toMatchObject({
 			realtimeRedisFanout: true,
 			redisUrl: 'redis://127.0.0.1:6379',
 		})

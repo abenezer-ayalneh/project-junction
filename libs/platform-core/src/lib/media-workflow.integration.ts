@@ -34,7 +34,7 @@ suite('Phase 01 sealed video worker path', () => {
 		if (!databaseUrl || !endpoint || !bucket || !region || !accessKeyId || !secretAccessKey)
 			throw new Error('Local media integration configuration is incomplete.')
 		if (!['127.0.0.1', 'localhost'].includes(new URL(endpoint).hostname)) throw new Error('Media integration requires a loopback object store.')
-		const repository = new PostgresFoundation(databaseUrl, { deliver: async () => ({ duplicate: false }) })
+		const repository = new PostgresFoundation(databaseUrl, { deliver: () => Promise.resolve({ duplicate: false }) })
 		const client = new S3Client({ endpoint, region, forcePathStyle: true, credentials: { accessKeyId, secretAccessKey } })
 		const directory = await mkdtemp(join(tmpdir(), 'junction-media-workflow-'))
 		const keys: string[] = []

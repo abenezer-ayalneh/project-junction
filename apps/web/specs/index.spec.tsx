@@ -22,10 +22,11 @@ function updateSystemTheme(matches: boolean) {
 }
 
 describe('Page', () => {
-	it('identifies the private staging environment', async () => {
+	it('identifies the configured environment', async () => {
 		render(await Page({ searchParams: Promise.resolve({}) }))
 
-		expect(screen.getByText('Private staging')).toBeTruthy()
+		const label = process.env['NEXT_PUBLIC_JUNCTION_RUNTIME_MODE'] === 'local' ? 'Local development' : 'Private staging'
+		expect(screen.getByText(label)).toBeTruthy()
 		expect(screen.getByRole('heading', { name: /find the good work happening nearby/i })).toBeTruthy()
 	})
 

@@ -71,7 +71,10 @@ export default function AccountPage() {
 					) : session ? (
 						<div className="space-y-4">
 							<p>Signed in as {session.user.email}</p>
-							<p className="text-sm text-muted-foreground">This local development account uses verified email or Google sign-in. Multi-factor and identity verification return before public release.</p>
+							<p className="text-sm text-muted-foreground">
+								This local development account uses verified email or Google sign-in. Multi-factor and identity verification return before
+								public release.
+							</p>
 							<Button type="button" variant="outline" onClick={() => void authClient.signOut()}>
 								Sign out
 							</Button>

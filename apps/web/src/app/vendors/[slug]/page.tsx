@@ -21,8 +21,8 @@ export default async function VendorStorefront({ params }: { params: Promise<{ s
 				<p className="text-sm text-muted-foreground">{runtimeLabel}</p>
 				<h1 className="mt-3 text-3xl font-semibold tracking-tight">This storefront is unavailable</h1>
 				<p className="mt-3 max-w-xl leading-7 text-muted-foreground">
-					The Vendor may be unpublished, or the {runtimeLabel.toLowerCase()} catalog may be unavailable. Public content is shown only while the Vendor is approved and
-					published.
+					The Vendor may be unpublished, or the {runtimeLabel.toLowerCase()} catalog may be unavailable. Public content is shown only while the Vendor
+					is approved and published.
 				</p>
 				<Link href="/" className="mt-6 inline-flex w-fit items-center gap-2 text-sm font-medium underline underline-offset-4">
 					<ArrowLeft className="size-4" aria-hidden="true" />

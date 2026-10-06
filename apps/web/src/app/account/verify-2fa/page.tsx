@@ -91,7 +91,9 @@ export default function VerifyTwoFactorPage() {
 						<CardTitle>Multi-factor authentication is deferred</CardTitle>
 					</CardHeader>
 					<CardContent>
-						<p className="text-sm text-muted-foreground">Local development uses verified email or Google sign-in. Multi-factor authentication returns before public release.</p>
+						<p className="text-sm text-muted-foreground">
+							Local development uses verified email or Google sign-in. Multi-factor authentication returns before public release.
+						</p>
 					</CardContent>
 				</Card>
 			</main>

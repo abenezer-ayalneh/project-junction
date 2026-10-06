@@ -25,7 +25,7 @@ import {
 	VendorApplicationReviewSchema,
 	VendorFollowMutationSchema,
 } from 'contracts'
-import { AccessDeniedError, DiditSandboxAdapter, PostgresFoundation, applicationRuntimeMode } from 'platform-core'
+import { AccessDeniedError, applicationRuntimeMode, DiditSandboxAdapter, PostgresFoundation } from 'platform-core'
 import { getAuth } from 'platform-core/auth'
 
 export function diditObservedAt(value: unknown): Date | undefined {

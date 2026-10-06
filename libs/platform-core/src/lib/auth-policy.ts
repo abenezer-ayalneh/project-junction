@@ -1,9 +1,11 @@
-import { applicationRuntimeMode, type ApplicationRuntimeMode } from './runtime.js'
+import { type ApplicationRuntimeMode, applicationRuntimeMode } from './runtime.js'
 
 export const GoogleAccountLinkingConfiguration = {
 	enabled: true,
 	requireLocalEmailVerified: true,
-	trustedProviders: ['google'],
+	// Trusted providers bypass the provider's emailVerified check in Better Auth.
+	// Google is the only configured social provider; require its verified claim.
+	trustedProviders: [],
 }
 
 export function localGoogleProvider(env: NodeJS.ProcessEnv = process.env) {

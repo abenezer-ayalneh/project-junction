@@ -49,6 +49,29 @@ async function createReviewerSession(repository: PostgresFoundation, workspaceId
 	return { id: sessionId }
 }
 
+// Strict-policy cases use real persisted authentication fixtures, independently
+// of the local development policy used by the rest of this disposable suite.
+async function seedStrictAuthSession(repository: PostgresFoundation, sessionId: string) {
+	const session = await repository.db.session.findUniqueOrThrow({ where: { id: sessionId }, include: { user: true } })
+	await repository.db.$executeRaw`INSERT INTO junction_auth."user" (id, name, email, "emailVerified")
+		VALUES (${session.userId}, ${'Strict integration fixture'}, ${session.user.email}, true) ON CONFLICT (id) DO NOTHING`
+	await repository.db.$executeRaw`INSERT INTO junction_auth.session (id, "expiresAt", token, "updatedAt", "userId")
+		VALUES (${session.id}, ${session.expiresAt}, ${randomUUID()}, now(), ${session.userId}) ON CONFLICT (id) DO NOTHING`
+}
+
+function strictIt(name: string, assertion: () => Promise<void>) {
+	it(name, async () => {
+		const previous = process.env['JUNCTION_RUNTIME_MODE']
+		process.env['JUNCTION_RUNTIME_MODE'] = 'staging'
+		try {
+			await assertion()
+		} finally {
+			if (previous === undefined) delete process.env['JUNCTION_RUNTIME_MODE']
+			else process.env['JUNCTION_RUNTIME_MODE'] = previous
+		}
+	})
+}
+
 const suite = process.env['FOUNDATION_INTEGRATION'] === '1' ? describe : describe.skip
 suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 	let repository: PostgresFoundation
@@ -76,15 +99,17 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 			data: { userId: user.id, workspaceId, activeVendorId: vendorId, activeRole: 'vendor_owner', expiresAt: new Date(Date.now() + 3600000) },
 		})
 		sessionId = session.id
+		await seedStrictAuthSession(repository, sessionId)
 	})
 	afterAll(async () => {
 		await repository?.close()
 		await other?.close()
 	})
 
-	it('bridges an authenticated session without treating verified email as adult verification', async () => {
+	strictIt('bridges an authenticated session without treating verified email as adult verification', async () => {
 		const authSession = { sessionId: randomUUID(), userId: randomUUID(), email: `${randomUUID()}@example.com`, expiresAt: new Date(Date.now() + 3600000) }
 		await Promise.all([repository.ensureAuthenticatedSession(authSession), other.ensureAuthenticatedSession(authSession)])
+		await seedStrictAuthSession(repository, authSession.sessionId)
 		expect(await repository.db.session.count({ where: { id: authSession.sessionId } })).toBe(1)
 		const user = await repository.db.user.findUniqueOrThrow({ where: { id: authSession.userId } })
 		expect(user.adultVerificationState).toBe('unverified')
@@ -139,7 +164,7 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		await repository.ensureAuthenticatedSession({ sessionId: nextSessionId, userId, email, expiresAt })
 		await expect(repository.accessContext(nextSessionId)).resolves.toMatchObject({ activeVendorId: created.vendorId })
 	})
-	it('switches only among the real account’s current Owner memberships after recent MFA', async () => {
+	strictIt('switches only among the real account’s current Owner memberships after recent MFA', async () => {
 		const userId = randomUUID()
 		const sessionId = randomUUID()
 		await repository.ensureAuthenticatedSession({
@@ -148,6 +173,7 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 			email: `${randomUUID()}@example.com`,
 			expiresAt: new Date(Date.now() + 3600000),
 		})
+		await seedStrictAuthSession(repository, sessionId)
 		await repository.db.user.update({ where: { id: userId }, data: { adultVerificationState: 'verified', verifiedAt: new Date() } })
 		const session = await repository.db.session.findUniqueOrThrow({ where: { id: sessionId } })
 		const first = await repository.db.vendor.create({ data: { workspaceId: session.workspaceId, displayName: 'First workshop' } })
@@ -211,7 +237,7 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 			else process.env['JUNCTION_RUNTIME_MODE'] = previous
 		}
 	})
-	it('grants real reviewer access only with current MFA and removes it on revocation', async () => {
+	strictIt('grants real reviewer access only with current MFA and removes it on revocation', async () => {
 		const accounts = [0, 1].map(() => ({
 			sessionId: randomUUID(),
 			userId: randomUUID(),
@@ -219,6 +245,7 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 			expiresAt: new Date(Date.now() + 3600000),
 		}))
 		await Promise.all(accounts.map((account) => repository.ensureAuthenticatedSession(account)))
+		await Promise.all(accounts.map((account) => seedStrictAuthSession(repository, account.sessionId)))
 		const [reviewer, applicant] = accounts
 		const applicantSession = await repository.db.session.findUniqueOrThrow({ where: { id: applicant.sessionId } })
 		await repository.db.user.updateMany({
@@ -265,9 +292,10 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		expect(await repository.db.outboxEvent.count({ where: { workspaceId: applicantSession.workspaceId } })).toBe(after.outbox)
 	})
 
-	it('records a Didit status update once and grants adult access only after reconciliation', async () => {
+	strictIt('records a Didit status update once and grants adult access only after reconciliation', async () => {
 		const authSession = { sessionId: randomUUID(), userId: randomUUID(), email: `${randomUUID()}@example.com`, expiresAt: new Date(Date.now() + 3600000) }
 		await repository.ensureAuthenticatedSession(authSession)
+		await seedStrictAuthSession(repository, authSession.sessionId)
 		const diditSessionId = `session-${randomUUID()}`
 		await repository.recordDiditSessionIssued(authSession.userId, diditSessionId)
 		const update = {
@@ -306,9 +334,10 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		expect(user.verifiedAt).toBeNull()
 	})
 
-	it('reconciles an issued Didit session when a signed callback is delayed or lost', async () => {
+	strictIt('reconciles an issued Didit session when a signed callback is delayed or lost', async () => {
 		const authSession = { sessionId: randomUUID(), userId: randomUUID(), email: `${randomUUID()}@example.com`, expiresAt: new Date(Date.now() + 3600000) }
 		await repository.ensureAuthenticatedSession(authSession)
+		await seedStrictAuthSession(repository, authSession.sessionId)
 		const diditSessionId = `session-${randomUUID()}`
 		await repository.recordDiditSessionIssued(authSession.userId, diditSessionId)
 		const request = jest.fn(() => Promise.resolve(new Response(JSON.stringify({ status: 'Approved' }), { status: 200 })))
@@ -483,7 +512,7 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		await repository.db.session.update({ where: { id: sessionId }, data: { expiresAt: new Date(Date.now() + 3600000) } })
 		expect((await repository.accessContext(sessionId)).locationIds).toEqual([locationId])
 	})
-	it('denies a user while adult verification is pending or rejected', async () => {
+	strictIt('denies a user while adult verification is pending or rejected', async () => {
 		await repository.db.user.update({ where: { id: userId }, data: { adultVerificationState: 'pending' } })
 		await expect(repository.accessContext(sessionId)).rejects.toThrow(AccessDeniedError)
 		await repository.db.user.update({ where: { id: userId }, data: { adultVerificationState: 'rejected' } })
@@ -516,7 +545,7 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 			else process.env['JUNCTION_RUNTIME_MODE'] = previous
 		}
 	})
-	it('requires fresh MFA and recent authentication for elevated mutations', async () => {
+	strictIt('requires fresh MFA and recent authentication for elevated mutations', async () => {
 		await expect(repository.acceptElevatedAuditMarker(sessionId, randomUUID(), { marker: 'elevated deny' })).rejects.toThrow(AccessDeniedError)
 		await repository.db.session.update({ where: { id: sessionId }, data: { mfaVerifiedAt: new Date(), recentAuthAt: new Date() } })
 		const accepted = await repository.acceptElevatedAuditMarker(sessionId, randomUUID(), { marker: 'elevated accept' })
@@ -1187,7 +1216,7 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		expect(replay).toMatchObject({
 			cursor: nextEvent.id,
 			restRefetchRequired: false,
-			events: [{ eventId: expect.any(String), type: 'ListingPublished', scope: { workspaceId }, payload: {} }],
+			events: [{ eventId: nextEvent.eventId, type: 'ListingPublished', scope: { workspaceId }, payload: {} }],
 		})
 		await repository.acknowledgeRealtimeCursor(sessionId, replay.cursor!)
 		expect(await repository.realtimeReplay(sessionId)).toMatchObject({ events: [], restRefetchRequired: false })

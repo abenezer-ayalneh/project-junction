@@ -4,9 +4,9 @@ import { ConnectedSocket, MessageBody, OnGatewayInit, SubscribeMessage, WebSocke
 import { createAdapter } from '@socket.io/redis-adapter'
 import {
 	DomainEventSchema,
+	RealtimeCursorAckSchema,
 	type RealtimeFoundationEvent,
 	RealtimeJoinRequestSchema,
-	RealtimeCursorAckSchema,
 	type RealtimeJoinResult,
 	RealtimeJoinResultSchema,
 	type RealtimeRoom,

@@ -8,11 +8,11 @@ const local = (): NodeJS.ProcessEnv => ({
 })
 
 describe('local Google authentication', () => {
-	it('links only trusted Google identities to an existing verified email account', () => {
+	it('requires verified provider email and an existing verified email account', () => {
 		expect(GoogleAccountLinkingConfiguration).toEqual({
 			enabled: true,
 			requireLocalEmailVerified: true,
-			trustedProviders: ['google'],
+			trustedProviders: [],
 		})
 	})
 

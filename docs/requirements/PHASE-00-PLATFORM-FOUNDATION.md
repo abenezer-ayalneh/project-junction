@@ -1,9 +1,9 @@
 # Phase 00 — Platform Foundation
 
-**Target status:** Specified — Not Executed — Not Verified. **Local status:** Accepted synthetic foundation on 2026-09-23; PostgreSQL-backed local authentication now replaces further staging development. Advanced verification remains a pre-public-release gate.
+**Target status:** Specified — Not Executed — Not Verified. **Local status:** Complete for the documented local-development scope on 2026-10-06. Advanced verification remains a pre-public-release gate.
 **Objective:** establish the future system’s safe, traceable foundation before any market capability.  
 **Owner:** platform foundation / architecture  
-**Entry:** documentation baseline accepted. **Local exit:** `TST-P00-001`–`TST-P00-005`, local real-account/email/Google evidence, reviewer authorization, outbox, and revocation paths. **Public-release gate:** MFA, adult identity verification, provider webhook/reconciliation, deployment, recovery, and capacity acceptance. Phase 06 retains the public-release gates.
+**Entry:** documentation baseline accepted. **Local exit:** completed on 2026-10-06 with `TST-P00-001`–`TST-P00-005`, local real-account/email/Google evidence, reviewer authorization, outbox, and revocation paths. **Public-release gate:** MFA, adult identity verification, provider webhook/reconciliation, deployment, recovery, and capacity acceptance. Phase 06 retains the public-release gates.
 **Decision coverage:** `DEC-067`–`DEC-073`, `DEC-107`, `DEC-117`–`DEC-125`, `DEC-129`, `DEC-153`
 
 ## Included / excluded
