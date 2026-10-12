@@ -1,0 +1,35 @@
+{
+	"date": "2026-10-12",
+	"chunk": "P04-C01",
+	"status": "complete_locally",
+	"environment": "user local machine; disposable loopback PostgreSQL schemas",
+	"requirements": ["REQ-P04-FIN-001 foundation", "REQ-P04-FIN-002 foundation"],
+	"checks": {
+		"postgresql": {
+			"passed": 10,
+			"command": "FOUNDATION_TEST_NAME=\"Phase 04 immutable ledger\"; load .env locally; pnpm nx run platform-core:test-integration",
+			"log": "integration.log"
+		},
+		"workspace": {
+			"status": "passed",
+			"command": "pnpm nx run-many -t lint,typecheck,test --projects=contracts,platform-core,api,worker,web --parallel=3",
+			"log": "workspace-checks.log"
+		},
+		"migrationCompatibility": {
+			"status": "passed",
+			"migrations": 43,
+			"log": "migration-compatibility.log"
+		},
+		"populatedUpgrade": {
+			"status": "passed",
+			"log": "populated-upgrade.log"
+		}
+	},
+	"limitations": [
+		"Internal posting seam only; commerce integration and historical backfill are not completed",
+		"Provider inbox, mixed checkout, promotion/commission snapshots, earnings and payouts remain future chunks",
+		"Manual correction recent-auth/dual control remains C09; no manual posting HTTP route",
+		"Formal phase/public-release and inherited gates remain open"
+	],
+	"nextChunk": "P04-C02"
+}

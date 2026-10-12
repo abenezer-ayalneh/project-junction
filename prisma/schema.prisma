@@ -1124,3 +1124,33 @@ model BookingRefund {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   @@map("booking_refunds")
 }
+
+model LedgerTransaction {
+  id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  workspaceId String @map("workspace_id") @db.Uuid
+  economicEventId String @map("economic_event_id")
+  sourceId String @map("source_id") @db.Uuid
+  reason String
+  currency String
+  requestHash String @map("request_hash")
+  reversalOf String? @unique @map("reversal_of") @db.Uuid
+  merchantModel Json @map("merchant_model")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  postings LedgerPosting[]
+  @@unique([workspaceId, economicEventId])
+  @@map("ledger_transactions")
+}
+model LedgerPosting {
+  id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  transactionId String @map("transaction_id") @db.Uuid
+  ordinal Int
+  account String
+  vendorId String? @map("vendor_id") @db.Uuid
+  locationId String? @map("location_id") @db.Uuid
+  componentId String? @map("component_id") @db.Uuid
+  minorUnits BigInt @map("minor_units")
+  currency String
+  transaction LedgerTransaction @relation(fields: [transactionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@unique([transactionId, ordinal])
+  @@map("ledger_postings")
+}
