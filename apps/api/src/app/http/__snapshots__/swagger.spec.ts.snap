@@ -7987,6 +7987,349 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
         "type": "object",
       },
+      "LocationScheduleCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "calendar": {
+            "additionalProperties": false,
+            "properties": {
+              "exceptions": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "breaks": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "endMinute": {
+                            "maximum": 1440,
+                            "minimum": 1,
+                            "type": "integer",
+                          },
+                          "startMinute": {
+                            "maximum": 1439,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                        },
+                        "required": [
+                          "startMinute",
+                          "endMinute",
+                        ],
+                        "type": "object",
+                      },
+                      "maxItems": 20,
+                      "type": "array",
+                    },
+                    "date": {
+                      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                      "type": "string",
+                    },
+                    "hours": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "endMinute": {
+                            "maximum": 1440,
+                            "minimum": 1,
+                            "type": "integer",
+                          },
+                          "startMinute": {
+                            "maximum": 1439,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                        },
+                        "required": [
+                          "startMinute",
+                          "endMinute",
+                        ],
+                        "type": "object",
+                      },
+                      "maxItems": 20,
+                      "type": "array",
+                    },
+                  },
+                  "required": [
+                    "hours",
+                    "breaks",
+                    "date",
+                  ],
+                  "type": "object",
+                },
+                "maxItems": 366,
+                "type": "array",
+              },
+              "timezone": {
+                "maxLength": 80,
+                "minLength": 1,
+                "type": "string",
+              },
+              "weekly": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "breaks": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "endMinute": {
+                            "maximum": 1440,
+                            "minimum": 1,
+                            "type": "integer",
+                          },
+                          "startMinute": {
+                            "maximum": 1439,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                        },
+                        "required": [
+                          "startMinute",
+                          "endMinute",
+                        ],
+                        "type": "object",
+                      },
+                      "maxItems": 20,
+                      "type": "array",
+                    },
+                    "hours": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "endMinute": {
+                            "maximum": 1440,
+                            "minimum": 1,
+                            "type": "integer",
+                          },
+                          "startMinute": {
+                            "maximum": 1439,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                        },
+                        "required": [
+                          "startMinute",
+                          "endMinute",
+                        ],
+                        "type": "object",
+                      },
+                      "maxItems": 20,
+                      "type": "array",
+                    },
+                    "weekday": {
+                      "maximum": 6,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                  },
+                  "required": [
+                    "hours",
+                    "breaks",
+                    "weekday",
+                  ],
+                  "type": "object",
+                },
+                "maxItems": 7,
+                "type": "array",
+              },
+            },
+            "required": [
+              "timezone",
+              "weekly",
+              "exceptions",
+            ],
+            "type": "object",
+          },
+          "expectedVersion": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "expectedVersion",
+          "calendar",
+        ],
+        "type": "object",
+      },
+      "LocationScheduleResult": {
+        "additionalProperties": false,
+        "properties": {
+          "calendar": {
+            "additionalProperties": false,
+            "nullable": true,
+            "properties": {
+              "exceptions": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "breaks": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "endMinute": {
+                            "maximum": 1440,
+                            "minimum": 1,
+                            "type": "integer",
+                          },
+                          "startMinute": {
+                            "maximum": 1439,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                        },
+                        "required": [
+                          "startMinute",
+                          "endMinute",
+                        ],
+                        "type": "object",
+                      },
+                      "maxItems": 20,
+                      "type": "array",
+                    },
+                    "date": {
+                      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                      "type": "string",
+                    },
+                    "hours": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "endMinute": {
+                            "maximum": 1440,
+                            "minimum": 1,
+                            "type": "integer",
+                          },
+                          "startMinute": {
+                            "maximum": 1439,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                        },
+                        "required": [
+                          "startMinute",
+                          "endMinute",
+                        ],
+                        "type": "object",
+                      },
+                      "maxItems": 20,
+                      "type": "array",
+                    },
+                  },
+                  "required": [
+                    "hours",
+                    "breaks",
+                    "date",
+                  ],
+                  "type": "object",
+                },
+                "maxItems": 366,
+                "type": "array",
+              },
+              "timezone": {
+                "maxLength": 80,
+                "minLength": 1,
+                "type": "string",
+              },
+              "weekly": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "breaks": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "endMinute": {
+                            "maximum": 1440,
+                            "minimum": 1,
+                            "type": "integer",
+                          },
+                          "startMinute": {
+                            "maximum": 1439,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                        },
+                        "required": [
+                          "startMinute",
+                          "endMinute",
+                        ],
+                        "type": "object",
+                      },
+                      "maxItems": 20,
+                      "type": "array",
+                    },
+                    "hours": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "endMinute": {
+                            "maximum": 1440,
+                            "minimum": 1,
+                            "type": "integer",
+                          },
+                          "startMinute": {
+                            "maximum": 1439,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                        },
+                        "required": [
+                          "startMinute",
+                          "endMinute",
+                        ],
+                        "type": "object",
+                      },
+                      "maxItems": 20,
+                      "type": "array",
+                    },
+                    "weekday": {
+                      "maximum": 6,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                  },
+                  "required": [
+                    "hours",
+                    "breaks",
+                    "weekday",
+                  ],
+                  "type": "object",
+                },
+                "maxItems": 7,
+                "type": "array",
+              },
+            },
+            "required": [
+              "timezone",
+              "weekly",
+              "exceptions",
+            ],
+            "type": "object",
+          },
+          "locationId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "replayed": {
+            "type": "boolean",
+          },
+          "version": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "locationId",
+          "version",
+          "calendar",
+          "replayed",
+        ],
+        "type": "object",
+      },
       "MediaAsset": {
         "additionalProperties": false,
         "properties": {
@@ -10164,6 +10507,292 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
         "type": "object",
       },
+      "ServiceSchedulingRulesCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "expectedVersion": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "rules": {
+            "additionalProperties": false,
+            "properties": {
+              "horizonDays": {
+                "maximum": 365,
+                "minimum": 1,
+                "type": "integer",
+              },
+              "leadTimeMinutes": {
+                "maximum": 43200,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "slotIntervalMinutes": {
+                "maximum": 60,
+                "minimum": 5,
+                "type": "integer",
+              },
+              "timezone": {
+                "maxLength": 80,
+                "minLength": 1,
+                "type": "string",
+              },
+            },
+            "required": [
+              "timezone",
+              "leadTimeMinutes",
+              "horizonDays",
+              "slotIntervalMinutes",
+            ],
+            "type": "object",
+          },
+        },
+        "required": [
+          "expectedVersion",
+          "rules",
+        ],
+        "type": "object",
+      },
+      "ServiceSchedulingRulesResult": {
+        "additionalProperties": false,
+        "properties": {
+          "listingId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "replayed": {
+            "type": "boolean",
+          },
+          "rules": {
+            "additionalProperties": false,
+            "nullable": true,
+            "properties": {
+              "horizonDays": {
+                "maximum": 365,
+                "minimum": 1,
+                "type": "integer",
+              },
+              "leadTimeMinutes": {
+                "maximum": 43200,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "slotIntervalMinutes": {
+                "maximum": 60,
+                "minimum": 5,
+                "type": "integer",
+              },
+              "timezone": {
+                "maxLength": 80,
+                "minLength": 1,
+                "type": "string",
+              },
+            },
+            "required": [
+              "timezone",
+              "leadTimeMinutes",
+              "horizonDays",
+              "slotIntervalMinutes",
+            ],
+            "type": "object",
+          },
+          "version": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "listingId",
+          "version",
+          "rules",
+          "replayed",
+        ],
+        "type": "object",
+      },
+      "ServiceSlotSelection": {
+        "additionalProperties": false,
+        "properties": {
+          "addonIds": {
+            "items": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            "maxItems": 20,
+            "type": "array",
+          },
+          "from": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+            "type": "string",
+          },
+          "locationId": {
+            "format": "uuid",
+            "nullable": true,
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "mode": {
+            "enum": [
+              "in_person",
+              "online",
+            ],
+            "type": "string",
+          },
+          "optionId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "staffId": {
+            "format": "uuid",
+            "nullable": true,
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "to": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "optionId",
+          "addonIds",
+          "mode",
+          "locationId",
+          "staffId",
+          "from",
+          "to",
+        ],
+        "type": "object",
+      },
+      "ServiceSlotsResult": {
+        "additionalProperties": false,
+        "properties": {
+          "bufferAfterMinutes": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "bufferBeforeMinutes": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "configurationVersion": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "durationMinutes": {
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "evaluatedAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "listingId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "locationId": {
+            "format": "uuid",
+            "nullable": true,
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "mode": {
+            "enum": [
+              "in_person",
+              "online",
+            ],
+            "type": "string",
+          },
+          "optionId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "priceCents": {
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "reserved": {
+            "enum": [
+              false,
+            ],
+            "type": "boolean",
+          },
+          "rulesVersion": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "slots": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "end": {
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                  "type": "string",
+                },
+                "start": {
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "start",
+                "end",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "staffId": {
+            "format": "uuid",
+            "nullable": true,
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "timezone": {
+            "maxLength": 80,
+            "minLength": 1,
+            "type": "string",
+          },
+        },
+        "required": [
+          "listingId",
+          "optionId",
+          "mode",
+          "locationId",
+          "staffId",
+          "timezone",
+          "configurationVersion",
+          "rulesVersion",
+          "evaluatedAt",
+          "priceCents",
+          "durationMinutes",
+          "bufferBeforeMinutes",
+          "bufferAfterMinutes",
+          "reserved",
+          "slots",
+        ],
+        "type": "object",
+      },
       "StaffConsentCommand": {
         "additionalProperties": false,
         "properties": {
@@ -10300,6 +10929,423 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         },
         "required": [
           "items",
+        ],
+        "type": "object",
+      },
+      "StaffScheduleCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "expectedVersion": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "schedule": {
+            "additionalProperties": false,
+            "properties": {
+              "scopes": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "calendar": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "exceptions": {
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "breaks": {
+                                "items": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "endMinute": {
+                                      "maximum": 1440,
+                                      "minimum": 1,
+                                      "type": "integer",
+                                    },
+                                    "startMinute": {
+                                      "maximum": 1439,
+                                      "minimum": 0,
+                                      "type": "integer",
+                                    },
+                                  },
+                                  "required": [
+                                    "startMinute",
+                                    "endMinute",
+                                  ],
+                                  "type": "object",
+                                },
+                                "maxItems": 20,
+                                "type": "array",
+                              },
+                              "date": {
+                                "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                                "type": "string",
+                              },
+                              "hours": {
+                                "items": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "endMinute": {
+                                      "maximum": 1440,
+                                      "minimum": 1,
+                                      "type": "integer",
+                                    },
+                                    "startMinute": {
+                                      "maximum": 1439,
+                                      "minimum": 0,
+                                      "type": "integer",
+                                    },
+                                  },
+                                  "required": [
+                                    "startMinute",
+                                    "endMinute",
+                                  ],
+                                  "type": "object",
+                                },
+                                "maxItems": 20,
+                                "type": "array",
+                              },
+                            },
+                            "required": [
+                              "hours",
+                              "breaks",
+                              "date",
+                            ],
+                            "type": "object",
+                          },
+                          "maxItems": 366,
+                          "type": "array",
+                        },
+                        "timezone": {
+                          "maxLength": 80,
+                          "minLength": 1,
+                          "type": "string",
+                        },
+                        "weekly": {
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "breaks": {
+                                "items": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "endMinute": {
+                                      "maximum": 1440,
+                                      "minimum": 1,
+                                      "type": "integer",
+                                    },
+                                    "startMinute": {
+                                      "maximum": 1439,
+                                      "minimum": 0,
+                                      "type": "integer",
+                                    },
+                                  },
+                                  "required": [
+                                    "startMinute",
+                                    "endMinute",
+                                  ],
+                                  "type": "object",
+                                },
+                                "maxItems": 20,
+                                "type": "array",
+                              },
+                              "hours": {
+                                "items": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "endMinute": {
+                                      "maximum": 1440,
+                                      "minimum": 1,
+                                      "type": "integer",
+                                    },
+                                    "startMinute": {
+                                      "maximum": 1439,
+                                      "minimum": 0,
+                                      "type": "integer",
+                                    },
+                                  },
+                                  "required": [
+                                    "startMinute",
+                                    "endMinute",
+                                  ],
+                                  "type": "object",
+                                },
+                                "maxItems": 20,
+                                "type": "array",
+                              },
+                              "weekday": {
+                                "maximum": 6,
+                                "minimum": 0,
+                                "type": "integer",
+                              },
+                            },
+                            "required": [
+                              "hours",
+                              "breaks",
+                              "weekday",
+                            ],
+                            "type": "object",
+                          },
+                          "maxItems": 7,
+                          "type": "array",
+                        },
+                      },
+                      "required": [
+                        "timezone",
+                        "weekly",
+                        "exceptions",
+                      ],
+                      "type": "object",
+                    },
+                    "locationId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "mode": {
+                      "enum": [
+                        "in_person",
+                        "online",
+                      ],
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "mode",
+                    "locationId",
+                    "calendar",
+                  ],
+                  "type": "object",
+                },
+                "maxItems": 100,
+                "type": "array",
+              },
+            },
+            "required": [
+              "scopes",
+            ],
+            "type": "object",
+          },
+        },
+        "required": [
+          "expectedVersion",
+          "schedule",
+        ],
+        "type": "object",
+      },
+      "StaffScheduleResult": {
+        "additionalProperties": false,
+        "properties": {
+          "replayed": {
+            "type": "boolean",
+          },
+          "schedule": {
+            "additionalProperties": false,
+            "nullable": true,
+            "properties": {
+              "scopes": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "calendar": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "exceptions": {
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "breaks": {
+                                "items": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "endMinute": {
+                                      "maximum": 1440,
+                                      "minimum": 1,
+                                      "type": "integer",
+                                    },
+                                    "startMinute": {
+                                      "maximum": 1439,
+                                      "minimum": 0,
+                                      "type": "integer",
+                                    },
+                                  },
+                                  "required": [
+                                    "startMinute",
+                                    "endMinute",
+                                  ],
+                                  "type": "object",
+                                },
+                                "maxItems": 20,
+                                "type": "array",
+                              },
+                              "date": {
+                                "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                                "type": "string",
+                              },
+                              "hours": {
+                                "items": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "endMinute": {
+                                      "maximum": 1440,
+                                      "minimum": 1,
+                                      "type": "integer",
+                                    },
+                                    "startMinute": {
+                                      "maximum": 1439,
+                                      "minimum": 0,
+                                      "type": "integer",
+                                    },
+                                  },
+                                  "required": [
+                                    "startMinute",
+                                    "endMinute",
+                                  ],
+                                  "type": "object",
+                                },
+                                "maxItems": 20,
+                                "type": "array",
+                              },
+                            },
+                            "required": [
+                              "hours",
+                              "breaks",
+                              "date",
+                            ],
+                            "type": "object",
+                          },
+                          "maxItems": 366,
+                          "type": "array",
+                        },
+                        "timezone": {
+                          "maxLength": 80,
+                          "minLength": 1,
+                          "type": "string",
+                        },
+                        "weekly": {
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "breaks": {
+                                "items": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "endMinute": {
+                                      "maximum": 1440,
+                                      "minimum": 1,
+                                      "type": "integer",
+                                    },
+                                    "startMinute": {
+                                      "maximum": 1439,
+                                      "minimum": 0,
+                                      "type": "integer",
+                                    },
+                                  },
+                                  "required": [
+                                    "startMinute",
+                                    "endMinute",
+                                  ],
+                                  "type": "object",
+                                },
+                                "maxItems": 20,
+                                "type": "array",
+                              },
+                              "hours": {
+                                "items": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "endMinute": {
+                                      "maximum": 1440,
+                                      "minimum": 1,
+                                      "type": "integer",
+                                    },
+                                    "startMinute": {
+                                      "maximum": 1439,
+                                      "minimum": 0,
+                                      "type": "integer",
+                                    },
+                                  },
+                                  "required": [
+                                    "startMinute",
+                                    "endMinute",
+                                  ],
+                                  "type": "object",
+                                },
+                                "maxItems": 20,
+                                "type": "array",
+                              },
+                              "weekday": {
+                                "maximum": 6,
+                                "minimum": 0,
+                                "type": "integer",
+                              },
+                            },
+                            "required": [
+                              "hours",
+                              "breaks",
+                              "weekday",
+                            ],
+                            "type": "object",
+                          },
+                          "maxItems": 7,
+                          "type": "array",
+                        },
+                      },
+                      "required": [
+                        "timezone",
+                        "weekly",
+                        "exceptions",
+                      ],
+                      "type": "object",
+                    },
+                    "locationId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "mode": {
+                      "enum": [
+                        "in_person",
+                        "online",
+                      ],
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "mode",
+                    "locationId",
+                    "calendar",
+                  ],
+                  "type": "object",
+                },
+                "maxItems": 100,
+                "type": "array",
+              },
+            },
+            "required": [
+              "scopes",
+            ],
+            "type": "object",
+          },
+          "staffId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "version": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "staffId",
+          "version",
+          "schedule",
+          "replayed",
         ],
         "type": "object",
       },
@@ -12386,6 +13432,94 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
       },
     },
+    "/v1/listings/{listingId}/scheduling-rules": {
+      "get": {
+        "operationId": "AppController_serviceSchedulingRules",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "listingId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceSchedulingRulesResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Read Service timezone, slot interval, lead time and horizon as assigned Owner.",
+        "tags": [
+          "foundation",
+        ],
+      },
+      "put": {
+        "operationId": "AppController_configureServiceSchedulingRules",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "listingId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceSchedulingRulesCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceSchedulingRulesResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Set uniform Service timezone, slot interval, lead time and horizon as assigned Owner.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
     "/v1/listings/{listingId}/service-configuration": {
       "get": {
         "operationId": "AppController_serviceConfiguration",
@@ -12747,6 +13881,94 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
         ],
         "summary": "Configure pickup, PostGIS delivery zones and goods policy for an assigned Owner Location.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/locations/{locationId}/schedule": {
+      "get": {
+        "operationId": "AppController_locationSchedule",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "locationId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationScheduleResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Read an assigned Location calendar as Owner or enabled Scheduler.",
+        "tags": [
+          "foundation",
+        ],
+      },
+      "put": {
+        "operationId": "AppController_configureLocationSchedule",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "locationId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LocationScheduleCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationScheduleResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Set assigned Location hours, breaks, timezone and date replacements as Owner or enabled Scheduler.",
         "tags": [
           "foundation",
         ],
@@ -13354,6 +14576,47 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
         },
         "summary": "Read Service Options, add-ons and qualified modes; private Staff identities are omitted. No slots are reserved.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/public/listings/{listingId}/slots": {
+      "post": {
+        "operationId": "AppController_serviceSlots",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "listingId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceSlotSelection",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceSlotsResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "summary": "Calculate current fixed-duration Service slots; named Staff requires consent, any Staff stays private. No allocation is created.",
         "tags": [
           "foundation",
         ],
@@ -14569,6 +15832,94 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
         ],
         "summary": "Set public display consent only for the authenticated Staff member’s linked profile.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/vendor/staff/{staffId}/schedule": {
+      "get": {
+        "operationId": "AppController_staffSchedule",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "staffId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffScheduleResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Read a Staff calendar as assigned Owner/Scheduler or linked Staff.",
+        "tags": [
+          "foundation",
+        ],
+      },
+      "put": {
+        "operationId": "AppController_configureStaffSchedule",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "staffId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StaffScheduleCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffScheduleResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Set assigned Staff mode calendars with hours, breaks, timezone and date replacements.",
         "tags": [
           "foundation",
         ],

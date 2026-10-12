@@ -1,16 +1,18 @@
 # Phase 03 local acceptance evidence
 
-**Recorded:** 2026-10-12. **Scope:** `P03-C01` only, complete locally. Formal phase exit remains open.
+**Recorded:** 2026-10-12. **Scope:** `P03-C01`–`P03-C02`, complete locally. Formal phase exit remains open.
 
 Phase 00–01 entry dependencies have recorded local evidence; existing independent accessibility, retention, target storage/recovery and provider gates remain separate. All development and verification ran on the user's local machine, with disposable PostgreSQL schemas on loopback and a built API bound to loopback. No staging, remote acceptance testing or deployment was used.
 
-## Verified behavior
+## P03-C01 — Service definitions — 2026-10-12
+
+### Verified behavior
 
 The [PostgreSQL scenarios](../../libs/platform-core/src/lib/service-definitions.integration.ts) prove fixed Option/add-on terms, uniform buffers, eligible modes/Locations and Option-specific Staff qualification; durable configuration read through another repository; private Staff participating without public identity; atomic scope failures; concurrent expected-version updates; idempotency/reuse conflicts; consent/withdrawal/rename; self versus Owner consent authority; active membership links without new permissions; publication/Product exclusion; and rejection of excluded resource/group/recurring/home/Staff-override models.
 
 The [built HTTP smoke](../../tools/check-service-definitions.mjs) uses disposable Better Auth user/session fixtures and an actual signed session cookie. It proves Staff create/link/list/self-read, configuration/read/replay, 400/403/409 responses, published anonymous definitions, private identity filtering, linked-Staff consent and withdrawal, and restricted Vendor visibility. Fixtures are cleaned by the integration runner; no credentials are retained in evidence.
 
-## Verification
+### Verification
 
 | Check                                                                                                                     | Result                                                                                                        |
 | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
@@ -25,8 +27,42 @@ The [built HTTP smoke](../../tools/check-service-definitions.mjs) uses disposabl
 
 [Machine-readable verification record](./evidence/phase-03-c01-2026-10-12/verification.json).
 
-## Remaining scope and gates
+### C01 remaining scope at completion
 
 Public `anyStaffEligible` is qualification eligibility only. Hours, exceptions, breaks, lead time, horizon, timezone and existing allocation filtering belong to C02. C03–C11 own holds, UI, Booking/payment/policies/meeting/attendance proof. No double-booking, provider integration, screen-reader or phase exit acceptance is claimed here. Stable definition IDs are retained within versioned configuration; JSON Staff/Location references rely on transactional API validation rather than database foreign keys. No browser UI was changed or tested in C01.
 
-**Next:** `P03-C02` — Authoritative slot calculation. The request ends after this chunk.
+**Next at C01 completion:** `P03-C02`; subsequently completed below.
+
+## P03-C02 — Authoritative slot calculation — 2026-10-12
+
+**Complete locally.** Scope is `REQ-P03-SCH-001` current availability calculation, with C01 qualifications. Actual atomic holds/no-double-booking and paid Booking lifecycles remain separate gates.
+
+### Verified behavior
+
+[Slot/contract unit scenarios](../../libs/platform-core/src/lib/slot-calculation.spec.ts) cover half-open hours, both buffers, combined Staff/Location breaks, date replacements/closures, exact lead/horizon, occupied bounds/adjacency, private any-Staff union, non-hour timezone offsets, spring gap/fall repeated instants, overnight/local-date exceptions, invalid calendars/queries and complete seven-day/five-minute output for 100 qualified Staff. Duration is elapsed time; no nonexistent wall-clock time is converted into a slot.
+
+[PostgreSQL scenarios](../../libs/platform-core/src/lib/service-scheduling.integration.ts) prove current Option/add-on price/duration/buffers, consent-aware named/private any Staff, active/expired/terminal holds and booked occupancy, cross-mode blocking, changed calendars/qualification/rules, online versus closed Locations, differing calendar timezones, replay/key conflicts, concurrent expected-version edits, cross-Vendor/partial Location scope, linked-Staff own authority, audited local Scheduler CLI enable/disable/revocation without commercial authority, unconfigured/invalid reads and absence of read-created allocations. Controlled allocation rows supply occupancy evidence only; no customer hold or paid Booking is created by C02.
+
+[Built HTTP smoke](../../tools/check-service-scheduling.mjs) exercises actual signed Better Auth cookie authentication against a loopback API process and disposable identities. It proves schedule/rules GET/PUT/replay/conflict/validation/anonymous denial, anonymous no-store slot reads with current terms/buffers, named consent/private any Staff, occupied Booking/hold fixtures, online separation, changed date closure and no read-created reservation. C01 definition HTTP smoke and its PostgreSQL suite also pass unchanged.
+
+### Verification
+
+| Check                                                                                                                                                 | Result                                                                                                                        |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `FOUNDATION_TEST_NAME="Phase 03 (authoritative scheduling\|Service definitions)" pnpm nx run platform-core:test-integration` with local `.env` loaded | 24 scenarios pass: 13 C02 plus 11 C01; both built loopback HTTP smokes pass; 108 unrelated integration scenarios not selected |
+| `pnpm nx run-many -t lint,typecheck,test --projects=contracts,platform-core,api,worker,web --parallel=3`                                              | All five projects pass; 77 unit tests and one snapshot pass; one existing worker test skipped                                 |
+| API/worker builds through integration dependencies                                                                                                    | Pass; six existing API optional dependency/source-map warnings                                                                |
+| `pnpm db:compat:check` and `pnpm db:upgrade:check` with local `.env` loaded                                                                           | 35-migration compatibility and populated supported-foundation upgrade pass; no Prisma schema difference                       |
+| `pnpm db:migrate:local` after asserting loopback hostname                                                                                             | C02 additive migration applied locally                                                                                        |
+| OpenAPI additive comparison                                                                                                                           | Existing endpoint/component schema contracts unchanged                                                                        |
+| `pnpm docs:check`, `pnpm contracts:check`, `git diff --check`                                                                                         | Pass                                                                                                                          |
+
+[Machine-readable C02 verification record](./evidence/phase-03-c02-2026-10-12/verification.json). Evidence contains artifact checksums and outcomes, not credentials or raw identity data.
+
+### Remaining scope and derived boundaries
+
+Minute precision, at most seven elapsed days per read, local-grid alignment, split overnight windows, whole-day replacing exceptions and an inclusive elapsed-day horizon are derived implementation semantics. Lead/horizon/grid values are explicitly configured per Service with no inferred default calendar. Legacy/unconfigured resources gain no availability automatically. Calendar JSON references depend on live Vendor/Location validation; Staff occupancy has an actual Staff foreign key.
+
+Slot reads use a consistent snapshot and are advisory: a later hold must revalidate. C02 has no public allocation writer and no atomic exclusion guarantee. C03–C11 retain hold, UI, payment/Booking, policy/amendment, meeting/attendance and phase acceptance work. Formal `TST-P03-001` no-double-booking and `TST-P03-002`–`004`, read-only iCal phase coverage, independent accessibility, provider and other release gates remain open. No browser UI was changed or tested, and no remote development/check/deployment occurred.
+
+**Next:** `P03-C03` — Atomic named/any-Staff holds. Stop after C02 under the single-chunk workflow.

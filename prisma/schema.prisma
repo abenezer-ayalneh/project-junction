@@ -153,6 +153,8 @@ model DiscoveryPreference {
 }
 
 model Listing {
+  schedulingRules Json? @map("scheduling_rules")
+  schedulingRulesVersion Int @default(0) @map("scheduling_rules_version")
   /// Versioned fixed commercial definitions and Vendor-validated Staff qualifications; no allocation state.
   serviceConfiguration Json? @map("service_configuration")
   serviceConfigurationVersion Int @default(0) @map("service_configuration_version")
@@ -311,6 +313,8 @@ model SearchDocument {
 }
 
 model Location {
+  scheduleCalendar Json? @map("schedule_calendar")
+  scheduleVersion Int @default(0) @map("schedule_version")
   goodsOrders               GoodsVendorOrder[]
   goodsHoldLines            GoodsHoldLine[]
   goodsConfiguration        Json?               @map("goods_configuration")
@@ -359,6 +363,7 @@ model InventoryMovement {
 }
 
 model VendorMembership {
+  schedulingEnabled Boolean @default(false) @map("scheduling_enabled")
   goodsFulfillmentEnabled Boolean   @default(false) @map("goods_fulfillment_enabled")
   id                      String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
   userId                  String    @map("user_id") @db.Uuid
@@ -377,6 +382,9 @@ model VendorMembership {
 }
 
 model Staff {
+  schedule Json?
+  scheduleVersion Int @default(0) @map("schedule_version")
+  allocations StaffAllocation[]
   displayName String? @map("display_name")
   profileVersion Int @default(0) @map("profile_version")
   publicConsentAt DateTime? @map("public_consent_at") @db.Timestamptz(6)
@@ -887,4 +895,19 @@ model GoodsReturnEvent {
 
   @@unique([returnId, version])
   @@map("goods_return_events")
+}
+
+// Authoritative occupancy read seam. Hold/Booking lifecycle writes belong to later chunks.
+model StaffAllocation {
+  id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  staffId String @map("staff_id") @db.Uuid
+  startAt DateTime @map("start_at") @db.Timestamptz(6)
+  endAt DateTime @map("end_at") @db.Timestamptz(6)
+  state String
+  expiresAt DateTime? @map("expires_at") @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  staff Staff @relation(fields: [staffId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([staffId, startAt, endAt])
+  @@map("staff_allocations")
 }

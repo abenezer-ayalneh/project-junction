@@ -25,3 +25,7 @@ Phase 02 local requirement/scenario coverage and unresolved formal gates are con
 ## Phase 03 local Service definition prerequisite — 2026-10-12
 
 [P03-C01 local evidence](./PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md) and [verification record](./evidence/phase-03-c01-2026-10-12/verification.json) record fixed Service Options/add-ons, Vendor Location/online eligibility, Staff qualification and private versus consented identity. Local PostgreSQL/HTTP, migration and workspace checks pass. This is partial `REQ-P03-SCH-001` coverage; no slot/allocation/Booking/provider or formal phase acceptance is claimed. Next is C02.
+
+## Phase 03 local authoritative availability — 2026-10-12
+
+[P03-C02 local evidence](./PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c02--authoritative-slot-calculation--2026-10-12) and [verification record](./evidence/phase-03-c02-2026-10-12/verification.json) record timezone-aware hours/date exceptions/breaks, duration/buffers, lead/horizon, current qualification/mode and controlled allocation filtering. Unit, PostgreSQL/HTTP, audited Scheduler CLI, migration and workspace checks pass. Atomic hold/no-double-booking, paid Booking, provider, UI and formal phase acceptance remain open. Next is C03.

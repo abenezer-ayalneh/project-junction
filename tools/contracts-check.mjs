@@ -5,6 +5,7 @@ const contractFiles = [
 	'libs/contracts/src/lib/api.ts',
 	'libs/contracts/src/lib/events.ts',
 	'libs/contracts/src/lib/services.ts',
+	'libs/contracts/src/lib/scheduling.ts',
 ]
 
 const source = await Promise.all(contractFiles.map((file) => readFile(file, 'utf8')))

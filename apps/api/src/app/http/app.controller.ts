@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, Param, Post, Put, Query, Req, Res } from '@nestjs/common'
+import { Body, Controller, Get, Header, Headers, HttpCode, Param, Post, Put, Query, Req, Res } from '@nestjs/common'
 import {
 	ApiBody,
 	ApiCreatedResponse,
@@ -241,6 +241,93 @@ export class AppController {
 	@ApiSecurity('junction-auth-cookie')
 	followVendor(@AuthenticatedSession() sessionId: string | undefined, @Param('vendorId') vendorId: string, @Body() body: { following?: unknown }) {
 		return this.foundation.followVendor(sessionId, vendorId, body.following === true)
+	}
+
+	@Post('public/listings/:listingId/slots')
+	@Header('Cache-Control', 'no-store')
+	@HttpCode(200)
+	@ApiOperation({
+		summary: 'Calculate current fixed-duration Service slots; named Staff requires consent, any Staff stays private. No allocation is created.',
+	})
+	@ApiBody({ schema: OpenApiSchemaRefs.serviceSlotSelection })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.serviceSlotsResult })
+	serviceSlots(@Param('listingId') listingId: string, @Body() body: unknown) {
+		return this.foundation.readPublicServiceSlots(listingId, body)
+	}
+
+	@Get('locations/:locationId/schedule')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Read an assigned Location calendar as Owner or enabled Scheduler.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.locationScheduleResult })
+	locationSchedule(@AuthenticatedSession() sessionId: string | undefined, @Param('locationId') locationId: string) {
+		return this.foundation.readLocationSchedule(sessionId, locationId)
+	}
+
+	@Put('locations/:locationId/schedule')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Set assigned Location hours, breaks, timezone and date replacements as Owner or enabled Scheduler.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.locationScheduleCommand })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.locationScheduleResult })
+	configureLocationSchedule(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('locationId') locationId: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.configureLocationSchedule(sessionId, key, locationId, body)
+	}
+
+	@Get('vendor/staff/:staffId/schedule')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Read a Staff calendar as assigned Owner/Scheduler or linked Staff.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.staffScheduleResult })
+	staffSchedule(@AuthenticatedSession() sessionId: string | undefined, @Param('staffId') staffId: string) {
+		return this.foundation.readStaffSchedule(sessionId, staffId)
+	}
+
+	@Put('vendor/staff/:staffId/schedule')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Set assigned Staff mode calendars with hours, breaks, timezone and date replacements.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.staffScheduleCommand })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.staffScheduleResult })
+	configureStaffSchedule(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('staffId') staffId: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.configureStaffSchedule(sessionId, key, staffId, body)
+	}
+
+	@Get('listings/:listingId/scheduling-rules')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Read Service timezone, slot interval, lead time and horizon as assigned Owner.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.serviceSchedulingRulesResult })
+	serviceSchedulingRules(@AuthenticatedSession() sessionId: string | undefined, @Param('listingId') listingId: string) {
+		return this.foundation.readServiceSchedulingRules(sessionId, listingId)
+	}
+
+	@Put('listings/:listingId/scheduling-rules')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Set uniform Service timezone, slot interval, lead time and horizon as assigned Owner.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.serviceSchedulingRulesCommand })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.serviceSchedulingRulesResult })
+	configureServiceSchedulingRules(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('listingId') listingId: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.configureServiceSchedulingRules(sessionId, key, listingId, body)
 	}
 
 	@Get('public/listings/:listingId/service-definition')

@@ -31,6 +31,7 @@ import {
 	ListingReviewCommandSchema,
 	ListingRevisionCommandSchema,
 	LocationReadSchema,
+	LocationScheduleCommandSchema,
 	MediaAssetSchema,
 	MediaPreviewSchema,
 	MediaProcessingCommandSchema,
@@ -59,6 +60,8 @@ import {
 	type RealtimeFoundationEvent,
 	RealtimeFoundationEventSchema,
 	RecommendationPageSchema,
+	ServiceSchedulingRulesCommandSchema,
+	StaffScheduleCommandSchema,
 	StorefrontUpdateSchema,
 	VendorApplicationCommandSchema,
 	VendorApplicationResultSchema,
@@ -80,6 +83,7 @@ import { type DeletionJournal, S3DeletionJournal } from './media-retention.js'
 import { type MediaStore, S3MediaStore } from './media-store.js'
 import { applicationRuntimeMode } from './runtime.js'
 import { ServiceDefinitions } from './service-definitions.js'
+import { ServiceScheduling } from './service-scheduling.js'
 import { MediaRejectedError, VideoProcessor } from './video-processor.js'
 
 type Transaction = Prisma.TransactionClient
@@ -131,6 +135,7 @@ function hasRequiredIdentity(user: { adultVerificationState: string; verifiedAt:
 /** Prisma owns CRUD; parameterized SQL below is restricted to concurrency locks/claims. */
 export class PostgresFoundation {
 	readonly db: PrismaClient
+	private readonly scheduling: ServiceScheduling
 	private readonly services: ServiceDefinitions
 	private readonly goods: GoodsCheckout
 	private readonly publicWorkspaceKind = 'real'
@@ -150,6 +155,13 @@ export class PostgresFoundation {
 		const schema = new URL(url).searchParams.get('schema') ?? 'public'
 		if (!/^[a-z_][a-z0-9_]*$/.test(schema)) throw new Error('Unsupported database schema name.')
 		this.db = new PrismaClient({ adapter: new PrismaPg({ connectionString: url, options: `-c search_path=${schema},public` }, { schema }) })
+		this.scheduling = new ServiceScheduling({
+			db: this.db,
+			derive: (tx, sessionId) => this.derive(tx, sessionId),
+			lockWorkspace: (tx, id) => this.workspaceLock(tx, id),
+			replay: (tx, context, key, method, request, create) => this.replayOrCreate(tx, context, key, method, request, create),
+			now: goodsClock,
+		})
 		this.services = new ServiceDefinitions({
 			db: this.db,
 			derive: (tx, sessionId) => this.derive(tx, sessionId),
@@ -544,6 +556,28 @@ export class PostgresFoundation {
 			assertScope(context, { workspaceId: location.vendor.workspaceId, vendorId: location.vendorId, locationId: location.id })
 			return LocationReadSchema.parse({ id: location.id, vendorId: location.vendorId, workspaceId: location.vendor.workspaceId })
 		})
+	}
+
+	readLocationSchedule(sessionId: string | undefined, locationId: string) {
+		return this.scheduling.locationCalendar(sessionId, locationId)
+	}
+	async configureLocationSchedule(sessionId: string | undefined, key: string | undefined, locationId: string, input: unknown) {
+		return this.scheduling.locationCalendar(sessionId, locationId, key, LocationScheduleCommandSchema.parse(input))
+	}
+	readStaffSchedule(sessionId: string | undefined, staffId: string) {
+		return this.scheduling.staffSchedule(sessionId, staffId)
+	}
+	async configureStaffSchedule(sessionId: string | undefined, key: string | undefined, staffId: string, input: unknown) {
+		return this.scheduling.staffSchedule(sessionId, staffId, key, StaffScheduleCommandSchema.parse(input))
+	}
+	readServiceSchedulingRules(sessionId: string | undefined, listingId: string) {
+		return this.scheduling.serviceRules(sessionId, listingId)
+	}
+	async configureServiceSchedulingRules(sessionId: string | undefined, key: string | undefined, listingId: string, input: unknown) {
+		return this.scheduling.serviceRules(sessionId, listingId, key, ServiceSchedulingRulesCommandSchema.parse(input))
+	}
+	readPublicServiceSlots(listingId: string, input: unknown) {
+		return this.scheduling.slots(listingId, input)
 	}
 
 	readServiceConfiguration(sessionId: string | undefined, listingId: string) {

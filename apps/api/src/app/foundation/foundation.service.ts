@@ -57,6 +57,28 @@ export class FoundationService {
 		this.durable = new PostgresFoundation(this.databaseUrl())
 	}
 
+	readLocationSchedule(sessionId: string | undefined, locationId: string) {
+		return this.durable.readLocationSchedule(sessionId, locationId)
+	}
+	configureLocationSchedule(sessionId: string | undefined, key: string | undefined, locationId: string, input: unknown) {
+		return this.durable.configureLocationSchedule(sessionId, key, locationId, input)
+	}
+	readStaffSchedule(sessionId: string | undefined, staffId: string) {
+		return this.durable.readStaffSchedule(sessionId, staffId)
+	}
+	configureStaffSchedule(sessionId: string | undefined, key: string | undefined, staffId: string, input: unknown) {
+		return this.durable.configureStaffSchedule(sessionId, key, staffId, input)
+	}
+	readServiceSchedulingRules(sessionId: string | undefined, listingId: string) {
+		return this.durable.readServiceSchedulingRules(sessionId, listingId)
+	}
+	configureServiceSchedulingRules(sessionId: string | undefined, key: string | undefined, listingId: string, input: unknown) {
+		return this.durable.configureServiceSchedulingRules(sessionId, key, listingId, input)
+	}
+	readPublicServiceSlots(listingId: string, input: unknown) {
+		return this.durable.readPublicServiceSlots(listingId, input)
+	}
+
 	readServiceConfiguration(sessionId: string | undefined, listingId: string) {
 		return this.durable.readServiceConfiguration(sessionId, listingId)
 	}

@@ -129,3 +129,7 @@ Phase 02 `P02-C09`–`P02-C11` subsequently completed local pickup, Vendor deliv
 ## Phase 03 C01 local prerequisite evidence — 2026-10-12
 
 `REQ-P03-SCH-001` has partial local coverage for fixed Option/add-on commercial terms, Vendor Location/online eligibility and Staff qualification/public consent. Eleven focused PostgreSQL scenarios plus built HTTP smoke and migration/workspace checks pass; see [C01 evidence](./PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md). This does not accept `TST-P03-001`: actual hours/timezone/slot filtering and atomic no-double-booking proof remain C02/C03 and the phase acceptance chunk. `TST-P03-002`–`004` remain open.
+
+## Phase 03 C02 local availability evidence — 2026-10-12
+
+`REQ-P03-SCH-001` now has local C01–C02 definition and current slot-calculation evidence: hours, replacing date exceptions, breaks, buffers, lead/horizon, timezones, mode/Location, qualification and controlled held/booked occupancy filtering. Twelve unit scenarios, 24 PostgreSQL scenarios (13 C02 + 11 C01), both built HTTP smokes and migration/workspace checks pass; see [C02 evidence](./PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c02--authoritative-slot-calculation--2026-10-12). This supersedes C01's unimplemented slot calculation note. `TST-P03-001` is not accepted: C03's atomic allocation/concurrency proof and later phase lifecycle acceptance remain open. No C03 or later implementation was started.

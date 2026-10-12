@@ -1,0 +1,121 @@
+{
+	"date": "2026-10-12",
+	"chunk": "P03-C02",
+	"status": "complete_locally",
+	"baseline": "8a105db25273ed8c02fe03347f87dc2982d0c67a",
+	"environment": "user local machine; loopback PostgreSQL; disposable integration schemas; built API bound to 127.0.0.1",
+	"requirements": ["REQ-P03-SCH-001 current availability calculation; C01 prerequisite definitions"],
+	"checks": [
+		{
+			"command": "FOUNDATION_TEST_NAME=\"Phase 03 (authoritative scheduling|Service definitions)\" pnpm nx run platform-core:test-integration (local .env loaded)",
+			"exitCode": 0,
+			"passed": 24,
+			"c02Passed": 13,
+			"c01RegressionPassed": 11,
+			"unselected": 108,
+			"builtSchedulingHttpSmoke": "passed",
+			"builtDefinitionsHttpSmoke": "passed",
+			"localSchedulerCliEnableDisableAudit": "passed",
+			"apiWorkerBuilds": "passed",
+			"apiWarnings": 6
+		},
+		{
+			"command": "pnpm nx run-many -t lint,typecheck,test --projects=contracts,platform-core,api,worker,web --parallel=3",
+			"exitCode": 0,
+			"unitPassed": 77,
+			"slotContractScenarios": 12,
+			"workerSkipped": 1,
+			"openApiSnapshotsPassed": 1
+		},
+		{
+			"command": "pnpm db:compat:check (local .env loaded)",
+			"exitCode": 0,
+			"migrations": 35,
+			"schemaDifference": "none"
+		},
+		{
+			"command": "pnpm db:upgrade:check (local .env loaded)",
+			"exitCode": 0,
+			"populatedUpgrade": "passed",
+			"schemaDifference": "none"
+		},
+		{
+			"command": "pnpm db:migrate:local (loopback asserted)",
+			"exitCode": 0,
+			"migrationApplied": "20261012080000_authoritative_schedules"
+		},
+		{
+			"command": "pnpm docs:check",
+			"exitCode": 0,
+			"manifestDocuments": 184
+		},
+		{
+			"command": "pnpm contracts:check",
+			"exitCode": 0
+		},
+		{
+			"command": "git diff --check",
+			"exitCode": 0
+		},
+		{
+			"command": "compare prior/current OpenAPI snapshot objects",
+			"result": "all existing paths and component schemas unchanged"
+		}
+	],
+	"slotSemantics": {
+		"query": "at most seven elapsed days; appointment starts in [from,to)",
+		"calendar": "timezone-local weekday hours/breaks, whole-date replacing exceptions, overnight split across local dates",
+		"durationAndBuffers": "elapsed minutes; both buffers fit complete open intervals",
+		"noticeAndHorizon": "start >= server now + configured lead; start <= now + configured elapsed-day horizon",
+		"gridAndDisplayTimezone": "Location timezone in person; Service-rule timezone online",
+		"dst": "real UTC instants; gaps omitted, repeated times remain distinct",
+		"occupancy": "booked and held with expiresAt > server now; cross-Service/Location/mode Staff scope; half-open occupied intervals",
+		"privacy": "any-Staff response contains no private identities/counts; named selection requires current display consent",
+		"snapshot": "PostgreSQL repeatable-read; no-store; reserved false; no write effects"
+	},
+	"artifacts": [
+		{
+			"path": "libs/contracts/src/lib/scheduling.ts",
+			"sha256": "66a011f95536027740acfe8d4aabcbaf96a83fff958aa04f1265ccd3821cf4a8"
+		},
+		{
+			"path": "libs/platform-core/src/lib/slot-calculation.ts",
+			"sha256": "e4f3d2883c3cfb5231b4cce75fcff678c0409064c90fbf8a0b671a36b3b815ac"
+		},
+		{
+			"path": "libs/platform-core/src/lib/slot-calculation.spec.ts",
+			"sha256": "6fb34f1f321847c3de4cf19755998627cb90bef1be4de606d6199f713008a416"
+		},
+		{
+			"path": "libs/platform-core/src/lib/service-scheduling.ts",
+			"sha256": "ed17de1ddc7aa06d7f92b6596fe3183932ea47ea0c68372d64e748fc346b5baa"
+		},
+		{
+			"path": "libs/platform-core/src/lib/service-scheduling.integration.ts",
+			"sha256": "c84f270ba295098a426f97baf856d84326a0a7fc4e1349ea8af10f8a3e8d0e34"
+		},
+		{
+			"path": "tools/check-service-scheduling.mjs",
+			"sha256": "a23253dd10c66c87a37bf8f7594d20acbc54984137fe6f2eb5524a9bbbac54bf"
+		},
+		{
+			"path": "tools/manage-local-scheduler.mjs",
+			"sha256": "70c699ed2fa966d939d8b2ce78496531b4baafa1b8f59f310cf767d350984e46"
+		},
+		{
+			"path": "prisma/migrations/20261012080000_authoritative_schedules/migration.sql",
+			"sha256": "e57e08ec90eed8dc546ea707b1c405104b7f5684fb32111aaa4c653d3f7661ef"
+		},
+		{
+			"path": "apps/api/src/app/http/__snapshots__/swagger.spec.ts.snap",
+			"sha256": "201e5597ea2631d557224eafcd3171dbcb45ff985f064807a32c3866cd2c02ea"
+		}
+	],
+	"limits": [
+		"Allocation rows in tests are controlled occupancy fixtures; C02 has no public allocation writer or atomic exclusion guarantee.",
+		"Atomic holds/no-double-booking, paid Bookings, UI, iCal phase coverage, policies, meetings, attendance and formal phase exit remain later scope.",
+		"No browser, independent accessibility, remote provider, staging or public release acceptance is claimed.",
+		"Calendar JSON Location references rely on live transaction scope validation; occupancy has a real Staff foreign key."
+	],
+	"nextChunk": "P03-C03"
+}

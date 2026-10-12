@@ -68,7 +68,9 @@ try {
 			run(['exec', 'prisma', 'migrate', 'deploy'])
 		}
 	}
-	if (!authProbe && (!focusedTestName || /Phase 03 Service definitions/i.test(focusedTestName)))
+	if (!authProbe && (!focusedTestName || /authoritative scheduling/i.test(focusedTestName)))
+		run(['exec', 'node', 'tools/check-service-scheduling.mjs'], { JUNCTION_RUNTIME_MODE: 'local' })
+	if (!authProbe && (!focusedTestName || /Service definitions/i.test(focusedTestName)))
 		run(['exec', 'node', 'tools/check-service-definitions.mjs'], { JUNCTION_RUNTIME_MODE: 'local' })
 	if (!authProbe && (!focusedTestName || /inventory/i.test(focusedTestName)))
 		run(['exec', 'node', 'tools/check-inventory-transfers.mjs'], { JUNCTION_RUNTIME_MODE: 'local' })
