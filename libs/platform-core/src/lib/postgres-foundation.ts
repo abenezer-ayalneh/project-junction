@@ -75,6 +75,7 @@ import { Prisma, PrismaClient } from '../../generated/prisma/index.js'
 import { AccessDeniedError, assertElevatedSession, assertRequiredMfa, assertScope } from './access.js'
 import { BookingChanges } from './booking-changes.js'
 import { BookingHolds } from './booking-holds.js'
+import { BookingMeetings } from './booking-meetings.js'
 import { Bookings } from './bookings.js'
 import { CATALOG_CSV_HEADER, decodeCatalogCsvText, encodeCatalogCsvField, parseCatalogCsv } from './catalog-csv.js'
 import { DiditSandboxAdapter } from './didit.js'
@@ -84,6 +85,7 @@ import { IdempotencyConflictError, stableHash } from './idempotency.js'
 import { LocalGoodsPaymentAdapter } from './local-goods-payment.js'
 import { type DeletionJournal, S3DeletionJournal } from './media-retention.js'
 import { type MediaStore, S3MediaStore } from './media-store.js'
+import type { MeetingProviderAdapter } from './meeting-provider.js'
 import { applicationRuntimeMode } from './runtime.js'
 import { ServiceDefinitions } from './service-definitions.js'
 import { ServiceScheduling } from './service-scheduling.js'
@@ -138,6 +140,7 @@ function hasRequiredIdentity(user: { adultVerificationState: string; verifiedAt:
 /** Prisma owns CRUD; parameterized SQL below is restricted to concurrency locks/claims. */
 export class PostgresFoundation {
 	readonly db: PrismaClient
+	private readonly bookingMeetings: BookingMeetings
 	private readonly bookingChanges: BookingChanges
 	private readonly bookings: Bookings
 	private readonly bookingHolds: BookingHolds
@@ -157,6 +160,7 @@ export class PostgresFoundation {
 		deletionJournal?: DeletionJournal,
 		goodsClock: () => Date = () => new Date(),
 		goodsPayments?: LocalGoodsPaymentAdapter,
+		meetingProvider?: MeetingProviderAdapter,
 	) {
 		const schema = new URL(url).searchParams.get('schema') ?? 'public'
 		if (!/^[a-z_][a-z0-9_]*$/.test(schema)) throw new Error('Unsupported database schema name.')
@@ -178,6 +182,17 @@ export class PostgresFoundation {
 				payments: goodsPayments,
 			},
 			this.scheduling,
+		)
+		this.bookingMeetings = new BookingMeetings(
+			{
+				db: this.db,
+				derive: (tx, sessionId, options) => this.derive(tx, sessionId, options),
+				lockWorkspace: (tx, id) => this.workspaceLock(tx, id),
+				replay: (tx, context, key, method, request, create) => this.replayOrCreate(tx, context, key, method, request, create),
+				now: goodsClock,
+			},
+			this.bookings,
+			meetingProvider,
 		)
 		this.bookingChanges = new BookingChanges(
 			{
@@ -596,6 +611,18 @@ export class PostgresFoundation {
 		})
 	}
 
+	readBookingMeeting(sessionId: string | undefined, id: string, vendor = false) {
+		return this.bookingMeetings.read(sessionId, id, vendor)
+	}
+	configureLocalMeetConnection(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.bookingMeetings.connection(sessionId, key, id, input)
+	}
+	replaceBookingMeeting(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.bookingMeetings.replacement(sessionId, key, id, input)
+	}
+	reconcileBookingMeetings() {
+		return this.bookingMeetings.reconcile()
+	}
 	proposeBookingSubstitution(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
 		return this.bookingChanges.propose(sessionId, key, id, input)
 	}

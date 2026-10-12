@@ -357,6 +357,52 @@ export class AppController {
 	) {
 		return this.foundation.removeBookingWaitlist(sessionId, id, key)
 	}
+	@Get('customer/bookings/:bookingId/meeting')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'customerBookingMeeting with private participant authority and local provider boundaries.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.bookingMeetingRead })
+	customerBookingMeeting(@AuthenticatedSession() sessionId: string | undefined, @Param('bookingId') id: string) {
+		return this.foundation.readBookingMeeting(sessionId, id)
+	}
+	@Get('vendor/bookings/:bookingId/meeting')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'vendorBookingMeeting with private participant authority and local provider boundaries.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.bookingMeetingRead })
+	vendorBookingMeeting(@AuthenticatedSession() sessionId: string | undefined, @Param('bookingId') id: string) {
+		return this.foundation.readBookingMeeting(sessionId, id, true)
+	}
+	@Put('vendor/staff/:staffId/local-meet-connection')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'configureLocalMeetConnection with private participant authority and local provider boundaries.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.staffMeetConnectionCommand })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.staffMeetConnectionResult })
+	configureLocalMeetConnection(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('staffId') id: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.configureLocalMeetConnection(sessionId, key, id, body)
+	}
+	@Post('vendor/bookings/:bookingId/meeting/replacement')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'replaceBookingMeeting with private participant authority and local provider boundaries.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.bookingMeetingReplacementCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.bookingMeetingResult })
+	replaceBookingMeeting(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('bookingId') id: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.replaceBookingMeeting(sessionId, key, id, body)
+	}
 	@Post('customer/bookings/payments')
 	@Header('Cache-Control', 'no-store')
 	@ApiOperation({ summary: 'Start a controlled local appointment payment without extending the hold.' })

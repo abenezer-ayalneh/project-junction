@@ -1106,6 +1106,214 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
         "type": "object",
       },
+      "BookingMeetingRead": {
+        "additionalProperties": false,
+        "properties": {
+          "attempts": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "bookingId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "bookingVersion": {
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "lastError": {
+            "enum": [
+              "timeout",
+              "provider_failure",
+              "invalid_response",
+              "connection_unavailable",
+            ],
+            "nullable": true,
+            "type": "string",
+          },
+          "manualReplacement": {
+            "type": "boolean",
+          },
+          "meetingId": {
+            "format": "uuid",
+            "nullable": true,
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "provider": {
+            "enum": [
+              "demo_meet",
+              "controlled_google_meet",
+            ],
+            "nullable": true,
+            "type": "string",
+          },
+          "retryAt": {
+            "format": "date-time",
+            "nullable": true,
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "safetyCutoffAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "state": {
+            "enum": [
+              "pending",
+              "provisioning",
+              "retry_scheduled",
+              "replacement_required",
+              "ready",
+              "booking_cancelled",
+            ],
+            "type": "string",
+          },
+          "uri": {
+            "nullable": true,
+            "type": "string",
+          },
+        },
+        "required": [
+          "bookingId",
+          "meetingId",
+          "state",
+          "provider",
+          "bookingVersion",
+          "attempts",
+          "retryAt",
+          "safetyCutoffAt",
+          "uri",
+          "lastError",
+          "manualReplacement",
+        ],
+        "type": "object",
+      },
+      "BookingMeetingReplacementCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "expectedVersion": {
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "kind": {
+            "enum": [
+              "demo_meet",
+            ],
+            "type": "string",
+          },
+          "reason": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string",
+          },
+        },
+        "required": [
+          "expectedVersion",
+          "kind",
+          "reason",
+        ],
+        "type": "object",
+      },
+      "BookingMeetingResult": {
+        "additionalProperties": false,
+        "properties": {
+          "attempts": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "bookingId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "bookingVersion": {
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "lastError": {
+            "enum": [
+              "timeout",
+              "provider_failure",
+              "invalid_response",
+              "connection_unavailable",
+            ],
+            "nullable": true,
+            "type": "string",
+          },
+          "manualReplacement": {
+            "type": "boolean",
+          },
+          "meetingId": {
+            "format": "uuid",
+            "nullable": true,
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "provider": {
+            "enum": [
+              "demo_meet",
+              "controlled_google_meet",
+            ],
+            "nullable": true,
+            "type": "string",
+          },
+          "replayed": {
+            "type": "boolean",
+          },
+          "retryAt": {
+            "format": "date-time",
+            "nullable": true,
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "safetyCutoffAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "state": {
+            "enum": [
+              "pending",
+              "provisioning",
+              "retry_scheduled",
+              "replacement_required",
+              "ready",
+              "booking_cancelled",
+            ],
+            "type": "string",
+          },
+          "uri": {
+            "nullable": true,
+            "type": "string",
+          },
+        },
+        "required": [
+          "bookingId",
+          "meetingId",
+          "state",
+          "provider",
+          "bookingVersion",
+          "attempts",
+          "retryAt",
+          "safetyCutoffAt",
+          "uri",
+          "lastError",
+          "manualReplacement",
+          "replayed",
+        ],
+        "type": "object",
+      },
       "BookingPaymentRead": {
         "additionalProperties": false,
         "properties": {
@@ -13031,6 +13239,59 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
         "type": "object",
       },
+      "StaffMeetConnectionCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "connected": {
+            "type": "boolean",
+          },
+          "expectedVersion": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "expectedVersion",
+          "connected",
+        ],
+        "type": "object",
+      },
+      "StaffMeetConnectionResult": {
+        "additionalProperties": false,
+        "properties": {
+          "connected": {
+            "type": "boolean",
+          },
+          "provider": {
+            "enum": [
+              "controlled_google_meet",
+            ],
+            "type": "string",
+          },
+          "replayed": {
+            "type": "boolean",
+          },
+          "staffId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "version": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "staffId",
+          "connected",
+          "version",
+          "provider",
+          "replayed",
+        ],
+        "type": "object",
+      },
       "StaffProfileCreate": {
         "additionalProperties": false,
         "properties": {
@@ -14948,6 +15209,42 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
         ],
         "summary": "Cancel a Booking under purchased policy and scoped customer authority.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/customer/bookings/{bookingId}/meeting": {
+      "get": {
+        "operationId": "AppController_customerBookingMeeting",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "bookingId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingMeetingRead",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "customerBookingMeeting with private participant authority and local provider boundaries.",
         "tags": [
           "foundation",
         ],
@@ -17850,6 +18147,96 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
       },
     },
+    "/v1/vendor/bookings/{bookingId}/meeting": {
+      "get": {
+        "operationId": "AppController_vendorBookingMeeting",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "bookingId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingMeetingRead",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "vendorBookingMeeting with private participant authority and local provider boundaries.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/vendor/bookings/{bookingId}/meeting/replacement": {
+      "post": {
+        "operationId": "AppController_replaceBookingMeeting",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "bookingId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookingMeetingReplacementCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingMeetingResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "replaceBookingMeeting with private participant authority and local provider boundaries.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
     "/v1/vendor/bookings/{bookingId}/substitutions": {
       "post": {
         "operationId": "AppController_proposeBookingSubstitution",
@@ -18728,6 +19115,60 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
         ],
         "summary": "Rename a Staff profile as Owner; prior public display consent is withdrawn.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/vendor/staff/{staffId}/local-meet-connection": {
+      "put": {
+        "operationId": "AppController_configureLocalMeetConnection",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "staffId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StaffMeetConnectionCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffMeetConnectionResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "configureLocalMeetConnection with private participant authority and local provider boundaries.",
         "tags": [
           "foundation",
         ],

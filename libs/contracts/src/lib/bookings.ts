@@ -93,3 +93,30 @@ export const BookingWaitlistReadSchema = z.object({
 	reserved: z.literal(false),
 })
 export const BookingWaitlistResultSchema = BookingWaitlistReadSchema.extend({ replayed: z.boolean() })
+export const StaffMeetConnectionCommandSchema = z.strictObject({ expectedVersion: z.number().int().min(0), connected: z.boolean() })
+export const StaffMeetConnectionResultSchema = z.object({
+	staffId: id,
+	connected: z.boolean(),
+	version: z.number().int().min(0),
+	provider: z.literal('controlled_google_meet'),
+	replayed: z.boolean(),
+})
+export const BookingMeetingReadSchema = z.object({
+	bookingId: id,
+	meetingId: id.nullable(),
+	state: z.enum(['pending', 'provisioning', 'retry_scheduled', 'replacement_required', 'ready', 'booking_cancelled']),
+	provider: z.enum(['demo_meet', 'controlled_google_meet']).nullable(),
+	bookingVersion: z.number().int().positive(),
+	attempts: z.number().int().min(0),
+	retryAt: z.string().datetime().nullable(),
+	safetyCutoffAt: z.string().datetime(),
+	uri: z.string().nullable(),
+	lastError: z.enum(['timeout', 'provider_failure', 'invalid_response', 'connection_unavailable']).nullable(),
+	manualReplacement: z.boolean(),
+})
+export const BookingMeetingReplacementCommandSchema = z.strictObject({
+	expectedVersion: z.number().int().positive(),
+	kind: z.literal('demo_meet'),
+	reason: z.string().trim().min(1).max(500),
+})
+export const BookingMeetingResultSchema = BookingMeetingReadSchema.extend({ replayed: z.boolean() })

@@ -13,6 +13,8 @@ export const DomainEventSchema = z.object({
 		'BookingStaffSubstituted',
 		'BookingSubstitutionProposed',
 		'BookingWaitlistAvailable',
+		'BookingMeetingReady',
+		'BookingMeetingCompensated',
 		'BookingRefundCompleted',
 		'BookingHoldCreated',
 		'BookingHoldReleased',

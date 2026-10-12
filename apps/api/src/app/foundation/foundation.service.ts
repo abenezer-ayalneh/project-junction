@@ -57,6 +57,15 @@ export class FoundationService {
 		this.durable = new PostgresFoundation(this.databaseUrl())
 	}
 
+	readBookingMeeting(sessionId: string | undefined, id: string, vendor = false) {
+		return this.durable.readBookingMeeting(sessionId, id, vendor)
+	}
+	configureLocalMeetConnection(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.durable.configureLocalMeetConnection(sessionId, key, id, input)
+	}
+	replaceBookingMeeting(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.durable.replaceBookingMeeting(sessionId, key, id, input)
+	}
 	proposeBookingSubstitution(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
 		return this.durable.proposeBookingSubstitution(sessionId, key, id, input)
 	}

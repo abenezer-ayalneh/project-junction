@@ -53,3 +53,7 @@ Phase 02 local requirement/scenario coverage and unresolved formal gates are con
 ## Phase 03 C08 — 2026-10-12
 
 [C08 evidence](./PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c08--staff-substitution-and-waitlists--2026-10-12) and [verification](./evidence/phase-03-c08-2026-10-12/verification.json) record private any-Staff notice, named consent/withdrawal and disruption refunds, preserved allowance, pending expiry and notification-only waitlists. Later meeting/attendance and formal gates remain open.
+
+## Phase 03 C09 — 2026-10-12
+
+[C09 evidence](./PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c09--meeting-provisioning-and-compensation--2026-10-12) and [verification](./evidence/phase-03-c09-2026-10-12/verification.json) record asynchronous controlled provider/worker, private binding, retries/leases/stale results, protected replacement and cutoff compensation. Live Google/public demo, attendance and formal gates remain open.

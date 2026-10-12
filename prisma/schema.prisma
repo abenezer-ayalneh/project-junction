@@ -388,6 +388,8 @@ model VendorMembership {
 }
 
 model Staff {
+  meetConnection StaffMeetConnection?
+  bookingMeetings BookingMeeting[]
   bookingSubstitutions BookingSubstitution[]
   schedule Json?
   scheduleVersion Int @default(0) @map("schedule_version")
@@ -969,6 +971,7 @@ model BookingPaymentReceipt {
 }
 
 model Booking {
+  meeting BookingMeeting?
   substitutions BookingSubstitution[]
   currentSnapshot Json? @map("current_snapshot")
   customerAmendments Int @default(0) @map("customer_amendments")
@@ -1042,13 +1045,49 @@ model BookingCancellation {
   id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
   bookingId String @unique @map("booking_id") @db.Uuid
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  actorId String @map("actor_id") @db.Uuid
+  actorId String? @map("actor_id") @db.Uuid
   actorKind String @map("actor_kind")
   reason String
   refundCents Int @map("refund_cents")
   policySnapshot Json @map("policy_snapshot")
   cancelledAt DateTime @map("cancelled_at") @db.Timestamptz(6)
   @@map("booking_cancellations")
+}
+
+model StaffMeetConnection {
+  id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  staffId String @unique @map("staff_id") @db.Uuid
+  staff Staff @relation(fields: [staffId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  privateReference String @unique @map("private_reference")
+  active Boolean @default(true)
+  version Int @default(1)
+  @@map("staff_meet_connections")
+}
+
+model BookingMeeting {
+  id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  bookingId String @unique @map("booking_id") @db.Uuid
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  staffId String @map("staff_id") @db.Uuid
+  staff Staff @relation(fields: [staffId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  bookingVersion Int @map("booking_version")
+  operationKey String @unique @map("operation_key")
+  provider String
+  connectionReference String? @map("connection_reference")
+  connectionVersion Int? @map("connection_version")
+  state String @default("pending")
+  attempts Int @default(0)
+  retryAt DateTime? @map("retry_at") @db.Timestamptz(6)
+  leaseUntil DateTime? @map("lease_until") @db.Timestamptz(6)
+  safetyCutoffAt DateTime @map("safety_cutoff_at") @db.Timestamptz(6)
+  uri String?
+  providerReference String? @map("provider_reference")
+  lastError String? @map("last_error")
+  manualReplacement Boolean @default(false) @map("manual_replacement")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  @@index([state,retryAt])
+  @@map("booking_meetings")
 }
 
 model BookingRefund {

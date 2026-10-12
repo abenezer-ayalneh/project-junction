@@ -478,8 +478,8 @@ export class Bookings {
 		const cancellation = await tx.bookingCancellation.create({
 			data: {
 				bookingId,
-				actorId: actorId ?? booking.hold.customerId,
-				actorKind: provider ? 'vendor' : 'customer',
+				actorId,
+				actorKind: actorId === null ? 'platform' : provider ? 'vendor' : 'customer',
 				reason: reason,
 				refundCents,
 				policySnapshot: goodsJson(snapshot.policy),

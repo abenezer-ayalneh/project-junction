@@ -388,6 +388,66 @@ try {
 	assert.equal((await request(`/customer/bookings/waitlists/${waiting.body.waitlistId}/remove`, 'POST', undefined, '')).status, 400)
 	assert.equal((await request(`/customer/bookings/waitlists/${waiting.body.waitlistId}/remove`, 'POST')).body.state, 'removed')
 	console.log('Built local waitlist HTTP smoke passed: scoped notification, no reservation or charge, removal and missing-key denial.')
+
+	const meetConnection = await request(`/vendor/staff/${linked.body.id}/local-meet-connection`, 'PUT', { expectedVersion: 0, connected: true })
+	assert.equal(meetConnection.status, 200, JSON.stringify(meetConnection.body))
+	assert.equal(meetConnection.body.provider, 'controlled_google_meet')
+	assert.ok(!JSON.stringify(meetConnection.body).includes('privateReference'))
+	const onlineHold = await request(path, 'POST', {
+		...paidSelection,
+		staffId: linked.body.id,
+		mode: 'online',
+		locationId: null,
+		start: `${tomorrow}T16:00:00Z`,
+	})
+	assert.equal(onlineHold.status, 201, JSON.stringify(onlineHold.body))
+	const onlinePayment = await request('/customer/bookings/payments', 'POST', { holdId: onlineHold.body.holdId })
+	assert.equal(onlinePayment.status, 201)
+	const onlineResult = await request(`/customer/bookings/payments/${onlinePayment.body.paymentId}/local-result`, 'POST', { outcome: 'succeeded' })
+	assert.equal(onlineResult.status, 201, JSON.stringify(onlineResult.body))
+	const onlineMeetingPath = `/customer/bookings/${onlineResult.body.bookingId}/meeting`
+	assert.equal((await request(onlineMeetingPath)).body.state, 'pending')
+	assert.equal((await request(onlineMeetingPath, 'GET', undefined, '', false)).status, 403)
+	const meetingWorker = spawn(process.execPath, ['apps/worker/dist/main.js'], {
+		env: { ...process.env, JUNCTION_RUNTIME_MODE: 'local', FOUNDATION_STORAGE: 'postgresql' },
+		stdio: ['ignore', 'ignore', 'ignore'],
+	})
+	const meetingWorkerClosed = once(meetingWorker, 'close')
+	try {
+		let readyMeeting
+		for (let attempt = 0; attempt < 40; attempt++) {
+			const read = await request(onlineMeetingPath)
+			if (read.body.state === 'ready') {
+				readyMeeting = read.body
+				break
+			}
+			if (meetingWorker.exitCode !== null) break
+			await new Promise((resolve) => setTimeout(resolve, 250))
+		}
+		assert.ok(readyMeeting, 'Built local worker did not provision the controlled online meeting.')
+		assert.equal(readyMeeting.provider, 'controlled_google_meet')
+		assert.match(readyMeeting.uri, /^https:\/\/meet.google.com\//)
+		assert.ok(!JSON.stringify(readyMeeting).includes('local-staff-connection'))
+	} finally {
+		if (meetingWorker.exitCode === null) meetingWorker.kill('SIGTERM')
+		const timer = setTimeout(() => meetingWorker.kill('SIGKILL'), 5000)
+		try {
+			await meetingWorkerClosed
+		} finally {
+			clearTimeout(timer)
+		}
+	}
+	const replacement = await request(`/vendor/bookings/${onlineResult.body.bookingId}/meeting/replacement`, 'POST', {
+		expectedVersion: 1,
+		kind: 'demo_meet',
+		reason: 'Protected local replacement',
+	})
+	assert.equal(replacement.status, 201, JSON.stringify(replacement.body))
+	assert.equal(replacement.body.manualReplacement, true)
+	assert.equal(replacement.body.provider, 'demo_meet')
+	console.log(
+		'Built local meeting HTTP/worker smoke passed: Staff self connection, asynchronous controlled assigned-Staff provisioning, private URI authority and protected replacement. No Google network call or live meeting acceptance.',
+	)
 	if (process.env.SERVICE_BROWSER_CHECK === '1') {
 		const { checkServiceSelectionBrowser } = await import('./check-service-selection-browser.mjs')
 		await checkServiceSelectionBrowser({ repository, sessionId, vendor, location: source, origin })

@@ -1,0 +1,35 @@
+{
+	"chunk": "P03-C09",
+	"date": "2026-10-12",
+	"baseline": "71b85f57408c17158979cb811410a76be5de3aef",
+	"environment": "local machine only; disposable loopback PostgreSQL/Redis/built API/worker; zero Google network calls",
+	"results": {
+		"meeting_postgresql_scenarios": 12,
+		"prior_phase03_postgresql": 83,
+		"workspace_lint_typecheck_test": "passed",
+		"built_meeting_http_and_actual_worker": "passed",
+		"prior_phase03_http_worker": "passed",
+		"migration_compatibility": "41 migrations; no difference",
+		"populated_upgrade": "passed"
+	},
+	"derived_defaults": {
+		"safety_minutes": 15,
+		"safety_range_minutes": [1, 120],
+		"lease_seconds": 30,
+		"controlled_timeout_seconds": 1,
+		"retry_seconds": 60,
+		"attempt_budget": 3
+	},
+	"limits": [
+		"controlled assigned-Staff protocol only; real Google OAuth/REST unverified",
+		"DemoMeet reference/provider boundary verified; public demo deployment unverified",
+		"full financial ledger remains Phase 04; formal phase/accessibility gates remain open"
+	],
+	"next": "P03-C10",
+	"sha256": {
+		"libs/platform-core/src/lib/booking-meetings.ts": "1bd0354e7be035ed681a42cf10879401675c80fa2e6d1573e72d48b1f056b8a9",
+		"libs/platform-core/src/lib/meeting-provider.ts": "9c804512aded15b5377e7697cc6dbc25059f94d198b2ebbdaad315692741db57",
+		"libs/platform-core/src/lib/booking-meetings.integration.ts": "6e413ca23e75fea8dcaecb8721aba2a1863863644bcd6a601d45ba7ec314d98f",
+		"prisma/migrations/20261012140000_booking_meetings/migration.sql": "38d9803b8867ec6f8a0d6adc3e2b94672ccac3e090d2475b0b51ffb539ea89af"
+	}
+}
