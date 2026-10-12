@@ -356,16 +356,17 @@ model InventoryMovement {
 }
 
 model VendorMembership {
-  id          String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  userId      String    @map("user_id") @db.Uuid
-  vendorId    String    @map("vendor_id") @db.Uuid
-  role        String
-  staffId     String?   @unique @map("staff_id") @db.Uuid
-  locationIds String[]  @map("location_ids") @db.Uuid
-  revokedAt   DateTime? @map("revoked_at") @db.Timestamptz(6)
-  user        User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  vendor      Vendor    @relation(fields: [vendorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  staff       Staff?    @relation(fields: [staffId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  goodsFulfillmentEnabled Boolean   @default(false) @map("goods_fulfillment_enabled")
+  id                      String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  userId                  String    @map("user_id") @db.Uuid
+  vendorId                String    @map("vendor_id") @db.Uuid
+  role                    String
+  staffId                 String?   @unique @map("staff_id") @db.Uuid
+  locationIds             String[]  @map("location_ids") @db.Uuid
+  revokedAt               DateTime? @map("revoked_at") @db.Timestamptz(6)
+  user                    User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  vendor                  Vendor    @relation(fields: [vendorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  staff                   Staff?    @relation(fields: [staffId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@unique([userId, vendorId])
   @@index([vendorId, revokedAt])
@@ -584,6 +585,7 @@ model GoodsPurchase {
 }
 
 model GoodsVendorOrder {
+  fulfillment        GoodsFulfillment?
   cancellations      GoodsOrderCancellation[]
   cancellationGrants GoodsCancellationGrant[]
   id                 String                   @id @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -636,6 +638,8 @@ model GoodsRefundOperation {
 }
 
 model GoodsOrderCancellation {
+  origin              String                  @default("pre_fulfillment")
+  pickupInspection    GoodsPickupInspection?
   id                  String                  @id @default(dbgenerated("uuidv7()")) @db.Uuid
   orderId             String                  @map("order_id") @db.Uuid
   order               GoodsVendorOrder        @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -688,4 +692,73 @@ model GoodsCancellationGrant {
   @@unique([userId, workspaceId, orderId])
   @@index([userId, workspaceId, expiresAt])
   @@map("goods_cancellation_grants")
+}
+
+model GoodsFulfillment {
+  id                 String                       @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orderId            String                       @unique @map("order_id") @db.Uuid
+  order              GoodsVendorOrder             @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  method             String
+  state              String                       @default("pending")
+  snapshot           Json
+  quantitySnapshot   Json?                        @map("quantity_snapshot")
+  preparedAt         DateTime?                    @map("prepared_at") @db.Timestamptz(6)
+  readyAt            DateTime?                    @map("ready_at") @db.Timestamptz(6)
+  pickupWindowEndsAt DateTime?                    @map("pickup_window_ends_at") @db.Timestamptz(6)
+  pickupGraceEndsAt  DateTime?                    @map("pickup_grace_ends_at") @db.Timestamptz(6)
+  handoffAt          DateTime?                    @map("handoff_at") @db.Timestamptz(6)
+  endedAt            DateTime?                    @map("ended_at") @db.Timestamptz(6)
+  codeCiphertext     String?                      @map("code_ciphertext")
+  codeDigest         String?                      @map("code_digest")
+  failedCodeAttempts Int                          @default(0) @map("failed_code_attempts")
+  version            Int                          @default(1)
+  createdAt          DateTime                     @default(now()) @map("created_at") @db.Timestamptz(6)
+  acknowledgements   GoodsPickupAcknowledgement[]
+  handoff            GoodsPickupHandoff?
+  inspection         GoodsPickupInspection?
+
+  @@index([state, pickupGraceEndsAt])
+  @@map("goods_fulfillments")
+}
+
+model GoodsPickupAcknowledgement {
+  id            String              @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  fulfillmentId String              @map("fulfillment_id") @db.Uuid
+  fulfillment   GoodsFulfillment    @relation(fields: [fulfillmentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  customerId    String              @map("customer_id") @db.Uuid
+  reason        String
+  statement     String
+  createdAt     DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  handoff       GoodsPickupHandoff?
+
+  @@index([fulfillmentId])
+  @@map("goods_pickup_acknowledgements")
+}
+
+model GoodsPickupHandoff {
+  id                String                      @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  fulfillmentId     String                      @unique @map("fulfillment_id") @db.Uuid
+  fulfillment       GoodsFulfillment            @relation(fields: [fulfillmentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  method            String
+  actorId           String                      @map("actor_id") @db.Uuid
+  customerId        String                      @map("customer_id") @db.Uuid
+  acknowledgementId String?                     @unique @map("acknowledgement_id") @db.Uuid
+  acknowledgement   GoodsPickupAcknowledgement? @relation(fields: [acknowledgementId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  evidence          Json
+  handedOffAt       DateTime                    @map("handed_off_at") @db.Timestamptz(6)
+
+  @@map("goods_pickup_handoffs")
+}
+
+model GoodsPickupInspection {
+  id             String                 @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  fulfillmentId  String                 @unique @map("fulfillment_id") @db.Uuid
+  fulfillment    GoodsFulfillment       @relation(fields: [fulfillmentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  cancellationId String                 @unique @map("cancellation_id") @db.Uuid
+  cancellation   GoodsOrderCancellation @relation(fields: [cancellationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  actorId        String                 @map("actor_id") @db.Uuid
+  evidence       Json
+  inspectedAt    DateTime               @map("inspected_at") @db.Timestamptz(6)
+
+  @@map("goods_pickup_inspections")
 }

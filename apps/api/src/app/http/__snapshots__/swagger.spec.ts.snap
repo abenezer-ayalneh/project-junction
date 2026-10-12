@@ -395,6 +395,1753 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
         "type": "object",
       },
+      "GoodsCustomerPickupRead": {
+        "additionalProperties": false,
+        "properties": {
+          "codeLocked": {
+            "type": "boolean",
+          },
+          "collectionProof": {
+            "additionalProperties": false,
+            "nullable": true,
+            "properties": {
+              "code": {
+                "type": "string",
+              },
+              "qrPayload": {
+                "type": "string",
+              },
+              "qrSvgDataUri": {
+                "type": "string",
+              },
+            },
+            "required": [
+              "code",
+              "qrPayload",
+              "qrSvgDataUri",
+            ],
+            "type": "object",
+          },
+          "fulfillmentId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "handoff": {
+            "additionalProperties": false,
+            "nullable": true,
+            "properties": {
+              "handedOffAt": {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                "type": "string",
+              },
+              "handoffId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "method": {
+                "enum": [
+                  "code",
+                  "qr",
+                  "fallback",
+                ],
+                "type": "string",
+              },
+            },
+            "required": [
+              "handoffId",
+              "method",
+              "handedOffAt",
+            ],
+            "type": "object",
+          },
+          "handoffAt": {
+            "format": "date-time",
+            "nullable": true,
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "inspection": {
+            "additionalProperties": false,
+            "nullable": true,
+            "properties": {
+              "cancellationId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "inspectedAt": {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                "type": "string",
+              },
+              "inspectionId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "refundId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "refundState": {
+                "enum": [
+                  "pending",
+                  "succeeded",
+                ],
+                "type": "string",
+              },
+            },
+            "required": [
+              "inspectionId",
+              "inspectedAt",
+              "cancellationId",
+              "refundId",
+              "refundState",
+            ],
+            "type": "object",
+          },
+          "method": {
+            "enum": [
+              "pickup",
+              "delivery",
+            ],
+            "type": "string",
+          },
+          "orderId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "pickupGraceEndsAt": {
+            "format": "date-time",
+            "nullable": true,
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "pickupPhase": {
+            "enum": [
+              "not_ready",
+              "window",
+              "grace",
+              "ended",
+            ],
+            "type": "string",
+          },
+          "pickupWindowEndsAt": {
+            "format": "date-time",
+            "nullable": true,
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "preparedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "quantitySnapshot": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "lineId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "quantity": {
+                  "exclusiveMinimum": true,
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+              },
+              "required": [
+                "lineId",
+                "quantity",
+              ],
+              "type": "object",
+            },
+            "nullable": true,
+            "type": "array",
+          },
+          "readyAt": {
+            "format": "date-time",
+            "nullable": true,
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "remainingLines": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "lineId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "listingId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "quantity": {
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+                "sku": {
+                  "nullable": true,
+                  "type": "string",
+                },
+              },
+              "required": [
+                "lineId",
+                "listingId",
+                "sku",
+                "quantity",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "snapshot": {
+            "additionalProperties": false,
+            "properties": {
+              "configurationVersion": {
+                "exclusiveMinimum": true,
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "deliveryFeeCents": {
+                "maximum": 2147483647,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "deliveryZone": {
+                "additionalProperties": false,
+                "nullable": true,
+                "properties": {
+                  "etaMinutes": {
+                    "maximum": 10080,
+                    "minimum": 1,
+                    "type": "integer",
+                  },
+                  "feeCents": {
+                    "maximum": 2147483647,
+                    "minimum": 0,
+                    "type": "integer",
+                  },
+                  "freeDeliveryThresholdCents": {
+                    "maximum": 2147483647,
+                    "minimum": 0,
+                    "nullable": true,
+                    "type": "integer",
+                  },
+                  "id": {
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string",
+                  },
+                  "label": {
+                    "maxLength": 80,
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                  "minimumCents": {
+                    "maximum": 2147483647,
+                    "minimum": 0,
+                    "type": "integer",
+                  },
+                  "polygon": {
+                    "items": {
+                      "items": {
+                        "anyOf": [
+                          {
+                            "maximum": 180,
+                            "minimum": -180,
+                            "type": "number",
+                          },
+                          {
+                            "maximum": 90,
+                            "minimum": -90,
+                            "type": "number",
+                          },
+                        ],
+                      },
+                      "maxItems": 2,
+                      "minItems": 2,
+                      "type": "array",
+                    },
+                    "maxItems": 100,
+                    "minItems": 4,
+                    "type": "array",
+                  },
+                },
+                "required": [
+                  "id",
+                  "label",
+                  "polygon",
+                  "feeCents",
+                  "minimumCents",
+                  "freeDeliveryThresholdCents",
+                  "etaMinutes",
+                ],
+                "type": "object",
+              },
+              "etaMinutes": {
+                "exclusiveMinimum": true,
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "nullable": true,
+                "type": "integer",
+              },
+              "failedDeliveryRetryHours": {
+                "enum": [
+                  48,
+                ],
+                "nullable": true,
+                "type": "number",
+              },
+              "fulfillment": {
+                "oneOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "method": {
+                        "enum": [
+                          "pickup",
+                        ],
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "method",
+                    ],
+                    "type": "object",
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "address": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "address": {
+                            "maxLength": 300,
+                            "minLength": 1,
+                            "type": "string",
+                          },
+                          "contactName": {
+                            "maxLength": 120,
+                            "minLength": 1,
+                            "type": "string",
+                          },
+                          "instructions": {
+                            "maxLength": 500,
+                            "type": "string",
+                          },
+                          "locality": {
+                            "maxLength": 120,
+                            "minLength": 1,
+                            "type": "string",
+                          },
+                          "phone": {
+                            "maxLength": 40,
+                            "minLength": 5,
+                            "type": "string",
+                          },
+                          "point": {
+                            "items": {
+                              "anyOf": [
+                                {
+                                  "maximum": 180,
+                                  "minimum": -180,
+                                  "type": "number",
+                                },
+                                {
+                                  "maximum": 90,
+                                  "minimum": -90,
+                                  "type": "number",
+                                },
+                              ],
+                            },
+                            "maxItems": 2,
+                            "minItems": 2,
+                            "type": "array",
+                          },
+                        },
+                        "required": [
+                          "contactName",
+                          "phone",
+                          "locality",
+                          "address",
+                          "point",
+                        ],
+                        "type": "object",
+                      },
+                      "method": {
+                        "enum": [
+                          "delivery",
+                        ],
+                        "type": "string",
+                      },
+                      "zoneId": {
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "method",
+                      "zoneId",
+                      "address",
+                    ],
+                    "type": "object",
+                  },
+                ],
+              },
+              "lines": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "listingId": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "listingVersion": {
+                      "exclusiveMinimum": true,
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "policy": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "changeOfMindDays": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                7,
+                              ],
+                              "type": "number",
+                            },
+                            {
+                              "enum": [
+                                14,
+                              ],
+                              "type": "number",
+                            },
+                          ],
+                        },
+                        "faultProtectionDays": {
+                          "enum": [
+                            30,
+                          ],
+                          "type": "number",
+                        },
+                        "restockingFeeCents": {
+                          "enum": [
+                            0,
+                          ],
+                          "type": "number",
+                        },
+                        "returnTemplate": {
+                          "enum": [
+                            "standard",
+                            "flexible",
+                          ],
+                          "type": "string",
+                        },
+                        "startsAt": {
+                          "enum": [
+                            "verified_handoff",
+                          ],
+                          "type": "string",
+                        },
+                      },
+                      "required": [
+                        "returnTemplate",
+                        "changeOfMindDays",
+                        "faultProtectionDays",
+                        "restockingFeeCents",
+                        "startsAt",
+                      ],
+                      "type": "object",
+                    },
+                    "quantity": {
+                      "exclusiveMinimum": true,
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "sku": {
+                      "nullable": true,
+                      "type": "string",
+                    },
+                    "subtotalCents": {
+                      "maximum": 2147483647,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "unitPriceCents": {
+                      "maximum": 2147483647,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                  },
+                  "required": [
+                    "listingId",
+                    "listingVersion",
+                    "sku",
+                    "quantity",
+                    "unitPriceCents",
+                    "subtotalCents",
+                    "policy",
+                  ],
+                  "type": "object",
+                },
+                "minItems": 1,
+                "type": "array",
+              },
+              "locationId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "pickupGraceHours": {
+                "enum": [
+                  48,
+                ],
+                "nullable": true,
+                "type": "number",
+              },
+              "pickupWindowHours": {
+                "enum": [
+                  72,
+                ],
+                "nullable": true,
+                "type": "number",
+              },
+              "vendorId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+            },
+            "required": [
+              "vendorId",
+              "locationId",
+              "configurationVersion",
+              "fulfillment",
+              "deliveryZone",
+              "deliveryFeeCents",
+              "etaMinutes",
+              "pickupWindowHours",
+              "pickupGraceHours",
+              "failedDeliveryRetryHours",
+              "lines",
+            ],
+            "type": "object",
+          },
+          "state": {
+            "enum": [
+              "pending",
+              "preparing",
+              "ready_for_pickup",
+              "collected",
+              "inspection_pending",
+              "inspection_completed",
+              "cancelled",
+            ],
+            "type": "string",
+          },
+          "version": {
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "fulfillmentId",
+          "orderId",
+          "method",
+          "state",
+          "version",
+          "snapshot",
+          "remainingLines",
+          "quantitySnapshot",
+          "preparedAt",
+          "readyAt",
+          "pickupWindowEndsAt",
+          "pickupGraceEndsAt",
+          "handoffAt",
+          "pickupPhase",
+          "codeLocked",
+          "handoff",
+          "inspection",
+          "collectionProof",
+        ],
+        "type": "object",
+      },
+      "GoodsFulfillmentCommand": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object",
+      },
+      "GoodsFulfillmentRead": {
+        "additionalProperties": false,
+        "properties": {
+          "codeLocked": {
+            "type": "boolean",
+          },
+          "fulfillmentId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "handoff": {
+            "additionalProperties": false,
+            "nullable": true,
+            "properties": {
+              "handedOffAt": {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                "type": "string",
+              },
+              "handoffId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "method": {
+                "enum": [
+                  "code",
+                  "qr",
+                  "fallback",
+                ],
+                "type": "string",
+              },
+            },
+            "required": [
+              "handoffId",
+              "method",
+              "handedOffAt",
+            ],
+            "type": "object",
+          },
+          "handoffAt": {
+            "format": "date-time",
+            "nullable": true,
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "inspection": {
+            "additionalProperties": false,
+            "nullable": true,
+            "properties": {
+              "cancellationId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "inspectedAt": {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                "type": "string",
+              },
+              "inspectionId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "refundId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "refundState": {
+                "enum": [
+                  "pending",
+                  "succeeded",
+                ],
+                "type": "string",
+              },
+            },
+            "required": [
+              "inspectionId",
+              "inspectedAt",
+              "cancellationId",
+              "refundId",
+              "refundState",
+            ],
+            "type": "object",
+          },
+          "method": {
+            "enum": [
+              "pickup",
+              "delivery",
+            ],
+            "type": "string",
+          },
+          "orderId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "pickupGraceEndsAt": {
+            "format": "date-time",
+            "nullable": true,
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "pickupPhase": {
+            "enum": [
+              "not_ready",
+              "window",
+              "grace",
+              "ended",
+            ],
+            "type": "string",
+          },
+          "pickupWindowEndsAt": {
+            "format": "date-time",
+            "nullable": true,
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "preparedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "quantitySnapshot": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "lineId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "quantity": {
+                  "exclusiveMinimum": true,
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+              },
+              "required": [
+                "lineId",
+                "quantity",
+              ],
+              "type": "object",
+            },
+            "nullable": true,
+            "type": "array",
+          },
+          "readyAt": {
+            "format": "date-time",
+            "nullable": true,
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "remainingLines": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "lineId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "listingId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "quantity": {
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+                "sku": {
+                  "nullable": true,
+                  "type": "string",
+                },
+              },
+              "required": [
+                "lineId",
+                "listingId",
+                "sku",
+                "quantity",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "snapshot": {
+            "additionalProperties": false,
+            "properties": {
+              "configurationVersion": {
+                "exclusiveMinimum": true,
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "deliveryFeeCents": {
+                "maximum": 2147483647,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "deliveryZone": {
+                "additionalProperties": false,
+                "nullable": true,
+                "properties": {
+                  "etaMinutes": {
+                    "maximum": 10080,
+                    "minimum": 1,
+                    "type": "integer",
+                  },
+                  "feeCents": {
+                    "maximum": 2147483647,
+                    "minimum": 0,
+                    "type": "integer",
+                  },
+                  "freeDeliveryThresholdCents": {
+                    "maximum": 2147483647,
+                    "minimum": 0,
+                    "nullable": true,
+                    "type": "integer",
+                  },
+                  "id": {
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string",
+                  },
+                  "label": {
+                    "maxLength": 80,
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                  "minimumCents": {
+                    "maximum": 2147483647,
+                    "minimum": 0,
+                    "type": "integer",
+                  },
+                  "polygon": {
+                    "items": {
+                      "items": {
+                        "anyOf": [
+                          {
+                            "maximum": 180,
+                            "minimum": -180,
+                            "type": "number",
+                          },
+                          {
+                            "maximum": 90,
+                            "minimum": -90,
+                            "type": "number",
+                          },
+                        ],
+                      },
+                      "maxItems": 2,
+                      "minItems": 2,
+                      "type": "array",
+                    },
+                    "maxItems": 100,
+                    "minItems": 4,
+                    "type": "array",
+                  },
+                },
+                "required": [
+                  "id",
+                  "label",
+                  "polygon",
+                  "feeCents",
+                  "minimumCents",
+                  "freeDeliveryThresholdCents",
+                  "etaMinutes",
+                ],
+                "type": "object",
+              },
+              "etaMinutes": {
+                "exclusiveMinimum": true,
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "nullable": true,
+                "type": "integer",
+              },
+              "failedDeliveryRetryHours": {
+                "enum": [
+                  48,
+                ],
+                "nullable": true,
+                "type": "number",
+              },
+              "fulfillment": {
+                "oneOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "method": {
+                        "enum": [
+                          "pickup",
+                        ],
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "method",
+                    ],
+                    "type": "object",
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "address": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "address": {
+                            "maxLength": 300,
+                            "minLength": 1,
+                            "type": "string",
+                          },
+                          "contactName": {
+                            "maxLength": 120,
+                            "minLength": 1,
+                            "type": "string",
+                          },
+                          "instructions": {
+                            "maxLength": 500,
+                            "type": "string",
+                          },
+                          "locality": {
+                            "maxLength": 120,
+                            "minLength": 1,
+                            "type": "string",
+                          },
+                          "phone": {
+                            "maxLength": 40,
+                            "minLength": 5,
+                            "type": "string",
+                          },
+                          "point": {
+                            "items": {
+                              "anyOf": [
+                                {
+                                  "maximum": 180,
+                                  "minimum": -180,
+                                  "type": "number",
+                                },
+                                {
+                                  "maximum": 90,
+                                  "minimum": -90,
+                                  "type": "number",
+                                },
+                              ],
+                            },
+                            "maxItems": 2,
+                            "minItems": 2,
+                            "type": "array",
+                          },
+                        },
+                        "required": [
+                          "contactName",
+                          "phone",
+                          "locality",
+                          "address",
+                          "point",
+                        ],
+                        "type": "object",
+                      },
+                      "method": {
+                        "enum": [
+                          "delivery",
+                        ],
+                        "type": "string",
+                      },
+                      "zoneId": {
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "method",
+                      "zoneId",
+                      "address",
+                    ],
+                    "type": "object",
+                  },
+                ],
+              },
+              "lines": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "listingId": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "listingVersion": {
+                      "exclusiveMinimum": true,
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "policy": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "changeOfMindDays": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                7,
+                              ],
+                              "type": "number",
+                            },
+                            {
+                              "enum": [
+                                14,
+                              ],
+                              "type": "number",
+                            },
+                          ],
+                        },
+                        "faultProtectionDays": {
+                          "enum": [
+                            30,
+                          ],
+                          "type": "number",
+                        },
+                        "restockingFeeCents": {
+                          "enum": [
+                            0,
+                          ],
+                          "type": "number",
+                        },
+                        "returnTemplate": {
+                          "enum": [
+                            "standard",
+                            "flexible",
+                          ],
+                          "type": "string",
+                        },
+                        "startsAt": {
+                          "enum": [
+                            "verified_handoff",
+                          ],
+                          "type": "string",
+                        },
+                      },
+                      "required": [
+                        "returnTemplate",
+                        "changeOfMindDays",
+                        "faultProtectionDays",
+                        "restockingFeeCents",
+                        "startsAt",
+                      ],
+                      "type": "object",
+                    },
+                    "quantity": {
+                      "exclusiveMinimum": true,
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "sku": {
+                      "nullable": true,
+                      "type": "string",
+                    },
+                    "subtotalCents": {
+                      "maximum": 2147483647,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "unitPriceCents": {
+                      "maximum": 2147483647,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                  },
+                  "required": [
+                    "listingId",
+                    "listingVersion",
+                    "sku",
+                    "quantity",
+                    "unitPriceCents",
+                    "subtotalCents",
+                    "policy",
+                  ],
+                  "type": "object",
+                },
+                "minItems": 1,
+                "type": "array",
+              },
+              "locationId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "pickupGraceHours": {
+                "enum": [
+                  48,
+                ],
+                "nullable": true,
+                "type": "number",
+              },
+              "pickupWindowHours": {
+                "enum": [
+                  72,
+                ],
+                "nullable": true,
+                "type": "number",
+              },
+              "vendorId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+            },
+            "required": [
+              "vendorId",
+              "locationId",
+              "configurationVersion",
+              "fulfillment",
+              "deliveryZone",
+              "deliveryFeeCents",
+              "etaMinutes",
+              "pickupWindowHours",
+              "pickupGraceHours",
+              "failedDeliveryRetryHours",
+              "lines",
+            ],
+            "type": "object",
+          },
+          "state": {
+            "enum": [
+              "pending",
+              "preparing",
+              "ready_for_pickup",
+              "collected",
+              "inspection_pending",
+              "inspection_completed",
+              "cancelled",
+            ],
+            "type": "string",
+          },
+          "version": {
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "fulfillmentId",
+          "orderId",
+          "method",
+          "state",
+          "version",
+          "snapshot",
+          "remainingLines",
+          "quantitySnapshot",
+          "preparedAt",
+          "readyAt",
+          "pickupWindowEndsAt",
+          "pickupGraceEndsAt",
+          "handoffAt",
+          "pickupPhase",
+          "codeLocked",
+          "handoff",
+          "inspection",
+        ],
+        "type": "object",
+      },
+      "GoodsFulfillmentResult": {
+        "additionalProperties": false,
+        "properties": {
+          "codeLocked": {
+            "type": "boolean",
+          },
+          "fulfillmentId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "handoff": {
+            "additionalProperties": false,
+            "nullable": true,
+            "properties": {
+              "handedOffAt": {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                "type": "string",
+              },
+              "handoffId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "method": {
+                "enum": [
+                  "code",
+                  "qr",
+                  "fallback",
+                ],
+                "type": "string",
+              },
+            },
+            "required": [
+              "handoffId",
+              "method",
+              "handedOffAt",
+            ],
+            "type": "object",
+          },
+          "handoffAt": {
+            "format": "date-time",
+            "nullable": true,
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "inspection": {
+            "additionalProperties": false,
+            "nullable": true,
+            "properties": {
+              "cancellationId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "inspectedAt": {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                "type": "string",
+              },
+              "inspectionId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "refundId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "refundState": {
+                "enum": [
+                  "pending",
+                  "succeeded",
+                ],
+                "type": "string",
+              },
+            },
+            "required": [
+              "inspectionId",
+              "inspectedAt",
+              "cancellationId",
+              "refundId",
+              "refundState",
+            ],
+            "type": "object",
+          },
+          "method": {
+            "enum": [
+              "pickup",
+              "delivery",
+            ],
+            "type": "string",
+          },
+          "orderId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "pickupGraceEndsAt": {
+            "format": "date-time",
+            "nullable": true,
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "pickupPhase": {
+            "enum": [
+              "not_ready",
+              "window",
+              "grace",
+              "ended",
+            ],
+            "type": "string",
+          },
+          "pickupWindowEndsAt": {
+            "format": "date-time",
+            "nullable": true,
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "preparedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "quantitySnapshot": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "lineId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "quantity": {
+                  "exclusiveMinimum": true,
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+              },
+              "required": [
+                "lineId",
+                "quantity",
+              ],
+              "type": "object",
+            },
+            "nullable": true,
+            "type": "array",
+          },
+          "readyAt": {
+            "format": "date-time",
+            "nullable": true,
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "remainingLines": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "lineId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "listingId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "quantity": {
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+                "sku": {
+                  "nullable": true,
+                  "type": "string",
+                },
+              },
+              "required": [
+                "lineId",
+                "listingId",
+                "sku",
+                "quantity",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "replayed": {
+            "type": "boolean",
+          },
+          "snapshot": {
+            "additionalProperties": false,
+            "properties": {
+              "configurationVersion": {
+                "exclusiveMinimum": true,
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "deliveryFeeCents": {
+                "maximum": 2147483647,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "deliveryZone": {
+                "additionalProperties": false,
+                "nullable": true,
+                "properties": {
+                  "etaMinutes": {
+                    "maximum": 10080,
+                    "minimum": 1,
+                    "type": "integer",
+                  },
+                  "feeCents": {
+                    "maximum": 2147483647,
+                    "minimum": 0,
+                    "type": "integer",
+                  },
+                  "freeDeliveryThresholdCents": {
+                    "maximum": 2147483647,
+                    "minimum": 0,
+                    "nullable": true,
+                    "type": "integer",
+                  },
+                  "id": {
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string",
+                  },
+                  "label": {
+                    "maxLength": 80,
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                  "minimumCents": {
+                    "maximum": 2147483647,
+                    "minimum": 0,
+                    "type": "integer",
+                  },
+                  "polygon": {
+                    "items": {
+                      "items": {
+                        "anyOf": [
+                          {
+                            "maximum": 180,
+                            "minimum": -180,
+                            "type": "number",
+                          },
+                          {
+                            "maximum": 90,
+                            "minimum": -90,
+                            "type": "number",
+                          },
+                        ],
+                      },
+                      "maxItems": 2,
+                      "minItems": 2,
+                      "type": "array",
+                    },
+                    "maxItems": 100,
+                    "minItems": 4,
+                    "type": "array",
+                  },
+                },
+                "required": [
+                  "id",
+                  "label",
+                  "polygon",
+                  "feeCents",
+                  "minimumCents",
+                  "freeDeliveryThresholdCents",
+                  "etaMinutes",
+                ],
+                "type": "object",
+              },
+              "etaMinutes": {
+                "exclusiveMinimum": true,
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "nullable": true,
+                "type": "integer",
+              },
+              "failedDeliveryRetryHours": {
+                "enum": [
+                  48,
+                ],
+                "nullable": true,
+                "type": "number",
+              },
+              "fulfillment": {
+                "oneOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "method": {
+                        "enum": [
+                          "pickup",
+                        ],
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "method",
+                    ],
+                    "type": "object",
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "address": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "address": {
+                            "maxLength": 300,
+                            "minLength": 1,
+                            "type": "string",
+                          },
+                          "contactName": {
+                            "maxLength": 120,
+                            "minLength": 1,
+                            "type": "string",
+                          },
+                          "instructions": {
+                            "maxLength": 500,
+                            "type": "string",
+                          },
+                          "locality": {
+                            "maxLength": 120,
+                            "minLength": 1,
+                            "type": "string",
+                          },
+                          "phone": {
+                            "maxLength": 40,
+                            "minLength": 5,
+                            "type": "string",
+                          },
+                          "point": {
+                            "items": {
+                              "anyOf": [
+                                {
+                                  "maximum": 180,
+                                  "minimum": -180,
+                                  "type": "number",
+                                },
+                                {
+                                  "maximum": 90,
+                                  "minimum": -90,
+                                  "type": "number",
+                                },
+                              ],
+                            },
+                            "maxItems": 2,
+                            "minItems": 2,
+                            "type": "array",
+                          },
+                        },
+                        "required": [
+                          "contactName",
+                          "phone",
+                          "locality",
+                          "address",
+                          "point",
+                        ],
+                        "type": "object",
+                      },
+                      "method": {
+                        "enum": [
+                          "delivery",
+                        ],
+                        "type": "string",
+                      },
+                      "zoneId": {
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "method",
+                      "zoneId",
+                      "address",
+                    ],
+                    "type": "object",
+                  },
+                ],
+              },
+              "lines": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "listingId": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "listingVersion": {
+                      "exclusiveMinimum": true,
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "policy": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "changeOfMindDays": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                7,
+                              ],
+                              "type": "number",
+                            },
+                            {
+                              "enum": [
+                                14,
+                              ],
+                              "type": "number",
+                            },
+                          ],
+                        },
+                        "faultProtectionDays": {
+                          "enum": [
+                            30,
+                          ],
+                          "type": "number",
+                        },
+                        "restockingFeeCents": {
+                          "enum": [
+                            0,
+                          ],
+                          "type": "number",
+                        },
+                        "returnTemplate": {
+                          "enum": [
+                            "standard",
+                            "flexible",
+                          ],
+                          "type": "string",
+                        },
+                        "startsAt": {
+                          "enum": [
+                            "verified_handoff",
+                          ],
+                          "type": "string",
+                        },
+                      },
+                      "required": [
+                        "returnTemplate",
+                        "changeOfMindDays",
+                        "faultProtectionDays",
+                        "restockingFeeCents",
+                        "startsAt",
+                      ],
+                      "type": "object",
+                    },
+                    "quantity": {
+                      "exclusiveMinimum": true,
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "sku": {
+                      "nullable": true,
+                      "type": "string",
+                    },
+                    "subtotalCents": {
+                      "maximum": 2147483647,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "unitPriceCents": {
+                      "maximum": 2147483647,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                  },
+                  "required": [
+                    "listingId",
+                    "listingVersion",
+                    "sku",
+                    "quantity",
+                    "unitPriceCents",
+                    "subtotalCents",
+                    "policy",
+                  ],
+                  "type": "object",
+                },
+                "minItems": 1,
+                "type": "array",
+              },
+              "locationId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "pickupGraceHours": {
+                "enum": [
+                  48,
+                ],
+                "nullable": true,
+                "type": "number",
+              },
+              "pickupWindowHours": {
+                "enum": [
+                  72,
+                ],
+                "nullable": true,
+                "type": "number",
+              },
+              "vendorId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+            },
+            "required": [
+              "vendorId",
+              "locationId",
+              "configurationVersion",
+              "fulfillment",
+              "deliveryZone",
+              "deliveryFeeCents",
+              "etaMinutes",
+              "pickupWindowHours",
+              "pickupGraceHours",
+              "failedDeliveryRetryHours",
+              "lines",
+            ],
+            "type": "object",
+          },
+          "state": {
+            "enum": [
+              "pending",
+              "preparing",
+              "ready_for_pickup",
+              "collected",
+              "inspection_pending",
+              "inspection_completed",
+              "cancelled",
+            ],
+            "type": "string",
+          },
+          "version": {
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "fulfillmentId",
+          "orderId",
+          "method",
+          "state",
+          "version",
+          "snapshot",
+          "remainingLines",
+          "quantitySnapshot",
+          "preparedAt",
+          "readyAt",
+          "pickupWindowEndsAt",
+          "pickupGraceEndsAt",
+          "handoffAt",
+          "pickupPhase",
+          "codeLocked",
+          "handoff",
+          "inspection",
+          "replayed",
+        ],
+        "type": "object",
+      },
       "GoodsHoldCommand": {
         "additionalProperties": false,
         "properties": {
@@ -1166,6 +2913,8 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
                   "enum": [
                     "restock",
                     "damaged",
+                    "quarantine",
+                    "lost",
                   ],
                   "type": "string",
                 },
@@ -1241,6 +2990,8 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
                   "enum": [
                     "restock",
                     "damaged",
+                    "quarantine",
+                    "lost",
                   ],
                   "type": "string",
                 },
@@ -1582,6 +3333,199 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         },
         "required": [
           "holdId",
+        ],
+        "type": "object",
+      },
+      "GoodsPickupAcknowledgementCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "enum": [
+              "code_unavailable",
+              "accessibility",
+            ],
+            "type": "string",
+          },
+          "statement": {
+            "maxLength": 1000,
+            "minLength": 10,
+            "type": "string",
+          },
+        },
+        "required": [
+          "reason",
+          "statement",
+        ],
+        "type": "object",
+      },
+      "GoodsPickupAcknowledgementResult": {
+        "additionalProperties": false,
+        "properties": {
+          "acknowledgedAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "acknowledgementId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "fulfillmentId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "replayed": {
+            "type": "boolean",
+          },
+        },
+        "required": [
+          "acknowledgementId",
+          "fulfillmentId",
+          "acknowledgedAt",
+          "replayed",
+        ],
+        "type": "object",
+      },
+      "GoodsPickupCollectionCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "proof": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "code": {
+                    "maxLength": 80,
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                  "method": {
+                    "enum": [
+                      "code",
+                    ],
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "method",
+                  "code",
+                ],
+                "type": "object",
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "method": {
+                    "enum": [
+                      "qr",
+                    ],
+                    "type": "string",
+                  },
+                  "payload": {
+                    "maxLength": 300,
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "method",
+                  "payload",
+                ],
+                "type": "object",
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "acknowledgementId": {
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string",
+                  },
+                  "method": {
+                    "enum": [
+                      "fallback",
+                    ],
+                    "type": "string",
+                  },
+                  "reason": {
+                    "enum": [
+                      "code_unavailable",
+                      "accessibility",
+                    ],
+                    "type": "string",
+                  },
+                  "witnessStatement": {
+                    "maxLength": 1000,
+                    "minLength": 10,
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "method",
+                  "acknowledgementId",
+                  "reason",
+                  "witnessStatement",
+                ],
+                "type": "object",
+              },
+            ],
+          },
+        },
+        "required": [
+          "proof",
+        ],
+        "type": "object",
+      },
+      "GoodsPickupInspectionCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "evidence": {
+            "maxLength": 1000,
+            "minLength": 10,
+            "type": "string",
+          },
+          "lines": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "lineId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "quantity": {
+                  "exclusiveMinimum": true,
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+                "stockDisposition": {
+                  "enum": [
+                    "restock",
+                    "damaged",
+                    "quarantine",
+                    "lost",
+                  ],
+                  "type": "string",
+                },
+              },
+              "required": [
+                "lineId",
+                "quantity",
+                "stockDisposition",
+              ],
+              "type": "object",
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "type": "array",
+          },
+        },
+        "required": [
+          "evidence",
+          "lines",
         ],
         "type": "object",
       },
@@ -6925,6 +8869,61 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
       },
     },
+    "/v1/customer/goods/fulfillments/{fulfillmentId}/acknowledgements": {
+      "post": {
+        "operationId": "AppController_acknowledgeGoodsPickup",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fulfillmentId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoodsPickupAcknowledgementCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoodsPickupAcknowledgementResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Record a private authenticated Customer acknowledgement for controlled code-unavailable/accessibility fallback. A distinct assigned witness must collect.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
     "/v1/customer/goods/holds": {
       "post": {
         "operationId": "AppController_createGoodsHold",
@@ -7048,6 +9047,43 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
         ],
         "summary": "Release all uncommitted goods reservations once. A new attempt requires a fresh quote.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/customer/goods/orders/{orderId}/fulfillment": {
+      "get": {
+        "operationId": "AppController_readCustomerGoodsFulfillment",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "orderId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoodsCustomerPickupRead",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Read the Customer’s pickup status and private one-time code/QR during its window/grace. Terminal pickups omit the code.",
         "tags": [
           "foundation",
         ],
@@ -9101,6 +11137,226 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
       },
     },
+    "/v1/vendor/goods/fulfillments/{fulfillmentId}/collect": {
+      "post": {
+        "operationId": "AppController_collectGoodsPickup",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fulfillmentId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoodsPickupCollectionCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoodsFulfillmentResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Collect pickup once with Customer code/QR, or fresh private Customer acknowledgement plus distinct authorized witness evidence. Does not move stock again.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/vendor/goods/fulfillments/{fulfillmentId}/inspect": {
+      "post": {
+        "operationId": "AppController_inspectGoodsPickup",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fulfillmentId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoodsPickupInspectionCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoodsFulfillmentResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Inspect all expired pickup quantities as the assigned Owner. Record disposition and policy refund atomically; stock is not restored merely by expiry.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/vendor/goods/fulfillments/{fulfillmentId}/prepare": {
+      "post": {
+        "operationId": "AppController_prepareGoodsFulfillment",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fulfillmentId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoodsFulfillmentCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoodsFulfillmentResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Begin preparation for an active paid Order under current assigned fulfillment authority.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/vendor/goods/fulfillments/{fulfillmentId}/ready": {
+      "post": {
+        "operationId": "AppController_readyGoodsPickup",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fulfillmentId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoodsFulfillmentCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoodsFulfillmentResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Mark prepared pickup goods ready once. Start 72-hour collection and 48-hour grace using immutable policies/remaining quantities.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
     "/v1/vendor/goods/orders/{orderId}": {
       "get": {
         "operationId": "AppController_readGoodsVendorOrder",
@@ -9188,6 +11444,43 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
         ],
         "summary": "Cancel exact pre-fulfillment goods quantities for an assigned Owner; append stock disposition and pending proportional refund without changing other Orders.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/vendor/goods/orders/{orderId}/fulfillment": {
+      "get": {
+        "operationId": "AppController_readVendorGoodsFulfillment",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "orderId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoodsFulfillmentRead",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Read existing fulfillment for an assigned Owner or explicitly enabled Fulfillment Staff. Customer code is omitted.",
         "tags": [
           "foundation",
         ],

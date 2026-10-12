@@ -24,6 +24,7 @@ import { z } from 'zod'
 import { Prisma } from '../../generated/prisma/index.js'
 import { AccessDeniedError, assertScope } from './access.js'
 import { GoodsCancellation } from './goods-cancellation.js'
+import { GoodsPickup } from './goods-pickup.js'
 import { goodsAudit, GoodsCheckoutConflictError, type GoodsDependencies, goodsEmit } from './goods-support.js'
 import { stableHash } from './idempotency.js'
 import { LocalGoodsPaymentAdapter } from './local-goods-payment.js'
@@ -39,10 +40,12 @@ export { GoodsCheckoutConflictError } from './goods-support.js'
 
 /** Goods-only quote, reservation and controlled local payment commitment lifecycle. */
 export class GoodsCheckout {
+	private readonly pickup: GoodsPickup
 	private readonly cancellations: GoodsCancellation
 	private readonly payments: LocalGoodsPaymentAdapter
 	constructor(private readonly dependencies: GoodsDependencies) {
 		this.cancellations = new GoodsCancellation(dependencies)
+		this.pickup = new GoodsPickup(dependencies, this.cancellations)
 		this.payments = dependencies.payments ?? new LocalGoodsPaymentAdapter()
 	}
 
@@ -689,6 +692,13 @@ export class GoodsCheckout {
 					})
 					await this.stockEvent(tx, allocation.vendorWorkspaceId, hold.id, line.listingId, group.locationId, line.sku, 'sold', null)
 				}
+				const fulfillment = await tx.goodsFulfillment.create({
+					data: { orderId: order.id, method: group.fulfillment.method, snapshot: json(group), createdAt: this.dependencies.now() },
+				})
+				await this.emit(tx, order.vendorWorkspaceId, 'GoodsFulfillmentCreated', fulfillment.id, 1, null, {
+					fulfillmentId: fulfillment.id,
+					orderId: order.id,
+				})
 				await this.audit(tx, order.vendorWorkspaceId, null, 'goods.order-confirmed', { orderId: order.id, purchaseId: purchase.id })
 				await this.emit(tx, order.vendorWorkspaceId, 'GoodsVendorOrderConfirmed', order.id, 1, null, { orderId: order.id, purchaseId: purchase.id })
 			}
@@ -815,6 +825,28 @@ export class GoodsCheckout {
 
 	readPlatformGoodsOrder(sessionId: string | undefined, orderId: string) {
 		return this.cancellations.readPlatformOrder(sessionId, orderId)
+	}
+
+	readGoodsFulfillment(sessionId: string | undefined, orderId: string, customer: boolean) {
+		return this.pickup.byOrder(sessionId, orderId, customer)
+	}
+	prepareGoodsFulfillment(sessionId: string | undefined, key: string | undefined, id: string) {
+		return this.pickup.prepare(sessionId, key, id)
+	}
+	readyGoodsPickup(sessionId: string | undefined, key: string | undefined, id: string) {
+		return this.pickup.ready(sessionId, key, id)
+	}
+	acknowledgeGoodsPickup(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.pickup.acknowledge(sessionId, key, id, input)
+	}
+	collectGoodsPickup(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.pickup.collect(sessionId, key, id, input)
+	}
+	inspectGoodsPickup(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.pickup.inspect(sessionId, key, id, input)
+	}
+	expireGoodsPickups() {
+		return this.pickup.expire()
 	}
 
 	private async stockEvent(

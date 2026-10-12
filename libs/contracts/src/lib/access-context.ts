@@ -9,6 +9,7 @@ export const MembershipSchema = z.object({
 	role: z.enum(['vendor_owner', 'vendor_staff']),
 	locationIds: z.array(IdentifierSchema),
 	active: z.boolean(),
+	goodsFulfillmentEnabled: z.boolean().default(false),
 })
 
 export const AccessContextSchema = z.object({

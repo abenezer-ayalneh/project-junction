@@ -11,6 +11,7 @@ import {
 	ApiSecurity,
 	ApiTags,
 } from '@nestjs/swagger'
+import { GoodsFulfillmentCommandSchema } from 'contracts'
 
 import { FoundationService } from '../foundation/foundation.service'
 import { RealtimeGateway } from '../realtime/realtime.gateway'
@@ -421,6 +422,117 @@ export class AppController {
 	@ApiOkResponse({ schema: OpenApiSchemaRefs.goodsVendorOrderRead })
 	readPlatformGoodsOrder(@AuthenticatedSession() sessionId: string | undefined, @Param('orderId') orderId: string) {
 		return this.foundation.readPlatformGoodsOrder(sessionId, orderId)
+	}
+
+	@Get('vendor/goods/orders/:orderId/fulfillment')
+	@ApiOperation({ summary: 'Read existing fulfillment for an assigned Owner or explicitly enabled Fulfillment Staff. Customer code is omitted.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiParam({ name: 'orderId', schema: { type: 'string', format: 'uuid' } })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.goodsFulfillmentRead })
+	readVendorGoodsFulfillment(@AuthenticatedSession() sessionId: string | undefined, @Param('orderId') orderId: string) {
+		return this.foundation.readGoodsFulfillment(sessionId, orderId, false)
+	}
+
+	@Get('customer/goods/orders/:orderId/fulfillment')
+	@ApiOperation({ summary: 'Read the Customer’s pickup status and private one-time code/QR during its window/grace. Terminal pickups omit the code.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiParam({ name: 'orderId', schema: { type: 'string', format: 'uuid' } })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.goodsCustomerPickupRead })
+	readCustomerGoodsFulfillment(@AuthenticatedSession() sessionId: string | undefined, @Param('orderId') orderId: string) {
+		return this.foundation.readGoodsFulfillment(sessionId, orderId, true)
+	}
+
+	@Post('vendor/goods/fulfillments/:fulfillmentId/prepare')
+	@ApiOperation({ summary: 'Begin preparation for an active paid Order under current assigned fulfillment authority.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiParam({ name: 'fulfillmentId', schema: { type: 'string', format: 'uuid' } })
+	@ApiBody({ schema: OpenApiSchemaRefs.goodsFulfillmentCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.goodsFulfillmentResult })
+	prepareGoodsFulfillment(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('fulfillmentId') id: string,
+		@Body() body: unknown,
+	) {
+		GoodsFulfillmentCommandSchema.parse(body)
+		return this.foundation.prepareGoodsFulfillment(sessionId, key, id)
+	}
+
+	@Post('vendor/goods/fulfillments/:fulfillmentId/ready')
+	@ApiOperation({
+		summary: 'Mark prepared pickup goods ready once. Start 72-hour collection and 48-hour grace using immutable policies/remaining quantities.',
+	})
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiParam({ name: 'fulfillmentId', schema: { type: 'string', format: 'uuid' } })
+	@ApiBody({ schema: OpenApiSchemaRefs.goodsFulfillmentCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.goodsFulfillmentResult })
+	readyGoodsPickup(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('fulfillmentId') id: string,
+		@Body() body: unknown,
+	) {
+		GoodsFulfillmentCommandSchema.parse(body)
+		return this.foundation.readyGoodsPickup(sessionId, key, id)
+	}
+
+	@Post('customer/goods/fulfillments/:fulfillmentId/acknowledgements')
+	@ApiOperation({
+		summary:
+			'Record a private authenticated Customer acknowledgement for controlled code-unavailable/accessibility fallback. A distinct assigned witness must collect.',
+	})
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiParam({ name: 'fulfillmentId', schema: { type: 'string', format: 'uuid' } })
+	@ApiBody({ schema: OpenApiSchemaRefs.goodsPickupAcknowledgementCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.goodsPickupAcknowledgementResult })
+	acknowledgeGoodsPickup(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('fulfillmentId') id: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.acknowledgeGoodsPickup(sessionId, key, id, body)
+	}
+
+	@Post('vendor/goods/fulfillments/:fulfillmentId/collect')
+	@ApiOperation({
+		summary:
+			'Collect pickup once with Customer code/QR, or fresh private Customer acknowledgement plus distinct authorized witness evidence. Does not move stock again.',
+	})
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiParam({ name: 'fulfillmentId', schema: { type: 'string', format: 'uuid' } })
+	@ApiBody({ schema: OpenApiSchemaRefs.goodsPickupCollectionCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.goodsFulfillmentResult })
+	collectGoodsPickup(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('fulfillmentId') id: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.collectGoodsPickup(sessionId, key, id, body)
+	}
+
+	@Post('vendor/goods/fulfillments/:fulfillmentId/inspect')
+	@ApiOperation({
+		summary:
+			'Inspect all expired pickup quantities as the assigned Owner. Record disposition and policy refund atomically; stock is not restored merely by expiry.',
+	})
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiParam({ name: 'fulfillmentId', schema: { type: 'string', format: 'uuid' } })
+	@ApiBody({ schema: OpenApiSchemaRefs.goodsPickupInspectionCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.goodsFulfillmentResult })
+	inspectGoodsPickup(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('fulfillmentId') id: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.inspectGoodsPickup(sessionId, key, id, body)
 	}
 
 	@Get('inventory/listings/:listingId/availability')

@@ -592,6 +592,28 @@ export class PostgresFoundation {
 		return this.goods.readPlatformGoodsOrder(sessionId, orderId)
 	}
 
+	readGoodsFulfillment(sessionId: string | undefined, orderId: string, customer = false) {
+		return this.goods.readGoodsFulfillment(sessionId, orderId, customer)
+	}
+	prepareGoodsFulfillment(sessionId: string | undefined, key: string | undefined, id: string) {
+		return this.goods.prepareGoodsFulfillment(sessionId, key, id)
+	}
+	readyGoodsPickup(sessionId: string | undefined, key: string | undefined, id: string) {
+		return this.goods.readyGoodsPickup(sessionId, key, id)
+	}
+	acknowledgeGoodsPickup(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.goods.acknowledgeGoodsPickup(sessionId, key, id, input)
+	}
+	collectGoodsPickup(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.goods.collectGoodsPickup(sessionId, key, id, input)
+	}
+	inspectGoodsPickup(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.goods.inspectGoodsPickup(sessionId, key, id, input)
+	}
+	expireGoodsPickups() {
+		return this.goods.expireGoodsPickups()
+	}
+
 	async readInventoryAvailability(sessionId: string | undefined, listingId: string, queryInput: unknown) {
 		this.requireResourceId(listingId)
 		const query = InventoryAvailabilityQuerySchema.parse(queryInput)
@@ -2722,7 +2744,13 @@ export class PostgresFoundation {
 				throw new AccessDeniedError()
 			if (membership.locationIds.some((id) => !membership.vendor.locations.some((location) => location.id === id))) throw new AccessDeniedError()
 			memberships = [
-				{ vendorId: membership.vendorId, role: membership.role as 'vendor_owner' | 'vendor_staff', locationIds: membership.locationIds, active: true },
+				{
+					vendorId: membership.vendorId,
+					role: membership.role as 'vendor_owner' | 'vendor_staff',
+					locationIds: membership.locationIds,
+					active: true,
+					goodsFulfillmentEnabled: membership.goodsFulfillmentEnabled,
+				},
 			]
 		} else if (session.activeRole) throw new AccessDeniedError()
 		await tx.$queryRaw`SELECT user_id FROM "platform_reviewer_grants" WHERE user_id = ${session.user.id}::uuid FOR SHARE`

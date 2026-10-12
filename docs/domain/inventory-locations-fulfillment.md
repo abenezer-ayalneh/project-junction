@@ -54,7 +54,7 @@ Pickup is a ready-then-collect workflow. It does not create a Booking or reserve
 
 Vendor prepares the goods and marks them ready. Collection uses a Customer one-time code/QR. A restricted evidence fallback must capture actor, time, reason, evidence, and audit when the primary proof cannot be used. `[DEC-037, DEC-132]`
 
-The chat did not confirm exact pickup window/grace durations; they must be policy configuration/TBD rather than copied from the previous assistant plan.
+The authoritative `POL-GOOD-004` sets 72 hours after readiness plus 48 hours grace, followed by inspection/refund treatment.
 
 ## Vendor-managed delivery
 
@@ -102,3 +102,5 @@ Evidence objects are private, scoped, scanned, retained according to the related
 ## Local partial cancellation — 2026-10-12
 
 `P02-C08` locally verifies selected pre-fulfillment paid quantities, immutable terms, scoped Owner/Finance authority and atomic reasoned stock recovery/refund allocation. Restock adds returned quantity; damaged/non-sellable disposition adds an equal damage movement so available stock remains unchanged. Cancellation cannot overrun original quantities or append wrong-SKU effects. Partial cancellation preserves original delivery economics; whole-group cancellation includes its paid delivery fee once. Final ledger/provider/earnings remain Phase 04; fulfillment and after-handoff ReturnCase remain subsequent chunks. See [local evidence and limits](../requirements/PHASE-02-GOODS-COMMERCE.md#p02-c08--partial-cancellation-and-refund-allocation--2026-10-12).
+
+Local `P02-C09` verifies preparation, Customer-only encrypted code/decodable QR, one-time collection, distinct Customer/witness fallback, exact 72+48 expiry and atomic inspection/disposition/refund recovery. Fulfillment Staff permission is explicit and Location-scoped. Expiry alone never increases resale availability. Binary evidence uploads, notification-channel delivery, delivery and earning integration remain separately gated.

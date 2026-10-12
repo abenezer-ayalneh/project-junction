@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion -- integration suite requires DATABASE_URL */
 import { randomUUID } from 'node:crypto'
 
-import type { GoodsQuoteCommand } from 'contracts'
+import { GoodsCustomerPickupReadSchema, type GoodsQuoteCommand } from 'contracts'
 
 import { AccessDeniedError } from './access.js'
 import { GoodsCheckoutConflictError } from './goods-checkout.js'
@@ -1180,5 +1180,226 @@ suite('Phase 02 goods quotes and holds PostgreSQL', () => {
 		await repository.createGoodsHold(next.sessionId, randomUUID(), { quoteId: quote.quoteId })
 		await expect(repository.createGoodsQuote(customer.sessionId, randomUUID(), fixture.selection)).rejects.toThrow(GoodsCheckoutConflictError)
 		await expect(repository.readPublicProductAvailability(fixture.listing.id, { locationId: fixture.location.id })).resolves.toMatchObject({ available: 0 })
+	})
+	async function readyPickup() {
+		const fixture = await createVendor(3)
+		const { purchase, payment } = await cancellationPurchase(fixture.selection)
+		const order = purchase.orders[0]
+		const fulfillment = await repository.readGoodsFulfillment(fixture.owner.sessionId, order.orderId)
+		await repository.prepareGoodsFulfillment(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId)
+		const ready = await repository.readyGoodsPickup(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId)
+		const customerRead = GoodsCustomerPickupReadSchema.parse(await repository.readGoodsFulfillment(customer.sessionId, order.orderId, true))
+		if (!('collectionProof' in customerRead) || !customerRead.collectionProof) throw new Error('Pickup proof missing')
+		return { fixture, order, ready, proof: customerRead.collectionProof, payment }
+	}
+
+	it('goods pickup readies once and collects with private Customer code without moving stock twice', async () => {
+		const { fixture, order, ready, proof } = await readyPickup()
+		expect(Date.parse(ready.pickupWindowEndsAt!) - Date.parse(ready.readyAt!)).toBe(72 * 3600000)
+		expect(Date.parse(ready.pickupGraceEndsAt!) - Date.parse(ready.readyAt!)).toBe(120 * 3600000)
+		expect(proof.qrSvgDataUri).toContain('data:image/svg+xml')
+		expect(JSON.stringify(await repository.readGoodsFulfillment(fixture.owner.sessionId, order.orderId))).not.toContain(proof.code)
+		const key = randomUUID(),
+			command = { proof: { method: 'code', code: proof.code } }
+		const before = await repository.db.inventoryMovement.count({ where: { orderLineId: order.lines[0].lineId } })
+		const result = await repository.collectGoodsPickup(fixture.owner.sessionId, key, ready.fulfillmentId, command)
+		expect(result).toMatchObject({ state: 'collected', handoff: { method: 'code' } })
+		await expect(repository.collectGoodsPickup(fixture.owner.sessionId, key, ready.fulfillmentId, command)).resolves.toEqual({ ...result, replayed: true })
+		await expect(repository.collectGoodsPickup(fixture.owner.sessionId, randomUUID(), ready.fulfillmentId, command)).rejects.toThrow(
+			GoodsCheckoutConflictError,
+		)
+		expect(await repository.db.inventoryMovement.count({ where: { orderLineId: order.lines[0].lineId } })).toBe(before)
+		await expect(repository.readGoodsFulfillment(customer.sessionId, order.orderId, true)).resolves.toMatchObject({ collectionProof: null })
+		await expect(repository.cancelGoodsOrder(fixture.owner.sessionId, randomUUID(), order.orderId, cancelCommand(order.lines[0].lineId))).rejects.toThrow(
+			GoodsCheckoutConflictError,
+		)
+	})
+
+	it('goods pickup QR binds one fulfillment and five rejected attempts require controlled fallback', async () => {
+		const { fixture, order, ready, proof } = await readyPickup()
+		for (let i = 0; i < 5; i++)
+			await expect(
+				repository.collectGoodsPickup(fixture.owner.sessionId, randomUUID(), ready.fulfillmentId, {
+					proof: { method: 'qr', payload: 'junction-pickup-v1:wrong:code' },
+				}),
+			).rejects.toThrow(GoodsCheckoutConflictError)
+		await expect(repository.readGoodsFulfillment(customer.sessionId, order.orderId, true)).resolves.toMatchObject({
+			codeLocked: true,
+			collectionProof: null,
+		})
+		await expect(
+			repository.collectGoodsPickup(fixture.owner.sessionId, randomUUID(), ready.fulfillmentId, { proof: { method: 'qr', payload: proof.qrPayload } }),
+		).rejects.toThrow(GoodsCheckoutConflictError)
+		const ack = await repository.acknowledgeGoodsPickup(customer.sessionId, randomUUID(), ready.fulfillmentId, {
+			reason: 'code_unavailable',
+			statement: 'I acknowledge receipt of these pickup goods in person.',
+		})
+		const result = await repository.collectGoodsPickup(fixture.owner.sessionId, randomUUID(), ready.fulfillmentId, {
+			proof: {
+				method: 'fallback',
+				acknowledgementId: ack.acknowledgementId,
+				reason: 'code_unavailable',
+				witnessStatement: 'I witnessed the authenticated Customer collect all goods.',
+			},
+		})
+		expect(result).toMatchObject({ state: 'collected', handoff: { method: 'fallback' } })
+		const evidence = await repository.db.goodsPickupHandoff.findUniqueOrThrow({ where: { fulfillmentId: ready.fulfillmentId } })
+		expect(evidence.acknowledgementId).toBe(ack.acknowledgementId)
+		await expect(repository.db.goodsPickupHandoff.update({ where: { id: evidence.id }, data: { evidence: {} } })).rejects.toThrow()
+	})
+
+	it('goods pickup window enters grace at 72 hours then expires at 120 hours without restocking before inspection', async () => {
+		const { fixture, order, ready, payment } = await readyPickup()
+		now = new Date(Date.parse(ready.pickupWindowEndsAt!))
+		await expect(repository.readGoodsFulfillment(customer.sessionId, order.orderId, true)).resolves.toMatchObject({
+			state: 'ready_for_pickup',
+			pickupPhase: 'grace',
+		})
+		now = new Date(Date.parse(ready.pickupGraceEndsAt!))
+		await Promise.all([repository.expireGoodsPickups(), other.expireGoodsPickups()])
+		await expect(repository.readGoodsFulfillment(customer.sessionId, order.orderId, true)).resolves.toMatchObject({
+			state: 'inspection_pending',
+			collectionProof: null,
+		})
+		await expect(repository.readPublicProductAvailability(fixture.listing.id, { locationId: fixture.location.id })).resolves.toMatchObject({ available: 2 })
+		const key = randomUUID(),
+			command = {
+				evidence: 'Expired pickup inspected with all units present and resaleable.',
+				lines: [{ lineId: order.lines[0].lineId, quantity: 1, stockDisposition: 'restock' }],
+			}
+		const result = await repository.inspectGoodsPickup(fixture.owner.sessionId, key, ready.fulfillmentId, command)
+		expect(result).toMatchObject({ state: 'inspection_completed', inspection: { refundState: 'pending' } })
+		await expect(repository.inspectGoodsPickup(fixture.owner.sessionId, key, ready.fulfillmentId, command)).resolves.toEqual({ ...result, replayed: true })
+		await repository.reconcileGoodsRefunds()
+		await expect(repository.readGoodsPayment(customer.sessionId, payment.paymentId)).resolves.toMatchObject({ state: 'refunded' })
+		await expect(repository.readPublicProductAvailability(fixture.listing.id, { locationId: fixture.location.id })).resolves.toMatchObject({ available: 3 })
+	})
+
+	it('goods pickup valid QR collection races expiry and records only one terminal outcome', async () => {
+		const { fixture, ready, proof } = await readyPickup()
+		now = new Date(Date.parse(ready.pickupGraceEndsAt!) - 1)
+		const results = await Promise.allSettled([
+			repository.collectGoodsPickup(fixture.owner.sessionId, randomUUID(), ready.fulfillmentId, { proof: { method: 'qr', payload: proof.qrPayload } }),
+			other.expireGoodsPickups(),
+		])
+		expect(results[0].status).toBe('fulfilled')
+		now = new Date(Date.parse(ready.pickupGraceEndsAt!))
+		await repository.expireGoodsPickups()
+		expect((await repository.db.goodsFulfillment.findUniqueOrThrow({ where: { id: ready.fulfillmentId } })).state).toBe('collected')
+		expect(await repository.db.goodsPickupHandoff.count({ where: { fulfillmentId: ready.fulfillmentId } })).toBe(1)
+	})
+	it('goods pickup staff requires explicit fulfillment permission and live assigned scope', async () => {
+		const { fixture, order, ready, proof } = await readyPickup()
+		const staff = await createCustomer()
+		const membership = await repository.db.vendorMembership.create({
+			data: { userId: staff.userId, vendorId: fixture.vendor.id, role: 'vendor_staff', locationIds: [fixture.location.id] },
+		})
+		await repository.db.session.update({
+			where: { id: staff.sessionId },
+			data: { workspaceId: fixture.owner.workspaceId, activeVendorId: fixture.vendor.id, activeRole: 'vendor_staff' },
+		})
+		await expect(repository.readGoodsFulfillment(staff.sessionId, order.orderId)).rejects.toThrow(AccessDeniedError)
+		await repository.db.vendorMembership.update({ where: { id: membership.id }, data: { goodsFulfillmentEnabled: true } })
+		await expect(repository.readGoodsFulfillment(staff.sessionId, order.orderId)).resolves.toMatchObject({ state: 'ready_for_pickup' })
+		await expect(repository.cancelGoodsOrder(staff.sessionId, randomUUID(), order.orderId, cancelCommand(order.lines[0].lineId))).rejects.toThrow(
+			AccessDeniedError,
+		)
+		await repository.db.vendorMembership.update({ where: { id: membership.id }, data: { locationIds: [] } })
+		await expect(
+			repository.collectGoodsPickup(staff.sessionId, randomUUID(), ready.fulfillmentId, { proof: { method: 'code', code: proof.code } }),
+		).rejects.toThrow(AccessDeniedError)
+		await repository.db.vendorMembership.update({ where: { id: membership.id }, data: { locationIds: [fixture.location.id], revokedAt: new Date() } })
+		await expect(repository.readGoodsFulfillment(staff.sessionId, order.orderId)).rejects.toThrow(AccessDeniedError)
+		const stranger = await createCustomer()
+		await expect(repository.readGoodsFulfillment(stranger.sessionId, order.orderId, true)).rejects.toThrow(AccessDeniedError)
+	})
+
+	it('goods pickup rejects stale or foreign fallback acknowledgement and preserves evidence on failure', async () => {
+		const first = await readyPickup()
+		const second = await readyPickup()
+		const ack = await repository.acknowledgeGoodsPickup(customer.sessionId, randomUUID(), first.ready.fulfillmentId, {
+			reason: 'accessibility',
+			statement: 'I acknowledge receiving the selected goods in person.',
+		})
+		const proof = {
+			method: 'fallback',
+			acknowledgementId: ack.acknowledgementId,
+			reason: 'accessibility',
+			witnessStatement: 'Assigned witness saw the Customer receive the goods.',
+		}
+		await expect(repository.collectGoodsPickup(second.fixture.owner.sessionId, randomUUID(), second.ready.fulfillmentId, { proof })).rejects.toThrow(
+			AccessDeniedError,
+		)
+		now = new Date(now.getTime() + 15 * 60_000 + 1)
+		await expect(repository.collectGoodsPickup(first.fixture.owner.sessionId, randomUUID(), first.ready.fulfillmentId, { proof })).rejects.toThrow(
+			AccessDeniedError,
+		)
+		expect(await repository.db.goodsPickupHandoff.count({ where: { fulfillmentId: first.ready.fulfillmentId } })).toBe(0)
+	})
+
+	it('goods pickup inspection failure rolls back refund and stock and retries quarantine without resale', async () => {
+		const { fixture, order, ready, payment } = await readyPickup()
+		now = new Date(Date.parse(ready.pickupGraceEndsAt!))
+		await repository.expireGoodsPickups()
+		const command = {
+			evidence: 'Expired pickup inspection quarantines the unit pending disposal.',
+			lines: [{ lineId: order.lines[0].lineId, quantity: 1, stockDisposition: 'quarantine' }],
+		}
+		const key = randomUUID()
+		await repository.db.$executeRawUnsafe(
+			`CREATE FUNCTION reject_test_pickup_inspection() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'Deliberate inspection failure'; END; $$`,
+		)
+		await repository.db.$executeRawUnsafe(
+			'CREATE TRIGGER reject_test_pickup_inspection_trigger BEFORE INSERT ON goods_pickup_inspections FOR EACH ROW EXECUTE FUNCTION reject_test_pickup_inspection()',
+		)
+		try {
+			await expect(repository.inspectGoodsPickup(fixture.owner.sessionId, key, ready.fulfillmentId, command)).rejects.toThrow()
+			expect(await repository.db.goodsOrderCancellation.count({ where: { orderId: order.orderId } })).toBe(0)
+			expect(await repository.db.goodsRefundOperation.count({ where: { paymentId: payment.paymentId } })).toBe(0)
+		} finally {
+			await repository.db.$executeRawUnsafe('DROP TRIGGER reject_test_pickup_inspection_trigger ON goods_pickup_inspections')
+			await repository.db.$executeRawUnsafe('DROP FUNCTION reject_test_pickup_inspection()')
+		}
+		await repository.inspectGoodsPickup(fixture.owner.sessionId, key, ready.fulfillmentId, command)
+		await expect(repository.readPublicProductAvailability(fixture.listing.id, { locationId: fixture.location.id })).resolves.toMatchObject({ available: 2 })
+		expect(await repository.db.inventoryMovement.count({ where: { orderLineId: order.lines[0].lineId, reason: 'quarantined' } })).toBe(1)
+	})
+
+	it('goods pickup readiness freezes remaining quantities and policies while replay never extends collection time', async () => {
+		const fixture = await createVendor(4)
+		const { purchase } = await cancellationPurchase({
+			groups: [{ ...fixture.selection.groups[0], lines: [{ listingId: fixture.listing.id, quantity: 3 }] }],
+		})
+		const order = purchase.orders[0]
+		await repository.cancelGoodsOrder(fixture.owner.sessionId, randomUUID(), order.orderId, cancelCommand(order.lines[0].lineId, 1))
+		const fulfillment = await repository.readGoodsFulfillment(fixture.owner.sessionId, order.orderId)
+		await expect(repository.readyGoodsPickup(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId)).rejects.toThrow(GoodsCheckoutConflictError)
+		await repository.prepareGoodsFulfillment(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId)
+		const key = randomUUID()
+		const ready = await repository.readyGoodsPickup(fixture.owner.sessionId, key, fulfillment.fulfillmentId)
+		expect(ready.quantitySnapshot).toEqual([{ lineId: order.lines[0].lineId, quantity: 2 }])
+		now = new Date(now.getTime() + 3600000)
+		await expect(repository.readyGoodsPickup(fixture.owner.sessionId, key, fulfillment.fulfillmentId)).resolves.toEqual({ ...ready, replayed: true })
+		await expect(
+			repository.db.goodsFulfillment.update({
+				where: { id: fulfillment.fulfillmentId },
+				data: { state: 'collected', handoffAt: now, endedAt: now, codeCiphertext: null, version: { increment: 1 } },
+			}),
+		).rejects.toThrow()
+		await expect(
+			repository.cancelGoodsOrder(fixture.owner.sessionId, randomUUID(), order.orderId, cancelCommand(order.lines[0].lineId, 1)),
+		).rejects.toThrow(GoodsCheckoutConflictError)
+		const proof = GoodsCustomerPickupReadSchema.parse(await repository.readGoodsFulfillment(customer.sessionId, order.orderId, true)).collectionProof!
+		now = new Date(Date.parse(ready.pickupGraceEndsAt!))
+		await expect(
+			repository.collectGoodsPickup(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId, { proof: { method: 'code', code: proof.code } }),
+		).rejects.toThrow(GoodsCheckoutConflictError)
+		expect((await repository.db.goodsFulfillment.findUniqueOrThrow({ where: { id: fulfillment.fulfillmentId } })).state).toBe('inspection_pending')
+		await expect(
+			repository.inspectGoodsPickup(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId, {
+				evidence: 'Inspection must include every allocated remaining unit.',
+				lines: [{ lineId: order.lines[0].lineId, quantity: 1, stockDisposition: 'restock' }],
+			}),
+		).rejects.toThrow(GoodsCheckoutConflictError)
 	})
 })

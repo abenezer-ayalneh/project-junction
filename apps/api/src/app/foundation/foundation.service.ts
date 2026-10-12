@@ -298,6 +298,25 @@ export class FoundationService {
 		return this.durable.readPlatformGoodsOrder(sessionId, orderId)
 	}
 
+	readGoodsFulfillment(sessionId: string | undefined, orderId: string, customer: boolean) {
+		return this.durable.readGoodsFulfillment(sessionId, orderId, customer)
+	}
+	prepareGoodsFulfillment(sessionId: string | undefined, key: string | undefined, id: string) {
+		return this.durable.prepareGoodsFulfillment(sessionId, key, id)
+	}
+	readyGoodsPickup(sessionId: string | undefined, key: string | undefined, id: string) {
+		return this.durable.readyGoodsPickup(sessionId, key, id)
+	}
+	acknowledgeGoodsPickup(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.durable.acknowledgeGoodsPickup(sessionId, key, id, input)
+	}
+	collectGoodsPickup(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.durable.collectGoodsPickup(sessionId, key, id, input)
+	}
+	inspectGoodsPickup(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.durable.inspectGoodsPickup(sessionId, key, id, input)
+	}
+
 	readInventoryAvailability(sessionId: string | undefined, listingId: string, query: unknown) {
 		InventoryAvailabilityQuerySchema.parse(query)
 		return this.durable.readInventoryAvailability(sessionId, listingId, query)

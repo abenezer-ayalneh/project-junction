@@ -888,7 +888,7 @@ export const GoodsOrderCancellationCommandSchema = z
 					.object({
 						lineId: z.string().uuid(),
 						quantity: z.number().int().positive().max(2147483647),
-						stockDisposition: z.enum(['restock', 'damaged']),
+						stockDisposition: z.enum(['restock', 'damaged', 'quarantine', 'lost']),
 					})
 					.strict(),
 			)
@@ -914,7 +914,7 @@ export const GoodsOrderCancellationResultSchema = z
 				.object({
 					lineId: z.string().uuid(),
 					quantity: z.number().int().positive(),
-					stockDisposition: z.enum(['restock', 'damaged']),
+					stockDisposition: z.enum(['restock', 'damaged', 'quarantine', 'lost']),
 					refundCents: GoodsMoneySchema,
 				})
 				.strict(),
@@ -923,3 +923,98 @@ export const GoodsOrderCancellationResultSchema = z
 		replayed: z.boolean(),
 	})
 	.strict()
+
+const GoodsEvidenceTextSchema = z
+	.string()
+	.trim()
+	.min(10)
+	.max(1000)
+	.refine(
+		(value) => [...value].every((character) => character.charCodeAt(0) >= 32 || [9, 10, 13].includes(character.charCodeAt(0))),
+		'Use plain readable evidence text.',
+	)
+export const GoodsFulfillmentCommandSchema = z.object({}).strict()
+export const GoodsPickupAcknowledgementCommandSchema = z
+	.object({ reason: z.enum(['code_unavailable', 'accessibility']), statement: GoodsEvidenceTextSchema })
+	.strict()
+export const GoodsPickupAcknowledgementResultSchema = z
+	.object({ acknowledgementId: z.string().uuid(), fulfillmentId: z.string().uuid(), acknowledgedAt: z.string().datetime(), replayed: z.boolean() })
+	.strict()
+export const GoodsPickupCollectionCommandSchema = z
+	.object({
+		proof: z.discriminatedUnion('method', [
+			z.object({ method: z.literal('code'), code: z.string().trim().min(1).max(80) }).strict(),
+			z.object({ method: z.literal('qr'), payload: z.string().min(1).max(300) }).strict(),
+			z
+				.object({
+					method: z.literal('fallback'),
+					acknowledgementId: z.string().uuid(),
+					reason: z.enum(['code_unavailable', 'accessibility']),
+					witnessStatement: GoodsEvidenceTextSchema,
+				})
+				.strict(),
+		]),
+	})
+	.strict()
+export const GoodsPickupInspectionCommandSchema = z
+	.object({
+		evidence: GoodsEvidenceTextSchema,
+		lines: z
+			.array(
+				z
+					.object({
+						lineId: z.string().uuid(),
+						quantity: z.number().int().positive(),
+						stockDisposition: z.enum(['restock', 'damaged', 'quarantine', 'lost']),
+					})
+					.strict(),
+			)
+			.min(1)
+			.max(50),
+	})
+	.strict()
+	.superRefine((value, context) => {
+		if (new Set(value.lines.map((line) => line.lineId)).size !== value.lines.length)
+			context.addIssue({ code: 'custom', path: ['lines'], message: 'Inspect each line once.' })
+	})
+export const GoodsFulfillmentReadSchema = z
+	.object({
+		fulfillmentId: z.string().uuid(),
+		orderId: z.string().uuid(),
+		method: z.enum(['pickup', 'delivery']),
+		state: z.enum(['pending', 'preparing', 'ready_for_pickup', 'collected', 'inspection_pending', 'inspection_completed', 'cancelled']),
+		version: z.number().int().positive(),
+		snapshot: GoodsQuoteSnapshotSchema.shape.groups.element,
+		remainingLines: z.array(
+			z
+				.object({ lineId: z.string().uuid(), listingId: z.string().uuid(), sku: z.string().nullable(), quantity: z.number().int().nonnegative() })
+				.strict(),
+		),
+		quantitySnapshot: z.array(z.object({ lineId: z.string().uuid(), quantity: z.number().int().positive() }).strict()).nullable(),
+		preparedAt: z.string().datetime().nullable(),
+		readyAt: z.string().datetime().nullable(),
+		pickupWindowEndsAt: z.string().datetime().nullable(),
+		pickupGraceEndsAt: z.string().datetime().nullable(),
+		handoffAt: z.string().datetime().nullable(),
+		pickupPhase: z.enum(['not_ready', 'window', 'grace', 'ended']),
+		codeLocked: z.boolean(),
+		handoff: z
+			.object({ handoffId: z.string().uuid(), method: z.enum(['code', 'qr', 'fallback']), handedOffAt: z.string().datetime() })
+			.strict()
+			.nullable(),
+		inspection: z
+			.object({
+				inspectionId: z.string().uuid(),
+				inspectedAt: z.string().datetime(),
+				cancellationId: z.string().uuid(),
+				refundId: z.string().uuid(),
+				refundState: z.enum(['pending', 'succeeded']),
+			})
+			.strict()
+			.nullable(),
+	})
+	.strict()
+export const GoodsFulfillmentResultSchema = GoodsFulfillmentReadSchema.extend({ replayed: z.boolean() })
+export const GoodsCustomerPickupReadSchema = GoodsFulfillmentReadSchema.extend({
+	collectionProof: z.object({ code: z.string(), qrPayload: z.string(), qrSvgDataUri: z.string() }).strict().nullable(),
+})

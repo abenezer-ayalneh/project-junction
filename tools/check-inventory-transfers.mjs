@@ -3,6 +3,8 @@ import { spawn, spawnSync } from 'node:child_process'
 import { createHmac, randomBytes, randomUUID } from 'node:crypto'
 import { createServer } from 'node:net'
 import { once } from 'node:events'
+import { createRequire } from 'node:module'
+const fixtureRequire = createRequire(new URL('../libs/platform-core/package.json', import.meta.url))
 
 import { PostgresFoundation } from '../libs/platform-core/dist/lib/postgres-foundation.js'
 
@@ -236,6 +238,46 @@ try {
 	assert.equal((await goodsRequest(`${paymentPath}/local-result`, 'POST', { outcome: 'failed' })).status, 409)
 	assert.equal((await goodsRequest(`/customer/goods/holds/${paidHold.body.holdId}/release`, 'POST', null)).status, 409)
 	assert.equal((await (await publicCheck({ locationId: destination.id })).json()).available, 1)
+	const pickupQuote = await goodsRequest('/customer/goods/quotes', 'POST', {
+		groups: [{ ...selection.groups[0], lines: [{ listingId: listing.id, quantity: 1 }] }],
+	})
+	const pickupHold = await goodsRequest('/customer/goods/holds', 'POST', { quoteId: pickupQuote.body.quoteId })
+	const pickupPayment = await goodsRequest('/customer/goods/payments', 'POST', { holdId: pickupHold.body.holdId })
+	await goodsRequest(`/customer/goods/payments/${pickupPayment.body.paymentId}/local-result`, 'POST', { outcome: 'succeeded' })
+	const pickupPaid = await goodsRequest(`/customer/goods/payments/${pickupPayment.body.paymentId}`, 'GET')
+	const pickupPurchase = await goodsRequest(`/customer/goods/purchases/${pickupPaid.body.purchaseId}`, 'GET')
+	const pickupOrder = pickupPurchase.body.orders[0]
+	const pickupRead = await goodsRequest(`/vendor/goods/orders/${pickupOrder.orderId}/fulfillment`, 'GET')
+	assert.equal(pickupRead.status, 200, JSON.stringify(pickupRead.body))
+	const fulfillmentPath = `/vendor/goods/fulfillments/${pickupRead.body.fulfillmentId}`
+	assert.equal((await goodsRequest(`${fulfillmentPath}/ready`, 'POST', {})).status, 409)
+	assert.equal((await goodsRequest(`${fulfillmentPath}/prepare`, 'POST', {})).status, 201)
+	const readyKey = randomUUID()
+	const pickupReady = await goodsRequest(`${fulfillmentPath}/ready`, 'POST', {}, readyKey)
+	assert.equal(pickupReady.status, 201, JSON.stringify(pickupReady.body))
+	assert.equal((await goodsRequest(`${fulfillmentPath}/ready`, 'POST', {}, readyKey)).body.replayed, true)
+	const privateProof = await goodsRequest(`/customer/goods/orders/${pickupOrder.orderId}/fulfillment`, 'GET')
+	assert.ok(privateProof.body.collectionProof)
+	assert.equal(pickupReady.body.collectionProof, undefined)
+	const svg = decodeURIComponent(privateProof.body.collectionProof.qrSvgDataUri.split(',').slice(1).join(','))
+	const sharp = fixtureRequire('sharp')
+	const jsQR = fixtureRequire('jsqr')
+	const raster = await sharp(Buffer.from(svg)).resize(600, 600, { kernel: 'nearest' }).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+	const decoded = jsQR(new Uint8ClampedArray(raster.data), raster.info.width, raster.info.height)
+	assert.equal(decoded?.data, privateProof.body.collectionProof.qrPayload)
+	assert.equal((await goodsRequest(`${fulfillmentPath}/collect`, 'POST', { proof: { method: 'code', code: 'wrong' } })).status, 409)
+	const collectionKey = randomUUID()
+	const collection = { proof: { method: 'qr', payload: decoded.data } }
+	const collected = await goodsRequest(`${fulfillmentPath}/collect`, 'POST', collection, collectionKey)
+	assert.equal(collected.status, 201, JSON.stringify(collected.body))
+	assert.equal(collected.body.state, 'collected')
+	assert.equal((await goodsRequest(`${fulfillmentPath}/collect`, 'POST', collection, collectionKey)).body.replayed, true)
+	assert.equal((await goodsRequest(`/customer/goods/orders/${pickupOrder.orderId}/fulfillment`, 'GET')).body.collectionProof, null)
+	assert.equal((await goodsRequest(`${fulfillmentPath}/collect`, 'POST', collection)).status, 409)
+	console.log(
+		'Built local pickup smoke passed: preparation/readiness replay, private Customer code and decodable SVG QR, wrong-proof denial, QR collection once and terminal code removal.',
+	)
+
 	const order = purchase.body.orders[0]
 	const cancellationPath = `/vendor/goods/orders/${order.orderId}/cancellations`
 	const cancellationBody = {
@@ -252,7 +294,7 @@ try {
 	assert.equal(cancelled.body.refund.amountCents, 1000)
 	assert.equal((await goodsRequest(cancellationPath, 'POST', cancellationBody, cancellationKey)).body.replayed, true)
 	assert.equal((await goodsRequest(cancellationPath, 'POST', { ...cancellationBody, note: 'Changed cancellation reason' }, cancellationKey)).status, 409)
-	assert.equal((await (await publicCheck({ locationId: destination.id })).json()).available, 2)
+	assert.equal((await (await publicCheck({ locationId: destination.id })).json()).available, 1)
 	assert.equal((await goodsRequest(paymentPath, 'GET')).body.pendingRefundCents, 1000)
 	const cancellationRead = await goodsRequest(`/goods/cancellations/${cancelled.body.cancellationId}`, 'GET')
 	assert.equal(cancellationRead.status, 200)
@@ -309,7 +351,7 @@ try {
 	assert.equal(refunded.body.refundedCents, 2000)
 	assert.equal(refunded.body.pendingRefundCents, 0)
 	assert.equal((await goodsRequest(`/goods/cancellations/${cancelled.body.cancellationId}`, 'GET')).body.refund.state, 'succeeded')
-	assert.equal((await (await publicCheck({ locationId: destination.id })).json()).available, 3)
+	assert.equal((await (await publicCheck({ locationId: destination.id })).json()).available, 2)
 	await repository.db.vendor.update({ where: { id: vendor.id }, data: { applicationState: 'restricted' } })
 	assert.equal((await goodsRequest(`/vendor/goods/orders/${order.orderId}`, 'GET')).status, 200)
 	assert.equal(

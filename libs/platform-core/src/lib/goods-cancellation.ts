@@ -70,161 +70,193 @@ export class GoodsCancellation {
 			async (tx) => {
 				await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended('junction:goods-checkout', 0))`
 				const context = await this.dependencies.derive(tx, sessionId, { allowRestrictedVendor: true })
-				const order = await tx.goodsVendorOrder.findUnique({
-					where: { id: orderId },
-					include: { purchase: true, cancellations: { include: { refund: true } }, lines: { include: { holdLine: true, cancellationLines: true } } },
-				})
-				if (!order) throw new AccessDeniedError()
-				this.authorize(context, order, actor)
-				await this.dependencies.lockWorkspace(tx, order.vendorWorkspaceId)
-				const replay = await this.dependencies.replay(
-					tx,
-					context,
-					key,
-					`POST /v1/${actor}/goods/orders/:orderId/cancellations`,
-					{ orderId, command },
-					async () => {
-						if (!['confirmed', 'partially_cancelled'].includes(order.state))
-							throw new GoodsCheckoutConflictError('This Order cannot be cancelled before fulfillment. Use the appropriate aftercare flow.')
-						const group = GoodsQuoteSnapshotSchema.shape.groups.element.parse(order.snapshot)
-						let itemRefundCents = 0
-						const selected = command.lines.map((selection) => {
-							const line = order.lines.find((candidate) => candidate.id === selection.lineId)
-							if (!line) throw new AccessDeniedError()
-							const snapshot = GoodsQuoteSnapshotSchema.shape.groups.element.shape.lines.element.parse(line.snapshot)
-							const already = line.cancellationLines.reduce((total, prior) => total + prior.quantity, 0)
-							if (selection.quantity > snapshot.quantity - already)
-								throw new GoodsCheckoutConflictError(
-									'Selected cancellation quantity exceeds the remaining purchased quantity. Read the Order and choose a remaining quantity.',
-								)
-							const refundCents = snapshot.unitPriceCents * selection.quantity
-							itemRefundCents += refundCents
-							return { selection, line, snapshot, refundCents }
-						})
-						const remainingQuantity = order.lines.reduce(
-							(total, line) =>
-								total +
-								GoodsQuoteSnapshotSchema.shape.groups.element.shape.lines.element.parse(line.snapshot).quantity -
-								line.cancellationLines.reduce((sum, cancellation) => sum + cancellation.quantity, 0) -
-								(selected.find((candidate) => candidate.line.id === line.id)?.selection.quantity ?? 0),
-							0,
-						)
-						const state = remainingQuantity === 0 ? 'cancelled' : 'partially_cancelled'
-						const previousDeliveryRefund = order.cancellations.reduce((total, cancellation) => total + cancellation.deliveryRefundCents, 0)
-						const deliveryRefundCents = remainingQuantity === 0 ? group.deliveryFeeCents - previousDeliveryRefund : 0
-						const cancellationId = randomUUID()
-						const refund = await tx.goodsRefundOperation.create({
-							data: {
-								paymentId: order.purchase.paymentId,
-								semanticKey: `cancellation:${cancellationId}`,
-								amountCents: itemRefundCents + deliveryRefundCents,
-								createdAt: this.dependencies.now(),
-							},
-						})
-						await tx.goodsOrderCancellation.create({
-							data: {
-								id: cancellationId,
-								orderId,
-								refundId: refund.id,
-								actorId: context.actor.userId,
-								actorKind: actor,
-								note: command.note,
-								itemRefundCents,
-								deliveryRefundCents,
-								createdAt: this.dependencies.now(),
-							},
-						})
-						for (const { selection, line, snapshot, refundCents } of selected) {
-							const effect = await tx.goodsCancellationLine.create({
-								data: {
-									cancellationId,
-									orderLineId: line.id,
-									quantity: selection.quantity,
-									stockDisposition: selection.stockDisposition,
-									refundCents,
-								},
-							})
-							for (const reason of selection.stockDisposition === 'damaged' ? ['returned', 'damaged'] : ['returned']) {
-								await tx.inventoryMovement.create({
-									data: {
-										orderLineId: line.id,
-										cancellationLineId: effect.id,
-										listingId: snapshot.listingId,
-										locationId: order.locationId,
-										sku: snapshot.sku,
-										reason,
-										onHandDelta: reason === 'returned' ? selection.quantity : -selection.quantity,
-										reservedDelta: 0,
-										actorKind: 'user',
-										actorId: context.actor.userId,
-										note: command.note,
-									},
-								})
-							}
-							const version = await tx.inventoryMovement.count({ where: { listingId: snapshot.listingId } })
-							await goodsEmit(tx, () => this.dependencies.now(), order.vendorWorkspaceId, 'StockMoved', snapshot.listingId, version, key, {
-								cancellationId,
-								orderLineId: line.id,
-								listingId: snapshot.listingId,
-								locationId: order.locationId,
-								sku: snapshot.sku,
-								reason: 'cancellation-recovery',
-								stockDisposition: selection.stockDisposition,
-							})
-						}
-						await tx.goodsVendorOrder.update({ where: { id: orderId }, data: { state } })
-						const payment = await tx.goodsPaymentAttempt.findUniqueOrThrow({ where: { id: order.purchase.paymentId } })
-						if (payment.state !== 'refund_pending')
-							await tx.goodsPaymentAttempt.update({ where: { id: payment.id }, data: { state: 'refund_pending' } })
-						await goodsAudit(tx, order.vendorWorkspaceId, context.actor.userId, 'goods.order-cancelled', {
-							cancellationId,
-							orderId,
-							actor,
-							note: command.note,
-							itemRefundCents,
-							deliveryRefundCents,
-							reviewRequired: true,
-						})
-						await goodsEmit(
-							tx,
-							() => this.dependencies.now(),
-							order.vendorWorkspaceId,
-							state === 'cancelled' ? 'GoodsOrderCancelled' : 'GoodsOrderPartiallyCancelled',
-							orderId,
-							order.cancellations.length + 2,
-							key,
-							{ cancellationId, orderId, refundId: refund.id },
-						)
-						await goodsEmit(tx, () => this.dependencies.now(), order.purchase.workspaceId, 'GoodsRefundRequested', refund.id, 1, key, {
-							refundId: refund.id,
-							cancellationId,
-							orderId,
-							amountCents: refund.amountCents,
-						})
-						await goodsEmit(
-							tx,
-							() => this.dependencies.now(),
-							order.purchase.workspaceId,
-							'GoodsCancellationReviewRequested',
-							cancellationId,
-							1,
-							key,
-							{
-								cancellationId,
-								orderId,
-								actor,
-								reviewRequired: true,
-							},
-						)
-						return this.result(tx, cancellationId, false)
-					},
-				)
-				// Command replay preserves acceptance; read the cancellation for current refund state.
-				return GoodsOrderCancellationResultSchema.parse({ ...replay.outcome, replayed: replay.replayed })
+				return this.cancelInTransaction(tx, context, key, orderId, command, actor, 'pre_fulfillment')
 			},
 			{ timeout: 30_000 },
 		)
 	}
+	async cancelInTransaction(
+		tx: Transaction,
+		context: AccessContext,
+		key: string,
+		orderId: string,
+		command: z.infer<typeof GoodsOrderCancellationCommandSchema>,
+		actor: 'vendor' | 'platform',
+		origin: 'pre_fulfillment' | 'pickup_expiry',
+	) {
+		const order = await tx.goodsVendorOrder.findUnique({
+			where: { id: orderId },
+			include: {
+				fulfillment: true,
+				purchase: true,
+				cancellations: { include: { refund: true } },
+				lines: { include: { holdLine: true, cancellationLines: true } },
+			},
+		})
+		if (!order) throw new AccessDeniedError()
+		this.authorize(context, order, actor)
+		await this.dependencies.lockWorkspace(tx, order.vendorWorkspaceId)
+		const replay = await this.dependencies.replay(
+			tx,
+			context,
+			key,
+			origin === 'pickup_expiry'
+				? 'POST /v1/vendor/goods/fulfillments/:fulfillmentId/inspection-effects'
+				: `POST /v1/${actor}/goods/orders/:orderId/cancellations`,
+			{ orderId, command },
+			async () => {
+				if (!['confirmed', 'partially_cancelled'].includes(order.state))
+					throw new GoodsCheckoutConflictError('This Order cannot be cancelled before fulfillment. Use the appropriate aftercare flow.')
+				if (origin === 'pre_fulfillment' && order.fulfillment && !['pending', 'preparing'].includes(order.fulfillment.state))
+					throw new GoodsCheckoutConflictError('Fulfillment has advanced. Use the relevant inspection or return path.')
+				if (origin === 'pickup_expiry' && (order.fulfillment?.state !== 'inspection_pending' || order.fulfillment.method !== 'pickup'))
+					throw new GoodsCheckoutConflictError('Pickup must expire into inspection first.')
+				const group = GoodsQuoteSnapshotSchema.shape.groups.element.parse(order.snapshot)
+				let itemRefundCents = 0
+				const selected = command.lines.map((selection) => {
+					const line = order.lines.find((candidate) => candidate.id === selection.lineId)
+					if (!line) throw new AccessDeniedError()
+					const snapshot = GoodsQuoteSnapshotSchema.shape.groups.element.shape.lines.element.parse(line.snapshot)
+					const already = line.cancellationLines.reduce((total, prior) => total + prior.quantity, 0)
+					if (selection.quantity > snapshot.quantity - already)
+						throw new GoodsCheckoutConflictError(
+							'Selected cancellation quantity exceeds the remaining purchased quantity. Read the Order and choose a remaining quantity.',
+						)
+					const refundCents = snapshot.unitPriceCents * selection.quantity
+					itemRefundCents += refundCents
+					return { selection, line, snapshot, refundCents }
+				})
+				const remainingQuantity = order.lines.reduce(
+					(total, line) =>
+						total +
+						GoodsQuoteSnapshotSchema.shape.groups.element.shape.lines.element.parse(line.snapshot).quantity -
+						line.cancellationLines.reduce((sum, cancellation) => sum + cancellation.quantity, 0) -
+						(selected.find((candidate) => candidate.line.id === line.id)?.selection.quantity ?? 0),
+					0,
+				)
+				const state = remainingQuantity === 0 ? 'cancelled' : 'partially_cancelled'
+				const previousDeliveryRefund = order.cancellations.reduce((total, cancellation) => total + cancellation.deliveryRefundCents, 0)
+				const deliveryRefundCents = remainingQuantity === 0 ? group.deliveryFeeCents - previousDeliveryRefund : 0
+				const cancellationId = randomUUID()
+				const refund = await tx.goodsRefundOperation.create({
+					data: {
+						paymentId: order.purchase.paymentId,
+						semanticKey: `cancellation:${cancellationId}`,
+						amountCents: itemRefundCents + deliveryRefundCents,
+						createdAt: this.dependencies.now(),
+					},
+				})
+				await tx.goodsOrderCancellation.create({
+					data: {
+						id: cancellationId,
+						orderId,
+						refundId: refund.id,
+						actorId: context.actor.userId,
+						actorKind: actor,
+						origin,
+						note: command.note,
+						itemRefundCents,
+						deliveryRefundCents,
+						createdAt: this.dependencies.now(),
+					},
+				})
+				for (const { selection, line, snapshot, refundCents } of selected) {
+					const effect = await tx.goodsCancellationLine.create({
+						data: {
+							cancellationId,
+							orderLineId: line.id,
+							quantity: selection.quantity,
+							stockDisposition: selection.stockDisposition,
+							refundCents,
+						},
+					})
+					for (const reason of selection.stockDisposition === 'restock'
+						? ['returned']
+						: ['returned', selection.stockDisposition === 'quarantine' ? 'quarantined' : selection.stockDisposition]) {
+						await tx.inventoryMovement.create({
+							data: {
+								orderLineId: line.id,
+								cancellationLineId: effect.id,
+								listingId: snapshot.listingId,
+								locationId: order.locationId,
+								sku: snapshot.sku,
+								reason,
+								onHandDelta: reason === 'returned' ? selection.quantity : -selection.quantity,
+								reservedDelta: 0,
+								actorKind: 'user',
+								actorId: context.actor.userId,
+								note: command.note,
+							},
+						})
+					}
+					const version = await tx.inventoryMovement.count({ where: { listingId: snapshot.listingId } })
+					await goodsEmit(tx, () => this.dependencies.now(), order.vendorWorkspaceId, 'StockMoved', snapshot.listingId, version, key, {
+						cancellationId,
+						orderLineId: line.id,
+						listingId: snapshot.listingId,
+						locationId: order.locationId,
+						sku: snapshot.sku,
+						reason: 'cancellation-recovery',
+						stockDisposition: selection.stockDisposition,
+					})
+				}
+				await tx.goodsVendorOrder.update({ where: { id: orderId }, data: { state } })
+				if (state === 'cancelled' && origin === 'pre_fulfillment' && order.fulfillment) {
+					await tx.goodsFulfillment.update({
+						where: { id: order.fulfillment.id },
+						data: { state: 'cancelled', endedAt: this.dependencies.now(), version: { increment: 1 } },
+					})
+					await goodsEmit(
+						tx,
+						() => this.dependencies.now(),
+						order.vendorWorkspaceId,
+						'GoodsFulfillmentCancelled',
+						order.fulfillment.id,
+						order.fulfillment.version + 1,
+						key,
+						{ fulfillmentId: order.fulfillment.id, orderId },
+					)
+				}
+				const payment = await tx.goodsPaymentAttempt.findUniqueOrThrow({ where: { id: order.purchase.paymentId } })
+				if (payment.state !== 'refund_pending') await tx.goodsPaymentAttempt.update({ where: { id: payment.id }, data: { state: 'refund_pending' } })
+				await goodsAudit(tx, order.vendorWorkspaceId, context.actor.userId, 'goods.order-cancelled', {
+					cancellationId,
+					orderId,
+					actor,
+					note: command.note,
+					itemRefundCents,
+					deliveryRefundCents,
+					reviewRequired: true,
+				})
+				await goodsEmit(
+					tx,
+					() => this.dependencies.now(),
+					order.vendorWorkspaceId,
+					state === 'cancelled' ? 'GoodsOrderCancelled' : 'GoodsOrderPartiallyCancelled',
+					orderId,
+					order.cancellations.length + 2,
+					key,
+					{ cancellationId, orderId, refundId: refund.id },
+				)
+				await goodsEmit(tx, () => this.dependencies.now(), order.purchase.workspaceId, 'GoodsRefundRequested', refund.id, 1, key, {
+					refundId: refund.id,
+					cancellationId,
+					orderId,
+					amountCents: refund.amountCents,
+				})
+				await goodsEmit(tx, () => this.dependencies.now(), order.purchase.workspaceId, 'GoodsCancellationReviewRequested', cancellationId, 1, key, {
+					cancellationId,
+					orderId,
+					actor,
+					reviewRequired: true,
+				})
+				return this.result(tx, cancellationId, false)
+			},
+		)
+		// Command replay preserves acceptance; read the cancellation for current refund state.
+		return GoodsOrderCancellationResultSchema.parse({ ...replay.outcome, replayed: replay.replayed })
+	}
+
 	orderView(order: Pick<Order, 'id' | 'purchaseId' | 'vendorId' | 'locationId' | 'state' | 'snapshot' | 'cancellations' | 'lines'>) {
 		return GoodsVendorOrderReadSchema.parse({
 			orderId: order.id,

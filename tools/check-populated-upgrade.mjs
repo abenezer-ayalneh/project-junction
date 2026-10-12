@@ -48,6 +48,7 @@ const migrations = [
 	'prisma/migrations/20261012010000_goods_quotes_and_holds/migration.sql',
 	'prisma/migrations/20261012020000_goods_paid_orders/migration.sql',
 	'prisma/migrations/20261012030000_goods_order_cancellations/migration.sql',
+	'prisma/migrations/20261012040000_goods_pickup_fulfillment/migration.sql',
 ]
 
 try {

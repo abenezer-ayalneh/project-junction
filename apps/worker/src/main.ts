@@ -32,6 +32,7 @@ async function tick() {
 	tickRunning = true
 	try {
 		await repository.expireGoodsHolds()
+		await repository.expireGoodsPickups()
 		await repository.reconcileGoodsRefunds()
 		await repository.expirePendingVideoUploads()
 		if (Date.now() - lastMediaSweep >= 10 * 60 * 1000) {
