@@ -57,6 +57,31 @@ export class FoundationService {
 		this.durable = new PostgresFoundation(this.databaseUrl())
 	}
 
+	readServiceConfiguration(sessionId: string | undefined, listingId: string) {
+		return this.durable.readServiceConfiguration(sessionId, listingId)
+	}
+	configureService(sessionId: string | undefined, key: string | undefined, listingId: string, input: unknown) {
+		return this.durable.configureService(sessionId, key, listingId, input)
+	}
+	readStaffProfiles(sessionId: string | undefined) {
+		return this.durable.readStaffProfiles(sessionId)
+	}
+	readStaffProfile(sessionId: string | undefined, staffId: string) {
+		return this.durable.readStaffProfile(sessionId, staffId)
+	}
+	createStaffProfile(sessionId: string | undefined, key: string | undefined, input: unknown) {
+		return this.durable.createStaffProfile(sessionId, key, input)
+	}
+	updateStaffProfile(sessionId: string | undefined, key: string | undefined, staffId: string, input: unknown) {
+		return this.durable.updateStaffProfile(sessionId, key, staffId, input)
+	}
+	setStaffPublicConsent(sessionId: string | undefined, key: string | undefined, staffId: string, input: unknown) {
+		return this.durable.setStaffPublicConsent(sessionId, key, staffId, input)
+	}
+	readPublicServiceDefinition(listingId: string) {
+		return this.durable.readPublicServiceDefinition(listingId)
+	}
+
 	async health(requestId?: string) {
 		await this.durable.health()
 		const runtimeMode = applicationRuntimeMode()

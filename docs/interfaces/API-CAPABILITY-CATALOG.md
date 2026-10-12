@@ -57,3 +57,13 @@ Phase 02 `P02-C11` local returns APIs:
 - `GET /v1/customer/goods/returns/:returnId` and the corresponding Vendor route return only authorized case evidence and current provider reconciliation. Refund acceptance remains `refund_pending` until the controlled local operation succeeds.
 
 Mutation routes require idempotency keys. Exchange is a fresh Purchase. Return policies/quantity/handoff snapshots and event evidence are immutable; current membership, Location and MFA checks apply at mutation/read time.
+
+Phase 03 `P03-C01` locally verified definition APIs (2026-10-12):
+
+- `GET/PUT /v1/listings/:listingId/service-configuration`: active Owner, Service-only, all old/new eligible Location grants, same-Vendor Staff/Locations; PUT requires idempotency key and expected configuration version. Version zero/null means not yet configured.
+- `GET/POST /v1/vendor/staff`: Owner private list/create; optional `memberUserId` links an existing active member without changing authority. POST requires an idempotency key.
+- `GET/PUT /v1/vendor/staff/:staffId`: linked member or Owner reads; Owner renames with expected profile version and idempotency key, withdrawing prior display consent.
+- `PUT /v1/vendor/staff/:staffId/public-consent`: only the profile's authenticated linked Staff member grants/withdraws consent; expected profile version and idempotency key are required.
+- `GET /v1/public/listings/:listingId/service-definition`: only published configured Services of approved/published real Vendors. Returns fixed Option/add-on terms, Locations/modes and qualification eligibility; private Staff names/IDs and qualification lists are omitted. Consent controls named Staff display.
+
+Strict command parsing rejects excluded scheduling/commercial models and unknown fields. Stale versions or changed idempotency payloads return 409, invalid commands 400, unauthorized/publication scope 403. Profile/configuration versions, audit, private-workspace outbox and command outcomes commit atomically. Replay represents original acceptance; fresh GET returns current state. No asynchronous slot/allocation/payment effect runs in C01. See [C01 local evidence](../quality/PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md).

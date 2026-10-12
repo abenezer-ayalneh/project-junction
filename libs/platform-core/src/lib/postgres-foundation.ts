@@ -79,6 +79,7 @@ import { LocalGoodsPaymentAdapter } from './local-goods-payment.js'
 import { type DeletionJournal, S3DeletionJournal } from './media-retention.js'
 import { type MediaStore, S3MediaStore } from './media-store.js'
 import { applicationRuntimeMode } from './runtime.js'
+import { ServiceDefinitions } from './service-definitions.js'
 import { MediaRejectedError, VideoProcessor } from './video-processor.js'
 
 type Transaction = Prisma.TransactionClient
@@ -130,6 +131,7 @@ function hasRequiredIdentity(user: { adultVerificationState: string; verifiedAt:
 /** Prisma owns CRUD; parameterized SQL below is restricted to concurrency locks/claims. */
 export class PostgresFoundation {
 	readonly db: PrismaClient
+	private readonly services: ServiceDefinitions
 	private readonly goods: GoodsCheckout
 	private readonly publicWorkspaceKind = 'real'
 	private readonly externalEffects: ExternalEffectAdapter
@@ -148,6 +150,13 @@ export class PostgresFoundation {
 		const schema = new URL(url).searchParams.get('schema') ?? 'public'
 		if (!/^[a-z_][a-z0-9_]*$/.test(schema)) throw new Error('Unsupported database schema name.')
 		this.db = new PrismaClient({ adapter: new PrismaPg({ connectionString: url, options: `-c search_path=${schema},public` }, { schema }) })
+		this.services = new ServiceDefinitions({
+			db: this.db,
+			derive: (tx, sessionId) => this.derive(tx, sessionId),
+			lockWorkspace: (tx, id) => this.workspaceLock(tx, id),
+			replay: (tx, context, key, method, request, create) => this.replayOrCreate(tx, context, key, method, request, create),
+			now: goodsClock,
+		})
 		this.goods = new GoodsCheckout({
 			db: this.db,
 			derive: (tx, sessionId, options) => this.derive(tx, sessionId, options),
@@ -535,6 +544,31 @@ export class PostgresFoundation {
 			assertScope(context, { workspaceId: location.vendor.workspaceId, vendorId: location.vendorId, locationId: location.id })
 			return LocationReadSchema.parse({ id: location.id, vendorId: location.vendorId, workspaceId: location.vendor.workspaceId })
 		})
+	}
+
+	readServiceConfiguration(sessionId: string | undefined, listingId: string) {
+		return this.services.read(sessionId, listingId)
+	}
+	configureService(sessionId: string | undefined, key: string | undefined, listingId: string, input: unknown) {
+		return this.services.configure(sessionId, key, listingId, input)
+	}
+	readStaffProfiles(sessionId: string | undefined) {
+		return this.services.profiles(sessionId)
+	}
+	readStaffProfile(sessionId: string | undefined, staffId: string) {
+		return this.services.readProfile(sessionId, staffId)
+	}
+	createStaffProfile(sessionId: string | undefined, key: string | undefined, input: unknown) {
+		return this.services.createProfile(sessionId, key, input)
+	}
+	updateStaffProfile(sessionId: string | undefined, key: string | undefined, staffId: string, input: unknown) {
+		return this.services.updateProfile(sessionId, key, staffId, input)
+	}
+	setStaffPublicConsent(sessionId: string | undefined, key: string | undefined, staffId: string, input: unknown) {
+		return this.services.updateProfile(sessionId, key, staffId, input, true)
+	}
+	readPublicServiceDefinition(listingId: string) {
+		return this.services.publicDefinition(listingId)
 	}
 
 	readGoodsLocationConfiguration(sessionId: string | undefined, locationId: string) {
@@ -1301,6 +1335,7 @@ export class PostgresFoundation {
 				const listing = await tx.listing.findFirst({ where: { id: listingId, vendorId: vendor.id } })
 				if (!listing || !['draft', 'rejected', 'unpublished'].includes(listing.state) || listing.version !== draft.expectedVersion)
 					throw new AccessDeniedError('The listing revision is stale.')
+				if (listing.serviceConfiguration && draft.kind !== 'service') throw new AccessDeniedError('A configured Service cannot become a Product.')
 				const { variants, expectedVersion, ...listingDraft } = draft
 				const updated = await tx.listing
 					.update({

@@ -1,6 +1,6 @@
 # Services, Staff Scheduling, and Bookings
 
-> **Status:** Planned domain behavior; no scheduler, Booking, or meeting integration exists.
+> **Status:** Service definitions/Staff qualification are locally verified under P03-C01 (2026-10-12). Scheduler, Booking and meeting integration remain planned and unverified.
 
 ## Service commercial model
 

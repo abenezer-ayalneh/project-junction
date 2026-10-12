@@ -1,6 +1,11 @@
 import { readFile } from 'node:fs/promises'
 
-const contractFiles = ['libs/contracts/src/lib/access-context.ts', 'libs/contracts/src/lib/api.ts', 'libs/contracts/src/lib/events.ts']
+const contractFiles = [
+	'libs/contracts/src/lib/access-context.ts',
+	'libs/contracts/src/lib/api.ts',
+	'libs/contracts/src/lib/events.ts',
+	'libs/contracts/src/lib/services.ts',
+]
 
 const source = await Promise.all(contractFiles.map((file) => readFile(file, 'utf8')))
 const forbidden = /\b(Prisma|@prisma\/client|providerSecret|rawProviderPayload)\b/

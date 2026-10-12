@@ -153,6 +153,9 @@ model DiscoveryPreference {
 }
 
 model Listing {
+  /// Versioned fixed commercial definitions and Vendor-validated Staff qualifications; no allocation state.
+  serviceConfiguration Json? @map("service_configuration")
+  serviceConfigurationVersion Int @default(0) @map("service_configuration_version")
   goodsHoldLines     GoodsHoldLine[]
   id                 String              @id @default(dbgenerated("uuidv7()")) @db.Uuid
   vendorId           String              @map("vendor_id") @db.Uuid
@@ -374,6 +377,9 @@ model VendorMembership {
 }
 
 model Staff {
+  displayName String? @map("display_name")
+  profileVersion Int @default(0) @map("profile_version")
+  publicConsentAt DateTime? @map("public_consent_at") @db.Timestamptz(6)
   id         String            @id @default(dbgenerated("uuidv7()")) @db.Uuid
   vendorId   String            @map("vendor_id") @db.Uuid
   userId     String?           @map("user_id") @db.Uuid

@@ -9277,6 +9277,204 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
         "type": "object",
       },
+      "PublicServiceDefinition": {
+        "additionalProperties": false,
+        "properties": {
+          "capacity": {
+            "enum": [
+              "staff_only",
+            ],
+            "type": "string",
+          },
+          "listingId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "options": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "addons": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "durationMinutes": {
+                        "maximum": 480,
+                        "minimum": 0,
+                        "type": "integer",
+                      },
+                      "id": {
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                        "type": "string",
+                      },
+                      "label": {
+                        "maxLength": 120,
+                        "minLength": 2,
+                        "type": "string",
+                      },
+                      "priceCents": {
+                        "maximum": 100000000,
+                        "minimum": 0,
+                        "type": "integer",
+                      },
+                    },
+                    "required": [
+                      "id",
+                      "label",
+                      "priceCents",
+                      "durationMinutes",
+                    ],
+                    "type": "object",
+                  },
+                  "type": "array",
+                },
+                "bufferAfterMinutes": {
+                  "maximum": 120,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+                "bufferBeforeMinutes": {
+                  "maximum": 120,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+                "durationMinutes": {
+                  "maximum": 480,
+                  "minimum": 15,
+                  "type": "integer",
+                },
+                "eligibleModes": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "anyStaffEligible": {
+                        "type": "boolean",
+                      },
+                      "locationId": {
+                        "format": "uuid",
+                        "nullable": true,
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                        "type": "string",
+                      },
+                      "mode": {
+                        "enum": [
+                          "in_person",
+                          "online",
+                        ],
+                        "type": "string",
+                      },
+                      "namedStaff": {
+                        "items": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "displayName": {
+                              "maxLength": 120,
+                              "minLength": 2,
+                              "type": "string",
+                            },
+                            "id": {
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string",
+                            },
+                          },
+                          "required": [
+                            "id",
+                            "displayName",
+                          ],
+                          "type": "object",
+                        },
+                        "type": "array",
+                      },
+                    },
+                    "required": [
+                      "mode",
+                      "locationId",
+                      "anyStaffEligible",
+                      "namedStaff",
+                    ],
+                    "type": "object",
+                  },
+                  "type": "array",
+                },
+                "id": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "label": {
+                  "maxLength": 120,
+                  "minLength": 2,
+                  "type": "string",
+                },
+                "locations": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "city": {
+                        "type": "string",
+                      },
+                      "id": {
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                        "type": "string",
+                      },
+                      "label": {
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "id",
+                      "label",
+                      "city",
+                    ],
+                    "type": "object",
+                  },
+                  "type": "array",
+                },
+                "online": {
+                  "type": "boolean",
+                },
+                "priceCents": {
+                  "exclusiveMinimum": true,
+                  "maximum": 100000000,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+              },
+              "required": [
+                "id",
+                "label",
+                "priceCents",
+                "durationMinutes",
+                "bufferBeforeMinutes",
+                "bufferAfterMinutes",
+                "locations",
+                "online",
+                "addons",
+                "eligibleModes",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "version": {
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "listingId",
+          "version",
+          "capacity",
+          "options",
+        ],
+        "type": "object",
+      },
       "PublicStorefront": {
         "additionalProperties": false,
         "properties": {
@@ -9622,6 +9820,486 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         "required": [
           "items",
           "nextCursor",
+        ],
+        "type": "object",
+      },
+      "ServiceConfigurationCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "configuration": {
+            "additionalProperties": false,
+            "properties": {
+              "capacity": {
+                "enum": [
+                  "staff_only",
+                ],
+                "type": "string",
+              },
+              "options": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "addons": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "durationMinutes": {
+                            "maximum": 480,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string",
+                          },
+                          "label": {
+                            "maxLength": 120,
+                            "minLength": 2,
+                            "type": "string",
+                          },
+                          "priceCents": {
+                            "maximum": 100000000,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                        },
+                        "required": [
+                          "id",
+                          "label",
+                          "priceCents",
+                          "durationMinutes",
+                        ],
+                        "type": "object",
+                      },
+                      "maxItems": 20,
+                      "type": "array",
+                    },
+                    "bufferAfterMinutes": {
+                      "maximum": 120,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "bufferBeforeMinutes": {
+                      "maximum": 120,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "durationMinutes": {
+                      "maximum": 480,
+                      "minimum": 15,
+                      "type": "integer",
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "label": {
+                      "maxLength": 120,
+                      "minLength": 2,
+                      "type": "string",
+                    },
+                    "locationIds": {
+                      "items": {
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                        "type": "string",
+                      },
+                      "maxItems": 100,
+                      "type": "array",
+                    },
+                    "online": {
+                      "type": "boolean",
+                    },
+                    "priceCents": {
+                      "exclusiveMinimum": true,
+                      "maximum": 100000000,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "qualifications": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "locationIds": {
+                            "items": {
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string",
+                            },
+                            "maxItems": 100,
+                            "type": "array",
+                          },
+                          "online": {
+                            "type": "boolean",
+                          },
+                          "staffId": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string",
+                          },
+                        },
+                        "required": [
+                          "staffId",
+                          "locationIds",
+                          "online",
+                        ],
+                        "type": "object",
+                      },
+                      "maxItems": 100,
+                      "type": "array",
+                    },
+                  },
+                  "required": [
+                    "id",
+                    "label",
+                    "priceCents",
+                    "durationMinutes",
+                    "bufferBeforeMinutes",
+                    "bufferAfterMinutes",
+                    "locationIds",
+                    "online",
+                    "addons",
+                    "qualifications",
+                  ],
+                  "type": "object",
+                },
+                "maxItems": 50,
+                "minItems": 1,
+                "type": "array",
+              },
+            },
+            "required": [
+              "capacity",
+              "options",
+            ],
+            "type": "object",
+          },
+          "expectedVersion": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "expectedVersion",
+          "configuration",
+        ],
+        "type": "object",
+      },
+      "ServiceConfigurationResult": {
+        "additionalProperties": false,
+        "properties": {
+          "configuration": {
+            "additionalProperties": false,
+            "nullable": true,
+            "properties": {
+              "capacity": {
+                "enum": [
+                  "staff_only",
+                ],
+                "type": "string",
+              },
+              "options": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "addons": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "durationMinutes": {
+                            "maximum": 480,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string",
+                          },
+                          "label": {
+                            "maxLength": 120,
+                            "minLength": 2,
+                            "type": "string",
+                          },
+                          "priceCents": {
+                            "maximum": 100000000,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                        },
+                        "required": [
+                          "id",
+                          "label",
+                          "priceCents",
+                          "durationMinutes",
+                        ],
+                        "type": "object",
+                      },
+                      "maxItems": 20,
+                      "type": "array",
+                    },
+                    "bufferAfterMinutes": {
+                      "maximum": 120,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "bufferBeforeMinutes": {
+                      "maximum": 120,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "durationMinutes": {
+                      "maximum": 480,
+                      "minimum": 15,
+                      "type": "integer",
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "label": {
+                      "maxLength": 120,
+                      "minLength": 2,
+                      "type": "string",
+                    },
+                    "locationIds": {
+                      "items": {
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                        "type": "string",
+                      },
+                      "maxItems": 100,
+                      "type": "array",
+                    },
+                    "online": {
+                      "type": "boolean",
+                    },
+                    "priceCents": {
+                      "exclusiveMinimum": true,
+                      "maximum": 100000000,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "qualifications": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "locationIds": {
+                            "items": {
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string",
+                            },
+                            "maxItems": 100,
+                            "type": "array",
+                          },
+                          "online": {
+                            "type": "boolean",
+                          },
+                          "staffId": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string",
+                          },
+                        },
+                        "required": [
+                          "staffId",
+                          "locationIds",
+                          "online",
+                        ],
+                        "type": "object",
+                      },
+                      "maxItems": 100,
+                      "type": "array",
+                    },
+                  },
+                  "required": [
+                    "id",
+                    "label",
+                    "priceCents",
+                    "durationMinutes",
+                    "bufferBeforeMinutes",
+                    "bufferAfterMinutes",
+                    "locationIds",
+                    "online",
+                    "addons",
+                    "qualifications",
+                  ],
+                  "type": "object",
+                },
+                "maxItems": 50,
+                "minItems": 1,
+                "type": "array",
+              },
+            },
+            "required": [
+              "capacity",
+              "options",
+            ],
+            "type": "object",
+          },
+          "listingId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "replayed": {
+            "type": "boolean",
+          },
+          "version": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "listingId",
+          "version",
+          "configuration",
+          "replayed",
+        ],
+        "type": "object",
+      },
+      "StaffConsentCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "expectedVersion": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "publicDisplay": {
+            "type": "boolean",
+          },
+        },
+        "required": [
+          "expectedVersion",
+          "publicDisplay",
+        ],
+        "type": "object",
+      },
+      "StaffProfileCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "displayName": {
+            "maxLength": 120,
+            "minLength": 2,
+            "type": "string",
+          },
+          "memberUserId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "displayName",
+        ],
+        "type": "object",
+      },
+      "StaffProfileResult": {
+        "additionalProperties": false,
+        "properties": {
+          "displayName": {
+            "maxLength": 120,
+            "minLength": 2,
+            "nullable": true,
+            "type": "string",
+          },
+          "id": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "publicDisplay": {
+            "type": "boolean",
+          },
+          "replayed": {
+            "type": "boolean",
+          },
+          "version": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "id",
+          "displayName",
+          "version",
+          "publicDisplay",
+          "replayed",
+        ],
+        "type": "object",
+      },
+      "StaffProfileUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "displayName": {
+            "maxLength": 120,
+            "minLength": 2,
+            "type": "string",
+          },
+          "expectedVersion": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "expectedVersion",
+          "displayName",
+        ],
+        "type": "object",
+      },
+      "StaffProfiles": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "displayName": {
+                  "maxLength": 120,
+                  "minLength": 2,
+                  "nullable": true,
+                  "type": "string",
+                },
+                "id": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "publicDisplay": {
+                  "type": "boolean",
+                },
+                "replayed": {
+                  "type": "boolean",
+                },
+                "version": {
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+              },
+              "required": [
+                "id",
+                "displayName",
+                "version",
+                "publicDisplay",
+                "replayed",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+        },
+        "required": [
+          "items",
         ],
         "type": "object",
       },
@@ -11708,6 +12386,94 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
       },
     },
+    "/v1/listings/{listingId}/service-configuration": {
+      "get": {
+        "operationId": "AppController_serviceConfiguration",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "listingId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceConfigurationResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Read Service configuration for an active Owner within all eligible Location grants.",
+        "tags": [
+          "foundation",
+        ],
+      },
+      "put": {
+        "operationId": "AppController_configureService",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "listingId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceConfigurationCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceConfigurationResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Configure fixed Service Options, add-ons and Staff qualifications within assigned Locations.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
     "/v1/listings/{listingId}/short-video": {
       "post": {
         "operationId": "AppController_processShortVideo",
@@ -12557,6 +13323,37 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
         },
         "summary": "Check current Product stock for a selected Location and SKU. This does not reserve stock.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/public/listings/{listingId}/service-definition": {
+      "get": {
+        "operationId": "AppController_publicServiceDefinition",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "listingId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicServiceDefinition",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "summary": "Read Service Options, add-ons and qualified modes; private Staff identities are omitted. No slots are reserved.",
         "tags": [
           "foundation",
         ],
@@ -13559,6 +14356,219 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
         ],
         "summary": "Record scoped vendor return lifecycle evidence or inspection outcome.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/vendor/staff": {
+      "get": {
+        "operationId": "AppController_staffProfiles",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffProfiles",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Read private Staff profiles for the active Vendor Owner.",
+        "tags": [
+          "foundation",
+        ],
+      },
+      "post": {
+        "operationId": "AppController_createStaffProfile",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StaffProfileCreate",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffProfileResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Create a private Staff scheduling profile without granting authentication access or public consent.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/vendor/staff/{staffId}": {
+      "get": {
+        "operationId": "AppController_staffProfile",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "staffId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffProfileResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Read a Staff profile as its linked member or active Vendor Owner.",
+        "tags": [
+          "foundation",
+        ],
+      },
+      "put": {
+        "operationId": "AppController_updateStaffProfile",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "staffId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StaffProfileUpdate",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffProfileResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Rename a Staff profile as Owner; prior public display consent is withdrawn.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/vendor/staff/{staffId}/public-consent": {
+      "put": {
+        "operationId": "AppController_setStaffConsent",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "staffId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StaffConsentCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffProfileResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Set public display consent only for the authenticated Staff member’s linked profile.",
         "tags": [
           "foundation",
         ],

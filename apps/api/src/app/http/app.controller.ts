@@ -243,6 +243,92 @@ export class AppController {
 		return this.foundation.followVendor(sessionId, vendorId, body.following === true)
 	}
 
+	@Get('public/listings/:listingId/service-definition')
+	@ApiOperation({ summary: 'Read Service Options, add-ons and qualified modes; private Staff identities are omitted. No slots are reserved.' })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.publicServiceDefinition })
+	publicServiceDefinition(@Param('listingId') listingId: string) {
+		return this.foundation.readPublicServiceDefinition(listingId)
+	}
+
+	@Get('listings/:listingId/service-configuration')
+	@ApiOperation({ summary: 'Read Service configuration for an active Owner within all eligible Location grants.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.serviceConfigurationResult })
+	serviceConfiguration(@AuthenticatedSession() sessionId: string | undefined, @Param('listingId') listingId: string) {
+		return this.foundation.readServiceConfiguration(sessionId, listingId)
+	}
+
+	@Put('listings/:listingId/service-configuration')
+	@ApiOperation({ summary: 'Configure fixed Service Options, add-ons and Staff qualifications within assigned Locations.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.serviceConfigurationCommand })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.serviceConfigurationResult })
+	configureService(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('listingId') listingId: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.configureService(sessionId, key, listingId, body)
+	}
+
+	@Get('vendor/staff')
+	@ApiOperation({ summary: 'Read private Staff profiles for the active Vendor Owner.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.staffProfiles })
+	staffProfiles(@AuthenticatedSession() sessionId: string | undefined) {
+		return this.foundation.readStaffProfiles(sessionId)
+	}
+
+	@Post('vendor/staff')
+	@ApiOperation({ summary: 'Create a private Staff scheduling profile without granting authentication access or public consent.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.staffProfileCreate })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.staffProfileResult })
+	createStaffProfile(@AuthenticatedSession() sessionId: string | undefined, @Headers('idempotency-key') key: string | undefined, @Body() body: unknown) {
+		return this.foundation.createStaffProfile(sessionId, key, body)
+	}
+
+	@Get('vendor/staff/:staffId')
+	@ApiOperation({ summary: 'Read a Staff profile as its linked member or active Vendor Owner.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.staffProfileResult })
+	staffProfile(@AuthenticatedSession() sessionId: string | undefined, @Param('staffId') staffId: string) {
+		return this.foundation.readStaffProfile(sessionId, staffId)
+	}
+
+	@Put('vendor/staff/:staffId')
+	@ApiOperation({ summary: 'Rename a Staff profile as Owner; prior public display consent is withdrawn.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.staffProfileUpdate })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.staffProfileResult })
+	updateStaffProfile(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('staffId') staffId: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.updateStaffProfile(sessionId, key, staffId, body)
+	}
+
+	@Put('vendor/staff/:staffId/public-consent')
+	@ApiOperation({ summary: 'Set public display consent only for the authenticated Staff member’s linked profile.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.staffConsentCommand })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.staffProfileResult })
+	setStaffConsent(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('staffId') staffId: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.setStaffPublicConsent(sessionId, key, staffId, body)
+	}
+
 	@Get('locations/:locationId/goods-configuration')
 	@ApiOperation({ summary: 'Read goods fulfillment settings for an assigned Owner Location.' })
 	@ApiSecurity('junction-auth-cookie')

@@ -1,0 +1,92 @@
+{
+	"date": "2026-10-12",
+	"chunk": "P03-C01",
+	"status": "complete_locally",
+	"baseline": "702252e534ed0fac8d343140eb874cc67dd7890a",
+	"environment": "user local machine; loopback PostgreSQL; disposable integration schemas; built API bound to 127.0.0.1",
+	"checks": [
+		{
+			"command": "FOUNDATION_TEST_NAME=\"Phase 03 Service definitions\" pnpm nx run platform-core:test-integration",
+			"exitCode": 0,
+			"passed": 11,
+			"unselected": 108,
+			"builtHttpSmoke": "passed",
+			"apiWorkerBuilds": "passed",
+			"apiWarnings": 6
+		},
+		{
+			"command": "pnpm nx run-many -t lint,typecheck,test --projects=contracts,platform-core,api,worker,web --parallel=3",
+			"exitCode": 0,
+			"unitPassed": 65,
+			"workerSkipped": 1,
+			"openApiSnapshotsPassed": 1
+		},
+		{
+			"command": "pnpm db:compat:check (local .env loaded)",
+			"exitCode": 0,
+			"migrations": 34,
+			"schemaDifference": "none"
+		},
+		{
+			"command": "pnpm db:upgrade:check (local .env loaded)",
+			"exitCode": 0,
+			"populatedUpgrade": "passed",
+			"schemaDifference": "none"
+		},
+		{
+			"command": "pnpm db:migrate:local (loopback asserted)",
+			"exitCode": 0,
+			"result": "pending local development migrations applied through service-definitions"
+		},
+		{
+			"command": "pnpm docs:check",
+			"exitCode": 0,
+			"manifestDocuments": 184
+		},
+		{
+			"command": "pnpm contracts:check",
+			"exitCode": 0
+		},
+		{
+			"command": "git diff --check",
+			"exitCode": 0
+		},
+		{
+			"command": "compare previous/current OpenAPI snapshot objects",
+			"result": "all existing paths and component schemas unchanged"
+		}
+	],
+	"artifacts": [
+		{
+			"path": "libs/contracts/src/lib/services.ts",
+			"sha256": "afd2044e552eb8f422d66ffe661cda9f1231b0ff66be3ab35e67adc89cfbeb6a"
+		},
+		{
+			"path": "libs/platform-core/src/lib/service-definitions.ts",
+			"sha256": "7c40bbeca2d5d46dd7e164695249241807ab79c65ace52fbf329c964e23d1412"
+		},
+		{
+			"path": "libs/platform-core/src/lib/service-definitions.integration.ts",
+			"sha256": "a8976c5d679c9ab03c18148e9c8557e313b39587c42b9c5766401561ae5709ec"
+		},
+		{
+			"path": "tools/check-service-definitions.mjs",
+			"sha256": "5413d59d35577d3eecf1292c52894773614ea49d10cc8b1a6472fda1c5f7b326"
+		},
+		{
+			"path": "prisma/migrations/20261012070000_service_definitions/migration.sql",
+			"sha256": "d1bd607ab9456596a475bf10ee1055af270d08834a797892290c647cd491bf9e"
+		},
+		{
+			"path": "apps/api/src/app/http/__snapshots__/swagger.spec.ts.snap",
+			"sha256": "89ddb7e7227ebb1fc899b1c17dca798e0d639aab38b1085df8aebca7ee2c80e1"
+		}
+	],
+	"limits": [
+		"Qualification eligibility is not schedule availability or reservation.",
+		"Calendar filtering, holds, Service UI, Bookings, payment, policies, meetings and attendance remain subsequent chunks.",
+		"JSON Staff and Location references use transactional Vendor/scope validation; no database foreign keys for these configuration references.",
+		"No browser, independent accessibility, remote provider, public release or formal phase exit acceptance."
+	],
+	"nextChunk": "P03-C02"
+}

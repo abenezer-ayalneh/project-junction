@@ -21,3 +21,7 @@ Current local Phase 00 account and platform evidence: [local acceptance record](
 `EVD-REQ-P01-20260925`: [historical Phase 01 fixture evidence and open gates](./PHASE-01-ACCEPTANCE-EVIDENCE.md). This is not the current local development flow or a public release claim.
 
 Phase 02 local requirement/scenario coverage and unresolved formal gates are consolidated in [Phase 02 local acceptance evidence](./PHASE-02-LOCAL-ACCEPTANCE-EVIDENCE.md), with fresh [C12 browser/verification artifacts](./evidence/phase-02-c12-2026-10-12/README.md). These local artifacts do not establish independent accessibility, live provider/ledger/earnings or formal phase exit.
+
+## Phase 03 local Service definition prerequisite — 2026-10-12
+
+[P03-C01 local evidence](./PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md) and [verification record](./evidence/phase-03-c01-2026-10-12/verification.json) record fixed Service Options/add-ons, Vendor Location/online eligibility, Staff qualification and private versus consented identity. Local PostgreSQL/HTTP, migration and workspace checks pass. This is partial `REQ-P03-SCH-001` coverage; no slot/allocation/Booking/provider or formal phase acceptance is claimed. Next is C02.
