@@ -1,4 +1,6 @@
 import {
+	BookingCancellationCommandSchema,
+	BookingCancellationResultSchema,
 	BookingHoldSnapshotSchema,
 	BookingPaymentReadSchema,
 	BookingPaymentReceiptCommandSchema,
@@ -11,8 +13,9 @@ import {
 import { z } from 'zod'
 
 import type { Prisma } from '../../generated/prisma/index.js'
-import { AccessDeniedError } from './access.js'
+import { AccessDeniedError, assertScope } from './access.js'
 import { BookingHoldConflictError } from './booking-holds.js'
+import { bookingCancellationRefund } from './booking-policy.js'
 import { goodsAudit, type GoodsDependencies, goodsEmit, goodsJson } from './goods-support.js'
 import { LocalGoodsPaymentAdapter } from './local-goods-payment.js'
 
@@ -37,6 +40,7 @@ export class Bookings {
 			bookingId: payment.booking?.id ?? null,
 			expiresAt: payment.hold.expiresAt.toISOString(),
 			refundedCents: payment.refunds.filter((r) => r.state === 'succeeded').reduce((s, r) => s + r.amountCents, 0),
+			pendingRefundCents: payment.refunds.filter((r) => r.state === 'pending').reduce((s, r) => s + r.amountCents, 0),
 		})
 	}
 	private async owned(tx: Tx, sessionId: string | undefined, paymentId: string) {
@@ -271,6 +275,86 @@ export class Bookings {
 			})
 		})
 	}
+	async cancel(sessionId: string | undefined, keyInput: string | undefined, idInput: string, input: unknown, provider = false) {
+		this.payments.assertLocal()
+		const key = IdempotencyKeySchema.parse(keyInput),
+			bookingId = z.string().uuid().parse(idInput),
+			command = BookingCancellationCommandSchema.parse(input)
+		return this.dependencies.db.$transaction(
+			async (tx) => {
+				await this.lock(tx)
+				const context = await this.dependencies.derive(tx, sessionId, { allowRestrictedVendor: true })
+				const booking = await tx.booking.findUnique({ where: { id: bookingId }, include: { hold: true, payment: true } })
+				if (!booking) throw new AccessDeniedError()
+				const vendor = await tx.vendor.findUniqueOrThrow({ where: { id: booking.hold.vendorId } })
+				await this.dependencies.lockWorkspace(tx, vendor.workspaceId)
+				const snapshot = BookingSnapshotSchema.parse(booking.snapshot)
+				if (provider) {
+					assertScope(context, {
+						workspaceId: vendor.workspaceId,
+						vendorId: vendor.id,
+						...(snapshot.locationId ? { locationId: snapshot.locationId } : {}),
+					})
+					const member = await tx.vendorMembership.findFirst({ where: { vendorId: vendor.id, userId: context.actor.userId, revokedAt: null } })
+					if (!member || (member.role !== 'vendor_owner' && !member.schedulingEnabled)) throw new AccessDeniedError()
+				} else if (booking.hold.customerId !== context.actor.userId || booking.hold.workspaceId !== context.workspaceId) throw new AccessDeniedError()
+				const result = await this.dependencies.replay(
+					tx,
+					context,
+					key,
+					provider ? 'POST /v1/vendor/bookings/:bookingId/cancel' : 'POST /v1/customer/bookings/:bookingId/cancel',
+					{ bookingId, command },
+					async () => {
+						if (booking.version !== command.expectedVersion || booking.state !== 'confirmed')
+							throw new BookingHoldConflictError('Booking changed or is no longer cancellable.')
+						const now = this.dependencies.now()
+						const refundCents = bookingCancellationRefund(snapshot.policy, booking.payment.amountCents, new Date(snapshot.start), now, provider)
+						const cancellation = await tx.bookingCancellation.create({
+							data: {
+								bookingId,
+								actorId: context.actor.userId,
+								actorKind: provider ? 'vendor' : 'customer',
+								reason: command.reason,
+								refundCents,
+								policySnapshot: goodsJson(snapshot.policy),
+								cancelledAt: now,
+							},
+						})
+						await tx.booking.update({ where: { id: bookingId }, data: { state: 'cancelled', version: { increment: 1 } } })
+						await tx.staffAllocation.update({ where: { id: booking.allocationId }, data: { state: 'cancelled' } })
+						if (refundCents > 0)
+							await tx.bookingRefund.create({
+								data: { paymentId: booking.paymentId, semanticKey: `cancellation:${bookingId}`, amountCents: refundCents, createdAt: now },
+							})
+						for (const workspaceId of new Set([booking.hold.workspaceId, vendor.workspaceId])) {
+							await goodsAudit(tx, workspaceId, context.actor.userId, 'booking.cancelled', {
+								bookingId,
+								cancellationId: cancellation.id,
+								refundCents,
+								actorKind: cancellation.actorKind,
+							})
+							await goodsEmit(tx, () => this.dependencies.now(), workspaceId, 'BookingCancelled', bookingId, booking.version + 1, key, {
+								bookingId,
+								cancellationId: cancellation.id,
+								refundCents,
+							})
+						}
+						return BookingCancellationResultSchema.parse({
+							bookingId,
+							cancellationId: cancellation.id,
+							state: 'cancelled',
+							refundCents,
+							cancelledAt: now.toISOString(),
+							replayed: false,
+						})
+					},
+				)
+				return BookingCancellationResultSchema.parse({ ...result.outcome, replayed: result.replayed })
+			},
+			{ timeout: 30_000 },
+		)
+	}
+
 	async reconcileRefunds() {
 		this.payments.assertLocal()
 		const due = await this.dependencies.db.bookingRefund.findMany({ where: { state: 'pending' }, orderBy: { id: 'asc' }, take: 100 })
@@ -281,7 +365,12 @@ export class Bookings {
 				const current = await tx.bookingRefund.findUniqueOrThrow({ where: { id: refund.id } })
 				if (current.state !== 'pending') return
 				await tx.bookingRefund.update({ where: { id: refund.id }, data: { state: 'succeeded', reference: result.reference } })
-				await tx.bookingPayment.update({ where: { id: refund.paymentId }, data: { state: 'refunded' } })
+				const completed = await tx.bookingRefund.aggregate({ where: { paymentId: refund.paymentId, state: 'succeeded' }, _sum: { amountCents: true } })
+				const original = await tx.bookingPayment.findUniqueOrThrow({ where: { id: refund.paymentId } })
+				await tx.bookingPayment.update({
+					where: { id: refund.paymentId },
+					data: { state: (completed._sum.amountCents ?? 0) >= original.amountCents ? 'refunded' : 'succeeded' },
+				})
 				const payment = await tx.bookingPayment.findUniqueOrThrow({ where: { id: refund.paymentId }, include: { hold: true } })
 				await goodsAudit(tx, payment.hold.workspaceId, null, 'booking.refund-completed', { refundId: refund.id, amountCents: refund.amountCents })
 				await goodsEmit(tx, () => this.dependencies.now(), payment.hold.workspaceId, 'BookingRefundCompleted', refund.id, 1, null, {

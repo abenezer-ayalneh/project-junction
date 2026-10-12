@@ -37,3 +37,7 @@ Service selection and Cart now store browser-local unreserved appointment intent
 ## Local paid Booking commitment — 2026-10-12
 
 C05 implements controlled local payment start and durable receipt/reconciliation with immutable Booking purchase terms, policy, attendee and exact hold deadline. Unknown/failure never confirms; late or terminal-hold success compensates with one local refund. Assigned Staff stays private for any-Staff responses. Optional attendee fields create no User. Promotion/commission are null in this local slice pending Phase 04. See [C05 evidence](../quality/PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c05--paid-booking-confirmation--2026-10-12). Later lifecycle and formal gates remain open.
+
+## Local Booking cancellation — 2026-10-12
+
+C06 uses purchased Flexible/Standard cutoffs for Customer refunds and full refunds for scoped Vendor cancellation. Half-value refunds round down to minor units. Cancellation, allocation release, refund request and event/replay outcomes are atomic; purchase history stays immutable. Local refund receipts remain separately auditable. [C06 evidence](../quality/PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c06--cancellation-policy-and-refunds--2026-10-12).

@@ -1,0 +1,29 @@
+{
+	"chunk": "P03-C06",
+	"date": "2026-10-12",
+	"baseline": "ec4b3fcea28ad4663ff495a3540fc99c58ced83d",
+	"environment": "local machine only; disposable loopback PostgreSQL/Redis/built API",
+	"results": {
+		"cancellation_postgresql_scenarios": 13,
+		"phase03_regressions": 51,
+		"policy_unit_scenarios": 2,
+		"workspace_lint_typecheck_test": "passed",
+		"built_cancellation_payment_hold_http": "passed",
+		"existing_scheduling_definition_http": "passed",
+		"actual_worker_expiry": "passed",
+		"migration_compatibility": "38 migrations; no difference",
+		"populated_upgrade": "passed"
+	},
+	"limits": [
+		"half refund rounds down as a derived minor-unit default",
+		"local controlled payments only; no browser cancellation acceptance",
+		"Phase 04 ledger/earning and formal provider/accessibility/phase gates remain open"
+	],
+	"next": "P03-C07",
+	"sha256": {
+		"libs/platform-core/src/lib/bookings.ts": "1e64fdd188ca5c7aa4180c304d28e234c13ff85f7d22e44cdf285fc0ef7d5122",
+		"libs/platform-core/src/lib/booking-cancellations.integration.ts": "2048e3b21444a5011895e188a48f523dc8f9d1cba3c6fe0b31055aa199bcd813",
+		"libs/platform-core/src/lib/booking-policy.ts": "89fdc6e06868aeb19c96922aa098822e759553c7cefa101aad660eb17e1c3153",
+		"prisma/migrations/20261012110000_booking_cancellations/migration.sql": "8f114d5581cee4252d5f5efc5da005d5566a50c7508a3d1a97c1e84083162914"
+	}
+}

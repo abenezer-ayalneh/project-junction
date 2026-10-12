@@ -580,6 +580,9 @@ export class PostgresFoundation {
 		})
 	}
 
+	cancelBooking(sessionId: string | undefined, key: string | undefined, id: string, input: unknown, provider = false) {
+		return this.bookings.cancel(sessionId, key, id, input, provider)
+	}
 	startBookingPayment(sessionId: string | undefined, key: string | undefined, input: unknown) {
 		return this.bookings.start(sessionId, key, input)
 	}

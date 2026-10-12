@@ -320,6 +320,18 @@ try {
 	assert.equal(booking.body.snapshot.policy.template, 'standard')
 	assert.equal((await request(`/customer/bookings/${confirmed.body.bookingId}`, 'GET', undefined, '', false)).status, 403)
 	assert.equal((await request(`${path}/${paidHold.body.holdId}/release`, 'POST')).status, 409)
+	const cancelKey = randomUUID()
+	const cancellationPath = `/customer/bookings/${confirmed.body.bookingId}/cancel`
+	const cancelled = await request(cancellationPath, 'POST', { reason: 'Plans changed', expectedVersion: 1 }, cancelKey)
+	assert.equal(cancelled.status, 201, JSON.stringify(cancelled.body))
+	const remaining = new Date(booking.body.snapshot.start).getTime() - Date.now()
+	assert.equal(cancelled.body.refundCents, remaining >= 48 * 3600000 ? 1500 : remaining >= 12 * 3600000 ? 750 : 0)
+	assert.equal((await request(cancellationPath, 'POST', { reason: 'Plans changed', expectedVersion: 1 }, cancelKey)).body.replayed, true)
+	await repository.reconcileBookingRefunds()
+	assert.equal((await request(paymentPath)).body.refundedCents, cancelled.body.refundCents)
+	assert.equal((await request(`/customer/bookings/${confirmed.body.bookingId}`)).body.state, 'cancelled')
+	assert.equal((await request(cancellationPath, 'POST', { reason: 'Cancel', expectedVersion: 2 })).status, 409)
+	console.log('Built local Booking cancellation HTTP smoke passed: snapshotted Standard policy, replay, terminal state and scoped refund completion.')
 	console.log(
 		'Built local paid Booking HTTP smoke passed: adult cookie scope, exact amount/deadline, attendee, policy, durable receipt, once-only commitment and terminal release denial.',
 	)

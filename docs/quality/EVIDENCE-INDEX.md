@@ -41,3 +41,7 @@ Phase 02 local requirement/scenario coverage and unresolved formal gates are con
 ## Phase 03 C05 — 2026-10-12
 
 [C05 local evidence](./PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c05--paid-booking-confirmation--2026-10-12) and [verification record](./evidence/phase-03-c05-2026-10-12/verification.json) record controlled payment, once-only confirmed allocation, immutable snapshots/attendee, late-success compensation and durable recovery. Local PostgreSQL/HTTP/worker, workspace and migration checks pass. C06 cancellation and later lifecycle/formal gates remain open.
+
+## Phase 03 C06 — 2026-10-12
+
+[C06 local evidence](./PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c06--cancellation-policy-and-refunds--2026-10-12) records purchased cancellation policy, full Vendor refunds, exact boundaries, replay/races, authority and rollback. [Verification](./evidence/phase-03-c06-2026-10-12/verification.json) records local PostgreSQL/HTTP/worker, workspace and 38-migration checks. C07 and later lifecycle/formal gates remain open.

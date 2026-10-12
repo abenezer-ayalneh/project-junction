@@ -243,6 +243,36 @@ export class AppController {
 		return this.foundation.followVendor(sessionId, vendorId, body.following === true)
 	}
 
+	@Post('customer/bookings/:bookingId/cancel')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Cancel a Booking under purchased policy and scoped customer authority.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.bookingCancellationCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.bookingCancellationResult })
+	customerCancelBooking(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('bookingId') id: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.cancelBooking(sessionId, key, id, body, false)
+	}
+	@Post('vendor/bookings/:bookingId/cancel')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Cancel a Booking under purchased policy and scoped vendor authority.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.bookingCancellationCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.bookingCancellationResult })
+	vendorCancelBooking(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('bookingId') id: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.cancelBooking(sessionId, key, id, body, true)
+	}
 	@Post('customer/bookings/payments')
 	@Header('Cache-Control', 'no-store')
 	@ApiOperation({ summary: 'Start a controlled local appointment payment without extending the hold.' })

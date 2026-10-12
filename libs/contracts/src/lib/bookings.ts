@@ -40,5 +40,15 @@ export const BookingPaymentReadSchema = z.object({
 	bookingId: id.nullable(),
 	expiresAt: z.string().datetime(),
 	refundedCents: z.number().int().min(0),
+	pendingRefundCents: z.number().int().min(0),
 })
 export const BookingPaymentResultSchema = BookingPaymentReadSchema.extend({ replayed: z.boolean() })
+export const BookingCancellationCommandSchema = z.strictObject({ reason: z.string().trim().min(1).max(500), expectedVersion: z.number().int().positive() })
+export const BookingCancellationResultSchema = z.object({
+	bookingId: id,
+	cancellationId: id,
+	state: z.literal('cancelled'),
+	refundCents: z.number().int().min(0),
+	cancelledAt: z.string().datetime(),
+	replayed: z.boolean(),
+})

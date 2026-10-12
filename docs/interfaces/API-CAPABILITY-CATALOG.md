@@ -92,3 +92,7 @@ Phase 03 `P03-C04` public definition extension (2026-10-12): `PublicServiceDefin
 ## Local Phase 03 paid Booking — 2026-10-12
 
 Customer-scoped `POST /v1/customer/bookings/payments`, `POST /v1/customer/bookings/payments/:paymentId/local-result`, `GET /v1/customer/bookings/payments/:paymentId` and `GET /v1/customer/bookings/:bookingId` implement controlled local payment, reconciliation and immutable purchase reads. Mutations require idempotency keys; controlled result/start reject non-local runtime. Start requires verified adult identity. Result/read never accept a browser price or timestamp. Vendor Owner selects Flexible/Standard through the versioned Service configuration command. Promotion/commission remain explicitly absent pending Phase 04. [C05 local evidence](../quality/PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c05--paid-booking-confirmation--2026-10-12).
+
+## Local Booking cancellation — 2026-10-12
+
+`POST /v1/customer/bookings/:bookingId/cancel` and `POST /v1/vendor/bookings/:bookingId/cancel` require reason, expected version and idempotency key. Customer ownership or active scoped Owner/enabled Scheduler authority is checked on every retry. Purchased policy determines Customer refund; Vendor cancellation always returns full value. Payment reads expose pending and completed refund amounts. [C06 evidence](../quality/PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c06--cancellation-policy-and-refunds--2026-10-12).

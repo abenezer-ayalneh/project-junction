@@ -966,6 +966,7 @@ model BookingPaymentReceipt {
 }
 
 model Booking {
+  cancellation BookingCancellation?
   id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
   holdId String @unique @map("hold_id") @db.Uuid
   hold BookingHold @relation(fields: [holdId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -978,6 +979,19 @@ model Booking {
   version Int @default(1)
   confirmedAt DateTime @map("confirmed_at") @db.Timestamptz(6)
   @@map("bookings")
+}
+
+model BookingCancellation {
+  id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  bookingId String @unique @map("booking_id") @db.Uuid
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  actorId String @map("actor_id") @db.Uuid
+  actorKind String @map("actor_kind")
+  reason String
+  refundCents Int @map("refund_cents")
+  policySnapshot Json @map("policy_snapshot")
+  cancelledAt DateTime @map("cancelled_at") @db.Timestamptz(6)
+  @@map("booking_cancellations")
 }
 
 model BookingRefund {
