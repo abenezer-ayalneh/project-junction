@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
 import { once } from 'node:events'
-import { mkdir } from 'node:fs/promises'
+import { mkdir, writeFile } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
 
 // Called inside the disposable inventory fixture. All traffic stays on loopback;
@@ -131,7 +131,7 @@ export async function checkGoodsCartBrowser({ repository, sessionId, vendor, loc
 		await page.getByLabel('Quantity', { exact: true }).fill('2')
 		await page.getByRole('button', { name: 'Add to Cart' }).click()
 		await page.getByRole('link', { name: 'View Cart', exact: true }).waitFor()
-		const dir = 'docs/quality/evidence/phase-02-c06-2026-10-12'
+		const dir = process.env.GOODS_BROWSER_EVIDENCE_DIR ?? 'docs/quality/evidence/phase-02-c07-2026-10-12'
 		await mkdir(dir, { recursive: true })
 		await page.screenshot({ path: `${dir}/product-desktop.png`, fullPage: true })
 		await page.getByRole('link', { name: 'View Cart', exact: true }).click()
@@ -181,6 +181,59 @@ export async function checkGoodsCartBrowser({ repository, sessionId, vendor, loc
 		await page.goto(`http://localhost:3000/listings/${product.id}`)
 		await page.screenshot({ path: `${dir}/product-mobile.png`, fullPage: true })
 		assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'Mobile Product overflows')
+		await page.goto('http://localhost:3000/cart')
+		// Delivery contact is deliberately not persisted; choose pickup for this
+		// controlled payment bridge and obtain a new quote/hold through the UI.
+		await page.getByRole('combobox', { name: /^Fulfillment/ }).selectOption('pickup')
+		await page.getByRole('button', { name: 'Continue to checkout' }).click()
+		await page.getByRole('button', { name: 'Accept quote and hold stock' }).click()
+		await page.getByRole('heading', { name: 'Stock held', exact: true }).waitFor()
+		const pending = await page.evaluate(() => JSON.parse(window.sessionStorage.getItem('junction:goods-hold-pending:v1')))
+		const simulated = async (path, body) => {
+			const response = await fetch(`${origin}${path}`, {
+				method: 'POST',
+				headers: { cookie, 'Content-Type': 'application/json', 'Idempotency-Key': randomUUID() },
+				body: JSON.stringify(body),
+			})
+			assert.equal(response.status, 201, await response.clone().text())
+			return response.json()
+		}
+		const payment = await simulated('/customer/goods/payments', { holdId: pending.holdId })
+		await page.getByRole('button', { name: 'Refresh hold status' }).click()
+		await page.getByRole('heading', { name: 'Awaiting payment', exact: true }).waitFor()
+		assert.ok(await page.getByRole('button', { name: 'Continue to checkout' }).isDisabled())
+		await page.screenshot({ path: `${dir}/cart-awaiting-payment-mobile.png`, fullPage: true })
+		await simulated(`/customer/goods/payments/${payment.paymentId}/local-result`, { outcome: 'succeeded' })
+		await page.getByRole('button', { name: 'Refresh hold status' }).click()
+		await page.getByText('Local payment confirmed. Goods Orders created.', { exact: true }).waitFor()
+		assert.equal((await repository.readPublicProductAvailability(product.id, { locationId: location.id, sku: 'small' })).available, 1)
+		await page.waitForFunction(() => {
+			const button = [...document.querySelectorAll('button')].find((item) => item.textContent === 'Continue to checkout')
+			return button && !button.disabled && document.querySelector('[role=\"status\"]')?.textContent?.includes('Local payment confirmed.')
+		})
+		await page.evaluate(async () => {
+			await new Promise(requestAnimationFrame)
+			await new Promise(requestAnimationFrame)
+		})
+		await writeFile(
+			`${dir}/payment-bridge.json`,
+			JSON.stringify(
+				{
+					paymentId: payment.paymentId,
+					status: await page.getByRole('status').textContent(),
+					cartEditingEnabled: await page.getByRole('button', { name: 'Continue to checkout' }).isEnabled(),
+					soldAvailability: 1,
+					liveFunds: false,
+				},
+				null,
+				2,
+			),
+		)
+		await page.screenshot({ path: `${dir}/cart-paid-mobile.png`, fullPage: true })
+		console.log(
+			'Served local Edge controlled payment bridge passed: awaiting payment preserves hold and locks Cart edits; authoritative committed hold reports local paid Orders and sold stock.',
+		)
+
 		console.log(
 			'Served local Edge goods Cart passed: explicit variant/Location, failed read preservation, stock conflict, Cart persistence/no reservation, changed-price review, lost committed hold/replay, reload reconciliation, release, delivery zone/address rejection and recovery, desktop/mobile layout.',
 		)

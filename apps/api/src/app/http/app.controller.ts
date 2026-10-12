@@ -310,6 +310,62 @@ export class AppController {
 		return this.foundation.releaseGoodsHold(sessionId, key, holdId)
 	}
 
+	@Post('customer/goods/payments')
+	@ApiOperation({ summary: 'Begin a controlled local payment for held goods. No live charge is made; retries preserve the original payment window.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.goodsPaymentStartCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.goodsPaymentResult })
+	startGoodsPayment(@AuthenticatedSession() sessionId: string | undefined, @Headers('idempotency-key') key: string | undefined, @Body() body: unknown) {
+		return this.foundation.startGoodsPayment(sessionId, key, body)
+	}
+
+	@Post('customer/goods/payments/:paymentId/local-result')
+	@ApiOperation({
+		summary:
+			'Record a controlled local simulator result for this Customer payment. Reconciliation determines Purchase or refund; not a live provider webhook.',
+	})
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiParam({ name: 'paymentId', schema: { type: 'string', format: 'uuid' } })
+	@ApiBody({ schema: OpenApiSchemaRefs.goodsLocalPaymentResultCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.goodsPaymentResult })
+	recordLocalGoodsPaymentResult(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('paymentId') paymentId: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.recordLocalGoodsPaymentResult(sessionId, key, paymentId, body)
+	}
+
+	@Get('customer/goods/payments/:paymentId')
+	@ApiOperation({ summary: 'Read and reconcile this Customer payment from its recorded provider result. Unknown results never imply success.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiParam({ name: 'paymentId', schema: { type: 'string', format: 'uuid' } })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.goodsPaymentRead })
+	readGoodsPayment(@AuthenticatedSession() sessionId: string | undefined, @Param('paymentId') paymentId: string) {
+		return this.foundation.readGoodsPayment(sessionId, paymentId)
+	}
+
+	@Get('customer/goods/purchases/:purchaseId')
+	@ApiOperation({ summary: 'Read the Customer’s paid goods Purchase with immutable commercial snapshots and independently scoped Vendor Orders.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiParam({ name: 'purchaseId', schema: { type: 'string', format: 'uuid' } })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.goodsPurchaseRead })
+	readGoodsPurchase(@AuthenticatedSession() sessionId: string | undefined, @Param('purchaseId') purchaseId: string) {
+		return this.foundation.readGoodsPurchase(sessionId, purchaseId)
+	}
+
+	@Get('vendor/goods/orders/:orderId')
+	@ApiOperation({ summary: 'Read one goods Order for an assigned active Vendor Owner. Other Vendor components are omitted.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiParam({ name: 'orderId', schema: { type: 'string', format: 'uuid' } })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.goodsVendorOrderRead })
+	readGoodsVendorOrder(@AuthenticatedSession() sessionId: string | undefined, @Param('orderId') orderId: string) {
+		return this.foundation.readGoodsVendorOrder(sessionId, orderId)
+	}
+
 	@Get('inventory/listings/:listingId/availability')
 	@ApiOperation({ summary: 'Read derived stock availability for a Product at an assigned Vendor Location.' })
 	@ApiSecurity('junction-auth-cookie')

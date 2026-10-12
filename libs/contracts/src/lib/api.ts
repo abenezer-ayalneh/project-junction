@@ -120,7 +120,7 @@ export const InventoryAvailabilitySchema = z.object({
 	available: z.number().int().nonnegative(),
 })
 
-// Public stock checks are advisory; only a future checkout hold reserves stock.
+// Public stock checks are advisory; only an accepted checkout hold reserves stock.
 export const PublicProductAvailabilityQuerySchema = InventoryAvailabilityQuerySchema.extend({
 	quantity: z.coerce.number().int().min(1).max(2_147_483_647).default(1),
 }).strict()
@@ -327,7 +327,7 @@ export const GoodsHoldResultSchema = z
 	})
 	.strict()
 export const GoodsHoldReadSchema = GoodsHoldResultSchema.omit({ replayed: true }).extend({
-	state: z.enum(['holding', 'released', 'expired']),
+	state: z.enum(['holding', 'awaiting_payment', 'committed', 'released', 'expired', 'compensating']),
 	snapshot: GoodsQuoteSnapshotSchema,
 })
 export const GoodsHoldReleaseResultSchema = z
@@ -815,3 +815,42 @@ export const MediaDeletionEntrySchema = z
 		}
 	})
 export type MediaDeletionEntry = z.infer<typeof MediaDeletionEntrySchema>
+
+export const GoodsPaymentStartCommandSchema = z.object({ holdId: z.string().uuid() }).strict()
+export const GoodsLocalPaymentResultCommandSchema = z.object({ outcome: z.enum(['succeeded', 'failed', 'unknown']) }).strict()
+export const GoodsPaymentReadSchema = z
+	.object({
+		paymentId: z.string().uuid(),
+		holdId: z.string().uuid(),
+		state: z.enum(['processing', 'unknown', 'succeeded', 'failed', 'refund_pending', 'refunded']),
+		amountCents: GoodsMoneySchema,
+		currency: z.literal('ETB'),
+		provider: z.literal('local-controlled'),
+		holdState: z.enum(['holding', 'awaiting_payment', 'committed', 'released', 'expired', 'compensating']),
+		expiresAt: z.string().datetime(),
+		purchaseId: z.string().uuid().nullable(),
+		refunds: z.array(z.object({ refundId: z.string().uuid(), amountCents: GoodsMoneySchema, state: z.enum(['pending', 'succeeded']) }).strict()),
+	})
+	.strict()
+export const GoodsPaymentResultSchema = GoodsPaymentReadSchema.extend({ replayed: z.boolean() })
+export const GoodsVendorOrderReadSchema = z
+	.object({
+		orderId: z.string().uuid(),
+		purchaseId: z.string().uuid(),
+		vendorId: z.string().uuid(),
+		locationId: z.string().uuid(),
+		state: z.literal('confirmed'),
+		snapshot: GoodsQuoteSnapshotSchema.shape.groups.element,
+		lines: z.array(z.object({ lineId: z.string().uuid(), snapshot: GoodsQuoteSnapshotSchema.shape.groups.element.shape.lines.element }).strict()),
+	})
+	.strict()
+export const GoodsPurchaseReadSchema = z
+	.object({
+		purchaseId: z.string().uuid(),
+		holdId: z.string().uuid(),
+		paymentId: z.string().uuid(),
+		paidAt: z.string().datetime(),
+		snapshot: GoodsQuoteSnapshotSchema,
+		orders: z.array(GoodsVendorOrderReadSchema),
+	})
+	.strict()

@@ -6,6 +6,7 @@ import type { GoodsQuoteCommand } from 'contracts'
 import { AccessDeniedError } from './access.js'
 import { GoodsCheckoutConflictError } from './goods-checkout.js'
 import { IdempotencyConflictError } from './idempotency.js'
+import { LocalGoodsPaymentAdapter } from './local-goods-payment.js'
 import { PostgresFoundation } from './postgres-foundation.js'
 
 const suite = process.env['FOUNDATION_INTEGRATION'] === '1' ? describe : describe.skip
@@ -520,4 +521,258 @@ suite('Phase 02 goods quotes and holds PostgreSQL', () => {
 		await repository.releaseGoodsHold(customer.sessionId, randomUUID(), hold.holdId)
 		await expect(repository.db.goodsHold.update({ where: { id: hold.holdId }, data: { state: 'holding', releasedAt: null } })).rejects.toThrow()
 	})
+
+	async function beginPayment(selection: GoodsQuoteCommand, sessionId = customer.sessionId) {
+		const quote = await repository.createGoodsQuote(sessionId, randomUUID(), selection)
+		const hold = await repository.createGoodsHold(sessionId, randomUUID(), { quoteId: quote.quoteId })
+		const payment = await repository.startGoodsPayment(sessionId, randomUUID(), { holdId: hold.holdId })
+		return { quote, hold, payment }
+	}
+
+	it('goods payment starts its fifteen-minute window once, scopes replay and denies non-local simulation', async () => {
+		const fixture = await createVendor()
+		const quote = await repository.createGoodsQuote(customer.sessionId, randomUUID(), fixture.selection)
+		const hold = await repository.createGoodsHold(customer.sessionId, randomUUID(), { quoteId: quote.quoteId })
+		now = new Date(now.getTime() + 5 * 60_000)
+		const key = randomUUID()
+		const payment = await repository.startGoodsPayment(customer.sessionId, key, { holdId: hold.holdId })
+		expect(Date.parse(payment.expiresAt) - now.getTime()).toBe(15 * 60_000)
+		expect(payment.expiresAt).not.toBe(hold.expiresAt)
+		now = new Date(now.getTime() + 60_000)
+		await expect(repository.startGoodsPayment(customer.sessionId, key, { holdId: hold.holdId })).resolves.toEqual({ ...payment, replayed: true })
+		await expect(repository.startGoodsPayment(customer.sessionId, randomUUID(), { holdId: hold.holdId })).rejects.toThrow(GoodsCheckoutConflictError)
+		const stranger = await createCustomer()
+		await expect(repository.readGoodsPayment(stranger.sessionId, payment.paymentId)).rejects.toThrow(AccessDeniedError)
+		await expect(repository.recordLocalGoodsPaymentResult(stranger.sessionId, randomUUID(), payment.paymentId, { outcome: 'succeeded' })).rejects.toThrow(
+			AccessDeniedError,
+		)
+		await expect(
+			repository.recordLocalGoodsPaymentResult(customer.sessionId, randomUUID(), payment.paymentId, {
+				outcome: 'succeeded',
+				succeededAt: now.toISOString(),
+			}),
+		).rejects.toThrow()
+		const runtime = process.env['JUNCTION_RUNTIME_MODE']
+		process.env['JUNCTION_RUNTIME_MODE'] = 'staging'
+		try {
+			await expect(repository.startGoodsPayment(customer.sessionId, randomUUID(), { holdId: hold.holdId })).rejects.toThrow(AccessDeniedError)
+		} finally {
+			process.env['JUNCTION_RUNTIME_MODE'] = runtime
+		}
+	})
+
+	it('goods payment commits multi-Vendor simple and variant Orders once with immutable paid snapshots', async () => {
+		const first = await createVendor(3, true)
+		const second = await createVendor(3)
+		const { payment, quote } = await beginPayment({ groups: [first.selection.groups[0], second.selection.groups[0]] })
+		const key = randomUUID()
+		await repository.recordLocalGoodsPaymentResult(customer.sessionId, key, payment.paymentId, { outcome: 'succeeded' })
+		await expect(repository.recordLocalGoodsPaymentResult(customer.sessionId, key, payment.paymentId, { outcome: 'succeeded' })).resolves.toMatchObject({
+			replayed: true,
+		})
+		await Promise.all([
+			repository.reconcileGoodsPayments(),
+			other.reconcileGoodsPayments(),
+			repository.readGoodsPayment(customer.sessionId, payment.paymentId),
+		])
+		const paid = await repository.readGoodsPayment(customer.sessionId, payment.paymentId)
+		expect(paid).toMatchObject({ state: 'succeeded', holdState: 'committed' })
+		if (!paid.purchaseId) throw new Error('Purchase missing')
+		const purchase = await repository.readGoodsPurchase(customer.sessionId, paid.purchaseId)
+		expect(purchase.snapshot).toEqual(quote.snapshot)
+		expect(purchase.orders).toHaveLength(2)
+		expect(await repository.db.goodsPurchase.count({ where: { paymentId: payment.paymentId } })).toBe(1)
+		for (const order of purchase.orders) {
+			expect(order.state).toBe('confirmed')
+			expect(order.lines).toHaveLength(1)
+			const fixture = order.vendorId === first.vendor.id ? first : second
+			await expect(repository.readGoodsVendorOrder(fixture.owner.sessionId, order.orderId)).resolves.toEqual(order)
+			await expect(repository.readGoodsVendorOrder((fixture === first ? second : first).owner.sessionId, order.orderId)).rejects.toThrow(
+				AccessDeniedError,
+			)
+		}
+		expect(await repository.db.inventoryMovement.count({ where: { holdId: payment.holdId, reason: 'sold' } })).toBe(2)
+		await expect(repository.readPublicProductAvailability(first.listing.id, { locationId: first.location.id, sku: 'small' })).resolves.toMatchObject({
+			available: 2,
+		})
+		await expect(repository.releaseGoodsHold(customer.sessionId, randomUUID(), payment.holdId)).rejects.toThrow(GoodsCheckoutConflictError)
+		await expect(
+			repository.db.goodsVendorOrder.create({
+				data: {
+					purchaseId: paid.purchaseId,
+					vendorId: first.vendor.id,
+					vendorWorkspaceId: first.owner.workspaceId,
+					locationId: first.location.id,
+					snapshot: quote.snapshot.groups[0] as never,
+				},
+			}),
+		).rejects.toThrow()
+		await expect(repository.db.goodsPurchase.update({ where: { id: paid.purchaseId }, data: { snapshot: {} } })).rejects.toThrow()
+		await expect(repository.db.goodsOrderLine.update({ where: { id: purchase.orders[0].lines[0].lineId }, data: { snapshot: {} } })).rejects.toThrow()
+		await expect(repository.db.goodsPaymentAttempt.update({ where: { id: payment.paymentId }, data: { amountCents: 1 } })).rejects.toThrow()
+		await expect(repository.recordLocalGoodsPaymentResult(customer.sessionId, randomUUID(), payment.paymentId, { outcome: 'failed' })).rejects.toThrow(
+			GoodsCheckoutConflictError,
+		)
+		const stranger = await createCustomer()
+		await expect(repository.readGoodsPurchase(stranger.sessionId, paid.purchaseId)).rejects.toThrow(AccessDeniedError)
+		await repository.db.vendorMembership.updateMany({ where: { vendorId: first.vendor.id, userId: first.owner.userId }, data: { revokedAt: new Date() } })
+		const firstOrder = purchase.orders.find((order) => order.vendorId === first.vendor.id)!
+		await expect(repository.readGoodsVendorOrder(first.owner.sessionId, firstOrder.orderId)).rejects.toThrow(AccessDeniedError)
+	})
+
+	it('goods payment unknown stays reconcilable and authoritative failure releases stock once', async () => {
+		const fixture = await createVendor(1)
+		const { payment } = await beginPayment(fixture.selection)
+		await repository.recordLocalGoodsPaymentResult(customer.sessionId, randomUUID(), payment.paymentId, { outcome: 'unknown' })
+		await expect(repository.readGoodsPayment(customer.sessionId, payment.paymentId)).resolves.toMatchObject({
+			state: 'unknown',
+			purchaseId: null,
+			holdState: 'awaiting_payment',
+		})
+		await expect(repository.readPublicProductAvailability(fixture.listing.id, { locationId: fixture.location.id })).resolves.toMatchObject({ available: 0 })
+		await repository.recordLocalGoodsPaymentResult(customer.sessionId, randomUUID(), payment.paymentId, { outcome: 'failed' })
+		await Promise.all([repository.reconcileGoodsPayments(), other.reconcileGoodsPayments()])
+		await expect(repository.readGoodsPayment(customer.sessionId, payment.paymentId)).resolves.toMatchObject({
+			state: 'failed',
+			holdState: 'released',
+			purchaseId: null,
+		})
+		await expect(repository.readPublicProductAvailability(fixture.listing.id, { locationId: fixture.location.id })).resolves.toMatchObject({ available: 1 })
+		expect(await repository.db.inventoryMovement.count({ where: { holdId: payment.holdId, reason: 'released' } })).toBe(1)
+	})
+
+	it('goods payment uses recorded provider success time across delayed reconciliation and expiry races', async () => {
+		const fixture = await createVendor(1)
+		const { payment } = await beginPayment(fixture.selection)
+		now = new Date(Date.parse(payment.expiresAt) - 1)
+		await repository.recordLocalGoodsPaymentResult(customer.sessionId, randomUUID(), payment.paymentId, { outcome: 'succeeded' })
+		const successTime = now.toISOString()
+		now = new Date(Date.parse(payment.expiresAt) + 1000)
+		await repository.db.user.update({ where: { id: customer.userId }, data: { adultVerificationState: 'unverified', verifiedAt: null } })
+		await Promise.all([repository.expireGoodsHolds(), other.reconcileGoodsPayments()])
+		const paid = await repository.readGoodsPayment(customer.sessionId, payment.paymentId)
+		expect(paid).toMatchObject({ state: 'succeeded', holdState: 'committed' })
+		const purchase = await repository.readGoodsPurchase(customer.sessionId, paid.purchaseId!)
+		expect(purchase.paidAt).toBe(successTime)
+		expect(await repository.db.inventoryMovement.count({ where: { holdId: payment.holdId, reason: 'released' } })).toBe(0)
+	})
+
+	it('goods payment success at exact expiry compensates without claiming another Customer stock and retries refund failure', async () => {
+		const fixture = await createVendor(1)
+		const { payment } = await beginPayment(fixture.selection)
+		await repository.recordLocalGoodsPaymentResult(customer.sessionId, randomUUID(), payment.paymentId, { outcome: 'unknown' })
+		now = new Date(Date.parse(payment.expiresAt))
+		await repository.expireGoodsHolds()
+		const nextCustomer = await createCustomer()
+		const next = await beginPayment(fixture.selection, nextCustomer.sessionId)
+		await repository.recordLocalGoodsPaymentResult(customer.sessionId, randomUUID(), payment.paymentId, { outcome: 'succeeded' })
+		await repository.reconcileGoodsPayments()
+		await expect(repository.readGoodsPayment(customer.sessionId, payment.paymentId)).resolves.toMatchObject({
+			state: 'refund_pending',
+			holdState: 'compensating',
+			purchaseId: null,
+		})
+		await expect(repository.readGoodsHold(nextCustomer.sessionId, next.hold.holdId)).resolves.toMatchObject({ state: 'awaiting_payment' })
+		const adapter = new LocalGoodsPaymentAdapter()
+		jest.spyOn(adapter, 'refund').mockRejectedValueOnce(new Error('Local adapter unavailable'))
+		const retry = new PostgresFoundation(process.env['DATABASE_URL']!, undefined, undefined, undefined, undefined, clock, adapter)
+		try {
+			await retry.reconcileGoodsRefunds()
+			await expect(repository.readGoodsPayment(customer.sessionId, payment.paymentId)).resolves.toMatchObject({ state: 'refund_pending' })
+			await retry.reconcileGoodsRefunds()
+			await retry.reconcileGoodsRefunds()
+		} finally {
+			await retry.close()
+		}
+		await expect(repository.readGoodsPayment(customer.sessionId, payment.paymentId)).resolves.toMatchObject({
+			state: 'refunded',
+			refunds: [{ amountCents: payment.amountCents, state: 'succeeded' }],
+		})
+		expect(await repository.db.goodsRefundOperation.count({ where: { paymentId: payment.paymentId } })).toBe(1)
+		expect(await repository.db.inventoryMovement.count({ where: { holdId: payment.holdId, reason: 'sold' } })).toBe(0)
+	})
+
+	it('goods payment later-line commitment failure rolls back every Order, sale and event while preserving the provider receipt', async () => {
+		const first = await createVendor(1)
+		const second = await createVendor(1)
+		const { payment } = await beginPayment({ groups: [first.selection.groups[0], second.selection.groups[0]] })
+		await repository.recordLocalGoodsPaymentResult(customer.sessionId, randomUUID(), payment.paymentId, { outcome: 'succeeded' })
+		const before = { audit: await repository.db.auditLog.count(), outbox: await repository.db.outboxEvent.count() }
+		await repository.db.$executeRawUnsafe(
+			`CREATE FUNCTION reject_test_sale() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.reason = 'sold' AND NEW.listing_id = '${second.listing.id}'::uuid THEN RAISE EXCEPTION 'Deliberate second sale failure'; END IF; RETURN NEW; END; $$`,
+		)
+		await repository.db.$executeRawUnsafe(
+			'CREATE TRIGGER reject_test_sale_trigger BEFORE INSERT ON inventory_movements FOR EACH ROW EXECUTE FUNCTION reject_test_sale()',
+		)
+		try {
+			await expect(repository.reconcileGoodsPayments()).rejects.toThrow()
+			expect(await repository.db.goodsPurchase.count({ where: { paymentId: payment.paymentId } })).toBe(0)
+			expect(await repository.db.inventoryMovement.count({ where: { holdId: payment.holdId, reason: 'sold' } })).toBe(0)
+			expect(await repository.db.auditLog.count()).toBe(before.audit)
+			expect(await repository.db.outboxEvent.count()).toBe(before.outbox)
+			expect(await repository.db.goodsLocalPaymentResult.count({ where: { paymentId: payment.paymentId } })).toBe(1)
+		} finally {
+			await repository.db.$executeRawUnsafe('DROP TRIGGER reject_test_sale_trigger ON inventory_movements')
+			await repository.db.$executeRawUnsafe('DROP FUNCTION reject_test_sale()')
+		}
+		await repository.reconcileGoodsPayments()
+		await expect(repository.readGoodsPayment(customer.sessionId, payment.paymentId)).resolves.toMatchObject({ state: 'succeeded' })
+	})
+
+	it('goods payment racing competing last-unit holds cannot oversell', async () => {
+		const fixture = await createVendor(1)
+		const { payment } = await beginPayment(fixture.selection)
+		const otherCustomer = await createCustomer()
+		const result = await Promise.allSettled([
+			repository
+				.recordLocalGoodsPaymentResult(customer.sessionId, randomUUID(), payment.paymentId, { outcome: 'succeeded' })
+				.then(() => repository.reconcileGoodsPayments()),
+			other.createGoodsQuote(otherCustomer.sessionId, randomUUID(), fixture.selection),
+		])
+		expect(result[0].status).toBe('fulfilled')
+		expect(result[1].status).toBe('rejected')
+		await expect(repository.readPublicProductAvailability(fixture.listing.id, { locationId: fixture.location.id })).resolves.toMatchObject({ available: 0 })
+		expect(await repository.db.inventoryMovement.count({ where: { holdId: payment.holdId, reason: 'sold' } })).toBe(1)
+	})
+
+	it('goods payment Customer release racing a final success either commits or compensates once', async () => {
+		const fixture = await createVendor(1)
+		const { payment } = await beginPayment(fixture.selection)
+		await Promise.allSettled([
+			repository.recordLocalGoodsPaymentResult(customer.sessionId, randomUUID(), payment.paymentId, { outcome: 'succeeded' }),
+			other.releaseGoodsHold(customer.sessionId, randomUUID(), payment.holdId),
+		])
+		await repository.reconcileGoodsPayments()
+		const current = await repository.readGoodsPayment(customer.sessionId, payment.paymentId)
+		if (current.state === 'succeeded') {
+			expect(current.purchaseId).not.toBeNull()
+			expect(current.refunds).toHaveLength(0)
+			expect(await repository.db.inventoryMovement.count({ where: { holdId: payment.holdId, reason: 'sold' } })).toBe(1)
+		} else {
+			expect(current.state).toBe('refund_pending')
+			expect(current.purchaseId).toBeNull()
+			expect(current.refunds).toHaveLength(1)
+			expect(await repository.db.inventoryMovement.count({ where: { holdId: payment.holdId, reason: 'released' } })).toBe(1)
+			await repository.reconcileGoodsRefunds()
+		}
+	})
+
+	it('goods payment backlog preserves recorded timely successes beyond the bounded worker batch', async () => {
+		const fixture = await createVendor(101)
+		const attempts = []
+		for (let index = 0; index < 101; index++) attempts.push((await beginPayment(fixture.selection)).payment)
+		for (const payment of attempts)
+			await repository.recordLocalGoodsPaymentResult(customer.sessionId, randomUUID(), payment.paymentId, { outcome: 'succeeded' })
+		now = new Date(Date.parse(attempts[0].expiresAt) + 1000)
+		await repository.expireGoodsHolds()
+		const remaining = await repository.db.goodsPaymentAttempt.findFirstOrThrow({
+			where: { holdId: { in: attempts.map((payment) => payment.holdId) }, state: 'processing' },
+		})
+		expect(await repository.db.inventoryMovement.count({ where: { holdId: { in: attempts.map((payment) => payment.holdId) }, reason: 'released' } })).toBe(
+			0,
+		)
+		await expect(repository.readGoodsHold(customer.sessionId, remaining.holdId)).resolves.toMatchObject({ state: 'committed' })
+		expect(await repository.db.goodsPurchase.count({ where: { paymentId: { in: attempts.map((payment) => payment.paymentId) } } })).toBe(101)
+		await expect(repository.readPublicProductAvailability(fixture.listing.id, { locationId: fixture.location.id })).resolves.toMatchObject({ available: 0 })
+	}, 60_000)
 })

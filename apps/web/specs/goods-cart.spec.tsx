@@ -108,41 +108,7 @@ it('retries an uncertain hold using the persisted request key and unlocks after 
 
 it('uses a fresh quote key after an expired quote while retaining safe Cart selections', async () => {
 	addToCart(listing, { locationId, sku: 'small', quantity: 1, method: 'pickup' })
-	const snapshot = {
-		currency: 'ETB',
-		totalCents: 1000,
-		groups: [
-			{
-				vendorId: listing.vendor.id,
-				locationId,
-				configurationVersion: 1,
-				fulfillment: { method: 'pickup' },
-				deliveryZone: null,
-				deliveryFeeCents: 0,
-				etaMinutes: null,
-				pickupWindowHours: 72,
-				pickupGraceHours: 48,
-				failedDeliveryRetryHours: null,
-				lines: [
-					{
-						listingId: id,
-						listingVersion: 1,
-						sku: 'small',
-						quantity: 1,
-						unitPriceCents: 1000,
-						subtotalCents: 1000,
-						policy: {
-							returnTemplate: 'standard',
-							changeOfMindDays: 7,
-							faultProtectionDays: 30,
-							restockingFeeCents: 0,
-							startsAt: 'verified_handoff',
-						},
-					},
-				],
-			},
-		],
-	}
+	const snapshot = paymentSnapshot
 	const keys: string[] = []
 	globalThis.fetch = jest.fn(async (url, options) => {
 		if (!String(url).includes('/quotes')) return response(listing)
@@ -157,4 +123,65 @@ it('uses a fresh quote key after an expired quote while retaining safe Cart sele
 	await waitFor(() => expect(keys).toHaveLength(2))
 	expect(keys[0]).not.toBe(keys[1])
 	expect(readCart()).toHaveLength(1)
+})
+
+const paymentSnapshot = {
+	currency: 'ETB',
+	totalCents: 1000,
+	groups: [
+		{
+			vendorId: listing.vendor.id,
+			locationId,
+			configurationVersion: 1,
+			fulfillment: { method: 'pickup' },
+			deliveryZone: null,
+			deliveryFeeCents: 0,
+			etaMinutes: null,
+			pickupWindowHours: 72,
+			pickupGraceHours: 48,
+			failedDeliveryRetryHours: null,
+			lines: [
+				{
+					listingId: id,
+					listingVersion: 1,
+					sku: 'small',
+					quantity: 1,
+					unitPriceCents: 1000,
+					subtotalCents: 1000,
+					policy: {
+						returnTemplate: 'standard',
+						changeOfMindDays: 7,
+						faultProtectionDays: 30,
+						restockingFeeCents: 0,
+						startsAt: 'verified_handoff',
+					},
+				},
+			],
+		},
+	],
+}
+
+it('preserves the pending hold and locks Cart edits while authoritative payment is awaiting', async () => {
+	addToCart(listing, { locationId, sku: 'small', quantity: 1, method: 'pickup' })
+	globalThis.window.sessionStorage.setItem('junction:goods-hold-pending:v1', JSON.stringify({ quoteId: id, key: locationId, holdId: id }))
+	globalThis.fetch = jest.fn(async (url) =>
+		response(
+			String(url).includes('/holds/')
+				? {
+						holdId: id,
+						quoteId: id,
+						expiresAt: new Date(Date.now() + 60_000).toISOString(),
+						currency: 'ETB',
+						totalCents: 1000,
+						state: 'awaiting_payment',
+						snapshot: paymentSnapshot,
+					}
+				: listing,
+		),
+	)
+	render(<GoodsCart />)
+	fireEvent.click(await screen.findByRole('button', { name: 'Refresh hold status' }))
+	await screen.findByRole('heading', { name: 'Awaiting payment' })
+	expect((screen.getByRole('button', { name: 'Continue to checkout' }) as globalThis.HTMLButtonElement).disabled).toBe(true)
+	expect(globalThis.window.sessionStorage.getItem('junction:goods-hold-pending:v1')).not.toBeNull()
 })

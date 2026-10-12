@@ -6,7 +6,7 @@ export function MarketplaceFooter() {
 	return (
 		<footer className="border-t bg-background px-5 py-8 text-center text-sm text-muted-foreground sm:px-8">
 			<div className="mx-auto flex max-w-7xl flex-col items-center gap-3">
-				<p>{runtimeLabel} · payment and booking are not available</p>
+				<p>{runtimeLabel} · live payments and booking are not available</p>
 				<MakerSignature color="var(--foreground)" />
 			</div>
 		</footer>

@@ -67,3 +67,7 @@ Identifiers use UUIDv7 [DEC-121]. Money is integer minor units plus ISO currency
 - [Canonical public types](../interfaces/CANONICAL-PUBLIC-TYPES.md)
 - [Money and ledger model](MONEY-AND-DOUBLE-ENTRY-LEDGER.md)
 - [Location, address, and geospatial model](LOCATION-ADDRESS-AND-GEOSPATIAL-MODEL.md)
+
+## Local goods payment/commitment storage — 2026-10-12
+
+`P02-C07` adds goods-only physical `GoodsPaymentAttempt`, immutable `GoodsLocalPaymentResult`, `GoodsPurchase`, immutable `GoodsVendorOrder`/`GoodsOrderLine` commercial snapshots and recoverable `GoodsRefundOperation`. Each payment links one hold and its exact ETB amount; each Purchase uniquely links that hold/payment and scopes its Customer/workspace. Orders uniquely group Purchase/Vendor at the held Location, and each Order line uniquely links its held allocation. Sold inventory movements reference immutable Order lines. Deferred database checks require complete paid commitment and bounded refunds; child insert guards seal committed aggregates. These are the local goods implementations of the conceptual Purchase/Order boundary, not a claim that the mixed-commerce/final double-entry ledger model is complete.

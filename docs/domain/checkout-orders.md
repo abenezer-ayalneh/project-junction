@@ -1,6 +1,6 @@
 # Cart, Checkout, Purchase, and Orders
 
-> **Status:** Planned domain behavior; no Cart, Checkout, or Order implementation exists.
+> **Status:** Target domain behavior. Goods Cart/quotes/holds and controlled local paid Purchase/Vendor Orders are implemented; mixed commerce, live providers and final finance remain unverified.
 
 ## Cart
 
@@ -106,3 +106,7 @@ Reconciliation must be able to find:
 - unaffected components retain state and economic availability; `[DEC-038, DEC-133]`
 - anonymous merge changes nothing silently; and `[DEC-152]`
 - receipt language stays inside the non-tax/sandbox/portfolio claims. `[DEC-025, DEC-056, DEC-057, DEC-077]`
+
+## Local goods payment/Order implementation — 2026-10-12
+
+[P02-C07](../requirements/PHASE-02-GOODS-COMMERCE.md#p02-c07--paid-goods-order-commitment--2026-10-12) records the controlled local payment API, immutable provider receipt before reconciliation, atomic complete Purchase/Order/sold-ledger commitment, exact expiry/late-success compensation, scoped reads and local evidence. Payment initiation starts the fifteen-minute payment window once after a bounded provisional hold; replay never extends it. The local simulator is denied outside local runtime and receives no caller amount/currency/success timestamp. Cart preserves an active payment lock and reports authoritative local commitment when refreshed. Payment initiation/control UI, live providers, mixed Booking components and final Phase 04 finance are not claimed by that API slice.

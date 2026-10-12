@@ -17,3 +17,13 @@
 Example command contracts must name authorization scope, idempotency requirement, aggregate/state guard, normal/failure response, emitted event, asynchronous work, and reconciliation endpoint. Capability routes are not an implementation commitment or public API availability statement.
 
 Phase 02 P02-C06 local public-read addition: `GET /v1/public/listings/:listingId` includes nullable `goodsConfiguration` on public Locations (pickup eligibility, Standard/Flexible return template and delivery zones/fees/minimums/ETA). This is advisory selection context; Customer quotes and holds revalidate publication, current configuration, price and stock. Private goods-configuration writes remain Owner-scoped.
+
+Phase 02 `P02-C07` controlled local proof APIs:
+
+- `POST /v1/customer/goods/payments` starts one payment window for a Customer-owned hold with an idempotency key.
+- `POST /v1/customer/goods/payments/:paymentId/local-result` records succeeded/failed/unknown only in local runtime, with server adapter time and held amount/linkage. It is not a production payment webhook.
+- `GET /v1/customer/goods/payments/:paymentId` reconciles recorded results and returns current hold/payment/refund/Purchase state; creation/result replay responses preserve original acceptance.
+- `GET /v1/customer/goods/purchases/:purchaseId` reads the Customer's immutable paid Purchase and Vendor components.
+- `GET /v1/vendor/goods/orders/:orderId` reads only the assigned active Owner's Vendor/Location Order. Private workspace/provider receipts are not exposed.
+
+See [local evidence and Phase 04 provider/finance limits](../requirements/PHASE-02-GOODS-COMMERCE.md#p02-c07--paid-goods-order-commitment--2026-10-12).

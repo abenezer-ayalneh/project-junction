@@ -75,6 +75,7 @@ import { DiditSandboxAdapter } from './didit.js'
 import { type ExternalEffectAdapter, UnconfiguredExternalEffectAdapter } from './external-effects.js'
 import { GoodsCheckout } from './goods-checkout.js'
 import { IdempotencyConflictError, stableHash } from './idempotency.js'
+import { LocalGoodsPaymentAdapter } from './local-goods-payment.js'
 import { type DeletionJournal, S3DeletionJournal } from './media-retention.js'
 import { type MediaStore, S3MediaStore } from './media-store.js'
 import { applicationRuntimeMode } from './runtime.js'
@@ -142,6 +143,7 @@ export class PostgresFoundation {
 		videoProcessor?: VideoProcessor,
 		deletionJournal?: DeletionJournal,
 		goodsClock: () => Date = () => new Date(),
+		goodsPayments?: LocalGoodsPaymentAdapter,
 	) {
 		const schema = new URL(url).searchParams.get('schema') ?? 'public'
 		if (!/^[a-z_][a-z0-9_]*$/.test(schema)) throw new Error('Unsupported database schema name.')
@@ -152,6 +154,7 @@ export class PostgresFoundation {
 			lockWorkspace: (tx, id) => this.workspaceLock(tx, id),
 			replay: (tx, context, key, method, request, create) => this.replayOrCreate(tx, context, key, method, request, create),
 			now: goodsClock,
+			payments: goodsPayments,
 		})
 		this.externalEffects = externalEffects ?? new UnconfiguredExternalEffectAdapter()
 		this.mediaStore = mediaStore ?? S3MediaStore.fromEnvironment()
@@ -554,6 +557,28 @@ export class PostgresFoundation {
 	}
 	expireGoodsHolds() {
 		return this.goods.expire()
+	}
+
+	startGoodsPayment(sessionId: string | undefined, key: string | undefined, input: unknown) {
+		return this.goods.startPayment(sessionId, key, input)
+	}
+	recordLocalGoodsPaymentResult(sessionId: string | undefined, key: string | undefined, paymentId: string, input: unknown) {
+		return this.goods.recordLocalPaymentResult(sessionId, key, paymentId, input)
+	}
+	readGoodsPayment(sessionId: string | undefined, paymentId: string) {
+		return this.goods.readPayment(sessionId, paymentId)
+	}
+	reconcileGoodsPayments() {
+		return this.goods.reconcilePayments()
+	}
+	reconcileGoodsRefunds() {
+		return this.goods.reconcileRefunds()
+	}
+	readGoodsPurchase(sessionId: string | undefined, purchaseId: string) {
+		return this.goods.readPurchase(sessionId, purchaseId)
+	}
+	readGoodsVendorOrder(sessionId: string | undefined, orderId: string) {
+		return this.goods.readVendorOrder(sessionId, orderId)
 	}
 
 	async readInventoryAvailability(sessionId: string | undefined, listingId: string, queryInput: unknown) {

@@ -23,3 +23,5 @@ Purchase is created committed once; it is a grouping, not a generic downstream s
 | DeliveryInProgress → DeliveryFailed | Fulfillment member          | reason/evidence                       | one corrected retry deadline      | retry within 48h or aftercare |
 
 Pickup window is 72 hours with 48-hour grace; expire follows return/inspection/refund path. No state can erase its prior proof/audit.
+
+Local `P02-C07` evidence verifies one paid goods Purchase with complete immutable snapshots and auto-confirmed independent Vendor Orders, idempotent concurrent commitment, sold inventory links and current Customer/assigned Owner read scope. Cancellation and fulfillment transitions remain for `P02-C08` onward; final earning/ledger effects remain Phase 04. See [local payment/Order evidence](../requirements/PHASE-02-GOODS-COMMERCE.md#p02-c07--paid-goods-order-commitment--2026-10-12).

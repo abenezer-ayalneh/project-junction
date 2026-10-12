@@ -72,7 +72,8 @@ export function GoodsCart() {
 			return all
 		}, {}),
 	)
-	const locked = busy || !!pending || hold?.state === 'holding'
+	const activeHold = hold?.state === 'holding' || hold?.state === 'awaiting_payment'
+	const locked = busy || !!pending || activeHold
 	function edit(next: CartLine[]) {
 		try {
 			writeCart(next)
@@ -118,11 +119,13 @@ export function GoodsCart() {
 	async function refreshHold(id: string) {
 		const result = await goodsRequest(`customer/goods/holds/${id}`, (data) => GoodsHoldReadSchema.parse(data))
 		setHold(result)
-		if (result.state !== 'holding') {
+		if (result.state !== 'holding' && result.state !== 'awaiting_payment') {
 			remember(null)
 			setQuote(null)
 			quoteAttempt.current = null
-			setMessage('Hold ended. Your Cart is saved. Request a fresh quote.')
+			setMessage(
+				result.state === 'committed' ? 'Local payment confirmed. Goods Orders created.' : 'Hold ended. Your Cart is saved. Request a fresh quote.',
+			)
 		}
 	}
 	function quoteCart(event: React.FormEvent) {
@@ -365,7 +368,7 @@ export function GoodsCart() {
 					Sign in
 				</Link>
 			) : null}
-			{quote && !pending && hold?.state !== 'holding' ? (
+			{quote && !pending && !activeHold ? (
 				<section className="space-y-5 border-t pt-6" aria-label="Quote review">
 					<h2 className="text-xl font-semibold">Review quote</h2>
 					<p>Valid until {new Date(quote.expiresAt).toLocaleTimeString()}</p>
@@ -408,11 +411,19 @@ export function GoodsCart() {
 			) : null}
 			{pending ? (
 				<section className="space-y-4 border-t pt-6" aria-label="Hold status">
-					<h2 className="text-xl font-semibold">{hold?.state === 'holding' ? 'Stock held' : 'Checking hold status'}</h2>
+					<h2 className="text-xl font-semibold">
+						{hold?.state === 'awaiting_payment' ? 'Awaiting payment' : hold?.state === 'holding' ? 'Stock held' : 'Checking hold status'}
+					</h2>
 					{hold ? (
 						<>
 							<p>Hold expires at {new Date(hold.expiresAt).toLocaleTimeString()}.</p>
-							<p>{now >= Date.parse(hold.expiresAt) ? 'Expiry reached. Refresh to confirm stock release.' : 'Payment is not available yet.'}</p>
+							<p>
+								{now >= Date.parse(hold.expiresAt)
+									? 'Deadline reached. Refresh to confirm the checkout outcome.'
+									: hold.state === 'awaiting_payment'
+										? 'Payment is pending. Refresh status before changing this Cart.'
+										: 'Payment is not available yet.'}
+							</p>
 						</>
 					) : (
 						<p>Do not start another hold. Retry checks the original request.</p>

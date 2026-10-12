@@ -204,6 +204,41 @@ try {
 		const { checkGoodsCartBrowser } = await import('./check-goods-cart-browser.mjs')
 		await checkGoodsCartBrowser({ repository, sessionId, vendor, location: destination, origin, cookie })
 	}
+
+	const paidQuote = await goodsRequest('/customer/goods/quotes', 'POST', selection)
+	const paidHold = await goodsRequest('/customer/goods/holds', 'POST', { quoteId: paidQuote.body.quoteId })
+	const paymentKey = randomUUID()
+	const payment = await goodsRequest('/customer/goods/payments', 'POST', { holdId: paidHold.body.holdId }, paymentKey)
+	assert.equal(payment.status, 201, JSON.stringify(payment.body))
+	assert.equal(payment.body.holdState, 'awaiting_payment')
+	assert.equal((await goodsRequest('/customer/goods/payments', 'POST', { holdId: paidHold.body.holdId }, paymentKey)).body.replayed, true)
+	assert.equal((await goodsRequest('/customer/goods/payments', 'POST', { holdId: paidHold.body.holdId })).status, 409)
+	assert.equal((await goodsRequest('/customer/goods/payments', 'POST', { holdId: paidHold.body.holdId }, randomUUID(), false)).status, 403)
+	const paymentPath = `/customer/goods/payments/${payment.body.paymentId}`
+	assert.equal((await goodsRequest(`${paymentPath}/local-result`, 'POST', { outcome: 'succeeded', amountCents: 1 })).status, 400)
+	assert.equal((await goodsRequest(`${paymentPath}/local-result`, 'POST', { outcome: 'unknown' })).body.state, 'unknown')
+	assert.equal((await goodsRequest(paymentPath, 'GET')).body.purchaseId, null)
+	const resultKey = randomUUID()
+	assert.equal((await goodsRequest(`${paymentPath}/local-result`, 'POST', { outcome: 'succeeded' }, resultKey)).status, 201)
+	assert.equal((await goodsRequest(`${paymentPath}/local-result`, 'POST', { outcome: 'succeeded' }, resultKey)).body.replayed, true)
+	const paidPayment = await goodsRequest(paymentPath, 'GET')
+	assert.equal(paidPayment.body.state, 'succeeded')
+	assert.equal(paidPayment.body.holdState, 'committed')
+	const purchasePath = `/customer/goods/purchases/${paidPayment.body.purchaseId}`
+	const purchase = await goodsRequest(purchasePath, 'GET')
+	assert.equal(purchase.status, 200, JSON.stringify(purchase.body))
+	assert.equal(purchase.body.snapshot.totalCents, 2000)
+	assert.equal(purchase.body.orders.length, 1)
+	assert.equal(purchase.body.orders[0].state, 'confirmed')
+	assert.equal(purchase.body.orders[0].lines[0].snapshot.quantity, 2)
+	assert.equal((await goodsRequest(`/vendor/goods/orders/${purchase.body.orders[0].orderId}`, 'GET')).status, 200)
+	assert.equal((await goodsRequest(purchasePath, 'GET', null, randomUUID(), false)).status, 403)
+	assert.equal((await goodsRequest(`${paymentPath}/local-result`, 'POST', { outcome: 'failed' })).status, 409)
+	assert.equal((await goodsRequest(`/customer/goods/holds/${paidHold.body.holdId}/release`, 'POST', null)).status, 409)
+	assert.equal((await (await publicCheck({ locationId: destination.id })).json()).available, 1)
+	console.log(
+		'Built local goods paid Order smoke passed: payment window/replay, unknown and authoritative success, one Purchase/confirmed scoped Order, immutable price/quantity snapshots, denial and stock sale.',
+	)
 	console.log(
 		'Built local goods checkout smoke passed: Owner configuration, quote/hold/release replay, snapshots, stock reservation and restored availability.',
 	)

@@ -8,6 +8,7 @@ datasource db {
 }
 
 model User {
+  goodsPurchases               GoodsPurchase[]
   goodsQuotes                  GoodsQuote[]
   id                           String                        @id @default(dbgenerated("uuidv7()")) @db.Uuid
   email                        String                        @unique
@@ -28,6 +29,8 @@ model User {
 }
 
 model Workspace {
+  goodsPurchases               GoodsPurchase[]
+  goodsOrders                  GoodsVendorOrder[]
   goodsQuotes                  GoodsQuote[]
   goodsHoldLines               GoodsHoldLine[]
   id                           String                        @id @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -71,6 +74,7 @@ model Session {
 }
 
 model Vendor {
+  goodsOrders           GoodsVendorOrder[]
   goodsHoldLines        GoodsHoldLine[]
   id                    String             @id @default(dbgenerated("uuidv7()")) @db.Uuid
   workspaceId           String             @map("workspace_id") @db.Uuid
@@ -302,6 +306,7 @@ model SearchDocument {
 }
 
 model Location {
+  goodsOrders               GoodsVendorOrder[]
   goodsHoldLines            GoodsHoldLine[]
   goodsConfiguration        Json?               @map("goods_configuration")
   goodsConfigurationVersion Int                 @default(0) @map("goods_configuration_version")
@@ -320,22 +325,24 @@ model Location {
 }
 
 model InventoryMovement {
-  holdId        String?    @map("hold_id") @db.Uuid
-  hold          GoodsHold? @relation(fields: [holdId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  id            String     @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  locationId    String     @map("location_id") @db.Uuid
-  listingId     String     @map("listing_id") @db.Uuid
+  orderLineId   String?         @map("order_line_id") @db.Uuid
+  orderLine     GoodsOrderLine? @relation(fields: [orderLineId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  holdId        String?         @map("hold_id") @db.Uuid
+  hold          GoodsHold?      @relation(fields: [holdId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id            String          @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  locationId    String          @map("location_id") @db.Uuid
+  listingId     String          @map("listing_id") @db.Uuid
   sku           String?
   reason        String
-  onHandDelta   Int        @map("on_hand_delta")
-  reservedDelta Int        @default(0) @map("reserved_delta")
-  transferId    String?    @map("transfer_id") @db.Uuid
+  onHandDelta   Int             @map("on_hand_delta")
+  reservedDelta Int             @default(0) @map("reserved_delta")
+  transferId    String?         @map("transfer_id") @db.Uuid
   note          String?
-  actorKind     String     @map("actor_kind")
-  actorId       String     @map("actor_id") @db.Uuid
-  createdAt     DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
-  location      Location   @relation(fields: [locationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  listing       Listing    @relation(fields: [listingId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  actorKind     String          @map("actor_kind")
+  actorId       String          @map("actor_id") @db.Uuid
+  createdAt     DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  location      Location        @relation(fields: [locationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  listing       Listing         @relation(fields: [listingId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([holdId], map: "inventory_movements_hold_id_idx")
   @@index([transferId], map: "inventory_movements_transfer_id_idx")
@@ -487,36 +494,135 @@ model GoodsQuote {
 }
 
 model GoodsHold {
-  id         String              @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  quoteId    String              @unique @map("quote_id") @db.Uuid
-  quote      GoodsQuote          @relation(fields: [quoteId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  state      String              @default("holding")
-  expiresAt  DateTime            @map("expires_at") @db.Timestamptz(6)
-  createdAt  DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
-  releasedAt DateTime?           @map("released_at") @db.Timestamptz(6)
-  lines      GoodsHoldLine[]
-  movements  InventoryMovement[]
+  id          String               @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  quoteId     String               @unique @map("quote_id") @db.Uuid
+  quote       GoodsQuote           @relation(fields: [quoteId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  state       String               @default("holding")
+  expiresAt   DateTime             @map("expires_at") @db.Timestamptz(6)
+  createdAt   DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  releasedAt  DateTime?            @map("released_at") @db.Timestamptz(6)
+  committedAt DateTime?            @map("committed_at") @db.Timestamptz(6)
+  payment     GoodsPaymentAttempt?
+  purchase    GoodsPurchase?
+  lines       GoodsHoldLine[]
+  movements   InventoryMovement[]
 
   @@index([state, expiresAt])
   @@map("goods_holds")
 }
 
 model GoodsHoldLine {
-  id                String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  holdId            String    @map("hold_id") @db.Uuid
-  hold              GoodsHold @relation(fields: [holdId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  listingId         String    @map("listing_id") @db.Uuid
-  locationId        String    @map("location_id") @db.Uuid
+  orderLine         GoodsOrderLine?
+  id                String          @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  holdId            String          @map("hold_id") @db.Uuid
+  hold              GoodsHold       @relation(fields: [holdId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  listingId         String          @map("listing_id") @db.Uuid
+  locationId        String          @map("location_id") @db.Uuid
   sku               String?
   quantity          Int
-  vendorId          String    @map("vendor_id") @db.Uuid
-  vendorWorkspaceId String    @map("vendor_workspace_id") @db.Uuid
-  workspace         Workspace @relation(fields: [vendorWorkspaceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  listing           Listing   @relation(fields: [listingId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  location          Location  @relation(fields: [locationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  vendor            Vendor    @relation(fields: [vendorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  vendorId          String          @map("vendor_id") @db.Uuid
+  vendorWorkspaceId String          @map("vendor_workspace_id") @db.Uuid
+  workspace         Workspace       @relation(fields: [vendorWorkspaceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  listing           Listing         @relation(fields: [listingId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  location          Location        @relation(fields: [locationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  vendor            Vendor          @relation(fields: [vendorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@index([holdId])
   @@unique([holdId, listingId, locationId, sku], map: "goods_hold_lines_item_key")
+  @@index([holdId])
   @@map("goods_hold_lines")
+}
+
+model GoodsPaymentAttempt {
+  id          String                   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  holdId      String                   @unique @map("hold_id") @db.Uuid
+  hold        GoodsHold                @relation(fields: [holdId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  state       String                   @default("processing")
+  amountCents Int                      @map("amount_cents")
+  currency    String                   @default("ETB")
+  provider    String                   @default("local-controlled")
+  createdAt   DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
+  result      GoodsLocalPaymentResult?
+  purchase    GoodsPurchase?
+  refunds     GoodsRefundOperation[]
+
+  @@index([state, createdAt])
+  @@map("goods_payment_attempts")
+}
+
+model GoodsLocalPaymentResult {
+  id          String              @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  paymentId   String              @unique @map("payment_id") @db.Uuid
+  payment     GoodsPaymentAttempt @relation(fields: [paymentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  outcome     String
+  succeededAt DateTime?           @map("succeeded_at") @db.Timestamptz(6)
+  receivedAt  DateTime            @default(now()) @map("received_at") @db.Timestamptz(6)
+
+  @@map("goods_local_payment_results")
+}
+
+model GoodsPurchase {
+  id          String              @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  holdId      String              @unique @map("hold_id") @db.Uuid
+  hold        GoodsHold           @relation(fields: [holdId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  paymentId   String              @unique @map("payment_id") @db.Uuid
+  payment     GoodsPaymentAttempt @relation(fields: [paymentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  customerId  String              @map("customer_id") @db.Uuid
+  workspaceId String              @map("workspace_id") @db.Uuid
+  customer    User                @relation(fields: [customerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  workspace   Workspace           @relation(fields: [workspaceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  snapshot    Json
+  paidAt      DateTime            @map("paid_at") @db.Timestamptz(6)
+  createdAt   DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  orders      GoodsVendorOrder[]
+
+  @@index([customerId, workspaceId, createdAt])
+  @@map("goods_purchases")
+}
+
+model GoodsVendorOrder {
+  id                String           @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  purchaseId        String           @map("purchase_id") @db.Uuid
+  purchase          GoodsPurchase    @relation(fields: [purchaseId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  vendorId          String           @map("vendor_id") @db.Uuid
+  vendorWorkspaceId String           @map("vendor_workspace_id") @db.Uuid
+  locationId        String           @map("location_id") @db.Uuid
+  state             String           @default("confirmed")
+  vendor            Vendor           @relation(fields: [vendorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  workspace         Workspace        @relation(fields: [vendorWorkspaceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  location          Location         @relation(fields: [locationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  snapshot          Json
+  createdAt         DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  lines             GoodsOrderLine[]
+
+  @@unique([purchaseId, vendorId])
+  @@index([vendorWorkspaceId, vendorId, locationId, createdAt])
+  @@map("goods_vendor_orders")
+}
+
+model GoodsOrderLine {
+  id         String              @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orderId    String              @map("order_id") @db.Uuid
+  order      GoodsVendorOrder    @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  holdLineId String              @unique @map("hold_line_id") @db.Uuid
+  holdLine   GoodsHoldLine       @relation(fields: [holdLineId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  movements  InventoryMovement[]
+  snapshot   Json
+
+  @@index([orderId])
+  @@map("goods_order_lines")
+}
+
+model GoodsRefundOperation {
+  id                String              @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  paymentId         String              @map("payment_id") @db.Uuid
+  payment           GoodsPaymentAttempt @relation(fields: [paymentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  semanticKey       String              @unique @map("semantic_key")
+  amountCents       Int                 @map("amount_cents")
+  state             String              @default("pending")
+  providerReference String?             @map("provider_reference")
+  createdAt         DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  completedAt       DateTime?           @map("completed_at") @db.Timestamptz(6)
+
+  @@index([state, createdAt])
+  @@map("goods_refund_operations")
 }

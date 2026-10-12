@@ -272,6 +272,22 @@ export class FoundationService {
 		return this.durable.releaseGoodsHold(sessionId, key, holdId)
 	}
 
+	startGoodsPayment(sessionId: string | undefined, key: string | undefined, input: unknown) {
+		return this.durable.startGoodsPayment(sessionId, key, input)
+	}
+	recordLocalGoodsPaymentResult(sessionId: string | undefined, key: string | undefined, paymentId: string, input: unknown) {
+		return this.durable.recordLocalGoodsPaymentResult(sessionId, key, paymentId, input)
+	}
+	readGoodsPayment(sessionId: string | undefined, paymentId: string) {
+		return this.durable.readGoodsPayment(sessionId, paymentId)
+	}
+	readGoodsPurchase(sessionId: string | undefined, purchaseId: string) {
+		return this.durable.readGoodsPurchase(sessionId, purchaseId)
+	}
+	readGoodsVendorOrder(sessionId: string | undefined, orderId: string) {
+		return this.durable.readGoodsVendorOrder(sessionId, orderId)
+	}
+
 	readInventoryAvailability(sessionId: string | undefined, listingId: string, query: unknown) {
 		InventoryAvailabilityQuerySchema.parse(query)
 		return this.durable.readInventoryAvailability(sessionId, listingId, query)
