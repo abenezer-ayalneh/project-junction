@@ -9,3 +9,5 @@ Thirty-two migrations deploy and replay; schema compatibility has no difference;
 The broader local integration run passed 98 tests with one unrelated media backup controller test failure. MinIO and ClamAV were started locally after initial missing-service failures. The final controller failure remains a documented regression limitation. No remote or staging verification occurred.
 
 Reproduction and limits: [C10 requirements evidence](../../../requirements/PHASE-02-GOODS-COMMERCE.md#p02-c10--vendor-delivery-and-corrected-retry--2026-10-12). Local delivery completion does not claim UI, actual notification delivery, live refund provider, Phase 04 earnings or formal Phase 02 exit.
+
+C12 audit update — 2026-10-12: the media controller regression was a fixture-isolation issue and is resolved locally. All 108 integration scenarios now pass in isolated suites; see [the consolidated acceptance evidence](../../PHASE-02-LOCAL-ACCEPTANCE-EVIDENCE.md). Historical results above remain the chunk's original verification record.

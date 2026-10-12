@@ -1,5 +1,6 @@
 import { spawnSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
+import { globSync } from 'node:fs'
 import { createRequire } from 'node:module'
 const require = createRequire(new URL('../libs/platform-core/package.json', import.meta.url))
 const { Pool } = require('pg')
@@ -22,6 +23,19 @@ function run(args, overrides = {}) {
 	const result = spawnSync('pnpm', args, { env: { ...env, ...overrides }, stdio: 'inherit' })
 	if (result.status !== 0) throw new Error('Integration command failed.')
 }
+async function cleanSchema() {
+	try {
+		// Auth uses its fixed schema; remove only identities owned by this run's
+		// isolated domain fixtures before dropping their membership records.
+		const tables = await pool.query('SELECT to_regclass($1) AS domain_users, to_regclass($2) AS auth_users', [`${schema}.users`, 'junction_auth."user"'])
+		if (tables.rows[0].domain_users && tables.rows[0].auth_users) {
+			await pool.query(`DELETE FROM junction_auth."user" WHERE id IN (SELECT id::text FROM "${schema}".users)`)
+		}
+	} finally {
+		await pool.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`)
+	}
+}
+
 try {
 	run(['exec', 'prisma', 'migrate', 'deploy'])
 	run(['exec', 'prisma', 'migrate', 'deploy']) // restart/replay must be a no-op
@@ -35,35 +49,31 @@ try {
 		run(['db:lock:measure'])
 	}
 	// Generic fixtures use local policy; strict-policy cases explicitly select their runtime.
-	if (!authProbe)
-		run(
-			[
-				'exec',
-				'jest',
-				'--config',
-				'libs/platform-core/jest.config.cts',
-				'--testMatch',
-				'**/*.integration.ts',
-				'--runInBand',
-				...(focusedTestName ? ['--testNamePattern', focusedTestName] : []),
-			],
-			{ JUNCTION_RUNTIME_MODE: 'local' },
-		)
+	if (!authProbe) {
+		const jestArgs = ['exec', 'jest', '--config', 'libs/platform-core/jest.config.cts', '--testMatch', '**/*.integration.ts', '--runInBand']
+		if (focusedTestName) run([...jestArgs, '--testNamePattern', focusedTestName], { JUNCTION_RUNTIME_MODE: 'local' })
+		else {
+			// Public discovery, media ownership and commerce suites intentionally
+			// retain domain fixtures. Isolate files so test order cannot alter pages
+			// or make a temporary object store appear incomplete.
+			const files = globSync('libs/platform-core/src/**/*.integration.ts').sort()
+			if (!files.length) throw new Error('No integration suites found.')
+			for (const file of files) {
+				await cleanSchema()
+				run(['exec', 'prisma', 'migrate', 'deploy'])
+				run([...jestArgs, '--runTestsByPath', file], { JUNCTION_RUNTIME_MODE: 'local' })
+			}
+			console.log(`Full local integration suites passed: ${files.length} isolated files.`)
+			await cleanSchema()
+			run(['exec', 'prisma', 'migrate', 'deploy'])
+		}
+	}
 	if (!authProbe && (!focusedTestName || /inventory/i.test(focusedTestName)))
 		run(['exec', 'node', 'tools/check-inventory-transfers.mjs'], { JUNCTION_RUNTIME_MODE: 'local' })
 } finally {
 	try {
-		// Auth uses its fixed schema; remove only identities owned by this run's
-		// isolated domain fixtures before dropping their membership records.
-		const tables = await pool.query('SELECT to_regclass($1) AS domain_users, to_regclass($2) AS auth_users', [`${schema}.users`, 'junction_auth."user"'])
-		if (tables.rows[0].domain_users && tables.rows[0].auth_users) {
-			await pool.query(`DELETE FROM junction_auth."user" WHERE id IN (SELECT id::text FROM "${schema}".users)`)
-		}
+		await cleanSchema()
 	} finally {
-		try {
-			await pool.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`)
-		} finally {
-			await pool.end()
-		}
+		await pool.end()
 	}
 }

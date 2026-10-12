@@ -1,0 +1,49 @@
+{
+	"date": "2026-10-12",
+	"environment": "local loopback only",
+	"baseCommit": "462cbe086",
+	"integration": {
+		"passed": 108,
+		"suites": 7,
+		"suiteCounts": [51, 8, 2, 1, 1, 43, 2],
+		"builtGoodsHttpSmoke": "passed"
+	},
+	"browser": {
+		"browser": "headless Microsoft Edge",
+		"servedProductCart": "passed",
+		"offlineDraftReconnect": "passed",
+		"controlledPaymentBridge": "passed",
+		"desktopAndMobile": "passed"
+	},
+	"nx": {
+		"projects": ["contracts", "platform-core", "api", "worker", "web"],
+		"lint": "passed",
+		"typecheck": "passed",
+		"unitTestsPassed": 65,
+		"unitTestsSkipped": 1,
+		"openApiSnapshot": "passed",
+		"build": "passed"
+	},
+	"database": {
+		"migrations": 33,
+		"deployAndReplay": "passed",
+		"compatibility": "no difference",
+		"populatedUpgrade": "passed",
+		"restoreRehearsal": "passed",
+		"workspaceLockMeasurement": {
+			"writes": 16,
+			"elapsedMs": 826.0,
+			"p50Ms": 575.2,
+			"p95Ms": 824.4
+		}
+	},
+	"formalPhaseExit": "open",
+	"openGates": [
+		"Phase 00/01 target acceptance",
+		"Phase 04 live provider/ledger and goods earning release/freeze/reversal",
+		"independent accessibility/native screen-reader review",
+		"fulfillment/return UI and notification channel acceptance",
+		"Phase 05 formal Dispute/appeal operations",
+		"Phase 06 cumulative security/capacity/recovery/public-release gates"
+	]
+}

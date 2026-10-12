@@ -171,6 +171,7 @@ This is the authoritative inventory. `Owner` means normative owner, not a person
 | `docs/quality/PERFORMANCE-RELIABILITY-AND-SLO.md`                | S/NE/NV     | performance/SLO target                 | quality    | deployment                         |
 | `docs/quality/DEPLOYMENT-AND-RECOVERY-TESTING.md`                | S/NE/NV     | recovery proof                         | quality    | runbooks                           |
 | `docs/quality/EVIDENCE-INDEX.md`                                 | Baseline    | evidence schema/index                  | quality    | all `EVD-*`                        |
+| `docs/quality/PHASE-02-LOCAL-ACCEPTANCE-EVIDENCE.md`             | Evidence    | Phase 02 local coverage and open gates | quality    | Phase 02 chunks/scenarios          |
 | `docs/quality/PHASE-01-ACCEPTANCE-EVIDENCE.md`                   | Evidence    | Phase 01 gate assessment               | quality    | Phase 01 scenarios                 |
 | `docs/quality/PHASE-00-REAL-TRANSITION.md`                       | In progress | real-service staging gates             | quality    | Phase 00 transition                |
 | `docs/quality/AUTH-SIMPLIFICATION-DECISIONS.md`                  | Governance  | local auth/staging suspension decision | quality    | `DEC-190`/ADR-0017                 |

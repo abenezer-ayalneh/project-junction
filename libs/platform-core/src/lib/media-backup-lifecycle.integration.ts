@@ -361,8 +361,20 @@ suite('local media backup lifecycle', () => {
 		const directory = await mkdtemp(resolve(tmpdir(), 'junction-backup-controller-'))
 		const databaseUrl = process.env['DATABASE_URL']
 		if (!databaseUrl) throw new Error('Requires loopback database.')
-		const foundation = new PostgresFoundation(databaseUrl)
-		const pool = new Pool({ connectionString: process.env['DATABASE_URL'] })
+		const isolatedUrl = new URL(databaseUrl)
+		const sourceSchema = isolatedUrl.searchParams.get('schema')
+		if (!sourceSchema || !/^[a-z0-9_]+$/.test(sourceSchema)) throw new Error('Requires a disposable integration schema.')
+		const isolatedSchema = 'backup_controller_' + randomUUID().replaceAll('-', '')
+		const pool = new Pool({ connectionString: databaseUrl })
+		// The controller scans every database-owned source key. Other scenarios in
+		// the shared integration schema deliberately retain missing/invalid media.
+		// Clone the four ownership tables so this fixture tests one complete store.
+		await pool.query(`CREATE SCHEMA "${isolatedSchema}"`)
+		for (const table of ['workspaces', 'vendors', 'listings', 'media_assets']) {
+			await pool.query(`CREATE TABLE "${isolatedSchema}"."${table}" (LIKE "${sourceSchema}"."${table}" INCLUDING ALL)`)
+		}
+		isolatedUrl.searchParams.set('schema', isolatedSchema)
+		const foundation = new PostgresFoundation(isolatedUrl.toString())
 		const session = await pool.connect()
 		try {
 			const mediaId = randomUUID()
@@ -389,6 +401,7 @@ suite('local media backup lifecycle', () => {
 			await writeFile(keyPath, f.key.toString('hex'), { mode: 0o600 })
 			const env = {
 				...process.env,
+				DATABASE_URL: isolatedUrl.toString(),
 				MEDIA_BACKUP_POLICY_FILE: policyPath,
 				MEDIA_BACKUP_KEY_FILE: keyPath,
 				MEDIA_S3_BUCKET: f.sourceBucket,
@@ -443,8 +456,9 @@ suite('local media backup lifecycle', () => {
 			expect(JSON.parse((await run('run')).stdout)).toMatchObject({ created: false, failed: 0 })
 		} finally {
 			session.release()
-			await pool.end()
 			await foundation.close()
+			await pool.query(`DROP SCHEMA "${isolatedSchema}" CASCADE`)
+			await pool.end()
 			await rm(directory, { recursive: true, force: true })
 			await f.dispose()
 		}

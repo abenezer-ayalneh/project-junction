@@ -19,3 +19,5 @@ Current local Phase 00 account and platform evidence: [local acceptance record](
 `EVD-REQ-P00-20260923`: [archived evidence for the retired local synthetic runtime](./PHASE-00-DURABILITY-EVIDENCE.md); retained for historical traceability only.
 
 `EVD-REQ-P01-20260925`: [historical Phase 01 fixture evidence and open gates](./PHASE-01-ACCEPTANCE-EVIDENCE.md). This is not the current local development flow or a public release claim.
+
+Phase 02 local requirement/scenario coverage and unresolved formal gates are consolidated in [Phase 02 local acceptance evidence](./PHASE-02-LOCAL-ACCEPTANCE-EVIDENCE.md), with fresh [C12 browser/verification artifacts](./evidence/phase-02-c12-2026-10-12/README.md). These local artifacts do not establish independent accessibility, live provider/ledger/earnings or formal phase exit.

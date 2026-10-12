@@ -90,10 +90,15 @@ export async function checkGoodsCartBrowser({ repository, sessionId, vendor, loc
 		const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } })
 		const separator = cookie.indexOf('=')
 		await context.addCookies([{ name: cookie.slice(0, separator), value: decodeURIComponent(cookie.slice(separator + 1)), domain: 'localhost', path: '/' }])
+		let offline = false
 		let failRead = false
 		let loseHold = false
 		const holdKeys = []
 		await context.route('**/v1/**', async (route) => {
+			if (offline) {
+				await route.abort()
+				return
+			}
 			const request = route.request()
 			const path = new URL(request.url()).pathname + new URL(request.url()).search
 			if (failRead && path.includes('/availability')) {
@@ -137,6 +142,23 @@ export async function checkGoodsCartBrowser({ repository, sessionId, vendor, loc
 		await page.getByRole('link', { name: 'View Cart', exact: true }).click()
 		await page.getByRole('button', { name: 'Continue to checkout' }).waitFor()
 		assert.equal((await repository.readPublicProductAvailability(product.id, { locationId: location.id, sku: 'small' })).available, 3)
+		const draftBeforeOffline = await page.evaluate(() => localStorage.getItem('junction:goods-cart:v1'))
+		assert.ok(draftBeforeOffline)
+		offline = true
+		await context.setOffline(true)
+		await page.getByRole('button', { name: 'Continue to checkout' }).click()
+		await page
+			.getByRole('status')
+			.filter({ hasText: /Failed to fetch|fetch failed|Network/ })
+			.waitFor()
+		assert.equal(await page.evaluate(() => navigator.onLine), false)
+		assert.equal(await page.evaluate(() => localStorage.getItem('junction:goods-cart:v1')), draftBeforeOffline)
+		assert.equal((await repository.readPublicProductAvailability(product.id, { locationId: location.id, sku: 'small' })).available, 3)
+		offline = false
+		await context.setOffline(false)
+		await page.reload()
+		await page.getByRole('button', { name: 'Continue to checkout' }).waitFor()
+		assert.equal(await page.evaluate(() => localStorage.getItem('junction:goods-cart:v1')), draftBeforeOffline)
 		// Authoritative quote must expose the changed current price.
 		await repository.db.listingVariant.updateMany({ where: { listingId: product.id, sku: 'small' }, data: { priceCents: 1500 } })
 		await page.getByRole('button', { name: 'Continue to checkout' }).click()
@@ -235,7 +257,7 @@ export async function checkGoodsCartBrowser({ repository, sessionId, vendor, loc
 		)
 
 		console.log(
-			'Served local Edge goods Cart passed: explicit variant/Location, failed read preservation, stock conflict, Cart persistence/no reservation, changed-price review, lost committed hold/replay, reload reconciliation, release, delivery zone/address rejection and recovery, desktop/mobile layout.',
+			'Served local Edge goods Cart passed: explicit variant/Location, failed read preservation, stock conflict, Cart persistence/no reservation, offline draft preservation and reconnect, changed-price review, lost committed hold/replay, reload reconciliation, release, delivery zone/address rejection and recovery, desktop/mobile layout.',
 		)
 	} finally {
 		await browser?.close()

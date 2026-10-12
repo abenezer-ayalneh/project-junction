@@ -79,11 +79,15 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 	let sessionId: string
 	let userId: string
 	let workspaceId: string
+	let reviewWorkspaceId: string
 	let vendorId: string
 	let locationId: string
 	beforeAll(async () => {
 		repository = new PostgresFoundation(process.env['DATABASE_URL']!)
 		other = new PostgresFoundation(process.env['DATABASE_URL']!)
+		// Local authenticated accounts join the oldest real review workspace.
+		// Seed that baseline explicitly instead of relying on an earlier suite.
+		reviewWorkspaceId = (await repository.db.workspace.create({ data: { kind: 'real' } })).id
 		const workspace = await repository.db.workspace.create({ data: { kind: 'real' } })
 		workspaceId = workspace.id
 		const user = await repository.db.user.create({
@@ -140,6 +144,7 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		expect(sessions).toHaveLength(2)
 		expect(sessions.map((session) => session.workspaceId)).toEqual([sessions[0].workspaceId, sessions[0].workspaceId])
 		expect(sessions.every((session) => session.workspace.kind === 'real')).toBe(true)
+		expect(sessions[0].workspaceId).toBe(reviewWorkspaceId)
 		expect(sessions[0].workspaceId).not.toBe(workspaceId)
 	})
 	it('keeps a real Vendor Owner on the Better Auth session and restores the role on a new sign-in', async () => {
@@ -408,13 +413,14 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 
 	it('commits one audit/event/outcome under concurrent replay and across connections', async () => {
 		const key = randomUUID()
+		const previousEvents = await repository.db.outboxEvent.count({ where: { workspaceId } })
 		const results = await Promise.all(
 			Array.from({ length: 8 }, (_, i) => (i % 2 ? repository : other).acceptAuditMarker(sessionId, key, { marker: 'concurrent' })),
 		)
 		expect(results.filter((result) => !result.replayed)).toHaveLength(1)
 		expect(new Set(results.map((result) => result.commandId)).size).toBe(1)
 		expect(await repository.db.auditLog.count({ where: { correlationId: results[0].commandId } })).toBe(1)
-		expect(await repository.db.outboxEvent.count({ where: { workspaceId } })).toBe(1)
+		expect(await repository.db.outboxEvent.count({ where: { workspaceId } })).toBe(previousEvents + 1)
 		await expect(other.acceptAuditMarker(sessionId, key, { marker: 'mismatch' })).rejects.toThrow(IdempotencyConflictError)
 	})
 	it('keeps internal audit events out of the real delivery stream', async () => {

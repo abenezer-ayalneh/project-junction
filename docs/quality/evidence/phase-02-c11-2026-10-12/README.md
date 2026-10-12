@@ -7,3 +7,5 @@ Evidence covers snapshotted Standard 7/Flexible 14 and fault 30-day boundaries f
 All 33 migrations deploy/replay; compatibility reports no difference and populated supported-foundation upgrade passes. Five-project lint/typecheck/unit targets pass (65 tests, OpenAPI snapshot, existing worker test skipped). Documentation/contract audits pass. C10's unrelated local media backup controller regression remains recorded for acceptance audit.
 
 Reproduction and limits: [C11 requirements evidence](../../../requirements/PHASE-02-GOODS-COMMERCE.md#p02-c11--goods-returns-and-inspection--2026-10-12). API completion does not claim return UI, real carrier/provider delivery, formal Dispute/appeal or Phase 04 ledger/earnings. No remote or staging verification occurred.
+
+C12 audit update — 2026-10-12: the media controller regression was a fixture-isolation issue and is resolved locally. All 108 integration scenarios now pass in isolated suites; see [the consolidated acceptance evidence](../../PHASE-02-LOCAL-ACCEPTANCE-EVIDENCE.md). Historical results above remain the chunk's original verification record.
