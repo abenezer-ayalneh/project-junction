@@ -203,7 +203,7 @@ Snapshot evidence: [public contracts](../../libs/contracts/src/lib/api.ts), [mar
 | Review aggregates and eligibility                           | Public contracts lack aggregates/entitlement context. Phase 05 owns reputation and aftercare; omit ratings until genuine approved data exists.                                                            |
 | Product availability and fulfillment eligibility            | The existing inventory seam does not supply the complete Customer purchase context. Phase 02 owns SKU/Location stock, delivery/pickup eligibility, and product actions.                                   |
 | Service Options, Staff, slots, and appointment selection    | Basic Service price/duration is insufficient for live selection. Phase 03 owns scheduling and Booking behavior.                                                                                           |
-| Cart, quote/hold, payment, and outcome commands             | Dedicated Customer transaction surfaces/actions are absent from the inspected public routes. Phase 02/03 own their private slices; Phase 04 owns unified mixed commerce.                                  |
+| Cart, quote/hold, payment, and outcome commands             | Phase 02 goods Product selection and browser-local Cart/quote/hold/release UI are locally verified under P02-C06. Payment/outcome, Booking and unified mixed commerce remain pending.                     |
 
 These are required capabilities and information, not invented endpoints, JSON shapes, or implementation evidence. Extend shared public contracts through the existing API conventions and authorization boundaries. Do not fetch private Vendor data to fill public presentation gaps or manufacture client-side business truth.
 
@@ -234,3 +234,5 @@ The checks below were completed in the served local application with disposable 
 | `TST-P06-006` | Complete the supported discovery-to-aftercare flows at the specified widths, themes, zoom levels, and pseudo-locale. Verify keyboard/screen-reader feedback, touch targets, reduced motion, captions/no-speech video, slow-network media/layout, cached-content disclosure, and blocked offline commitments. Record actual performance against existing budgets.                                          |
 
 The definition of done is an evidenced shopping journey with genuine content, functioning navigation and selection, visible authoritative outcomes, and tested recovery.
+
+Local Phase 02 Product/Cart evidence: [P02-C06 captures and limits](../quality/evidence/phase-02-c06-2026-10-12/README.md). This does not close independent accessibility or formal public-release gates.

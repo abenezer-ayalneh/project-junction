@@ -15,3 +15,5 @@
 | `API-070`–`079` | operations/demo   | Platform/Demo            | reconciliation, approval, audit, demo workspace/persona                                                                                                                                                                                                                                                                                |
 
 Example command contracts must name authorization scope, idempotency requirement, aggregate/state guard, normal/failure response, emitted event, asynchronous work, and reconciliation endpoint. Capability routes are not an implementation commitment or public API availability statement.
+
+Phase 02 P02-C06 local public-read addition: `GET /v1/public/listings/:listingId` includes nullable `goodsConfiguration` on public Locations (pickup eligibility, Standard/Flexible return template and delivery zones/fees/minimums/ETA). This is advisory selection context; Customer quotes and holds revalidate publication, current configuration, price and stock. Private goods-configuration writes remain Owner-scoped.

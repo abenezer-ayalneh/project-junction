@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import { ListingMedia } from '@/components/listing-media'
 import { MarketplaceFooter } from '@/components/marketplace-footer'
 import { MarketplaceHeader } from '@/components/marketplace-header'
+import { ProductSelection } from '@/components/product-selection'
 import { Badge } from '@/components/ui/badge'
 import { formatListingPrice, getPublicListing } from '@/lib/marketplace'
 
@@ -114,25 +115,7 @@ export default async function ListingDetail({ params, searchParams }: { params: 
 								<p className="mt-2 text-sm text-muted-foreground">Fixed duration: {listing.durationMinutes} minutes</p>
 							) : null}
 
-							{listing.variants?.length ? (
-								<section className="mt-7 border-t pt-6" aria-labelledby="options-title">
-									<h2 className="font-medium" id="options-title">
-										Available options
-									</h2>
-									<ul className="mt-3 grid gap-2">
-										{listing.variants.map((variant) => (
-											<li className="flex items-center justify-between rounded-lg border px-3 py-2 text-sm" key={variant.sku}>
-												<span>{variant.label}</span>
-												<span className="font-medium">{formatListingPrice({ priceCents: variant.priceCents })}</span>
-											</li>
-										))}
-									</ul>
-									<p className="mt-3 text-sm leading-6 text-muted-foreground">
-										Product selection, availability, and Cart actions are introduced in the goods-commerce phase.
-									</p>
-								</section>
-							) : null}
-
+							{isProduct ? <ProductSelection listing={listing} /> : null}
 							<section className="mt-7 border-t pt-6" aria-labelledby="locations-title">
 								<h2 className="font-medium" id="locations-title">
 									Public locations

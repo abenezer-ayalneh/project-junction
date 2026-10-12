@@ -30,6 +30,9 @@ export function MarketplaceHeader({ searchQuery = '' }: { searchQuery?: string }
 					/>
 				</form>
 				<nav className="ml-auto flex items-center gap-3" aria-label="Account navigation">
+					<Link className="text-sm text-muted-foreground hover:text-foreground" href="/cart">
+						Cart
+					</Link>
 					<Link className="text-sm text-muted-foreground hover:text-foreground" href="/account">
 						Account
 					</Link>

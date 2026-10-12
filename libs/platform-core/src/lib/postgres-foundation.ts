@@ -858,7 +858,9 @@ export class PostgresFoundation {
 		return PublicListingDetailSchema.parse({
 			...this.publicListingResult(listing),
 			locations: listing.vendor.locations.flatMap((location) =>
-				location.label && location.city ? [{ id: location.id, label: location.label, city: location.city }] : [],
+				location.label && location.city
+					? [{ id: location.id, label: location.label, city: location.city, goodsConfiguration: location.goodsConfiguration }]
+					: [],
 			),
 		})
 	}

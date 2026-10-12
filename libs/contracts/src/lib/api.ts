@@ -419,7 +419,14 @@ export const PublicListingSummarySchema = ListingSummarySchema.extend({ vendor: 
 export type PublicListingSummary = z.infer<typeof PublicListingSummarySchema>
 
 export const PublicListingDetailSchema = PublicListingSummarySchema.extend({
-	locations: z.array(z.object({ id: z.string().uuid(), label: z.string().min(2).max(120), city: z.string().min(2).max(120) })),
+	locations: z.array(
+		z.object({
+			id: z.string().uuid(),
+			label: z.string().min(2).max(120),
+			city: z.string().min(2).max(120),
+			goodsConfiguration: GoodsLocationConfigurationSchema.nullable().optional(),
+		}),
+	),
 })
 export type PublicListingDetail = z.infer<typeof PublicListingDetailSchema>
 

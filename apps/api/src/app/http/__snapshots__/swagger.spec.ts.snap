@@ -3300,6 +3300,102 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
                   "minLength": 2,
                   "type": "string",
                 },
+                "goodsConfiguration": {
+                  "additionalProperties": false,
+                  "nullable": true,
+                  "properties": {
+                    "deliveryZones": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "etaMinutes": {
+                            "maximum": 10080,
+                            "minimum": 1,
+                            "type": "integer",
+                          },
+                          "feeCents": {
+                            "maximum": 2147483647,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                          "freeDeliveryThresholdCents": {
+                            "maximum": 2147483647,
+                            "minimum": 0,
+                            "nullable": true,
+                            "type": "integer",
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string",
+                          },
+                          "label": {
+                            "maxLength": 80,
+                            "minLength": 1,
+                            "type": "string",
+                          },
+                          "minimumCents": {
+                            "maximum": 2147483647,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                          "polygon": {
+                            "items": {
+                              "items": {
+                                "anyOf": [
+                                  {
+                                    "maximum": 180,
+                                    "minimum": -180,
+                                    "type": "number",
+                                  },
+                                  {
+                                    "maximum": 90,
+                                    "minimum": -90,
+                                    "type": "number",
+                                  },
+                                ],
+                              },
+                              "maxItems": 2,
+                              "minItems": 2,
+                              "type": "array",
+                            },
+                            "maxItems": 100,
+                            "minItems": 4,
+                            "type": "array",
+                          },
+                        },
+                        "required": [
+                          "id",
+                          "label",
+                          "polygon",
+                          "feeCents",
+                          "minimumCents",
+                          "freeDeliveryThresholdCents",
+                          "etaMinutes",
+                        ],
+                        "type": "object",
+                      },
+                      "maxItems": 20,
+                      "type": "array",
+                    },
+                    "pickupEnabled": {
+                      "type": "boolean",
+                    },
+                    "returnTemplate": {
+                      "enum": [
+                        "standard",
+                        "flexible",
+                      ],
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "pickupEnabled",
+                    "returnTemplate",
+                    "deliveryZones",
+                  ],
+                  "type": "object",
+                },
                 "id": {
                   "format": "uuid",
                   "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",

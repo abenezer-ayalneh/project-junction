@@ -198,6 +198,12 @@ try {
 	assert.equal((await goodsRequest(`${holdPath}/release`, 'POST', null, releaseKey)).body.replayed, true)
 	assert.equal((await goodsRequest(holdPath, 'GET')).body.state, 'released')
 	assert.equal((await (await publicCheck({ locationId: destination.id })).json()).available, 3)
+	const publicDetail = await fetch(`${origin}/public/listings/${listing.id}`)
+	assert.deepEqual((await publicDetail.json()).locations.find((item) => item.id === destination.id).goodsConfiguration, configuration.configuration)
+	if (process.env.FOUNDATION_BROWSER_GOODS === '1') {
+		const { checkGoodsCartBrowser } = await import('./check-goods-cart-browser.mjs')
+		await checkGoodsCartBrowser({ repository, sessionId, vendor, location: destination, origin, cookie })
+	}
 	console.log(
 		'Built local goods checkout smoke passed: Owner configuration, quote/hold/release replay, snapshots, stock reservation and restored availability.',
 	)
