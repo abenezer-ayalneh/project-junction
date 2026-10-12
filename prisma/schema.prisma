@@ -8,6 +8,7 @@ datasource db {
 }
 
 model User {
+  goodsCancellationGrants      GoodsCancellationGrant[]
   goodsPurchases               GoodsPurchase[]
   goodsQuotes                  GoodsQuote[]
   id                           String                        @id @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -29,6 +30,7 @@ model User {
 }
 
 model Workspace {
+  goodsCancellationGrants      GoodsCancellationGrant[]
   goodsPurchases               GoodsPurchase[]
   goodsOrders                  GoodsVendorOrder[]
   goodsQuotes                  GoodsQuote[]
@@ -325,24 +327,26 @@ model Location {
 }
 
 model InventoryMovement {
-  orderLineId   String?         @map("order_line_id") @db.Uuid
-  orderLine     GoodsOrderLine? @relation(fields: [orderLineId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  holdId        String?         @map("hold_id") @db.Uuid
-  hold          GoodsHold?      @relation(fields: [holdId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  id            String          @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  locationId    String          @map("location_id") @db.Uuid
-  listingId     String          @map("listing_id") @db.Uuid
-  sku           String?
-  reason        String
-  onHandDelta   Int             @map("on_hand_delta")
-  reservedDelta Int             @default(0) @map("reserved_delta")
-  transferId    String?         @map("transfer_id") @db.Uuid
-  note          String?
-  actorKind     String          @map("actor_kind")
-  actorId       String          @map("actor_id") @db.Uuid
-  createdAt     DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
-  location      Location        @relation(fields: [locationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  listing       Listing         @relation(fields: [listingId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  cancellationLineId String?                @map("cancellation_line_id") @db.Uuid
+  cancellationLine   GoodsCancellationLine? @relation(fields: [cancellationLineId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  orderLineId        String?                @map("order_line_id") @db.Uuid
+  orderLine          GoodsOrderLine?        @relation(fields: [orderLineId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  holdId             String?                @map("hold_id") @db.Uuid
+  hold               GoodsHold?             @relation(fields: [holdId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                 String                 @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  locationId         String                 @map("location_id") @db.Uuid
+  listingId          String                 @map("listing_id") @db.Uuid
+  sku                String?
+  reason             String
+  onHandDelta        Int                    @map("on_hand_delta")
+  reservedDelta      Int                    @default(0) @map("reserved_delta")
+  transferId         String?                @map("transfer_id") @db.Uuid
+  note               String?
+  actorKind          String                 @map("actor_kind")
+  actorId            String                 @map("actor_id") @db.Uuid
+  createdAt          DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
+  location           Location               @relation(fields: [locationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  listing            Listing                @relation(fields: [listingId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([holdId], map: "inventory_movements_hold_id_idx")
   @@index([transferId], map: "inventory_movements_transfer_id_idx")
@@ -580,19 +584,21 @@ model GoodsPurchase {
 }
 
 model GoodsVendorOrder {
-  id                String           @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  purchaseId        String           @map("purchase_id") @db.Uuid
-  purchase          GoodsPurchase    @relation(fields: [purchaseId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  vendorId          String           @map("vendor_id") @db.Uuid
-  vendorWorkspaceId String           @map("vendor_workspace_id") @db.Uuid
-  locationId        String           @map("location_id") @db.Uuid
-  state             String           @default("confirmed")
-  vendor            Vendor           @relation(fields: [vendorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  workspace         Workspace        @relation(fields: [vendorWorkspaceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  location          Location         @relation(fields: [locationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  snapshot          Json
-  createdAt         DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
-  lines             GoodsOrderLine[]
+  cancellations      GoodsOrderCancellation[]
+  cancellationGrants GoodsCancellationGrant[]
+  id                 String                   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  purchaseId         String                   @map("purchase_id") @db.Uuid
+  purchase           GoodsPurchase            @relation(fields: [purchaseId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  vendorId           String                   @map("vendor_id") @db.Uuid
+  vendorWorkspaceId  String                   @map("vendor_workspace_id") @db.Uuid
+  locationId         String                   @map("location_id") @db.Uuid
+  state              String                   @default("confirmed")
+  vendor             Vendor                   @relation(fields: [vendorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  workspace          Workspace                @relation(fields: [vendorWorkspaceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  location           Location                 @relation(fields: [locationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  snapshot           Json
+  createdAt          DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
+  lines              GoodsOrderLine[]
 
   @@unique([purchaseId, vendorId])
   @@index([vendorWorkspaceId, vendorId, locationId, createdAt])
@@ -600,29 +606,86 @@ model GoodsVendorOrder {
 }
 
 model GoodsOrderLine {
-  id         String              @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  orderId    String              @map("order_id") @db.Uuid
-  order      GoodsVendorOrder    @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  holdLineId String              @unique @map("hold_line_id") @db.Uuid
-  holdLine   GoodsHoldLine       @relation(fields: [holdLineId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  movements  InventoryMovement[]
-  snapshot   Json
+  cancellationLines GoodsCancellationLine[]
+  id                String                  @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orderId           String                  @map("order_id") @db.Uuid
+  order             GoodsVendorOrder        @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  holdLineId        String                  @unique @map("hold_line_id") @db.Uuid
+  holdLine          GoodsHoldLine           @relation(fields: [holdLineId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  movements         InventoryMovement[]
+  snapshot          Json
 
   @@index([orderId])
   @@map("goods_order_lines")
 }
 
 model GoodsRefundOperation {
-  id                String              @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  paymentId         String              @map("payment_id") @db.Uuid
-  payment           GoodsPaymentAttempt @relation(fields: [paymentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  semanticKey       String              @unique @map("semantic_key")
-  amountCents       Int                 @map("amount_cents")
-  state             String              @default("pending")
-  providerReference String?             @map("provider_reference")
-  createdAt         DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
-  completedAt       DateTime?           @map("completed_at") @db.Timestamptz(6)
+  cancellation      GoodsOrderCancellation?
+  id                String                  @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  paymentId         String                  @map("payment_id") @db.Uuid
+  payment           GoodsPaymentAttempt     @relation(fields: [paymentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  semanticKey       String                  @unique @map("semantic_key")
+  amountCents       Int                     @map("amount_cents")
+  state             String                  @default("pending")
+  providerReference String?                 @map("provider_reference")
+  createdAt         DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  completedAt       DateTime?               @map("completed_at") @db.Timestamptz(6)
 
   @@index([state, createdAt])
   @@map("goods_refund_operations")
+}
+
+model GoodsOrderCancellation {
+  id                  String                  @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orderId             String                  @map("order_id") @db.Uuid
+  order               GoodsVendorOrder        @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  refundId            String                  @unique @map("refund_id") @db.Uuid
+  refund              GoodsRefundOperation    @relation(fields: [refundId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  actorId             String                  @map("actor_id") @db.Uuid
+  actorKind           String                  @map("actor_kind")
+  note                String
+  itemRefundCents     Int                     @map("item_refund_cents")
+  deliveryRefundCents Int                     @map("delivery_refund_cents")
+  reviewRequired      Boolean                 @default(true) @map("review_required")
+  createdAt           DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  lines               GoodsCancellationLine[]
+
+  @@index([orderId, createdAt])
+  @@map("goods_order_cancellations")
+}
+
+model GoodsCancellationLine {
+  id               String                 @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  cancellationId   String                 @map("cancellation_id") @db.Uuid
+  cancellation     GoodsOrderCancellation @relation(fields: [cancellationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  orderLineId      String                 @map("order_line_id") @db.Uuid
+  orderLine        GoodsOrderLine         @relation(fields: [orderLineId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  quantity         Int
+  stockDisposition String                 @map("stock_disposition")
+  refundCents      Int                    @map("refund_cents")
+  movements        InventoryMovement[]
+
+  @@unique([cancellationId, orderLineId])
+  @@index([orderLineId])
+  @@map("goods_cancellation_lines")
+}
+
+model GoodsCancellationGrant {
+  id          String           @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  userId      String           @map("user_id") @db.Uuid
+  user        User             @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  workspaceId String           @map("workspace_id") @db.Uuid
+  workspace   Workspace        @relation(fields: [workspaceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  orderId     String           @map("order_id") @db.Uuid
+  order       GoodsVendorOrder @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  role        String           @default("platform_finance")
+  reason      String
+  grantedBy   String           @map("granted_by")
+  grantedAt   DateTime         @default(now()) @map("granted_at") @db.Timestamptz(6)
+  expiresAt   DateTime         @map("expires_at") @db.Timestamptz(6)
+  revokedAt   DateTime?        @map("revoked_at") @db.Timestamptz(6)
+
+  @@unique([userId, workspaceId, orderId])
+  @@index([userId, workspaceId, expiresAt])
+  @@map("goods_cancellation_grants")
 }

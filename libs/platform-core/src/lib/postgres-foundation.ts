@@ -150,7 +150,7 @@ export class PostgresFoundation {
 		this.db = new PrismaClient({ adapter: new PrismaPg({ connectionString: url, options: `-c search_path=${schema},public` }, { schema }) })
 		this.goods = new GoodsCheckout({
 			db: this.db,
-			derive: (tx, sessionId) => this.derive(tx, sessionId),
+			derive: (tx, sessionId, options) => this.derive(tx, sessionId, options),
 			lockWorkspace: (tx, id) => this.workspaceLock(tx, id),
 			replay: (tx, context, key, method, request, create) => this.replayOrCreate(tx, context, key, method, request, create),
 			now: goodsClock,
@@ -184,7 +184,7 @@ export class PostgresFoundation {
 
 	async listOwnerMemberships(sessionId: string | undefined) {
 		return this.db.$transaction(async (tx) => {
-			const context = await this.derive(tx, sessionId)
+			const context = await this.derive(tx, sessionId, { allowRestrictedVendor: true })
 			if (context.actor.kind !== 'user') throw new AccessDeniedError()
 			const memberships = await tx.vendorMembership.findMany({
 				where: {
@@ -210,7 +210,7 @@ export class PostgresFoundation {
 	async selectActiveVendor(sessionId: string | undefined, input: unknown) {
 		const { vendorId } = ActiveVendorSelectionSchema.parse(input)
 		return this.db.$transaction(async (tx) => {
-			const context = await this.derive(tx, sessionId)
+			const context = await this.derive(tx, sessionId, { allowRestrictedVendor: true })
 			if (context.actor.kind !== 'user') throw new AccessDeniedError()
 			if (vendorId) {
 				assertRequiredMfa(context)
@@ -225,7 +225,7 @@ export class PostgresFoundation {
 					membership.revokedAt ||
 					membership.role !== 'vendor_owner' ||
 					membership.vendor.workspaceId !== context.workspaceId ||
-					['rejected', 'restricted'].includes(membership.vendor.applicationState)
+					membership.vendor.applicationState === 'rejected'
 				)
 					throw new AccessDeniedError()
 			}
@@ -579,6 +579,17 @@ export class PostgresFoundation {
 	}
 	readGoodsVendorOrder(sessionId: string | undefined, orderId: string) {
 		return this.goods.readVendorOrder(sessionId, orderId)
+	}
+
+	cancelGoodsOrder(sessionId: string | undefined, key: string | undefined, orderId: string, input: unknown, actor: 'vendor' | 'platform' = 'vendor') {
+		return this.goods.cancelGoodsOrder(sessionId, key, orderId, input, actor)
+	}
+	readGoodsCancellation(sessionId: string | undefined, cancellationId: string) {
+		return this.goods.readGoodsCancellation(sessionId, cancellationId)
+	}
+
+	readPlatformGoodsOrder(sessionId: string | undefined, orderId: string) {
+		return this.goods.readPlatformGoodsOrder(sessionId, orderId)
 	}
 
 	async readInventoryAvailability(sessionId: string | undefined, listingId: string, queryInput: unknown) {
@@ -2659,7 +2670,7 @@ export class PostgresFoundation {
 		if (workspace?.kind !== 'real') throw new AccessDeniedError()
 	}
 
-	private async derive(tx: Transaction, sessionId: string | undefined): Promise<AccessContext> {
+	private async derive(tx: Transaction, sessionId: string | undefined, options: { allowRestrictedVendor?: boolean } = {}): Promise<AccessContext> {
 		if (!sessionId) throw new AccessDeniedError()
 		this.requireResourceId(sessionId)
 		const session = await tx.session.findUnique({ where: { id: sessionId }, include: { user: true } })
@@ -2702,7 +2713,8 @@ export class PostgresFoundation {
 				membership.revokedAt ||
 				membership.role !== session.activeRole ||
 				membership.vendor.workspaceId !== session.workspaceId ||
-				['rejected', 'restricted'].includes(membership.vendor.applicationState) ||
+				membership.vendor.applicationState === 'rejected' ||
+				(membership.vendor.applicationState === 'restricted' && !options.allowRestrictedVendor) ||
 				!['vendor_owner', 'vendor_staff'].includes(membership.role)
 			)
 				throw new AccessDeniedError()
@@ -2718,6 +2730,18 @@ export class PostgresFoundation {
 		const workspace = reviewerGrant?.revokedAt === null ? await tx.workspace.findUnique({ where: { id: session.workspaceId } }) : null
 		const capabilities = ['platform:foundation:read', 'platform:foundation:write']
 		if (reviewerGrant?.revokedAt === null && workspace?.kind === 'real') capabilities.push('platform:vendor:review')
+		await tx.$queryRaw`SELECT id FROM goods_cancellation_grants WHERE user_id = ${session.user.id}::uuid AND workspace_id = ${session.workspaceId}::uuid FOR SHARE`
+		const goodsOrderAuthorities = await tx.goodsCancellationGrant.findMany({
+			where: {
+				userId: session.user.id,
+				workspaceId: session.workspaceId,
+				role: 'platform_finance',
+				revokedAt: null,
+				expiresAt: { gt: new Date() },
+				order: { purchase: { customerId: { not: session.user.id } }, vendor: { memberships: { none: { userId: session.user.id, revokedAt: null } } } },
+			},
+			select: { orderId: true, expiresAt: true },
+		})
 		return AccessContextSchema.parse({
 			actor: { kind: 'user', userId: session.user.id },
 			workspaceId: session.workspaceId,
@@ -2725,6 +2749,11 @@ export class PostgresFoundation {
 			memberships,
 			locationIds: memberships[0]?.locationIds ?? [],
 			capabilities,
+			goodsOrderAuthorities: goodsOrderAuthorities.map((grant) => ({
+				orderId: grant.orderId,
+				permission: 'cancel',
+				expiresAt: grant.expiresAt.toISOString(),
+			})),
 			session: {
 				id: session.id,
 				expiresAt: session.expiresAt.toISOString(),

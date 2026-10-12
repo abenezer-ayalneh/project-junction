@@ -98,3 +98,7 @@ Evidence objects are private, scoped, scanned, retained according to the related
 - pickup creates no Staff allocation; `[DEC-132]`
 - delivery UI never implies Platform Driver/GPS functionality; and `[DEC-027]`
 - return disposition reconciles physical quantity, stock movements, refund, earnings, and evidence.
+
+## Local partial cancellation — 2026-10-12
+
+`P02-C08` locally verifies selected pre-fulfillment paid quantities, immutable terms, scoped Owner/Finance authority and atomic reasoned stock recovery/refund allocation. Restock adds returned quantity; damaged/non-sellable disposition adds an equal damage movement so available stock remains unchanged. Cancellation cannot overrun original quantities or append wrong-SKU effects. Partial cancellation preserves original delivery economics; whole-group cancellation includes its paid delivery fee once. Final ledger/provider/earnings remain Phase 04; fulfillment and after-handoff ReturnCase remain subsequent chunks. See [local evidence and limits](../requirements/PHASE-02-GOODS-COMMERCE.md#p02-c08--partial-cancellation-and-refund-allocation--2026-10-12).

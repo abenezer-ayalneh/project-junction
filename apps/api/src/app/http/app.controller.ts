@@ -366,6 +366,63 @@ export class AppController {
 		return this.foundation.readGoodsVendorOrder(sessionId, orderId)
 	}
 
+	@Post('vendor/goods/orders/:orderId/cancellations')
+	@ApiOperation({
+		summary:
+			'Cancel exact pre-fulfillment goods quantities for an assigned Owner; append stock disposition and pending proportional refund without changing other Orders.',
+	})
+	@ApiSecurity('junction-auth-cookie')
+	@ApiParam({ name: 'orderId', schema: { type: 'string', format: 'uuid' } })
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.goodsOrderCancellationCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.goodsOrderCancellationResult })
+	cancelVendorGoodsOrder(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('orderId') orderId: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.cancelGoodsOrder(sessionId, key, orderId, body, 'vendor')
+	}
+
+	@Post('platform/goods/orders/:orderId/cancellations')
+	@ApiOperation({
+		summary: 'Cancel exact goods quantities under a live, expiring Platform Finance grant for this Order. Catalog review privilege is insufficient.',
+	})
+	@ApiSecurity('junction-auth-cookie')
+	@ApiParam({ name: 'orderId', schema: { type: 'string', format: 'uuid' } })
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.goodsOrderCancellationCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.goodsOrderCancellationResult })
+	cancelPlatformGoodsOrder(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('orderId') orderId: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.cancelGoodsOrder(sessionId, key, orderId, body, 'platform')
+	}
+
+	@Get('goods/cancellations/:cancellationId')
+	@ApiOperation({
+		summary: 'Read a cancellation and its current refund state as the owning Customer, assigned Owner or Order-scoped Platform Finance authority.',
+	})
+	@ApiSecurity('junction-auth-cookie')
+	@ApiParam({ name: 'cancellationId', schema: { type: 'string', format: 'uuid' } })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.goodsOrderCancellationResult })
+	readGoodsCancellation(@AuthenticatedSession() sessionId: string | undefined, @Param('cancellationId') cancellationId: string) {
+		return this.foundation.readGoodsCancellation(sessionId, cancellationId)
+	}
+
+	@Get('platform/goods/orders/:orderId')
+	@ApiOperation({ summary: 'Read only the goods Order covered by the current expiring Platform Finance cancellation grant.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiParam({ name: 'orderId', schema: { type: 'string', format: 'uuid' } })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.goodsVendorOrderRead })
+	readPlatformGoodsOrder(@AuthenticatedSession() sessionId: string | undefined, @Param('orderId') orderId: string) {
+		return this.foundation.readPlatformGoodsOrder(sessionId, orderId)
+	}
+
 	@Get('inventory/listings/:listingId/availability')
 	@ApiOperation({ summary: 'Read derived stock availability for a Product at an assigned Vendor Location.' })
 	@ApiSecurity('junction-auth-cookie')

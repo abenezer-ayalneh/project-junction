@@ -822,10 +822,12 @@ export const GoodsPaymentReadSchema = z
 	.object({
 		paymentId: z.string().uuid(),
 		holdId: z.string().uuid(),
-		state: z.enum(['processing', 'unknown', 'succeeded', 'failed', 'refund_pending', 'refunded']),
+		state: z.enum(['processing', 'unknown', 'succeeded', 'failed', 'refund_pending', 'partially_refunded', 'refunded']),
 		amountCents: GoodsMoneySchema,
 		currency: z.literal('ETB'),
 		provider: z.literal('local-controlled'),
+		refundedCents: GoodsMoneySchema.default(0),
+		pendingRefundCents: GoodsMoneySchema.default(0),
 		holdState: z.enum(['holding', 'awaiting_payment', 'committed', 'released', 'expired', 'compensating']),
 		expiresAt: z.string().datetime(),
 		purchaseId: z.string().uuid().nullable(),
@@ -839,9 +841,31 @@ export const GoodsVendorOrderReadSchema = z
 		purchaseId: z.string().uuid(),
 		vendorId: z.string().uuid(),
 		locationId: z.string().uuid(),
-		state: z.literal('confirmed'),
+		state: z.enum(['confirmed', 'partially_cancelled', 'cancelled']),
+		cancellations: z
+			.array(
+				z
+					.object({
+						cancellationId: z.string().uuid(),
+						itemRefundCents: GoodsMoneySchema,
+						deliveryRefundCents: GoodsMoneySchema,
+						refundId: z.string().uuid(),
+						refundState: z.enum(['pending', 'succeeded']),
+					})
+					.strict(),
+			)
+			.default([]),
 		snapshot: GoodsQuoteSnapshotSchema.shape.groups.element,
-		lines: z.array(z.object({ lineId: z.string().uuid(), snapshot: GoodsQuoteSnapshotSchema.shape.groups.element.shape.lines.element }).strict()),
+		lines: z.array(
+			z
+				.object({
+					lineId: z.string().uuid(),
+					snapshot: GoodsQuoteSnapshotSchema.shape.groups.element.shape.lines.element,
+					cancelledQuantity: z.number().int().nonnegative().default(0),
+					remainingQuantity: z.number().int().nonnegative().optional(),
+				})
+				.strict(),
+		),
 	})
 	.strict()
 export const GoodsPurchaseReadSchema = z
@@ -852,5 +876,50 @@ export const GoodsPurchaseReadSchema = z
 		paidAt: z.string().datetime(),
 		snapshot: GoodsQuoteSnapshotSchema,
 		orders: z.array(GoodsVendorOrderReadSchema),
+	})
+	.strict()
+
+export const GoodsOrderCancellationCommandSchema = z
+	.object({
+		note: z.string().trim().min(5).max(500),
+		lines: z
+			.array(
+				z
+					.object({
+						lineId: z.string().uuid(),
+						quantity: z.number().int().positive().max(2147483647),
+						stockDisposition: z.enum(['restock', 'damaged']),
+					})
+					.strict(),
+			)
+			.min(1)
+			.max(50),
+	})
+	.strict()
+	.superRefine((value, context) => {
+		if (new Set(value.lines.map((line) => line.lineId)).size !== value.lines.length)
+			context.addIssue({ code: 'custom', path: ['lines'], message: 'Select each Order line once.' })
+	})
+export const GoodsOrderCancellationResultSchema = z
+	.object({
+		cancellationId: z.string().uuid(),
+		orderId: z.string().uuid(),
+		state: z.enum(['partially_cancelled', 'cancelled']),
+		itemRefundCents: GoodsMoneySchema,
+		deliveryRefundCents: GoodsMoneySchema,
+		currency: z.literal('ETB'),
+		reviewRequired: z.literal(true),
+		lines: z.array(
+			z
+				.object({
+					lineId: z.string().uuid(),
+					quantity: z.number().int().positive(),
+					stockDisposition: z.enum(['restock', 'damaged']),
+					refundCents: GoodsMoneySchema,
+				})
+				.strict(),
+		),
+		refund: z.object({ refundId: z.string().uuid(), amountCents: GoodsMoneySchema, state: z.enum(['pending', 'succeeded']) }).strict(),
+		replayed: z.boolean(),
 	})
 	.strict()

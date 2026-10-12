@@ -100,6 +100,7 @@ suite('Phase 02 goods quotes and holds PostgreSQL', () => {
 	afterEach(async () => {
 		now = new Date(Date.now() + 3600000)
 		await repository.expireGoodsHolds()
+		await repository.reconcileGoodsRefunds()
 		await Promise.all([repository.close(), other.close()])
 	})
 
@@ -775,4 +776,409 @@ suite('Phase 02 goods quotes and holds PostgreSQL', () => {
 		expect(await repository.db.goodsPurchase.count({ where: { paymentId: { in: attempts.map((payment) => payment.paymentId) } } })).toBe(101)
 		await expect(repository.readPublicProductAvailability(fixture.listing.id, { locationId: fixture.location.id })).resolves.toMatchObject({ available: 0 })
 	}, 60_000)
+	async function cancellationPurchase(selection: GoodsQuoteCommand) {
+		const { payment } = await beginPayment(selection)
+		await repository.recordLocalGoodsPaymentResult(customer.sessionId, randomUUID(), payment.paymentId, { outcome: 'succeeded' })
+		const paid = await repository.readGoodsPayment(customer.sessionId, payment.paymentId)
+		return { payment: paid, purchase: await repository.readGoodsPurchase(customer.sessionId, paid.purchaseId!) }
+	}
+	const cancelCommand = (lineId: string, quantity = 1, stockDisposition = 'restock') => ({
+		note: 'Exceptional pre-fulfillment cancellation evidence',
+		lines: [{ lineId, quantity, stockDisposition }],
+	})
+
+	it('goods cancellation scopes quantities, SKU disposition and paid prices across Vendor Orders', async () => {
+		const first = await createVendor(5, true)
+		const second = await createVendor(5)
+		await repository.createInventoryMovement(first.owner.sessionId, randomUUID(), {
+			listingId: first.listing.id,
+			locationId: first.location.id,
+			sku: 'large',
+			reason: 'received',
+			quantityDelta: 2,
+		})
+		const { payment, purchase } = await cancellationPurchase({
+			groups: [
+				{
+					...first.selection.groups[0],
+					lines: [
+						{ listingId: first.listing.id, sku: 'small', quantity: 3 },
+						{ listingId: first.listing.id, sku: 'large', quantity: 1 },
+					],
+				},
+				second.selection.groups[0],
+			],
+		})
+		const order = purchase.orders.find((item) => item.vendorId === first.vendor.id)!
+		const unaffected = purchase.orders.find((item) => item.vendorId === second.vendor.id)!
+		const small = order.lines.find((line) => line.snapshot.sku === 'small')!
+		const large = order.lines.find((line) => line.snapshot.sku === 'large')!
+		await repository.db.listingVariant.updateMany({ where: { listingId: first.listing.id, sku: 'small' }, data: { priceCents: 9000 } })
+		const key = randomUUID()
+		const command = {
+			note: 'Vendor fault; large unit damaged',
+			lines: [
+				{ lineId: small.lineId, quantity: 1, stockDisposition: 'restock' },
+				{ lineId: large.lineId, quantity: 1, stockDisposition: 'damaged' },
+			],
+		}
+		const result = await repository.cancelGoodsOrder(first.owner.sessionId, key, order.orderId, command)
+		expect(result).toMatchObject({
+			state: 'partially_cancelled',
+			itemRefundCents: 3000,
+			deliveryRefundCents: 0,
+			reviewRequired: true,
+			refund: { amountCents: 3000, state: 'pending' },
+		})
+		await expect(repository.cancelGoodsOrder(first.owner.sessionId, key, order.orderId, command)).resolves.toEqual({ ...result, replayed: true })
+		await expect(
+			repository.cancelGoodsOrder(first.owner.sessionId, key, order.orderId, { ...command, note: 'Different reason conflicts' }),
+		).rejects.toThrow(IdempotencyConflictError)
+		await expect(repository.readPublicProductAvailability(first.listing.id, { locationId: first.location.id, sku: 'small' })).resolves.toMatchObject({
+			available: 3,
+		})
+		await expect(repository.readPublicProductAvailability(first.listing.id, { locationId: first.location.id, sku: 'large' })).resolves.toMatchObject({
+			available: 1,
+		})
+		await expect(repository.readGoodsVendorOrder(second.owner.sessionId, unaffected.orderId)).resolves.toEqual(unaffected)
+		const updated = await repository.readGoodsPurchase(customer.sessionId, purchase.purchaseId)
+		expect(updated.snapshot).toEqual(purchase.snapshot)
+		expect(updated.orders.find((item) => item.orderId === order.orderId)?.lines).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({ lineId: small.lineId, cancelledQuantity: 1, remainingQuantity: 2 }),
+				expect.objectContaining({ lineId: large.lineId, cancelledQuantity: 1, remainingQuantity: 0 }),
+			]),
+		)
+		await repository.reconcileGoodsRefunds()
+		await expect(repository.readGoodsPayment(customer.sessionId, payment.paymentId)).resolves.toMatchObject({
+			state: 'partially_refunded',
+			refundedCents: 3000,
+			pendingRefundCents: 0,
+		})
+		await expect(repository.readGoodsCancellation(customer.sessionId, result.cancellationId)).resolves.toMatchObject({ refund: { state: 'succeeded' } })
+		await expect(repository.db.goodsOrderCancellation.update({ where: { id: result.cancellationId }, data: { itemRefundCents: 1 } })).rejects.toThrow()
+		const effect = await repository.db.goodsCancellationLine.findFirstOrThrow({
+			where: { cancellationId: result.cancellationId, orderLineId: small.lineId },
+		})
+		await expect(
+			repository.db.inventoryMovement.create({
+				data: {
+					cancellationLineId: effect.id,
+					orderLineId: small.lineId,
+					listingId: first.listing.id,
+					locationId: first.location.id,
+					sku: 'foreign-sku',
+					reason: 'damaged',
+					onHandDelta: -1,
+					reservedDelta: 0,
+					actorKind: 'user',
+					actorId: first.owner.userId,
+					note: command.note,
+				},
+			}),
+		).rejects.toThrow()
+	})
+
+	it('goods cancellation concurrent replay and competing quantities cannot exceed purchased quantity', async () => {
+		const fixture = await createVendor(3)
+		const { purchase } = await cancellationPurchase({
+			groups: [{ ...fixture.selection.groups[0], lines: [{ listingId: fixture.listing.id, quantity: 3 }] }],
+		})
+		const order = purchase.orders[0]
+		const key = randomUUID()
+		const command = cancelCommand(order.lines[0].lineId, 2)
+		const results = await Promise.all([
+			repository.cancelGoodsOrder(fixture.owner.sessionId, key, order.orderId, command),
+			other.cancelGoodsOrder(fixture.owner.sessionId, key, order.orderId, command),
+		])
+		expect(results.map((result) => result.replayed).sort()).toEqual([false, true])
+		await expect(repository.cancelGoodsOrder(fixture.owner.sessionId, randomUUID(), order.orderId, command)).rejects.toThrow(GoodsCheckoutConflictError)
+		expect(await repository.db.goodsOrderCancellation.count({ where: { orderId: order.orderId } })).toBe(1)
+		const last = cancelCommand(order.lines[0].lineId)
+		const competing = await Promise.allSettled([
+			repository.cancelGoodsOrder(fixture.owner.sessionId, randomUUID(), order.orderId, last),
+			other.cancelGoodsOrder(fixture.owner.sessionId, randomUUID(), order.orderId, last),
+		])
+		expect(competing.filter((result) => result.status === 'fulfilled')).toHaveLength(1)
+		expect(await repository.db.goodsCancellationLine.aggregate({ where: { orderLineId: order.lines[0].lineId }, _sum: { quantity: true } })).toMatchObject({
+			_sum: { quantity: 3 },
+		})
+	})
+
+	it('goods cancellation refunds delivery once for full cancellation and never penalizes Vendor-caused threshold breaks', async () => {
+		const fixture = await createVendor(8)
+		const address = {
+			contactName: 'Customer',
+			phone: '+251900000000',
+			locality: 'Test city',
+			address: 'Test street',
+			point: [41.5, 9.5] as [number, number],
+		}
+		const selection: GoodsQuoteCommand = {
+			groups: [
+				{
+					...fixture.selection.groups[0],
+					fulfillment: { method: 'delivery', zoneId: fixture.zone.id, address },
+					lines: [{ listingId: fixture.listing.id, quantity: 2 }],
+				},
+			],
+		}
+		const { payment, purchase } = await cancellationPurchase(selection)
+		const order = purchase.orders[0]
+		expect(order.snapshot.deliveryFeeCents).toBe(200)
+		const first = await repository.cancelGoodsOrder(fixture.owner.sessionId, randomUUID(), order.orderId, cancelCommand(order.lines[0].lineId))
+		expect(first.deliveryRefundCents).toBe(0)
+		const lastKey = randomUUID()
+		const last = await repository.cancelGoodsOrder(fixture.owner.sessionId, lastKey, order.orderId, cancelCommand(order.lines[0].lineId))
+		expect(last).toMatchObject({ deliveryRefundCents: 200, refund: { amountCents: 1200 } })
+		await expect(repository.cancelGoodsOrder(fixture.owner.sessionId, lastKey, order.orderId, cancelCommand(order.lines[0].lineId))).resolves.toMatchObject(
+			{ replayed: true },
+		)
+		await repository.reconcileGoodsRefunds()
+		await expect(repository.readGoodsPayment(customer.sessionId, payment.paymentId)).resolves.toMatchObject({ state: 'refunded', refundedCents: 2200 })
+		await expect(
+			repository.db.goodsRefundOperation.create({ data: { paymentId: payment.paymentId, semanticKey: randomUUID(), amountCents: 1 } }),
+		).rejects.toThrow()
+		await repository.configureGoodsLocation(fixture.owner.sessionId, randomUUID(), fixture.location.id, {
+			expectedVersion: 1,
+			configuration: { ...fixture.configuration, deliveryZones: [{ ...fixture.zone, minimumCents: 3000 }] },
+		})
+		const free = await cancellationPurchase({ groups: [{ ...selection.groups[0], lines: [{ listingId: fixture.listing.id, quantity: 4 }] }] })
+		const freeOrder = free.purchase.orders[0]
+		expect(freeOrder.snapshot.deliveryFeeCents).toBe(0)
+		await repository.cancelGoodsOrder(fixture.owner.sessionId, randomUUID(), freeOrder.orderId, cancelCommand(freeOrder.lines[0].lineId, 3))
+		const remaining = await repository.readGoodsVendorOrder(fixture.owner.sessionId, freeOrder.orderId)
+		expect(remaining.snapshot).toEqual(freeOrder.snapshot)
+		expect(remaining.lines[0].remainingQuantity).toBe(1)
+		await repository.reconcileGoodsRefunds()
+		await expect(repository.readGoodsPayment(customer.sessionId, free.payment.paymentId)).resolves.toMatchObject({
+			amountCents: 4000,
+			state: 'partially_refunded',
+			refundedCents: 3000,
+		})
+	})
+
+	it('goods cancellation enforces live Owner scopes and Order-specific Finance grants without reviewer escalation', async () => {
+		const fixture = await createVendor()
+		const second = await createVendor()
+		const { purchase } = await cancellationPurchase({ groups: [fixture.selection.groups[0], second.selection.groups[0]] })
+		const order = purchase.orders.find((item) => item.vendorId === fixture.vendor.id)!
+		const foreign = purchase.orders.find((item) => item.vendorId === second.vendor.id)!
+		const command = cancelCommand(order.lines[0].lineId)
+		await expect(repository.cancelGoodsOrder(customer.sessionId, randomUUID(), order.orderId, command)).rejects.toThrow(AccessDeniedError)
+		await expect(repository.cancelGoodsOrder(second.owner.sessionId, randomUUID(), order.orderId, command)).rejects.toThrow(AccessDeniedError)
+		await repository.db.vendorMembership.updateMany({ where: { userId: fixture.owner.userId, vendorId: fixture.vendor.id }, data: { locationIds: [] } })
+		await expect(repository.cancelGoodsOrder(fixture.owner.sessionId, randomUUID(), order.orderId, command)).rejects.toThrow(AccessDeniedError)
+		const finance = await createCustomer()
+		await repository.db.platformReviewerGrant.create({ data: { userId: finance.userId, grantedBy: 'Local reviewer fixture' } })
+		await expect(repository.cancelGoodsOrder(finance.sessionId, randomUUID(), order.orderId, command, 'platform')).rejects.toThrow(AccessDeniedError)
+		const data = {
+			userId: finance.userId,
+			workspaceId: finance.workspaceId,
+			orderId: order.orderId,
+			reason: 'Local Finance case scope',
+			grantedBy: 'Fixture operator',
+			expiresAt: new Date(Date.now() + 60_000),
+		}
+		const grant = await repository.db.goodsCancellationGrant.create({ data })
+		await expect(repository.readPlatformGoodsOrder(finance.sessionId, order.orderId)).resolves.toMatchObject({ orderId: order.orderId })
+		await expect(repository.readPlatformGoodsOrder(finance.sessionId, foreign.orderId)).rejects.toThrow(AccessDeniedError)
+		await repository.db.goodsCancellationGrant.update({ where: { id: grant.id }, data: { revokedAt: new Date() } })
+		await expect(repository.cancelGoodsOrder(finance.sessionId, randomUUID(), order.orderId, command, 'platform')).rejects.toThrow(AccessDeniedError)
+		await repository.db.goodsCancellationGrant.update({
+			where: { id: grant.id },
+			data: { revokedAt: null, grantedAt: new Date(Date.now() - 60_000), expiresAt: new Date(Date.now() - 1000) },
+		})
+		await expect(repository.cancelGoodsOrder(finance.sessionId, randomUUID(), order.orderId, command, 'platform')).rejects.toThrow(AccessDeniedError)
+		await repository.db.goodsCancellationGrant.update({
+			where: { id: grant.id },
+			data: { grantedAt: new Date(), expiresAt: new Date(Date.now() + 60_000) },
+		})
+		const result = await repository.cancelGoodsOrder(finance.sessionId, randomUUID(), order.orderId, command, 'platform')
+		await expect(repository.readGoodsCancellation(finance.sessionId, result.cancellationId)).resolves.toMatchObject({ refund: { state: 'pending' } })
+		await expect(
+			repository.db.goodsCancellationGrant.create({ data: { ...data, userId: customer.userId, workspaceId: customer.workspaceId } }),
+		).rejects.toThrow()
+		await expect(
+			repository.db.goodsCancellationGrant.create({ data: { ...data, userId: fixture.owner.userId, workspaceId: fixture.owner.workspaceId } }),
+		).rejects.toThrow()
+		const otherGrant = await repository.db.goodsCancellationGrant.create({ data: { ...data, orderId: foreign.orderId } })
+		await repository.db.vendorMembership.create({
+			data: { userId: finance.userId, vendorId: second.vendor.id, role: 'vendor_owner', locationIds: [second.location.id] },
+		})
+		await expect(repository.readPlatformGoodsOrder(finance.sessionId, foreign.orderId)).rejects.toThrow(AccessDeniedError)
+		await expect(
+			repository.cancelGoodsOrder(finance.sessionId, randomUUID(), foreign.orderId, cancelCommand(foreign.lines[0].lineId), 'platform'),
+		).rejects.toThrow(AccessDeniedError)
+		await repository.db.goodsCancellationGrant.update({ where: { id: otherGrant.id }, data: { revokedAt: new Date() } })
+		expect(otherGrant.orderId).toBe(foreign.orderId)
+	})
+
+	it('goods cancellation refund failures remain pending and recover without repeating stock effects', async () => {
+		const fixture = await createVendor(3)
+		const { payment, purchase } = await cancellationPurchase({
+			groups: [{ ...fixture.selection.groups[0], lines: [{ listingId: fixture.listing.id, quantity: 2 }] }],
+		})
+		const order = purchase.orders[0]
+		const result = await repository.cancelGoodsOrder(fixture.owner.sessionId, randomUUID(), order.orderId, cancelCommand(order.lines[0].lineId))
+		const adapter = new LocalGoodsPaymentAdapter()
+		jest.spyOn(adapter, 'refund').mockRejectedValueOnce(new Error('Controlled refund timeout'))
+		const retry = new PostgresFoundation(process.env['DATABASE_URL']!, undefined, undefined, undefined, undefined, clock, adapter)
+		try {
+			await retry.reconcileGoodsRefunds()
+			await expect(repository.readGoodsCancellation(customer.sessionId, result.cancellationId)).resolves.toMatchObject({ refund: { state: 'pending' } })
+			await retry.reconcileGoodsRefunds()
+			await retry.reconcileGoodsRefunds()
+		} finally {
+			await retry.close()
+		}
+		await expect(repository.readGoodsPayment(customer.sessionId, payment.paymentId)).resolves.toMatchObject({
+			state: 'partially_refunded',
+			refundedCents: 1000,
+			pendingRefundCents: 0,
+		})
+		expect(
+			await repository.db.inventoryMovement.count({ where: { cancellationLine: { cancellationId: result.cancellationId }, reason: 'returned' } }),
+		).toBe(1)
+	})
+
+	it('goods cancellation later-line failure rolls back stock, refund, quantity, audit, outbox and replay state', async () => {
+		const fixture = await createVendor(3, true)
+		await repository.createInventoryMovement(fixture.owner.sessionId, randomUUID(), {
+			listingId: fixture.listing.id,
+			locationId: fixture.location.id,
+			sku: 'large',
+			reason: 'received',
+			quantityDelta: 2,
+		})
+		const { payment, purchase } = await cancellationPurchase({
+			groups: [
+				{
+					...fixture.selection.groups[0],
+					lines: [
+						{ listingId: fixture.listing.id, sku: 'small', quantity: 2 },
+						{ listingId: fixture.listing.id, sku: 'large', quantity: 1 },
+					],
+				},
+			],
+		})
+		const order = purchase.orders[0]
+		const key = randomUUID()
+		const command = {
+			note: 'Local two-line cancellation failure proof',
+			lines: order.lines.map((line) => ({ lineId: line.lineId, quantity: 1, stockDisposition: 'restock' })),
+		}
+		const before = {
+			audit: await repository.db.auditLog.count(),
+			outbox: await repository.db.outboxEvent.count(),
+			replay: await repository.db.idempotencyRecord.count(),
+		}
+		await repository.db.$executeRawUnsafe(
+			`CREATE FUNCTION reject_test_cancel_stock() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.cancellation_line_id IS NOT NULL AND NEW.sku = 'large' THEN RAISE EXCEPTION 'Deliberate cancellation stock failure'; END IF; RETURN NEW; END; $$`,
+		)
+		await repository.db.$executeRawUnsafe(
+			'CREATE TRIGGER reject_test_cancel_stock_trigger BEFORE INSERT ON inventory_movements FOR EACH ROW EXECUTE FUNCTION reject_test_cancel_stock()',
+		)
+		try {
+			await expect(repository.cancelGoodsOrder(fixture.owner.sessionId, key, order.orderId, command)).rejects.toThrow()
+			expect(await repository.db.goodsOrderCancellation.count({ where: { orderId: order.orderId } })).toBe(0)
+			expect(await repository.db.goodsRefundOperation.count({ where: { paymentId: payment.paymentId } })).toBe(0)
+			expect(await repository.db.auditLog.count()).toBe(before.audit)
+			expect(await repository.db.outboxEvent.count()).toBe(before.outbox)
+			expect(await repository.db.idempotencyRecord.count()).toBe(before.replay)
+			await expect(repository.readGoodsVendorOrder(fixture.owner.sessionId, order.orderId)).resolves.toEqual(order)
+		} finally {
+			await repository.db.$executeRawUnsafe('DROP TRIGGER reject_test_cancel_stock_trigger ON inventory_movements')
+			await repository.db.$executeRawUnsafe('DROP FUNCTION reject_test_cancel_stock()')
+		}
+		await expect(repository.cancelGoodsOrder(fixture.owner.sessionId, key, order.orderId, command)).resolves.toMatchObject({
+			replayed: false,
+			state: 'partially_cancelled',
+		})
+	})
+
+	it('goods cancellation rejects invalid inputs, foreign lines and incomplete direct database allocation', async () => {
+		const fixture = await createVendor()
+		const foreign = await createVendor()
+		const { purchase, payment } = await cancellationPurchase({ groups: [fixture.selection.groups[0], foreign.selection.groups[0]] })
+		const order = purchase.orders.find((item) => item.vendorId === fixture.vendor.id)!
+		const otherOrder = purchase.orders.find((item) => item.vendorId === foreign.vendor.id)!
+		for (const quantity of [0, -1, 1.5, 2])
+			await expect(
+				repository.cancelGoodsOrder(fixture.owner.sessionId, randomUUID(), order.orderId, cancelCommand(order.lines[0].lineId, quantity)),
+			).rejects.toThrow()
+		await expect(
+			repository.cancelGoodsOrder(fixture.owner.sessionId, randomUUID(), order.orderId, cancelCommand(otherOrder.lines[0].lineId)),
+		).rejects.toThrow(AccessDeniedError)
+		await expect(repository.cancelGoodsOrder(fixture.owner.sessionId, undefined, order.orderId, cancelCommand(order.lines[0].lineId))).rejects.toThrow()
+		await expect(
+			repository.cancelGoodsOrder(fixture.owner.sessionId, randomUUID(), order.orderId, { ...cancelCommand(order.lines[0].lineId), amountCents: 1 }),
+		).rejects.toThrow()
+		await expect(repository.db.goodsVendorOrder.update({ where: { id: order.orderId }, data: { state: 'cancelled' } })).rejects.toThrow()
+		await expect(
+			repository.db.$transaction(async (tx) => {
+				const id = randomUUID()
+				const refund = await tx.goodsRefundOperation.create({
+					data: { paymentId: payment.paymentId, semanticKey: `cancellation:${id}`, amountCents: 1 },
+				})
+				await tx.goodsOrderCancellation.create({
+					data: {
+						id,
+						orderId: order.orderId,
+						refundId: refund.id,
+						actorId: fixture.owner.userId,
+						actorKind: 'vendor',
+						note: 'Incomplete cancellation fixture',
+						itemRefundCents: 1,
+						deliveryRefundCents: 0,
+					},
+				})
+				await tx.goodsPaymentAttempt.update({ where: { id: payment.paymentId }, data: { state: 'refund_pending' } })
+			}),
+		).rejects.toThrow()
+	})
+
+	it('goods cancellation resolves restricted Vendor commitments while ordinary writes stay denied', async () => {
+		const fixture = await createVendor()
+		const { purchase } = await cancellationPurchase(fixture.selection)
+		const order = purchase.orders[0]
+		await repository.db.vendor.update({ where: { id: fixture.vendor.id }, data: { applicationState: 'restricted' } })
+		await expect(repository.readGoodsVendorOrder(fixture.owner.sessionId, order.orderId)).resolves.toMatchObject({ state: 'confirmed' })
+		await expect(
+			repository.createInventoryMovement(fixture.owner.sessionId, randomUUID(), {
+				listingId: fixture.listing.id,
+				locationId: fixture.location.id,
+				reason: 'received',
+				quantityDelta: 1,
+			}),
+		).rejects.toThrow(AccessDeniedError)
+		await expect(
+			repository.cancelGoodsOrder(fixture.owner.sessionId, randomUUID(), order.orderId, cancelCommand(order.lines[0].lineId)),
+		).resolves.toMatchObject({ state: 'cancelled' })
+		await repository.selectActiveVendor(fixture.owner.sessionId, { vendorId: null })
+		await repository.selectActiveVendor(fixture.owner.sessionId, { vendorId: fixture.vendor.id })
+		await expect(repository.readGoodsVendorOrder(fixture.owner.sessionId, order.orderId)).resolves.toMatchObject({ state: 'cancelled' })
+		await repository.db.vendorMembership.updateMany({
+			where: { userId: fixture.owner.userId, vendorId: fixture.vendor.id },
+			data: { revokedAt: new Date() },
+		})
+		await expect(repository.readGoodsVendorOrder(fixture.owner.sessionId, order.orderId)).rejects.toThrow(AccessDeniedError)
+	})
+
+	it('goods cancellation stock recovery racing checkout cannot oversell the last unit', async () => {
+		const fixture = await createVendor(1)
+		const { purchase } = await cancellationPurchase(fixture.selection)
+		const order = purchase.orders[0]
+		const next = await createCustomer()
+		const [cancelled, pendingQuote] = await Promise.allSettled([
+			repository.cancelGoodsOrder(fixture.owner.sessionId, randomUUID(), order.orderId, cancelCommand(order.lines[0].lineId)),
+			other.createGoodsQuote(next.sessionId, randomUUID(), fixture.selection),
+		])
+		expect(cancelled.status).toBe('fulfilled')
+		const quote =
+			pendingQuote.status === 'fulfilled' ? pendingQuote.value : await repository.createGoodsQuote(next.sessionId, randomUUID(), fixture.selection)
+		await repository.createGoodsHold(next.sessionId, randomUUID(), { quoteId: quote.quoteId })
+		await expect(repository.createGoodsQuote(customer.sessionId, randomUUID(), fixture.selection)).rejects.toThrow(GoodsCheckoutConflictError)
+		await expect(repository.readPublicProductAvailability(fixture.listing.id, { locationId: fixture.location.id })).resolves.toMatchObject({ available: 0 })
+	})
 })

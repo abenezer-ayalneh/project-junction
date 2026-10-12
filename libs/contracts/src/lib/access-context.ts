@@ -18,6 +18,7 @@ export const AccessContextSchema = z.object({
 	locationIds: z.array(IdentifierSchema),
 	memberships: z.array(MembershipSchema),
 	capabilities: z.array(CapabilitySchema),
+	goodsOrderAuthorities: z.array(z.object({ orderId: IdentifierSchema, permission: z.literal('cancel'), expiresAt: z.string().datetime() })).default([]),
 	session: z.object({
 		id: IdentifierSchema,
 		expiresAt: z.string().datetime(),

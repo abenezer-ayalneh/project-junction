@@ -1,8 +1,5 @@
-import { randomUUID } from 'node:crypto'
-
 import {
 	type AccessContext,
-	DomainEventSchema,
 	GoodsHoldCommandSchema,
 	GoodsHoldReadSchema,
 	GoodsHoldReleaseResultSchema,
@@ -20,13 +17,14 @@ import {
 	GoodsQuoteResultSchema,
 	type GoodsQuoteSnapshot,
 	GoodsQuoteSnapshotSchema,
-	GoodsVendorOrderReadSchema,
 	IdempotencyKeySchema,
 } from 'contracts'
 import { z } from 'zod'
 
-import { Prisma, type PrismaClient } from '../../generated/prisma/index.js'
+import { Prisma } from '../../generated/prisma/index.js'
 import { AccessDeniedError, assertScope } from './access.js'
+import { GoodsCancellation } from './goods-cancellation.js'
+import { goodsAudit, GoodsCheckoutConflictError, type GoodsDependencies, goodsEmit } from './goods-support.js'
 import { stableHash } from './idempotency.js'
 import { LocalGoodsPaymentAdapter } from './local-goods-payment.js'
 
@@ -37,34 +35,14 @@ const minute = 60_000
 const quoteDuration = 5 * minute
 const holdDuration = 15 * minute
 
-export class GoodsCheckoutConflictError extends Error {
-	readonly code = 'UNAVAILABLE'
-	constructor(message = 'Goods are no longer available on these terms. Request a new quote.') {
-		super(message)
-		this.name = 'GoodsCheckoutConflictError'
-	}
-}
-
-interface Dependencies {
-	payments?: LocalGoodsPaymentAdapter
-	db: PrismaClient
-	derive(tx: Transaction, sessionId: string | undefined): Promise<AccessContext>
-	lockWorkspace(tx: Transaction, id: string): Promise<void>
-	replay<T>(
-		tx: Transaction,
-		context: AccessContext,
-		key: string,
-		method: string,
-		request: unknown,
-		create: () => Promise<T>,
-	): Promise<{ outcome: T; replayed: boolean }>
-	now(): Date
-}
+export { GoodsCheckoutConflictError } from './goods-support.js'
 
 /** Goods-only quote, reservation and controlled local payment commitment lifecycle. */
 export class GoodsCheckout {
+	private readonly cancellations: GoodsCancellation
 	private readonly payments: LocalGoodsPaymentAdapter
-	constructor(private readonly dependencies: Dependencies) {
+	constructor(private readonly dependencies: GoodsDependencies) {
+		this.cancellations = new GoodsCancellation(dependencies)
 		this.payments = dependencies.payments ?? new LocalGoodsPaymentAdapter()
 	}
 
@@ -497,6 +475,8 @@ export class GoodsCheckout {
 			holdState: payment.hold.state,
 			expiresAt: payment.hold.expiresAt.toISOString(),
 			purchaseId: payment.purchase?.id ?? null,
+			refundedCents: payment.refunds.filter((refund) => refund.state === 'succeeded').reduce((total, refund) => total + refund.amountCents, 0),
+			pendingRefundCents: payment.refunds.filter((refund) => refund.state === 'pending').reduce((total, refund) => total + refund.amountCents, 0),
 			refunds: payment.refunds.map((refund) => ({ refundId: refund.id, amountCents: refund.amountCents, state: refund.state })),
 		})
 	}
@@ -752,7 +732,14 @@ export class GoodsCheckout {
 						where: { id: refund.id },
 						data: { state: 'succeeded', providerReference: result.reference, completedAt: this.dependencies.now() },
 					})
-					await tx.goodsPaymentAttempt.update({ where: { id: refund.paymentId }, data: { state: 'refunded' } })
+					const totals = await tx.goodsRefundOperation.findMany({ where: { paymentId: refund.paymentId } })
+					const pending = totals.some((operation) => operation.state === 'pending')
+					const refunded = totals
+						.filter((operation) => operation.state === 'succeeded')
+						.reduce((total, operation) => total + operation.amountCents, 0)
+					const state = pending ? 'refund_pending' : refunded === refund.payment.amountCents ? 'refunded' : 'partially_refunded'
+					if ((await tx.goodsPaymentAttempt.findUniqueOrThrow({ where: { id: refund.paymentId } })).state !== state)
+						await tx.goodsPaymentAttempt.update({ where: { id: refund.paymentId }, data: { state } })
 					await this.audit(tx, refund.payment.hold.quote.workspaceId, null, 'goods.refund-completed', { refundId: refund.id })
 					await this.emit(tx, refund.payment.hold.quote.workspaceId, 'GoodsRefundCompleted', refund.id, 2, null, {
 						refundId: refund.id,
@@ -780,32 +767,13 @@ export class GoodsCheckout {
 		)
 	}
 
-	private orderView(order: {
-		id: string
-		purchaseId: string
-		vendorId: string
-		locationId: string
-		state: string
-		snapshot: Prisma.JsonValue
-		lines: { id: string; snapshot: Prisma.JsonValue }[]
-	}) {
-		return GoodsVendorOrderReadSchema.parse({
-			orderId: order.id,
-			purchaseId: order.purchaseId,
-			vendorId: order.vendorId,
-			locationId: order.locationId,
-			state: order.state,
-			snapshot: order.snapshot,
-			lines: order.lines.map((line) => ({ lineId: line.id, snapshot: line.snapshot })),
-		})
-	}
 	async readPurchase(sessionId: string | undefined, purchaseInput: string) {
 		const purchaseId = z.string().uuid().parse(purchaseInput)
 		return this.dependencies.db.$transaction(async (tx) => {
 			const context = await this.dependencies.derive(tx, sessionId)
 			const purchase = await tx.goodsPurchase.findFirst({
 				where: { id: purchaseId, customerId: context.actor.userId, workspaceId: context.workspaceId },
-				include: { orders: { include: { lines: true } } },
+				include: { orders: { include: { cancellations: { include: { refund: true } }, lines: { include: { cancellationLines: true } } } } },
 			})
 			if (!purchase) throw new AccessDeniedError()
 			return GoodsPurchaseReadSchema.parse({
@@ -814,14 +782,14 @@ export class GoodsCheckout {
 				paymentId: purchase.paymentId,
 				paidAt: purchase.paidAt.toISOString(),
 				snapshot: purchase.snapshot,
-				orders: purchase.orders.map((order) => this.orderView(order)),
+				orders: purchase.orders.map((order) => this.cancellations.orderView(order)),
 			})
 		})
 	}
 	async readVendorOrder(sessionId: string | undefined, orderInput: string) {
 		const orderId = z.string().uuid().parse(orderInput)
 		return this.dependencies.db.$transaction(async (tx) => {
-			const context = await this.dependencies.derive(tx, sessionId)
+			const context = await this.dependencies.derive(tx, sessionId, { allowRestrictedVendor: true })
 			if (
 				!context.memberships.some(
 					(membership) => membership.active && membership.vendorId === context.activeVendorId && membership.role === 'vendor_owner',
@@ -830,12 +798,23 @@ export class GoodsCheckout {
 				throw new AccessDeniedError()
 			const order = await tx.goodsVendorOrder.findFirst({
 				where: { id: orderId, vendorId: context.activeVendorId ?? '', vendorWorkspaceId: context.workspaceId },
-				include: { lines: true },
+				include: { cancellations: { include: { refund: true } }, lines: { include: { cancellationLines: true } } },
 			})
 			if (!order) throw new AccessDeniedError()
 			assertScope(context, { workspaceId: order.vendorWorkspaceId, vendorId: order.vendorId, locationId: order.locationId })
-			return this.orderView(order)
+			return this.cancellations.orderView(order)
 		})
+	}
+
+	cancelGoodsOrder(sessionId: string | undefined, key: string | undefined, orderId: string, input: unknown, actor: 'vendor' | 'platform') {
+		return this.cancellations.cancel(sessionId, key, orderId, input, actor)
+	}
+	readGoodsCancellation(sessionId: string | undefined, cancellationId: string) {
+		return this.cancellations.read(sessionId, cancellationId)
+	}
+
+	readPlatformGoodsOrder(sessionId: string | undefined, orderId: string) {
+		return this.cancellations.readPlatformOrder(sessionId, orderId)
 	}
 
 	private async stockEvent(
@@ -861,23 +840,9 @@ export class GoodsCheckout {
 		key: string | null,
 		payload: Record<string, unknown>,
 	) {
-		const eventId = randomUUID()
-		const event = DomainEventSchema.parse({
-			eventId,
-			workspaceId,
-			type,
-			aggregateId,
-			aggregateVersion,
-			idempotencyKey: key,
-			causationId: eventId,
-			correlationId: eventId,
-			occurredAt: this.dependencies.now().toISOString(),
-			schemaVersion: 1,
-			payload,
-		})
-		return tx.outboxEvent.create({ data: { eventId, workspaceId, type, payload: json(event), occurredAt: new Date(event.occurredAt) } })
+		return goodsEmit(tx, () => this.dependencies.now(), workspaceId, type, aggregateId, aggregateVersion, key, payload)
 	}
 	private audit(tx: Transaction, workspaceId: string, actorId: string | null, action: string, metadata: Record<string, unknown>) {
-		return tx.auditLog.create({ data: { workspaceId, actorId, action, correlationId: randomUUID(), metadata: json(metadata) } })
+		return goodsAudit(tx, workspaceId, actorId, action, metadata)
 	}
 }

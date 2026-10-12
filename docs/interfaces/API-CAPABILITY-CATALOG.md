@@ -27,3 +27,12 @@ Phase 02 `P02-C07` controlled local proof APIs:
 - `GET /v1/vendor/goods/orders/:orderId` reads only the assigned active Owner's Vendor/Location Order. Private workspace/provider receipts are not exposed.
 
 See [local evidence and Phase 04 provider/finance limits](../requirements/PHASE-02-GOODS-COMMERCE.md#p02-c07--paid-goods-order-commitment--2026-10-12).
+
+Phase 02 `P02-C08` private cancellation APIs:
+
+- `POST /v1/vendor/goods/orders/:orderId/cancellations`: assigned current Owner, idempotency key, reason and exact line quantities/disposition; transactionally appends effects and a pending refund.
+- `POST /v1/platform/goods/orders/:orderId/cancellations`: same bounded command under a live expiring Order-specific Finance grant; no catalog-review escalation.
+- `GET /v1/platform/goods/orders/:orderId`: only the Order covered by that Finance grant.
+- `GET /v1/goods/cancellations/:cancellationId`: current refund state for the owning Customer, assigned Owner or scoped Finance actor. Command replay represents original acceptance.
+
+Purchase/Order reads now expose original snapshots plus cancelled/remaining quantities and scoped cancellation/refund references. Customer payment reads distinguish cumulative pending/completed refunds and partially_refunded/full refunded state. No caller amount/price/authority fields are accepted. These are local controlled proof surfaces; final live providers/discounts/ledger remain Phase 04. See [P02-C08 evidence](../requirements/PHASE-02-GOODS-COMMERCE.md#p02-c08--partial-cancellation-and-refund-allocation--2026-10-12).

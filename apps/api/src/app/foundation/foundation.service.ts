@@ -288,6 +288,16 @@ export class FoundationService {
 		return this.durable.readGoodsVendorOrder(sessionId, orderId)
 	}
 
+	cancelGoodsOrder(sessionId: string | undefined, key: string | undefined, orderId: string, input: unknown, actor: 'vendor' | 'platform') {
+		return this.durable.cancelGoodsOrder(sessionId, key, orderId, input, actor)
+	}
+	readGoodsCancellation(sessionId: string | undefined, cancellationId: string) {
+		return this.durable.readGoodsCancellation(sessionId, cancellationId)
+	}
+	readPlatformGoodsOrder(sessionId: string | undefined, orderId: string) {
+		return this.durable.readPlatformGoodsOrder(sessionId, orderId)
+	}
+
 	readInventoryAvailability(sessionId: string | undefined, listingId: string, query: unknown) {
 		InventoryAvailabilityQuerySchema.parse(query)
 		return this.durable.readInventoryAvailability(sessionId, listingId, query)

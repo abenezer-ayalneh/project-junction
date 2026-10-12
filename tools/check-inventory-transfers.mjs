@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { spawn } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { createHmac, randomBytes, randomUUID } from 'node:crypto'
 import { createServer } from 'node:net'
 import { once } from 'node:events'
@@ -236,6 +236,91 @@ try {
 	assert.equal((await goodsRequest(`${paymentPath}/local-result`, 'POST', { outcome: 'failed' })).status, 409)
 	assert.equal((await goodsRequest(`/customer/goods/holds/${paidHold.body.holdId}/release`, 'POST', null)).status, 409)
 	assert.equal((await (await publicCheck({ locationId: destination.id })).json()).available, 1)
+	const order = purchase.body.orders[0]
+	const cancellationPath = `/vendor/goods/orders/${order.orderId}/cancellations`
+	const cancellationBody = {
+		note: 'Built API exceptional cancellation proof',
+		lines: [{ lineId: order.lines[0].lineId, quantity: 1, stockDisposition: 'restock' }],
+	}
+	assert.equal((await goodsRequest(cancellationPath, 'POST', cancellationBody, randomUUID(), false)).status, 403)
+	assert.equal((await goodsRequest(cancellationPath, 'POST', cancellationBody, '')).status, 400)
+	assert.equal((await goodsRequest(cancellationPath, 'POST', { ...cancellationBody, lines: [{ ...cancellationBody.lines[0], quantity: 1.5 }] })).status, 400)
+	const cancellationKey = randomUUID()
+	const cancelled = await goodsRequest(cancellationPath, 'POST', cancellationBody, cancellationKey)
+	assert.equal(cancelled.status, 201, JSON.stringify(cancelled.body))
+	assert.equal(cancelled.body.state, 'partially_cancelled')
+	assert.equal(cancelled.body.refund.amountCents, 1000)
+	assert.equal((await goodsRequest(cancellationPath, 'POST', cancellationBody, cancellationKey)).body.replayed, true)
+	assert.equal((await goodsRequest(cancellationPath, 'POST', { ...cancellationBody, note: 'Changed cancellation reason' }, cancellationKey)).status, 409)
+	assert.equal((await (await publicCheck({ locationId: destination.id })).json()).available, 2)
+	assert.equal((await goodsRequest(paymentPath, 'GET')).body.pendingRefundCents, 1000)
+	const cancellationRead = await goodsRequest(`/goods/cancellations/${cancelled.body.cancellationId}`, 'GET')
+	assert.equal(cancellationRead.status, 200)
+	assert.equal(cancellationRead.body.refund.state, 'pending')
+
+	// Validate the local operator grant CLI and real authenticated Finance routes.
+	const financeId = randomUUID()
+	const financeSessionId = randomUUID()
+	const financeToken = randomBytes(32).toString('hex')
+	const financeEmail = `${financeId}@example.invalid`
+	const financeWorkspace = await repository.db.workspace.create({ data: { kind: 'real' } })
+	await repository.db.user.create({ data: { id: financeId, email: financeEmail, adultVerificationState: 'verified', verifiedAt: new Date() } })
+	await repository.db.session.create({ data: { id: financeSessionId, userId: financeId, workspaceId: financeWorkspace.id, expiresAt: expires } })
+	await repository.db
+		.$executeRaw`INSERT INTO junction_auth."user" (id, name, email, "emailVerified") VALUES (${financeId}, ${'Cancellation Finance fixture'}, ${financeEmail}, true)`
+	await repository.db
+		.$executeRaw`INSERT INTO junction_auth.session (id, "expiresAt", token, "updatedAt", "userId") VALUES (${financeSessionId}, ${expires}, ${financeToken}, now(), ${financeId})`
+	const financeCookie = `junction-auth.session_token=${encodeURIComponent(`${financeToken}.${createHmac('sha256', secret).update(financeToken).digest('base64')}`)}`
+	const financeRequest = async (path, body) => {
+		const response = await fetch(`${origin}${path}`, {
+			method: body ? 'POST' : 'GET',
+			headers: { cookie: financeCookie, 'Content-Type': 'application/json', 'Idempotency-Key': randomUUID() },
+			...(body ? { body: JSON.stringify(body) } : {}),
+		})
+		return { status: response.status, body: await response.json() }
+	}
+	const financePath = `/platform/goods/orders/${order.orderId}`
+	assert.equal((await financeRequest(financePath)).status, 403)
+	const manageGrant = (action) => {
+		const result = spawnSync(process.execPath, ['tools/manage-local-goods-cancellation-grant.mjs', action], {
+			env: {
+				...process.env,
+				LOCAL_FINANCE_EMAIL: financeEmail,
+				LOCAL_GOODS_ORDER_ID: order.orderId,
+				LOCAL_OPERATOR_LABEL: 'Disposable local operator',
+				LOCAL_GOODS_GRANT_REASON: 'Built local scoped Finance cancellation proof',
+			},
+			encoding: 'utf8',
+		})
+		assert.equal(result.status, 0, result.stderr)
+	}
+	manageGrant('grant')
+	assert.equal((await financeRequest(financePath)).status, 200)
+	manageGrant('revoke')
+	assert.equal((await financeRequest(`${financePath}/cancellations`, cancellationBody)).status, 403)
+	manageGrant('grant')
+	const finalCancellation = await financeRequest(`${financePath}/cancellations`, cancellationBody)
+	assert.equal(finalCancellation.status, 201, JSON.stringify(finalCancellation.body))
+	assert.equal(finalCancellation.body.state, 'cancelled')
+	await repository.reconcileGoodsRefunds()
+	await repository.reconcileGoodsRefunds()
+	const refunded = await goodsRequest(paymentPath, 'GET')
+	assert.equal(refunded.body.state, 'refunded')
+	assert.equal(refunded.body.refundedCents, 2000)
+	assert.equal(refunded.body.pendingRefundCents, 0)
+	assert.equal((await goodsRequest(`/goods/cancellations/${cancelled.body.cancellationId}`, 'GET')).body.refund.state, 'succeeded')
+	assert.equal((await (await publicCheck({ locationId: destination.id })).json()).available, 3)
+	await repository.db.vendor.update({ where: { id: vendor.id }, data: { applicationState: 'restricted' } })
+	assert.equal((await goodsRequest(`/vendor/goods/orders/${order.orderId}`, 'GET')).status, 200)
+	assert.equal(
+		(await goodsRequest('/inventory/movements', 'POST', { locationId: destination.id, listingId: listing.id, reason: 'received', quantityDelta: 1 }))
+			.status,
+		403,
+	)
+	console.log(
+		'Built local goods cancellation smoke passed: exact partial/full quantity and stock recovery, replay/conflict, validation/anonymous denial, live scoped Finance CLI grant/revoke, refunded state and restricted-Vendor read without new stock authority.',
+	)
+
 	console.log(
 		'Built local goods paid Order smoke passed: payment window/replay, unknown and authoritative success, one Purchase/confirmed scoped Order, immutable price/quantity snapshots, denial and stock sale.',
 	)
