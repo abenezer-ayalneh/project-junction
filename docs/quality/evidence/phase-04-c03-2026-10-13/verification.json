@@ -1,0 +1,74 @@
+{
+	"date": "2026-10-13",
+	"chunk": "P04-C03",
+	"status": "complete_locally",
+	"environment": "user local machine; disposable loopback PostgreSQL schemas and built API on loopback; actual local development schema reconciliation",
+	"requirements": ["REQ-P04-PRM-001 snapshot/budget foundation"],
+	"checks": {
+		"focusedPostgresqlAndHttp": {
+			"status": "passed",
+			"postgresqlScenarios": 21,
+			"target": "pnpm nx run platform-core:test-integration",
+			"selection": "Phase 04 promotions and commission",
+			"log": "focused-postgresql-http.log"
+		},
+		"regression": {
+			"status": "passed",
+			"postgresqlScenarios": 51,
+			"target": "pnpm nx run platform-core:test-integration",
+			"selection": "Phase 04 promotions and commission|Phase 04 mixed Cart and quote|Phase 04 immutable ledger",
+			"httpChecks": ["promotion/commission/temporary CLI authority", "mixed Cart/quote"],
+			"log": "regression-postgresql-http.log"
+		},
+		"workspace": {
+			"status": "passed",
+			"command": "pnpm nx run-many -t lint,typecheck,test --projects=contracts,platform-core,api,worker,web --parallel=3",
+			"unitTestsPassed": 106,
+			"workerTestsSkipped": 1,
+			"allocationPropertyCases": 500,
+			"log": "workspace-checks.log"
+		},
+		"migrationCompatibility": {
+			"status": "passed",
+			"migrations": 45,
+			"log": "migration-compatibility.log"
+		},
+		"populatedUpgrade": {
+			"status": "passed",
+			"log": "populated-upgrade.log"
+		},
+		"actualLocalSchema": {
+			"status": "passed",
+			"pendingMigrationsApplied": 9,
+			"currentMigrations": 45,
+			"financialConfigurationRowsCreated": 0,
+			"logs": ["local-migration-before.log", "local-migration-deploy.log", "local-migration-after.log", "local-schema-health.log"]
+		},
+		"documentationAndPublicContracts": {
+			"status": "passed",
+			"commands": ["pnpm docs:check", "pnpm contracts:check"]
+		}
+	},
+	"implemented": [
+		"Immutable configurable coupon/campaign definitions, explicit authority and effective global/Vendor rates",
+		"One Vendor coupon before one Platform campaign on eligible remaining sale value",
+		"Deterministic bigint largest-remainder/half-up allocation with compact original unit funding",
+		"Frozen rate/definition/funding/non-tax receipt context and missing-policy blocking",
+		"Internal capped budget/usage lifecycle with immutable movements, guarded projection, replay/release/consume/expiry and rollback",
+		"Local-only audited temporary configuration CLI and API privilege separation"
+	],
+	"derivedLocalRules": [
+		"Per-Vendor commission rounding group with exact rate quotas",
+		"Delivery thresholds use list sale before promotions",
+		"Refund funding uses proportional_original_allocations and original compact unit segments",
+		"Fixed and capped percentage allocation is proportional; uncapped percentage uses exact rate quotas"
+	],
+	"limitations": [
+		"No actual development Finance grants or policy values were seeded; new complete quotes require explicit applicable policy",
+		"Actual atomic stock/Staff/promotion Hold integration remains C04",
+		"Payment/provider inbox, economic ledger/Purchase/full receipt/refund remain C05-C06, including zero-payable commitment",
+		"Browser journey remains C07; earning/payout/reconciliation remains C08-C09",
+		"Formal provider, independent accessibility/retention/target recovery and phase/public-release gates remain open"
+	],
+	"nextChunk": "P04-C04"
+}

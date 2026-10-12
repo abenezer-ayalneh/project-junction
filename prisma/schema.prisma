@@ -1180,3 +1180,89 @@ model MixedCheckoutQuote {
   @@index([workspaceId, customerId, createdAt])
   @@map("mixed_checkout_quotes")
 }
+
+model PlatformFinanceGrant {
+ id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+ userId String @map("user_id") @db.Uuid
+ workspaceId String @map("workspace_id") @db.Uuid
+ expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+ revokedAt DateTime? @map("revoked_at") @db.Timestamptz(6)
+ grantedBy String @map("granted_by")
+ reason String
+ createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+ @@unique([userId, workspaceId])
+ @@map("platform_finance_grants")
+}
+model CommissionRate {
+ id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+ workspaceId String @map("workspace_id") @db.Uuid
+ actorId String @map("actor_id") @db.Uuid
+ scopeKey String @map("scope_key")
+ vendorId String? @map("vendor_id") @db.Uuid
+ basisPoints Int @map("basis_points")
+ effectiveFrom DateTime @map("effective_from") @db.Timestamptz(6)
+ effectiveUntil DateTime? @map("effective_until") @db.Timestamptz(6)
+ reason String
+ createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+ @@unique([scopeKey, effectiveFrom])
+ @@map("commission_rates")
+}
+model PromotionDefinition {
+ budgetBalance CampaignBudgetBalance?
+ id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+ workspaceId String @map("workspace_id") @db.Uuid
+ actorId String @map("actor_id") @db.Uuid
+ kind String
+ vendorId String? @map("vendor_id") @db.Uuid
+ scopeKey String @map("scope_key")
+ code String
+ definition Json
+ vendorIds String[] @map("vendor_ids") @db.Uuid
+ budgetMinorUnits BigInt? @map("budget_minor_units")
+ reason String
+ createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+ reservations PromotionReservation[]
+ movements CampaignBudgetMovement[]
+ @@unique([scopeKey, code])
+ @@map("promotion_definitions")
+}
+model PromotionReservation {
+ id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+ promotionId String @map("promotion_id") @db.Uuid
+ quoteId String @map("quote_id") @db.Uuid
+ holdRef String @map("hold_ref") @db.Uuid
+ workspaceId String @map("workspace_id") @db.Uuid
+ customerId String @map("customer_id") @db.Uuid
+ amountMinorUnits BigInt @map("amount_minor_units")
+ state String @default("reserved")
+ expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+ completedAt DateTime? @map("completed_at") @db.Timestamptz(6)
+ createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+ promotion PromotionDefinition @relation(fields: [promotionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+ movements CampaignBudgetMovement[]
+ @@unique([quoteId, promotionId])
+ @@index([state, expiresAt])
+ @@map("promotion_reservations")
+}
+model CampaignBudgetMovement {
+ id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+ promotionId String @map("promotion_id") @db.Uuid
+ reservationId String @map("reservation_id") @db.Uuid
+ kind String
+ reservedDelta BigInt @map("reserved_delta")
+ consumedDelta BigInt @map("consumed_delta")
+ createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+ promotion PromotionDefinition @relation(fields: [promotionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+ reservation PromotionReservation @relation(fields: [reservationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+ @@unique([reservationId, kind])
+ @@index([promotionId])
+ @@map("campaign_budget_movements")
+}
+model CampaignBudgetBalance {
+ promotionId String @id @map("promotion_id") @db.Uuid
+ capacity BigInt
+ reserved BigInt @default(0)
+ consumed BigInt @default(0)
+ promotion PromotionDefinition @relation(fields: [promotionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+ @@map("campaign_budget_balances")
+}

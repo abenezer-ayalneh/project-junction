@@ -142,10 +142,31 @@ suite('Phase 04 mixed Cart and quote PostgreSQL', () => {
 		}
 		return { owner, vendor, location, membership, product, service, linked, hidden, option, configuration, zone, selection }
 	}
-	beforeEach(() => {
+	beforeEach(async () => {
 		now = new Date('2026-10-12T08:00:00Z')
 		repository = new PostgresFoundation(process.env['DATABASE_URL']!, undefined, undefined, undefined, undefined, clock)
 		other = new PostgresFoundation(process.env['DATABASE_URL']!, undefined, undefined, undefined, undefined, clock)
+		// Existing C02 journeys now explicitly configure their controlled zero-rate
+		// policy; production does not infer a commission when none was published.
+		if (!(await repository.db.commissionRate.findFirst({ where: { vendorId: null, effectiveFrom: { lte: now } } }))) {
+			const control = await customer()
+			await repository.db.platformFinanceGrant.create({
+				data: {
+					userId: control.user.id,
+					workspaceId: control.workspace.id,
+					expiresAt: new Date(Date.now() + 3600000),
+					grantedBy: 'C02 control fixture',
+					reason: 'Controlled quote regression policy',
+				},
+			})
+			await repository.publishCommissionRate(control.session.id, randomUUID(), {
+				vendorId: null,
+				basisPoints: 0,
+				effectiveFrom: '2026-10-12T00:00:00Z',
+				effectiveUntil: null,
+				reason: 'Explicit zero-rate regression fixture',
+			})
+		}
 	})
 	afterEach(async () => {
 		await Promise.all([repository.close(), other.close()])

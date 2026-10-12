@@ -1,0 +1,44 @@
+
+> project-junction@0.0.0 db:migrate:local /Users/abeni/Documents/projects/misc/project-junction
+> node --env-file=.env node_modules/prisma/build/index.js migrate deploy
+
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "public" at "127.0.0.1:55432"
+
+45 migrations found in prisma/migrations
+
+Applying migration `20261012100000_paid_bookings`
+Applying migration `20261012110000_booking_cancellations`
+Applying migration `20261012120000_booking_amendments`
+Applying migration `20261012130000_substitutions_waitlists`
+Applying migration `20261012140000_booking_meetings`
+Applying migration `20261012150000_booking_attendance`
+Applying migration `20261012160000_immutable_ledger`
+Applying migration `20261012170000_mixed_cart_quotes`
+Applying migration `20261012180000_promotions_commission`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20261012100000_paid_bookings/
+    └─ migration.sql
+  └─ 20261012110000_booking_cancellations/
+    └─ migration.sql
+  └─ 20261012120000_booking_amendments/
+    └─ migration.sql
+  └─ 20261012130000_substitutions_waitlists/
+    └─ migration.sql
+  └─ 20261012140000_booking_meetings/
+    └─ migration.sql
+  └─ 20261012150000_booking_attendance/
+    └─ migration.sql
+  └─ 20261012160000_immutable_ledger/
+    └─ migration.sql
+  └─ 20261012170000_mixed_cart_quotes/
+    └─ migration.sql
+  └─ 20261012180000_promotions_commission/
+    └─ migration.sql
+
+All migrations have been successfully applied.

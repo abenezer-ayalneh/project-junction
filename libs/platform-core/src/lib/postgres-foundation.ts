@@ -80,6 +80,8 @@ import { BookingHolds } from './booking-holds.js'
 import { BookingMeetings } from './booking-meetings.js'
 import { Bookings } from './bookings.js'
 import { CATALOG_CSV_HEADER, decodeCatalogCsvText, encodeCatalogCsvField, parseCatalogCsv } from './catalog-csv.js'
+import { CheckoutFinanceConfiguration } from './checkout-finance-config.js'
+import { CheckoutPricing } from './checkout-pricing.js'
 import { DiditSandboxAdapter } from './didit.js'
 import { type ExternalEffectAdapter, UnconfiguredExternalEffectAdapter } from './external-effects.js'
 import { GoodsCheckout } from './goods-checkout.js'
@@ -150,6 +152,7 @@ export class PostgresFoundation {
 	private readonly bookingHolds: BookingHolds
 	private readonly scheduling: ServiceScheduling
 	private readonly services: ServiceDefinitions
+	private readonly checkoutFinance: CheckoutFinanceConfiguration
 	private readonly mixedCart: MixedCartCheckout
 	private readonly goods: GoodsCheckout
 	private readonly publicWorkspaceKind = 'real'
@@ -246,6 +249,17 @@ export class PostgresFoundation {
 			now: goodsClock,
 			payments: goodsPayments,
 		})
+		const pricing = new CheckoutPricing()
+		this.checkoutFinance = new CheckoutFinanceConfiguration(
+			{
+				db: this.db,
+				derive: (tx, sessionId, options) => this.derive(tx, sessionId, options),
+				lockWorkspace: (tx, id) => this.workspaceLock(tx, id),
+				replay: (tx, context, key, method, request, create) => this.replayOrCreate(tx, context, key, method, request, create),
+				now: goodsClock,
+			},
+			pricing,
+		)
 		this.mixedCart = new MixedCartCheckout(
 			{
 				db: this.db,
@@ -256,6 +270,7 @@ export class PostgresFoundation {
 			},
 			this.goods,
 			this.scheduling,
+			pricing,
 		)
 		this.externalEffects = externalEffects ?? new UnconfiguredExternalEffectAdapter()
 		this.mediaStore = mediaStore ?? S3MediaStore.fromEnvironment()
@@ -792,6 +807,24 @@ export class PostgresFoundation {
 	}
 	configureGoodsLocation(sessionId: string | undefined, key: string | undefined, locationId: string, input: unknown) {
 		return this.goods.configure(sessionId, key, locationId, input)
+	}
+	publishVendorCoupon(sessionId: string | undefined, key: string | undefined, input: unknown) {
+		return this.checkoutFinance.publishCoupon(sessionId, key, input)
+	}
+	publishPlatformCampaign(sessionId: string | undefined, key: string | undefined, input: unknown) {
+		return this.checkoutFinance.publishCampaign(sessionId, key, input)
+	}
+	publishCommissionRate(sessionId: string | undefined, key: string | undefined, input: unknown) {
+		return this.checkoutFinance.publishRate(sessionId, key, input)
+	}
+	readPromotionDefinition(sessionId: string | undefined, id: string, kind: 'vendor_coupon' | 'platform_campaign') {
+		return this.checkoutFinance.readPromotion(sessionId, id, kind)
+	}
+	readCommissionRate(sessionId: string | undefined, id: string) {
+		return this.checkoutFinance.readRate(sessionId, id)
+	}
+	resolveVendorCoupon(sessionId: string | undefined, input: unknown) {
+		return this.checkoutFinance.resolveCoupon(sessionId, input)
 	}
 	readMixedCart(sessionId: string | undefined) {
 		return this.mixedCart.readCart(sessionId)
@@ -3055,6 +3088,19 @@ export class PostgresFoundation {
 		const workspace = reviewerGrant?.revokedAt === null ? await tx.workspace.findUnique({ where: { id: session.workspaceId } }) : null
 		const capabilities = ['platform:foundation:read', 'platform:foundation:write']
 		if (reviewerGrant?.revokedAt === null && workspace?.kind === 'real') capabilities.push('platform:vendor:review')
+		await tx.$queryRaw`SELECT id FROM platform_finance_grants WHERE user_id=${session.user.id}::uuid AND workspace_id=${session.workspaceId}::uuid FOR SHARE`
+		const financeGrant = await tx.platformFinanceGrant.findUnique({
+			where: { userId_workspaceId: { userId: session.user.id, workspaceId: session.workspaceId } },
+		})
+		if (
+			financeGrant &&
+			!financeGrant.revokedAt &&
+			financeGrant.expiresAt > new Date() &&
+			!session.activeVendorId &&
+			(await tx.workspace.findFirst({ where: { id: session.workspaceId, kind: 'real' } })) &&
+			!(await tx.vendorMembership.findFirst({ where: { userId: session.user.id, revokedAt: null } }))
+		)
+			capabilities.push('platform:finance:configure')
 		await tx.$queryRaw`SELECT id FROM goods_cancellation_grants WHERE user_id = ${session.user.id}::uuid AND workspace_id = ${session.workspaceId}::uuid FOR SHARE`
 		const goodsOrderAuthorities = await tx.goodsCancellationGrant.findMany({
 			where: {

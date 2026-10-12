@@ -1,0 +1,19 @@
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "public" at "127.0.0.1:55432"
+
+45 migrations found in prisma/migrations
+Following migrations have not yet been applied:
+20261012100000_paid_bookings
+20261012110000_booking_cancellations
+20261012120000_booking_amendments
+20261012130000_substitutions_waitlists
+20261012140000_booking_meetings
+20261012150000_booking_attendance
+20261012160000_immutable_ledger
+20261012170000_mixed_cart_quotes
+20261012180000_promotions_commission
+
+To apply migrations in development run prisma migrate dev.
+To apply migrations in production run prisma migrate deploy.

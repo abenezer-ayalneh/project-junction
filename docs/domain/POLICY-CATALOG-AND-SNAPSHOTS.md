@@ -41,3 +41,9 @@ Every chosen policy version snapshots at Purchase/Booking commitment. It control
 | `POL-ACCESS-001`, `POL-TRUST-001`           | `STATE-TRUST-001` enforcement/appeal and `STATE-RET-001` high-risk decision   | approval/audit record required; financial decision creates a scoped reversal/compensation, never a history edit        |
 
 The transcript establishes the policy values above. Any policy detail not explicitly present above must be treated as a configurable future value and cannot be presented as User-confirmed. All policies map to `STATE-*` guards and `EVT-*`/ledger consequences in their associated state/domain docs.
+
+## Local Phase 04 C03 snapshot bindings — 2026-10-13
+
+`POL-FIN-001`/`002` now bind immutable promotion definition/version, funding/allocation, effective rate record/version/window/source, commission basis/rate/result, deterministic rounding and compact original unit economics on a complete mixed quote. No effective rate means no ready priced quote. Per-Vendor half-up/largest-remainder grouping, pre-promotion delivery-threshold basis and `proportional_original_allocations` refund funding are derived local rules, explicitly recorded rather than represented as confirmed commercial decisions. Exact coupon types/limits remain configurable/TBD.
+
+The budget/coupon-usage participant reserves against an owned current quote, releases on expiry/failure and consumes once on a trusted caller's commitment. Capacity and movement/projection reconciliation are database enforced; no public caller amount/budget writer exists. C04 integrates actual Hold, C05–C06 economic commitment/full receipt/refund and C08–C09 earning/payout/reconciliation. [C03 evidence](../quality/PHASE-04-LOCAL-ACCEPTANCE-EVIDENCE.md#p04-c03--promotion-and-commission-snapshots--2026-10-13).

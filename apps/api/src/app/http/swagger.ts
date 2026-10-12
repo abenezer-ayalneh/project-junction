@@ -40,6 +40,10 @@ import {
 	CatalogHealthSchema,
 	CatalogImportCommandSchema,
 	CatalogImportResultSchema,
+	CommissionRateCommandSchema,
+	CommissionRateReadSchema,
+	CommissionRateResultSchema,
+	CouponResolveCommandSchema,
 	CustomerDiscoveryStateSchema,
 	GoodsCustomerDeliveryReadSchema,
 	GoodsCustomerPickupReadSchema,
@@ -111,7 +115,10 @@ import {
 	MixedQuoteCommandSchema,
 	MixedQuoteReadSchema,
 	MixedQuoteResultSchema,
+	PlatformCampaignCommandSchema,
 	PlatformReviewQueueSchema,
+	PromotionReadSchema,
+	PromotionResultSchema,
 	PublicListingDetailSchema,
 	PublicListingPageSchema,
 	PublicProductAvailabilitySchema,
@@ -140,6 +147,7 @@ import {
 	VendorApplicationReviewResultSchema,
 	VendorApplicationReviewSchema,
 	VendorCatalogSchema,
+	VendorCouponCommandSchema,
 	VendorMembershipsSchema,
 } from 'contracts'
 import { z } from 'zod'
@@ -151,6 +159,15 @@ function schemaFor(schema: z.ZodType): SchemaObject {
 }
 
 export const OpenApiSchemaRefs = {
+	vendorCouponCommand: { $ref: '#/components/schemas/VendorCouponCommand' },
+	platformCampaignCommand: { $ref: '#/components/schemas/PlatformCampaignCommand' },
+	promotionRead: { $ref: '#/components/schemas/PromotionRead' },
+	promotionResult: { $ref: '#/components/schemas/PromotionResult' },
+	commissionRateCommand: { $ref: '#/components/schemas/CommissionRateCommand' },
+	commissionRateRead: { $ref: '#/components/schemas/CommissionRateRead' },
+	commissionRateResult: { $ref: '#/components/schemas/CommissionRateResult' },
+	couponResolveCommand: { $ref: '#/components/schemas/CouponResolveCommand' },
+
 	mixedCartRead: { $ref: '#/components/schemas/MixedCartRead' },
 	mixedCartWrite: { $ref: '#/components/schemas/MixedCartWrite' },
 	mixedCartWriteResult: { $ref: '#/components/schemas/MixedCartWriteResult' },
@@ -307,6 +324,15 @@ export const OpenApiSchemaRefs = {
 function publicSchemas(): Record<string, SchemaObject> {
 	return {
 		AccessContextResponse: schemaFor(AccessContextResponseSchema),
+		VendorCouponCommand: schemaFor(VendorCouponCommandSchema),
+		PlatformCampaignCommand: schemaFor(PlatformCampaignCommandSchema),
+		PromotionRead: schemaFor(PromotionReadSchema),
+		PromotionResult: schemaFor(PromotionResultSchema),
+		CommissionRateCommand: schemaFor(CommissionRateCommandSchema),
+		CommissionRateRead: schemaFor(CommissionRateReadSchema),
+		CommissionRateResult: schemaFor(CommissionRateResultSchema),
+		CouponResolveCommand: schemaFor(CouponResolveCommandSchema),
+
 		MixedCartRead: schemaFor(MixedCartReadSchema),
 		MixedCartWrite: schemaFor(MixedCartWriteSchema),
 		MixedCartWriteResult: schemaFor(MixedCartWriteResultSchema),

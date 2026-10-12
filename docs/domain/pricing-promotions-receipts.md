@@ -1,6 +1,6 @@
 # Pricing, Promotions, Commission, and Receipts
 
-> **Status:** Planned commercial rules; no pricing or promotion engine exists.
+> **Status:** Local Phase 04 C03 pricing/promotion/commission snapshot engine is verified; actual Purchase receipt/ledger integration and commercial gates remain open.
 
 ## Fixed-price rule
 
@@ -97,3 +97,13 @@ Exact legally required receipt fields for a future Dire Dawa launch require exte
 - Vendor cancellation cannot charge a Customer for Vendor-caused threshold break; `[DEC-133]`
 - receipt totals equal payment/ledger snapshots; and
 - no receipt or UI claims tax calculation, tax invoice, wallet, or escrow. `[DEC-025, DEC-056, DEC-059]`
+
+## Local implementation boundary — 2026-10-13
+
+C03 publishes immutable version-1 definitions for configurable fixed/percentage coupons/campaigns, optional percentage caps, finite windows, eligible kind/listing/Vendor scopes, minimum sale value and nullable total/per-Customer limits. Null limits explicitly mean unlimited for that configured definition. These are local implementation options; exact commercial coupon types/limits remain unconfirmed. Selection is at most one Vendor coupon across the entire mixed Cart, then one Platform campaign. Eligibility uses the current remaining sale value, excluding delivery. Delivery fee/minimum/free-threshold calculations retain C02's pre-promotion list-sale basis, explicitly recorded as a derived local rule.
+
+Effective rate definitions are append-only with reason/actor. Latest eligible start wins within Vendor/global scope; a Vendor override precedes global and exact end is exclusive. New complete quotes without an effective rate are blocked, including when a zero rate was not explicitly published. Commission is rounded half-up per Vendor total, with exact rate quotas and largest remainders allocated by stable component keys. This per-Vendor rounding boundary is derived to preserve independent seller economics. Fixed/capped discounts allocate the exact amount proportionally; uncapped percentage rules allocate their exact rate quotas. All intermediate arithmetic uses bigint.
+
+Original unit funding is compactly snapshotted in at most six segments per Product line, preserving Vendor discount, Platform subsidy, Customer payable, commission and Vendor proceeds without negative unit values or quantity-sized expansion. Refund funding is `proportional_original_allocations` (derived local rule); later cancellation/refund uses these original segments, not current promotions/rates. Fully funded zero-payable quotes are supported as pricing facts; C05–C06 owns their actual commitment/ledger behavior.
+
+Campaign capacity, reserved and consumed values are enforced through immutable movements and a guarded projection. Internal reserve/release/expiry/consume revalidates actual quote ownership/revision/window, allocation, definition eligibility, usage and common hold reference. Replay never extends deadline; consumed spend cannot be released/reused, and release/expiry is once-only. No standalone public budget writer exists. C04 must integrate this participant with stock/Staff; C05–C06 must integrate verified payment, ledger and full non-tax receipt. Quote/review remains advisory and changes no reservation. [C03 evidence](../quality/PHASE-04-LOCAL-ACCEPTANCE-EVIDENCE.md#p04-c03--promotion-and-commission-snapshots--2026-10-13).

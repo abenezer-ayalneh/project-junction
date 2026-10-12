@@ -23,6 +23,7 @@ import { z } from 'zod'
 
 import { type MixedCheckoutQuote, type Prisma } from '../../generated/prisma/index.js'
 import { AccessDeniedError } from './access.js'
+import type { CheckoutPricing } from './checkout-pricing.js'
 import type { GoodsCheckout } from './goods-checkout.js'
 import { goodsAudit, GoodsCheckoutConflictError, type GoodsDependencies, goodsEmit, goodsJson } from './goods-support.js'
 import { stableHash } from './idempotency.js'
@@ -44,6 +45,7 @@ export class MixedCartCheckout {
 		private readonly deps: GoodsDependencies,
 		private readonly goods: GoodsCheckout,
 		private readonly scheduling: ServiceScheduling,
+		private readonly pricing: CheckoutPricing,
 	) {}
 	private async lock(tx: Tx) {
 		await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended('junction:goods-checkout', 0))`
@@ -51,6 +53,8 @@ export class MixedCartCheckout {
 	private async cart(tx: Tx, sessionId: string | undefined, verified = false) {
 		const context = await this.deps.derive(tx, sessionId)
 		if (verified) {
+			if (!(await tx.workspace.findFirst({ where: { id: context.workspaceId, kind: 'real' } })))
+				throw new AccessDeniedError('Unified checkout requires a real Customer workspace.')
 			const user = await tx.user.findUniqueOrThrow({ where: { id: context.actor.userId } })
 			if (user.adultVerificationState !== 'verified' || !user.verifiedAt)
 				throw new AccessDeniedError('Verified adult Customer identity is required for checkout quotes.')
@@ -102,7 +106,7 @@ export class MixedCartCheckout {
 		return this.deps.db.$transaction(
 			async (tx) => {
 				await this.lock(tx)
-				const { read } = await this.cart(tx, sessionId)
+				const { read, context } = await this.cart(tx, sessionId)
 				this.version(read.version, command.expectedVersion)
 				const proposed = structuredClone(read.selection)
 				const conflicts: MixedQuoteConflict[] = []
@@ -178,6 +182,11 @@ export class MixedCartCheckout {
 							proposedQuantity: 1,
 						})
 				}
+				if (command.incoming.promotions) {
+					if (proposed.promotions && stableHash(proposed.promotions) !== stableHash(command.incoming.promotions))
+						conflicts.push(conflict('cart', null, 'selection_conflict', 'Resolve different promotion selections.'))
+					else proposed.promotions = command.incoming.promotions
+				}
 				if (!MixedCartSelectionSchema.safeParse(proposed).success)
 					conflicts.push(conflict('cart', null, 'limit_exceeded', 'Use at most five appointments and ten Vendor groups; review combined quantities.'))
 				const selections = conflicts.length ? [read.selection, command.incoming] : [proposed]
@@ -189,7 +198,7 @@ export class MixedCartCheckout {
 				await this.lockVendors(tx, union)
 				const now = this.deps.now()
 				const reviews = []
-				for (const selection of selections) reviews.push(await this.evaluate(tx, selection, now))
+				for (const selection of selections) reviews.push(await this.evaluate(tx, selection, now, context.actor.userId))
 				return MixedCartMergeResultSchema.parse({
 					cart: read,
 					incoming: command.incoming,
@@ -204,7 +213,7 @@ export class MixedCartCheckout {
 		)
 	}
 	/** Caller locks the participating Vendor workspaces. Does not expire or reserve resources. */
-	async evaluate(tx: Tx, selection: MixedCartSelection, now: Date): Promise<MixedQuoteSnapshot> {
+	async evaluate(tx: Tx, selection: MixedCartSelection, now: Date, customerId: string): Promise<MixedQuoteSnapshot> {
 		const goods: MixedQuoteSnapshot['goods'] = []
 		const bookings: MixedQuoteSnapshot['bookings'] = []
 		const conflicts: MixedQuoteConflict[] = []
@@ -326,7 +335,7 @@ export class MixedCartCheckout {
 				)
 		if (total > 2_147_483_647n) conflicts.push(conflict('cart', null, 'limit_exceeded', 'Combined quote exceeds the supported amount.'))
 		const incomplete = conflicts.some((c) => c.code === 'unavailable' || c.code === 'limit_exceeded')
-		return MixedQuoteSnapshotSchema.parse({
+		const snapshot = MixedQuoteSnapshotSchema.parse({
 			evaluatedAt: now.toISOString(),
 			goods,
 			bookings,
@@ -336,6 +345,7 @@ export class MixedCartCheckout {
 			promotion: null,
 			commission: null,
 		})
+		return this.pricing.apply(tx, snapshot, selection.promotions, customerId, now)
 	}
 	private competing<T extends { staffIds: string[]; start: number; end: number }>(candidates: T[]): T[] {
 		// At most five intents: find a smallest impossible subset so unrelated
@@ -378,7 +388,7 @@ export class MixedCartCheckout {
 						throw new GoodsCheckoutConflictError('Cart is empty. Add a Product or appointment.')
 					await this.lockVendors(tx, read.selection)
 					const now = this.deps.now()
-					const snapshot = await this.evaluate(tx, read.selection, now)
+					const snapshot = await this.evaluate(tx, read.selection, now, context.actor.userId)
 					const quote = await tx.mixedCheckoutQuote.create({
 						data: {
 							cartId: cart.id,

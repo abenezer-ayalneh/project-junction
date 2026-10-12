@@ -384,6 +384,24 @@ export class FoundationService {
 	configureGoodsLocation(sessionId: string | undefined, key: string | undefined, locationId: string, input: unknown) {
 		return this.durable.configureGoodsLocation(sessionId, key, locationId, input)
 	}
+	publishVendorCoupon(sessionId: string | undefined, key: string | undefined, input: unknown) {
+		return this.durable.publishVendorCoupon(sessionId, key, input)
+	}
+	publishPlatformCampaign(sessionId: string | undefined, key: string | undefined, input: unknown) {
+		return this.durable.publishPlatformCampaign(sessionId, key, input)
+	}
+	publishCommissionRate(sessionId: string | undefined, key: string | undefined, input: unknown) {
+		return this.durable.publishCommissionRate(sessionId, key, input)
+	}
+	readPromotionDefinition(sessionId: string | undefined, id: string, kind: 'vendor_coupon' | 'platform_campaign') {
+		return this.durable.readPromotionDefinition(sessionId, id, kind)
+	}
+	readCommissionRate(sessionId: string | undefined, id: string) {
+		return this.durable.readCommissionRate(sessionId, id)
+	}
+	resolveVendorCoupon(sessionId: string | undefined, input: unknown) {
+		return this.durable.resolveVendorCoupon(sessionId, input)
+	}
 	readMixedCart(sessionId: string | undefined) {
 		return this.durable.readMixedCart(sessionId)
 	}

@@ -773,6 +773,76 @@ export class AppController {
 		return this.foundation.configureGoodsLocation(sessionId, key, locationId, body)
 	}
 
+	@Post('vendor/coupons')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Publish an immutable Vendor-funded coupon with explicit scope, value and usage controls.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.vendorCouponCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.promotionResult })
+	publishVendorCoupon(@AuthenticatedSession() sessionId: string | undefined, @Headers('idempotency-key') key: string | undefined, @Body() body: unknown) {
+		return this.foundation.publishVendorCoupon(sessionId, key, body)
+	}
+
+	@Get('vendor/coupons/:promotionId')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Read an owned Vendor coupon definition.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.promotionRead })
+	readVendorCoupon(@AuthenticatedSession() sessionId: string | undefined, @Param('promotionId') id: string) {
+		return this.foundation.readPromotionDefinition(sessionId, id, 'vendor_coupon')
+	}
+
+	@Post('platform/finance/campaigns')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Publish an immutable Platform-funded campaign with a capped ETB budget.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.platformCampaignCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.promotionResult })
+	publishPlatformCampaign(@AuthenticatedSession() sessionId: string | undefined, @Headers('idempotency-key') key: string | undefined, @Body() body: unknown) {
+		return this.foundation.publishPlatformCampaign(sessionId, key, body)
+	}
+
+	@Get('platform/finance/campaigns/:promotionId')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Read an owned Platform campaign definition.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.promotionRead })
+	readPlatformCampaign(@AuthenticatedSession() sessionId: string | undefined, @Param('promotionId') id: string) {
+		return this.foundation.readPromotionDefinition(sessionId, id, 'platform_campaign')
+	}
+
+	@Post('platform/finance/commission-rates')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Publish an audited effective global or Vendor commission rate.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.commissionRateCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.commissionRateResult })
+	publishCommissionRate(@AuthenticatedSession() sessionId: string | undefined, @Headers('idempotency-key') key: string | undefined, @Body() body: unknown) {
+		return this.foundation.publishCommissionRate(sessionId, key, body)
+	}
+
+	@Get('platform/finance/commission-rates/:rateId')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Read an owned effective commission rate definition.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.commissionRateRead })
+	readCommissionRate(@AuthenticatedSession() sessionId: string | undefined, @Param('rateId') id: string) {
+		return this.foundation.readCommissionRate(sessionId, id)
+	}
+
+	@Post('customer/promotions/coupon')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Resolve a supplied Vendor coupon code; eligibility is rechecked at quote and hold.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiBody({ schema: OpenApiSchemaRefs.couponResolveCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.promotionRead })
+	resolveVendorCoupon(@AuthenticatedSession() sessionId: string | undefined, @Body() body: unknown) {
+		return this.foundation.resolveVendorCoupon(sessionId, body)
+	}
+
 	@Get('customer/cart')
 	@Header('Cache-Control', 'no-store')
 	@ApiOperation({ summary: 'Read the signed-in Customer Cart.' })

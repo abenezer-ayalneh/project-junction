@@ -133,6 +133,20 @@ try {
 			}
 		}
 	}
+	if (!(await repository.db.commissionRate.findFirst({ where: { vendorId: null, effectiveFrom: { lte: new Date() } } }))) {
+		await repository.db.commissionRate.create({
+			data: {
+				workspaceId: workspace.id,
+				actorId: userId,
+				scopeKey: 'global',
+				vendorId: null,
+				basisPoints: 0,
+				effectiveFrom: new Date('2026-10-12T00:00:00Z'),
+				effectiveUntil: null,
+				reason: 'Explicit controlled HTTP regression rate',
+			},
+		})
+	}
 	const selection = { goodsGroups: groups, bookings: [booking] }
 	const server = createServer()
 	await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve))

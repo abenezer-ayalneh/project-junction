@@ -1,0 +1,11 @@
+{
+  "status": "passed",
+  "localSchema": "current",
+  "newFinancialRecords": {
+    "financeGrants": 0,
+    "commissionRates": 0,
+    "promotions": 0,
+    "reservations": 0
+  },
+  "operatorChanges": "No actual Finance grants or financial definitions created."
+}

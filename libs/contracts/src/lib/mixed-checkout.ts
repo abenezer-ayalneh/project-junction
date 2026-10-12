@@ -4,6 +4,7 @@ import { GoodsQuoteCommandSchema, GoodsQuoteSnapshotSchema } from './api.js'
 import { BookingHoldCommandSchema, BookingHoldSnapshotSchema } from './booking-holds.js'
 import { BookingPolicySchema } from './bookings.js'
 import { MoneySchema } from './finance.js'
+import { CartPromotionSelectionSchema, CommissionSnapshotSchema, PromotionSnapshotSchema } from './promotions.js'
 const id = z.string().uuid()
 const version = z.number().int().min(0)
 const price = z.number().int().positive().max(2_147_483_647)
@@ -19,6 +20,7 @@ export const MixedCartSelectionSchema = z
 	.strictObject({
 		goodsGroups: z.array(MixedGoodsGroupSchema).max(10),
 		bookings: z.array(MixedBookingIntentSchema).max(5),
+		promotions: CartPromotionSelectionSchema.optional(),
 	})
 	.superRefine((selection, ctx) => {
 		if (new Set(selection.bookings.map((b) => b.intentId)).size !== selection.bookings.length)
@@ -41,7 +43,16 @@ export const MixedQuoteConflictSchema = z.strictObject({
 	referenceId: id.nullable(),
 	listingId: id.nullable(),
 	sku: z.string().nullable(),
-	code: z.enum(['unavailable', 'price_changed', 'terms_changed', 'selection_conflict', 'capacity_conflict', 'limit_exceeded']),
+	code: z.enum([
+		'unavailable',
+		'price_changed',
+		'terms_changed',
+		'selection_conflict',
+		'capacity_conflict',
+		'limit_exceeded',
+		'promotion_unavailable',
+		'commission_unavailable',
+	]),
 	message: z.string(),
 	expectedPriceCents: price.nullable(),
 	currentPriceCents: price.nullable(),
@@ -54,8 +65,8 @@ export const MixedQuoteSnapshotSchema = z.strictObject({
 	total: MoneySchema.nullable(),
 	conflicts: z.array(MixedQuoteConflictSchema),
 	reserved: z.literal(false),
-	promotion: z.null(),
-	commission: z.null(),
+	promotion: PromotionSnapshotSchema.nullable(),
+	commission: CommissionSnapshotSchema.nullable(),
 })
 export type MixedQuoteSnapshot = z.infer<typeof MixedQuoteSnapshotSchema>
 export const MixedCartMergeResultSchema = z.strictObject({

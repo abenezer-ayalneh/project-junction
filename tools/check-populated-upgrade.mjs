@@ -62,6 +62,7 @@ const migrations = [
 	'prisma/migrations/20261012150000_booking_attendance/migration.sql',
 	'prisma/migrations/20261012160000_immutable_ledger/migration.sql',
 	'prisma/migrations/20261012170000_mixed_cart_quotes/migration.sql',
+	'prisma/migrations/20261012180000_promotions_commission/migration.sql',
 ]
 
 try {

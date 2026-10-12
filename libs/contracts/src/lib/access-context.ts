@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 const IdentifierSchema = z.string().uuid()
 
-export const CapabilitySchema = z.enum(['platform:foundation:read', 'platform:foundation:write', 'platform:vendor:review'])
+export const CapabilitySchema = z.enum(['platform:foundation:read', 'platform:foundation:write', 'platform:vendor:review', 'platform:finance:configure'])
 
 export const MembershipSchema = z.object({
 	vendorId: IdentifierSchema,
