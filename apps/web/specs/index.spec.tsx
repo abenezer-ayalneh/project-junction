@@ -6,9 +6,9 @@ import { ThemeProvider } from '../src/components/theme-provider'
 import { ThemeToggle } from '../src/components/theme-toggle'
 
 jest.mock('../src/lib/marketplace', () => ({
-	getPublicListings: async () => ({ items: [], nextCursor: null }),
+	getPublicListings: async () => ({ items: [], nextCursor: null, total: 0 }),
 	getPublicVendors: async () => ({ items: [], nextCursor: null }),
-	formatPrice: () => 'ETB 0',
+	formatListingPrice: () => 'ETB 0',
 }))
 
 type MatchMediaListener = (event: { matches: boolean }) => void
@@ -23,15 +23,15 @@ function updateSystemTheme(matches: boolean) {
 
 describe('Page', () => {
 	it('identifies the configured environment', async () => {
-		render(await Page({ searchParams: Promise.resolve({}) }))
+		render(await Page())
 
 		const label = process.env['NEXT_PUBLIC_JUNCTION_RUNTIME_MODE'] === 'local' ? 'Local development' : 'Private staging'
 		expect(screen.getByText(label)).toBeTruthy()
-		expect(screen.getByRole('heading', { name: /find the good work happening nearby/i })).toBeTruthy()
+		expect(screen.getByRole('heading', { name: /products and services, side by side/i })).toBeTruthy()
 	})
 
 	it('preserves the discovery accessibility baseline', async () => {
-		render(await Page({ searchParams: Promise.resolve({}) }))
+		render(await Page())
 
 		expect(screen.getByRole('main')).toBeTruthy()
 		expect(screen.getByRole('banner')).toBeTruthy()

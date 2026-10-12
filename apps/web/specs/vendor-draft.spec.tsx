@@ -8,6 +8,8 @@ const catalog = {
 	slug: 'fixture-vendor',
 	displayName: 'Fixture Vendor',
 	description: 'A fixture Vendor for private draft recovery.',
+	logoImage: null,
+	coverImage: null,
 	locations: [],
 	listings: [],
 }

@@ -8,41 +8,44 @@ datasource db {
 }
 
 model User {
-  id                     String               @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  email                  String               @unique
-  adultVerificationState String               @default("unverified") @map("adult_verification_state")
-  verifiedAt             DateTime?            @map("verified_at") @db.Timestamptz(6)
-  createdAt              DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
-  sessions               Session[]
-  memberships            VendorMembership[]
-  staffProfiles          Staff[]
-  savedListings          SavedListing[]
-  followedVendors        VendorFollow[]
-  savedSearches          SavedSearch[]
-  discoveryPreference    DiscoveryPreference?
-  platformReviewerGrant  PlatformReviewerGrant?
+  goodsQuotes                  GoodsQuote[]
+  id                           String                        @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  email                        String                        @unique
+  adultVerificationState       String                        @default("unverified") @map("adult_verification_state")
+  verifiedAt                   DateTime?                     @map("verified_at") @db.Timestamptz(6)
+  createdAt                    DateTime                      @default(now()) @map("created_at") @db.Timestamptz(6)
+  sessions                     Session[]
+  memberships                  VendorMembership[]
+  staffProfiles                Staff[]
+  savedListings                SavedListing[]
+  followedVendors              VendorFollow[]
+  savedSearches                SavedSearch[]
+  discoveryPreference          DiscoveryPreference?
+  platformReviewerGrant        PlatformReviewerGrant?
   identityVerificationSessions IdentityVerificationSession[]
 
   @@map("users")
 }
 
 model Workspace {
-  id        String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  kind      String    @default("real")
-  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  vendors   Vendor[]
-  sessions  Session[]
+  goodsQuotes                  GoodsQuote[]
+  goodsHoldLines               GoodsHoldLine[]
+  id                           String                        @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  kind                         String                        @default("real")
+  createdAt                    DateTime                      @default(now()) @map("created_at") @db.Timestamptz(6)
+  vendors                      Vendor[]
+  sessions                     Session[]
   identityVerificationSessions IdentityVerificationSession[]
 
   @@map("workspaces")
 }
 
 model PlatformReviewerGrant {
-  userId     String    @id @map("user_id") @db.Uuid
-  grantedAt  DateTime  @default(now()) @map("granted_at") @db.Timestamptz(6)
-  revokedAt  DateTime? @map("revoked_at") @db.Timestamptz(6)
-  grantedBy  String    @map("granted_by")
-  user       User      @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  userId    String    @id @map("user_id") @db.Uuid
+  grantedAt DateTime  @default(now()) @map("granted_at") @db.Timestamptz(6)
+  revokedAt DateTime? @map("revoked_at") @db.Timestamptz(6)
+  grantedBy String    @map("granted_by")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: NoAction)
 
   @@map("platform_reviewer_grants")
 }
@@ -68,6 +71,7 @@ model Session {
 }
 
 model Vendor {
+  goodsHoldLines        GoodsHoldLine[]
   id                    String             @id @default(dbgenerated("uuidv7()")) @db.Uuid
   workspaceId           String             @map("workspace_id") @db.Uuid
   publicSlug            String?            @unique @map("public_slug")
@@ -76,6 +80,8 @@ model Vendor {
   applicationReviewedAt DateTime?          @map("application_reviewed_at") @db.Timestamptz(6)
   displayName           String?            @map("display_name")
   description           String?
+  logoMediaId           String?            @map("logo_media_id") @db.Uuid
+  coverMediaId          String?            @map("cover_media_id") @db.Uuid
   createdAt             DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
   workspace             Workspace          @relation(fields: [workspaceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   locations             Location[]
@@ -85,6 +91,8 @@ model Vendor {
   listings              Listing[]
   importJobs            CatalogImportJob[]
   followers             VendorFollow[]
+  logoMedia             MediaAsset?        @relation("VendorLogoMedia", fields: [logoMediaId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  coverMedia            MediaAsset?        @relation("VendorCoverMedia", fields: [coverMediaId], references: [id], onDelete: SetNull, onUpdate: NoAction)
 
   @@index([workspaceId])
   @@index([publishedAt, id])
@@ -139,6 +147,7 @@ model DiscoveryPreference {
 }
 
 model Listing {
+  goodsHoldLines     GoodsHoldLine[]
   id                 String              @id @default(dbgenerated("uuidv7()")) @db.Uuid
   vendorId           String              @map("vendor_id") @db.Uuid
   kind               String
@@ -198,38 +207,50 @@ model ListingRevision {
 }
 
 model MediaAsset {
-  id               String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  listingId        String    @map("listing_id") @db.Uuid
-  uploaderId       String?   @map("uploader_id") @db.Uuid
-  kind             String
-  state            String    @default("quarantined")
-  uploadKey        String?   @unique @map("upload_key")
-  sealedKey        String?   @unique @map("sealed_key")
-  uploadSha256     String?   @map("upload_sha256")
-  uploadBytes      Int?      @map("upload_bytes")
-  uploadExpiresAt  DateTime? @map("upload_expires_at") @db.Timestamptz(6)
-  uploadedAt       DateTime? @map("uploaded_at") @db.Timestamptz(6)
-  renditionKey     String?   @unique @map("rendition_key")
-  posterKey        String?   @unique @map("poster_key")
-  scanVerdict      String?   @map("scan_verdict")
-  durationSeconds  Float?    @map("duration_seconds")
-  sourceWidth      Int?      @map("source_width")
-  sourceHeight     Int?      @map("source_height")
-  outputWidth      Int?      @map("output_width")
-  outputHeight     Int?      @map("output_height")
-  moderatedBy      String?   @map("moderated_by") @db.Uuid
-  moderatedAt      DateTime? @map("moderated_at") @db.Timestamptz(6)
-  moderationNote   String?   @map("moderation_note")
-  version          Int       @default(1)
-  captionText      String?   @map("caption_text")
-  noSpeechDeclared Boolean   @default(false) @map("no_speech_declared")
-  description      String?
-  quarantineReason String?   @map("quarantine_reason")
-  processedAt      DateTime? @map("processed_at") @db.Timestamptz(6)
-  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  listing          Listing   @relation(fields: [listingId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                      String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  listingId               String    @map("listing_id") @db.Uuid
+  uploaderId              String?   @map("uploader_id") @db.Uuid
+  kind                    String
+  state                   String    @default("quarantined")
+  contentType             String?   @map("content_type")
+  uploadKey               String?   @unique @map("upload_key")
+  sealedKey               String?   @unique @map("sealed_key")
+  uploadSha256            String?   @map("upload_sha256")
+  uploadBytes             Int?      @map("upload_bytes")
+  uploadExpiresAt         DateTime? @map("upload_expires_at") @db.Timestamptz(6)
+  uploadedAt              DateTime? @map("uploaded_at") @db.Timestamptz(6)
+  renditionKey            String?   @unique @map("rendition_key")
+  posterKey               String?   @unique @map("poster_key")
+  scanVerdict             String?   @map("scan_verdict")
+  durationSeconds         Float?    @map("duration_seconds")
+  sourceWidth             Int?      @map("source_width")
+  sourceHeight            Int?      @map("source_height")
+  outputWidth             Int?      @map("output_width")
+  outputHeight            Int?      @map("output_height")
+  moderatedBy             String?   @map("moderated_by") @db.Uuid
+  moderatedAt             DateTime? @map("moderated_at") @db.Timestamptz(6)
+  moderationNote          String?   @map("moderation_note")
+  version                 Int       @default(1)
+  captionText             String?   @map("caption_text")
+  noSpeechDeclared        Boolean   @default(false) @map("no_speech_declared")
+  description             String?
+  quarantineReason        String?   @map("quarantine_reason")
+  processedAt             DateTime? @map("processed_at") @db.Timestamptz(6)
+  rejectedAt              DateTime? @map("rejected_at") @db.Timestamptz(6)
+  retentionDueAt          DateTime? @map("retention_due_at") @db.Timestamptz(6)
+  retentionPolicy         String?   @map("retention_policy")
+  retentionHoldReason     String?   @map("retention_hold_reason")
+  retentionDeletedAt      DateTime? @map("retention_deleted_at") @db.Timestamptz(6)
+  retentionDeleteAttempts Int       @default(0) @map("retention_delete_attempts")
+  retentionNextAttemptAt  DateTime? @map("retention_next_attempt_at") @db.Timestamptz(6)
+  createdAt               DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  listing                 Listing   @relation(fields: [listingId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  logoVendors             Vendor[]  @relation("VendorLogoMedia")
+  coverVendors            Vendor[]  @relation("VendorCoverMedia")
 
   @@index([listingId, state])
+  @@index([state, retentionDueAt, retentionNextAttemptAt], map: "media_assets_state_retention_due_at_retention_next_attempt_at_i")
+  @@index([listingId, kind, state, moderatedAt], map: "media_assets_listing_kind_state_moderated_idx")
   @@map("media_assets")
 }
 
@@ -270,44 +291,54 @@ model SearchDocument {
   kind        String
   title       String
   category    String
+  priceCents  Int?     @map("price_cents")
   version     Int
   projectedAt DateTime @default(now()) @map("projected_at") @db.Timestamptz(6)
   listing     Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([kind, category, title])
+  @@index([priceCents, listingId], map: "search_documents_price_listing_idx")
   @@map("search_documents")
 }
 
 model Location {
-  id                 String              @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  vendorId           String              @map("vendor_id") @db.Uuid
-  label              String?
-  city               String?
-  address            String?
-  latitude           Decimal?            @db.Decimal(9, 6)
-  longitude          Decimal?            @db.Decimal(9, 6)
-  vendor             Vendor              @relation(fields: [vendorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  inventoryMovements InventoryMovement[]
+  goodsHoldLines            GoodsHoldLine[]
+  goodsConfiguration        Json?               @map("goods_configuration")
+  goodsConfigurationVersion Int                 @default(0) @map("goods_configuration_version")
+  id                        String              @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  vendorId                  String              @map("vendor_id") @db.Uuid
+  label                     String?
+  city                      String?
+  address                   String?
+  latitude                  Decimal?            @db.Decimal(9, 6)
+  longitude                 Decimal?            @db.Decimal(9, 6)
+  vendor                    Vendor              @relation(fields: [vendorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  inventoryMovements        InventoryMovement[]
 
   @@index([vendorId])
   @@map("locations")
 }
 
 model InventoryMovement {
-  id            String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  locationId    String   @map("location_id") @db.Uuid
-  listingId     String   @map("listing_id") @db.Uuid
+  holdId        String?    @map("hold_id") @db.Uuid
+  hold          GoodsHold? @relation(fields: [holdId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id            String     @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  locationId    String     @map("location_id") @db.Uuid
+  listingId     String     @map("listing_id") @db.Uuid
   sku           String?
   reason        String
-  onHandDelta   Int      @map("on_hand_delta")
-  reservedDelta Int      @default(0) @map("reserved_delta")
+  onHandDelta   Int        @map("on_hand_delta")
+  reservedDelta Int        @default(0) @map("reserved_delta")
+  transferId    String?    @map("transfer_id") @db.Uuid
   note          String?
-  actorKind     String   @map("actor_kind")
-  actorId       String   @map("actor_id") @db.Uuid
-  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  location      Location @relation(fields: [locationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  listing       Listing  @relation(fields: [listingId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  actorKind     String     @map("actor_kind")
+  actorId       String     @map("actor_id") @db.Uuid
+  createdAt     DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  location      Location   @relation(fields: [locationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  listing       Listing    @relation(fields: [listingId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([holdId], map: "inventory_movements_hold_id_idx")
+  @@index([transferId], map: "inventory_movements_transfer_id_idx")
   @@index([locationId, listingId, sku, createdAt], map: "inventory_movements_location_item_created_idx")
   @@index([listingId, sku, createdAt], map: "inventory_movements_listing_item_created_idx")
   @@map("inventory_movements")
@@ -418,7 +449,6 @@ model IdentityVerificationSession {
   @@map("identity_verification_sessions")
 }
 
-
 model AuditLog {
   id            String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
   workspaceId   String?  @map("workspace_id") @db.Uuid
@@ -438,4 +468,55 @@ model OutboxReceipt {
   processedAt DateTime @default(now()) @map("processed_at") @db.Timestamptz(6)
 
   @@map("outbox_receipts")
+}
+
+model GoodsQuote {
+  id          String     @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  customerId  String     @map("customer_id") @db.Uuid
+  customer    User       @relation(fields: [customerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  workspaceId String     @map("workspace_id") @db.Uuid
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  selection   Json
+  snapshot    Json
+  expiresAt   DateTime   @map("expires_at") @db.Timestamptz(6)
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  hold        GoodsHold?
+
+  @@index([customerId, workspaceId, createdAt])
+  @@map("goods_quotes")
+}
+
+model GoodsHold {
+  id         String              @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  quoteId    String              @unique @map("quote_id") @db.Uuid
+  quote      GoodsQuote          @relation(fields: [quoteId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  state      String              @default("holding")
+  expiresAt  DateTime            @map("expires_at") @db.Timestamptz(6)
+  createdAt  DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  releasedAt DateTime?           @map("released_at") @db.Timestamptz(6)
+  lines      GoodsHoldLine[]
+  movements  InventoryMovement[]
+
+  @@index([state, expiresAt])
+  @@map("goods_holds")
+}
+
+model GoodsHoldLine {
+  id                String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  holdId            String    @map("hold_id") @db.Uuid
+  hold              GoodsHold @relation(fields: [holdId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  listingId         String    @map("listing_id") @db.Uuid
+  locationId        String    @map("location_id") @db.Uuid
+  sku               String?
+  quantity          Int
+  vendorId          String    @map("vendor_id") @db.Uuid
+  vendorWorkspaceId String    @map("vendor_workspace_id") @db.Uuid
+  workspace         Workspace @relation(fields: [vendorWorkspaceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  listing           Listing   @relation(fields: [listingId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  location          Location  @relation(fields: [locationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  vendor            Vendor    @relation(fields: [vendorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([holdId])
+  @@unique([holdId, listingId, locationId, sku], map: "goods_hold_lines_item_key")
+  @@map("goods_hold_lines")
 }

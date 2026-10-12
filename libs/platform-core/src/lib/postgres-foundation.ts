@@ -18,10 +18,14 @@ import {
 	EngagementMutationSchema,
 	IdempotencyKeySchema,
 	IdentityVerificationStatusSchema,
+	ImageUploadIntentCommandSchema,
+	ImageUploadIntentSchema,
 	InventoryAvailabilityQuerySchema,
 	InventoryAvailabilitySchema,
 	InventoryMovementCommandSchema,
 	InventoryMovementResultSchema,
+	InventoryTransferCommandSchema,
+	InventoryTransferResultSchema,
 	ListingCommandResultSchema,
 	ListingDraftSchema,
 	ListingReviewCommandSchema,
@@ -30,6 +34,8 @@ import {
 	MediaAssetSchema,
 	MediaPreviewSchema,
 	MediaProcessingCommandSchema,
+	MediaRetentionHoldCommandSchema,
+	MediaRetentionResultSchema,
 	MediaReviewCommandSchema,
 	MediaReviewQueueQuerySchema,
 	MediaReviewQueueSchema,
@@ -37,11 +43,16 @@ import {
 	MediaUploadCompleteCommandSchema,
 	MediaUploadIntentCommandSchema,
 	MediaUploadIntentSchema,
+	Phase01ImageLimits,
 	Phase01MediaLimits,
 	PlatformReviewQueueQuerySchema,
 	PlatformReviewQueueSchema,
 	PublicListingBrowseQuerySchema,
+	PublicListingDetailSchema,
 	PublicListingPageSchema,
+	PublicListingSummarySchema,
+	PublicProductAvailabilityQuerySchema,
+	PublicProductAvailabilitySchema,
 	PublicStorefrontSchema,
 	PublicVendorBrowseQuerySchema,
 	PublicVendorPageSchema,
@@ -62,12 +73,19 @@ import { AccessDeniedError, assertElevatedSession, assertRequiredMfa, assertScop
 import { CATALOG_CSV_HEADER, decodeCatalogCsvText, encodeCatalogCsvField, parseCatalogCsv } from './catalog-csv.js'
 import { DiditSandboxAdapter } from './didit.js'
 import { type ExternalEffectAdapter, UnconfiguredExternalEffectAdapter } from './external-effects.js'
+import { GoodsCheckout } from './goods-checkout.js'
 import { IdempotencyConflictError, stableHash } from './idempotency.js'
+import { type DeletionJournal, S3DeletionJournal } from './media-retention.js'
 import { type MediaStore, S3MediaStore } from './media-store.js'
 import { applicationRuntimeMode } from './runtime.js'
 import { MediaRejectedError, VideoProcessor } from './video-processor.js'
 
 type Transaction = Prisma.TransactionClient
+const rejectedMediaRetentionDays = 30
+const rejectedMediaRetentionPolicy = 'rejected-media-v1'
+function rejectionRetention(now = new Date()) {
+	return { rejectedAt: now, retentionDueAt: new Date(now.getTime() + rejectedMediaRetentionDays * 86400000), retentionPolicy: rejectedMediaRetentionPolicy }
+}
 export interface DurableClaim {
 	id: string
 	claimToken: string
@@ -92,6 +110,11 @@ const stagingDeliveryTypes = [
 	'MediaReviewed',
 	'CatalogImportCommitted',
 	'StockMoved',
+	'GoodsConfigurationUpdated',
+	'GoodsQuoteCreated',
+	'HoldCreated',
+	'HoldReleased',
+	'HoldExpired',
 ] as const satisfies readonly DomainEvent['type'][]
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const json = (value: unknown) => JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue
@@ -106,16 +129,33 @@ function hasRequiredIdentity(user: { adultVerificationState: string; verifiedAt:
 /** Prisma owns CRUD; parameterized SQL below is restricted to concurrency locks/claims. */
 export class PostgresFoundation {
 	readonly db: PrismaClient
+	private readonly goods: GoodsCheckout
 	private readonly publicWorkspaceKind = 'real'
 	private readonly externalEffects: ExternalEffectAdapter
 	private readonly mediaStore: MediaStore | undefined
+	private readonly deletionJournal: DeletionJournal | undefined
 	private readonly videoProcessor: VideoProcessor | undefined
-	constructor(url: string, externalEffects?: ExternalEffectAdapter, mediaStore?: MediaStore, videoProcessor?: VideoProcessor) {
+	constructor(
+		url: string,
+		externalEffects?: ExternalEffectAdapter,
+		mediaStore?: MediaStore,
+		videoProcessor?: VideoProcessor,
+		deletionJournal?: DeletionJournal,
+		goodsClock: () => Date = () => new Date(),
+	) {
 		const schema = new URL(url).searchParams.get('schema') ?? 'public'
 		if (!/^[a-z_][a-z0-9_]*$/.test(schema)) throw new Error('Unsupported database schema name.')
 		this.db = new PrismaClient({ adapter: new PrismaPg({ connectionString: url, options: `-c search_path=${schema},public` }, { schema }) })
+		this.goods = new GoodsCheckout({
+			db: this.db,
+			derive: (tx, sessionId) => this.derive(tx, sessionId),
+			lockWorkspace: (tx, id) => this.workspaceLock(tx, id),
+			replay: (tx, context, key, method, request, create) => this.replayOrCreate(tx, context, key, method, request, create),
+			now: goodsClock,
+		})
 		this.externalEffects = externalEffects ?? new UnconfiguredExternalEffectAdapter()
 		this.mediaStore = mediaStore ?? S3MediaStore.fromEnvironment()
+		this.deletionJournal = deletionJournal ?? S3DeletionJournal.fromEnvironment()
 		this.videoProcessor = videoProcessor ?? VideoProcessor.fromEnvironment()
 	}
 	close() {
@@ -494,6 +534,28 @@ export class PostgresFoundation {
 		})
 	}
 
+	readGoodsLocationConfiguration(sessionId: string | undefined, locationId: string) {
+		return this.goods.readConfiguration(sessionId, locationId)
+	}
+	configureGoodsLocation(sessionId: string | undefined, key: string | undefined, locationId: string, input: unknown) {
+		return this.goods.configure(sessionId, key, locationId, input)
+	}
+	createGoodsQuote(sessionId: string | undefined, key: string | undefined, input: unknown) {
+		return this.goods.quote(sessionId, key, input)
+	}
+	createGoodsHold(sessionId: string | undefined, key: string | undefined, input: unknown) {
+		return this.goods.hold(sessionId, key, input)
+	}
+	readGoodsHold(sessionId: string | undefined, holdId: string) {
+		return this.goods.readHold(sessionId, holdId)
+	}
+	releaseGoodsHold(sessionId: string | undefined, key: string | undefined, holdId: string) {
+		return this.goods.release(sessionId, key, holdId)
+	}
+	expireGoodsHolds() {
+		return this.goods.expire()
+	}
+
 	async readInventoryAvailability(sessionId: string | undefined, listingId: string, queryInput: unknown) {
 		this.requireResourceId(listingId)
 		const query = InventoryAvailabilityQuerySchema.parse(queryInput)
@@ -517,6 +579,83 @@ export class PostgresFoundation {
 				reserved,
 				available: onHand - reserved,
 			})
+		})
+	}
+
+	async createInventoryTransfer(sessionId: string | undefined, keyInput: string | undefined, input: unknown) {
+		const key = IdempotencyKeySchema.parse(keyInput)
+		const command = InventoryTransferCommandSchema.parse(input)
+		return this.db.$transaction(async (tx) => {
+			// derive locks the workspace and live authority, serializing against stock writes and revisions.
+			const context = await this.derive(tx, sessionId)
+			const vendor = await this.vendorForWrite(tx, context)
+			const source = await this.requireInventoryItem(tx, context, command.sourceLocationId, command.listingId, command.sku)
+			const destination = await this.requireInventoryItem(tx, context, command.destinationLocationId, command.listingId, command.sku)
+			if (source.location.vendorId !== vendor.id || destination.location.vendorId !== vendor.id) throw new AccessDeniedError()
+			const result = await this.replayOrCreate(tx, context, key, 'POST /v1/inventory/transfers', command, async () => {
+				const sku = source.variant?.sku ?? null
+				const readBalance = async (locationId: string) => {
+					const balance = await tx.inventoryMovement.aggregate({
+						where: { locationId, listingId: command.listingId, sku },
+						_sum: { onHandDelta: true, reservedDelta: true },
+					})
+					const onHand = balance._sum.onHandDelta ?? 0
+					const reserved = balance._sum.reservedDelta ?? 0
+					return { locationId, listingId: command.listingId, sku, onHand, reserved, available: onHand - reserved }
+				}
+				const sourceBalance = await readBalance(source.location.id)
+				const destinationBalance = await readBalance(destination.location.id)
+				if (sourceBalance.available < command.quantity) throw new AccessDeniedError('The transfer exceeds available stock at the source Location.')
+				const transferId = randomUUID()
+				const shared = {
+					listingId: command.listingId,
+					sku,
+					reason: 'transferred',
+					transferId,
+					reservedDelta: 0,
+					note: command.note,
+					actorKind: context.actor.kind,
+					actorId: this.actorId(context),
+				}
+				const debit = await tx.inventoryMovement.create({ data: { ...shared, locationId: source.location.id, onHandDelta: -command.quantity } })
+				const credit = await tx.inventoryMovement.create({ data: { ...shared, locationId: destination.location.id, onHandDelta: command.quantity } })
+				const payload = {
+					transferId,
+					sourceMovementId: debit.id,
+					destinationMovementId: credit.id,
+					sourceLocationId: source.location.id,
+					destinationLocationId: destination.location.id,
+					listingId: command.listingId,
+					sku,
+					quantity: command.quantity,
+					note: command.note,
+				}
+				await tx.auditLog.create({
+					data: {
+						workspaceId: context.workspaceId,
+						actorId: this.actorId(context),
+						action: 'inventory.stock-transferred',
+						correlationId: transferId,
+						metadata: json(payload),
+					},
+				})
+				const version = await tx.inventoryMovement.count({ where: { listingId: command.listingId } })
+				await this.enqueue(tx, this.catalogEvent(context, 'StockMoved', command.listingId, version, key, { ...payload, reason: 'transferred' }))
+				return InventoryTransferResultSchema.parse({
+					transferId,
+					sourceMovementId: debit.id,
+					destinationMovementId: credit.id,
+					quantity: command.quantity,
+					source: { ...sourceBalance, onHand: sourceBalance.onHand - command.quantity, available: sourceBalance.available - command.quantity },
+					destination: {
+						...destinationBalance,
+						onHand: destinationBalance.onHand + command.quantity,
+						available: destinationBalance.available + command.quantity,
+					},
+					replayed: false,
+				})
+			})
+			return InventoryTransferResultSchema.parse({ ...result.outcome, replayed: result.replayed })
 		})
 	}
 
@@ -606,12 +745,20 @@ export class PostgresFoundation {
 	async browsePublicVendors(queryInput: unknown) {
 		const query = PublicVendorBrowseQuerySchema.parse(queryInput)
 		const vendors = await this.db.vendor.findMany({
-			where: { publicSlug: { not: null }, publishedAt: { not: null }, applicationState: 'approved', workspace: { kind: this.publicWorkspaceKind } },
+			where: {
+				publicSlug: { not: null },
+				displayName: { not: null },
+				publishedAt: { not: null },
+				applicationState: 'approved',
+				workspace: { kind: this.publicWorkspaceKind },
+			},
 			orderBy: { id: 'asc' },
 			take: query.limit + 1,
 			...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
 		})
-		const items = vendors.slice(0, query.limit).map((vendor) => ({ id: vendor.id, slug: vendor.publicSlug }))
+		const items = vendors
+			.slice(0, query.limit)
+			.flatMap((vendor) => (vendor.publicSlug && vendor.displayName ? [{ id: vendor.id, slug: vendor.publicSlug, displayName: vendor.displayName }] : []))
 		return PublicVendorPageSchema.parse({ items, nextCursor: vendors.length > query.limit ? (items.at(-1)?.id ?? null) : null })
 	}
 
@@ -623,20 +770,96 @@ export class PostgresFoundation {
 				listings: {
 					where: { state: 'published' },
 					orderBy: { publishedAt: 'desc' },
-					include: { variants: true, media: { where: { state: 'ready', scanVerdict: 'clean' }, orderBy: { moderatedAt: 'desc' }, take: 1 } },
+					include: { variants: true, media: { where: { state: 'ready', scanVerdict: 'clean' }, orderBy: { moderatedAt: 'desc' } } },
 				},
 			},
 		})
 		if (!vendor || !vendor.publicSlug || !vendor.displayName || !vendor.description) throw new AccessDeniedError()
+		const approvedImages = vendor.listings.flatMap((listing) =>
+			listing.media.flatMap((media) =>
+				media.kind === 'listing_image' && media.description && media.outputWidth && media.outputHeight
+					? [{ id: media.id, alt: media.description, width: media.outputWidth, height: media.outputHeight }]
+					: [],
+			),
+		)
+		const logoImage = vendor.logoMediaId ? approvedImages.find((image) => image.id === vendor.logoMediaId) : undefined
+		const coverImage = vendor.coverMediaId ? approvedImages.find((image) => image.id === vendor.coverMediaId) : undefined
 		return PublicStorefrontSchema.parse({
 			id: vendor.id,
 			slug: vendor.publicSlug,
 			displayName: vendor.displayName,
 			description: vendor.description,
+			...(logoImage ? { logoImage } : {}),
+			...(coverImage ? { coverImage } : {}),
 			locations: vendor.locations.flatMap((location) =>
 				location.label && location.city ? [{ id: location.id, label: location.label, city: location.city }] : [],
 			),
 			listings: vendor.listings.map((listing) => this.listingResult(listing)),
+		})
+	}
+
+	async readPublicProductAvailability(listingId: string, queryInput: unknown) {
+		this.requireResourceId(listingId)
+		const query = PublicProductAvailabilityQuerySchema.parse(queryInput)
+		return this.db.$transaction(
+			async (tx) => {
+				// Publication and stock must come from the same database snapshot.
+				const listing = await tx.listing.findFirst({
+					where: {
+						id: listingId,
+						kind: 'product',
+						state: 'published',
+						vendor: {
+							applicationState: 'approved',
+							publishedAt: { not: null },
+							workspace: { kind: this.publicWorkspaceKind },
+							locations: { some: { id: query.locationId, label: { not: '' }, city: { not: '' } } },
+						},
+					},
+					include: { variants: { select: { sku: true } }, vendor: { select: { publicSlug: true, displayName: true } } },
+				})
+				if (!listing || !listing.vendor.publicSlug || !listing.vendor.displayName) throw new AccessDeniedError()
+				const sku = query.sku ?? null
+				if (listing.variants.length ? !listing.variants.some((variant) => variant.sku === sku) : sku !== null) throw new AccessDeniedError()
+				const balance = await tx.inventoryMovement.aggregate({
+					where: { listingId, locationId: query.locationId, sku },
+					_sum: { onHandDelta: true, reservedDelta: true },
+				})
+				const available = (balance._sum.onHandDelta ?? 0) - (balance._sum.reservedDelta ?? 0)
+				return PublicProductAvailabilitySchema.parse({
+					listingId,
+					locationId: query.locationId,
+					sku,
+					available,
+					requestedQuantity: query.quantity,
+					canFulfill: available >= query.quantity,
+					checkedAt: new Date().toISOString(),
+				})
+			},
+			{ isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
+		)
+	}
+
+	async readPublicListing(listingId: string) {
+		this.requireResourceId(listingId)
+		const listing = await this.db.listing.findFirst({
+			where: {
+				id: listingId,
+				state: 'published',
+				vendor: { applicationState: 'approved', publishedAt: { not: null }, workspace: { kind: this.publicWorkspaceKind } },
+			},
+			include: {
+				variants: true,
+				media: { where: { state: 'ready', scanVerdict: 'clean' }, orderBy: { moderatedAt: 'desc' } },
+				vendor: { include: { locations: true } },
+			},
+		})
+		if (!listing || !listing.vendor.publicSlug || !listing.vendor.displayName) throw new AccessDeniedError()
+		return PublicListingDetailSchema.parse({
+			...this.publicListingResult(listing),
+			locations: listing.vendor.locations.flatMap((location) =>
+				location.label && location.city ? [{ id: location.id, label: location.label, city: location.city }] : [],
+			),
 		})
 	}
 
@@ -652,22 +875,34 @@ export class PostgresFoundation {
 				throw new AccessDeniedError()
 			const vendor = await tx.vendor.findFirst({
 				where: { id: context.activeVendorId, workspaceId: context.workspaceId },
-				include: { locations: { orderBy: { id: 'asc' } }, listings: { orderBy: { id: 'asc' }, include: { variants: true } } },
+				include: {
+					locations: { orderBy: { id: 'asc' } },
+					listings: {
+						orderBy: { id: 'asc' },
+						include: { variants: true, media: { where: { state: 'ready', scanVerdict: 'clean' }, orderBy: { moderatedAt: 'desc' } } },
+					},
+				},
 			})
 			if (!vendor) throw new AccessDeniedError()
+			const listings = vendor.listings.map((listing) => this.listingResult(listing))
+			const images = listings.flatMap((listing) => listing.images)
+			const logoImage = vendor.logoMediaId ? (images.find((image) => image.id === vendor.logoMediaId) ?? null) : null
+			const coverImage = vendor.coverMediaId ? (images.find((image) => image.id === vendor.coverMediaId) ?? null) : null
 			return VendorCatalogSchema.parse({
 				id: vendor.id,
 				applicationState: vendor.applicationState,
 				slug: vendor.publicSlug,
 				displayName: vendor.displayName,
 				description: vendor.description,
+				logoImage,
+				coverImage,
 				locations: vendor.locations.map((location) => ({
 					id: location.id,
 					label: location.label,
 					city: location.city,
 					address: location.address,
 				})),
-				listings: vendor.listings.map((listing) => this.listingResult(listing)),
+				listings,
 			})
 		})
 	}
@@ -886,9 +1121,30 @@ export class PostgresFoundation {
 			const context = await this.derive(tx, sessionId)
 			const vendor = await this.vendorForWrite(tx, context)
 			const result = await this.replayOrCreate(tx, context, key, 'POST /v1/vendor-storefront', storefront, async () => {
+				const brandMediaIds = [storefront.logoMediaId, storefront.coverMediaId].filter((mediaId): mediaId is string => typeof mediaId === 'string')
+				if (brandMediaIds.length) {
+					const approvedImageMedia = await tx.mediaAsset.findMany({
+						where: {
+							id: { in: [...new Set(brandMediaIds)] },
+							kind: 'listing_image',
+							state: 'ready',
+							scanVerdict: 'clean',
+							listing: { vendorId: vendor.id },
+						},
+						select: { id: true },
+					})
+					if (approvedImageMedia.length !== new Set(brandMediaIds).size)
+						throw new AccessDeniedError('Storefront imagery must be an approved image owned by this Vendor.')
+				}
 				const updated = await tx.vendor.update({
 					where: { id: vendor.id },
-					data: { publicSlug: storefront.slug, displayName: storefront.displayName, description: storefront.description },
+					data: {
+						...(storefront.slug === undefined ? {} : { publicSlug: storefront.slug }),
+						...(storefront.displayName === undefined ? {} : { displayName: storefront.displayName }),
+						...(storefront.description === undefined ? {} : { description: storefront.description }),
+						...(storefront.logoMediaId === undefined ? {} : { logoMediaId: storefront.logoMediaId }),
+						...(storefront.coverMediaId === undefined ? {} : { coverMediaId: storefront.coverMediaId }),
+					},
 				})
 				await tx.auditLog.create({
 					data: {
@@ -1067,8 +1323,22 @@ export class PostgresFoundation {
 				if (state === 'published')
 					await tx.searchDocument.upsert({
 						where: { listingId },
-						create: { listingId, kind: updated.kind, title: updated.title, category: updated.category, version: updated.version },
-						update: { kind: updated.kind, title: updated.title, category: updated.category, version: updated.version, projectedAt: new Date() },
+						create: {
+							listingId,
+							kind: updated.kind,
+							title: updated.title,
+							category: updated.category,
+							priceCents: this.listingSearchPrice(updated),
+							version: updated.version,
+						},
+						update: {
+							kind: updated.kind,
+							title: updated.title,
+							category: updated.category,
+							priceCents: this.listingSearchPrice(updated),
+							version: updated.version,
+							projectedAt: new Date(),
+						},
 					})
 				await tx.auditLog.create({
 					data: {
@@ -1188,7 +1458,7 @@ export class PostgresFoundation {
 		const current = await this.db.mediaAsset.findUnique({ where: { id: result.outcome.mediaId }, select: { state: true, uploadExpiresAt: true } })
 		if (current?.state !== 'pending_upload' || !current.uploadExpiresAt || current.uploadExpiresAt <= new Date())
 			throw new AccessDeniedError('The upload intent is no longer pending.')
-		const grant = await store.createUploadGrant(result.outcome.uploadKey, command.bytes, expiresIn)
+		const grant = await store.createUploadGrant(result.outcome.uploadKey, command.bytes, expiresIn, 'video/mp4')
 		return MediaUploadIntentSchema.parse({
 			...grant,
 			mediaId: result.outcome.mediaId,
@@ -1221,7 +1491,7 @@ export class PostgresFoundation {
 		if (media.state === 'quarantined' && media.sealedKey) return MediaAssetSchema.parse({ id: media.id, state: media.state })
 		if (!media.uploadKey || !media.uploadBytes || !media.uploadSha256) throw new AccessDeniedError()
 		const sealedKey = `quarantine/sealed/${media.listingId}/${media.id}`
-		await store.sealUpload(media.uploadKey, sealedKey, media.uploadBytes, media.uploadSha256)
+		await store.sealUpload(media.uploadKey, sealedKey, media.uploadBytes, media.uploadSha256, 'video/mp4')
 		return this.db.$transaction(async (tx) => {
 			const context = await this.derive(tx, sessionId)
 			const vendor = await this.vendorForWrite(tx, context)
@@ -1243,6 +1513,98 @@ export class PostgresFoundation {
 		})
 	}
 
+	async createImageUploadIntent(sessionId: string | undefined, keyInput: string | undefined, listingId: string, input: unknown) {
+		this.requireResourceId(listingId)
+		const key = IdempotencyKeySchema.parse(keyInput)
+		const command = ImageUploadIntentCommandSchema.parse(input)
+		const store = this.requireMediaStore()
+		const result = await this.db.$transaction(async (tx) => {
+			const context = await this.derive(tx, sessionId)
+			const vendor = await this.vendorForWrite(tx, context)
+			await this.requireOwnedListing(tx, listingId, vendor.id)
+			return this.replayOrCreate(tx, context, key, 'POST /v1/listings/:listingId/image-upload-intents', { listingId, command }, async () => {
+				const mediaId = randomUUID()
+				const uploadKey = `quarantine/uploads/${context.workspaceId}/${mediaId}`
+				const expiresAt = new Date(Date.now() + Phase01ImageLimits.uploadIntentSeconds * 1000)
+				await tx.mediaAsset.create({
+					data: {
+						id: mediaId,
+						listingId,
+						uploaderId: this.actorId(context),
+						kind: 'listing_image',
+						state: 'pending_upload',
+						contentType: command.contentType,
+						uploadKey,
+						uploadSha256: command.sha256,
+						uploadBytes: command.bytes,
+						uploadExpiresAt: expiresAt,
+						description: command.alt,
+						quarantineReason: 'image upload pending',
+					},
+				})
+				return { mediaId, uploadKey, expiresAt: expiresAt.toISOString() }
+			})
+		})
+		const expiresIn = Math.floor((Date.parse(result.outcome.expiresAt) - Date.now()) / 1000)
+		if (expiresIn < 1) throw new AccessDeniedError('The upload intent expired; request a new intent.')
+		const current = await this.db.mediaAsset.findUnique({ where: { id: result.outcome.mediaId }, select: { state: true, uploadExpiresAt: true } })
+		if (current?.state !== 'pending_upload' || !current.uploadExpiresAt || current.uploadExpiresAt <= new Date())
+			throw new AccessDeniedError('The upload intent is no longer pending.')
+		const grant = await store.createUploadGrant(result.outcome.uploadKey, command.bytes, expiresIn, command.contentType)
+		return ImageUploadIntentSchema.parse({
+			...grant,
+			mediaId: result.outcome.mediaId,
+			state: 'pending_upload',
+			expiresAt: result.outcome.expiresAt,
+			replayed: result.replayed,
+		})
+	}
+
+	async completeImageUpload(sessionId: string | undefined, mediaId: string, input: unknown) {
+		this.requireResourceId(mediaId)
+		const command = MediaUploadCompleteCommandSchema.parse(input)
+		const store = this.requireMediaStore()
+		const media = await this.db.$transaction(async (tx) => {
+			const context = await this.derive(tx, sessionId)
+			const vendor = await this.vendorForWrite(tx, context)
+			const record = await tx.mediaAsset.findFirst({ where: { id: mediaId, kind: 'listing_image', listing: { vendorId: vendor.id } } })
+			if (!record || record.uploadSha256 !== command.sha256 || !record.contentType) throw new AccessDeniedError()
+			if (record.state === 'quarantined' && record.sealedKey) return record
+			if (
+				record.state !== 'pending_upload' ||
+				!record.uploadKey ||
+				!record.uploadBytes ||
+				!record.uploadExpiresAt ||
+				record.uploadExpiresAt <= new Date()
+			)
+				throw new AccessDeniedError('The upload intent expired or was already rejected.')
+			return record
+		})
+		if (media.state === 'quarantined' && media.sealedKey) return MediaAssetSchema.parse({ id: media.id, state: media.state })
+		if (!media.uploadKey || !media.uploadBytes || !media.uploadSha256 || !media.contentType) throw new AccessDeniedError()
+		const sealedKey = `quarantine/sealed/${media.listingId}/${media.id}`
+		await store.sealUpload(media.uploadKey, sealedKey, media.uploadBytes, media.uploadSha256, media.contentType)
+		return this.db.$transaction(async (tx) => {
+			const context = await this.derive(tx, sessionId)
+			const vendor = await this.vendorForWrite(tx, context)
+			await this.requireOwnedListing(tx, media.listingId, vendor.id)
+			const updated = await tx.mediaAsset.updateMany({
+				where: { id: media.id, kind: 'listing_image', state: 'pending_upload', uploadSha256: command.sha256 },
+				data: { state: 'quarantined', sealedKey, uploadedAt: new Date(), quarantineReason: 'safe image processing required' },
+			})
+			if (updated.count === 0) {
+				const existing = await tx.mediaAsset.findUniqueOrThrow({ where: { id: media.id } })
+				if (existing.state !== 'quarantined' || existing.sealedKey !== sealedKey) throw new AccessDeniedError()
+				return MediaAssetSchema.parse({ id: existing.id, state: existing.state })
+			}
+			await this.enqueue(
+				tx,
+				this.catalogEvent(context, 'MediaQuarantined', media.id, 1, null, { listingId: media.listingId, mediaId: media.id, state: 'quarantined' }),
+			)
+			return MediaAssetSchema.parse({ id: media.id, state: 'quarantined' })
+		})
+	}
+
 	async processQuarantinedMedia(mediaId: string) {
 		this.requireResourceId(mediaId)
 		const media = await this.db.mediaAsset.findUnique({ where: { id: mediaId }, include: { listing: { include: { vendor: true } } } })
@@ -1250,21 +1612,33 @@ export class PostgresFoundation {
 		const store = this.requireMediaStore()
 		if (!this.videoProcessor) throw new Error('Video scanning and processing are not configured.')
 		try {
-			const body = await store.readPrivate(media.sealedKey, Phase01MediaLimits.maxUploadBytes)
+			const isImage = media.kind === 'listing_image'
+			if (media.kind !== 'short_video' && !isImage) throw new MediaRejectedError('Unsupported media type.')
+			const imageContentType = media.contentType === 'image/jpeg' || media.contentType === 'image/png' ? media.contentType : undefined
+			if (isImage && !imageContentType) throw new MediaRejectedError('Image content type is invalid.')
+			const body = await store.readPrivate(
+				media.sealedKey,
+				isImage ? Phase01ImageLimits.maxUploadBytes : Phase01MediaLimits.maxUploadBytes,
+				imageContentType ?? 'video/mp4',
+			)
 			if (!media.uploadSha256 || createHash('sha256').update(body).digest('hex') !== media.uploadSha256)
 				throw new MediaRejectedError('Sealed source checksum mismatch.')
-			const output = await this.videoProcessor.process({
-				body,
-				captionText: media.captionText,
-				noSpeechDeclared: media.noSpeechDeclared,
-				description: media.description,
-			})
+			const imageOutput = isImage && imageContentType ? await this.videoProcessor.processImage({ body, contentType: imageContentType }) : undefined
+			const videoOutput = isImage
+				? undefined
+				: await this.videoProcessor.process({
+						body,
+						captionText: media.captionText,
+						noSpeechDeclared: media.noSpeechDeclared,
+						description: media.description,
+					})
+			const output = imageOutput ?? videoOutput
+			if (!output) throw new MediaRejectedError('No media output was produced.')
 			const renditionHash = createHash('sha256').update(output.processed).digest('hex')
-			const posterHash = createHash('sha256').update(output.poster).digest('hex')
-			const renditionKey = `private/processed/${media.id}/${renditionHash}.mp4`
-			const posterKey = `private/processed/${media.id}/${posterHash}.jpg`
-			await store.writePrivate(renditionKey, output.processed, 'video/mp4')
-			await store.writePrivate(posterKey, output.poster, 'image/jpeg')
+			const renditionKey = `private/processed/${media.id}/${renditionHash}.${isImage ? 'jpg' : 'mp4'}`
+			const posterKey = videoOutput ? `private/processed/${media.id}/${createHash('sha256').update(videoOutput.poster).digest('hex')}.jpg` : renditionKey
+			await store.writePrivate(renditionKey, output.processed, isImage ? 'image/jpeg' : 'video/mp4')
+			if (videoOutput) await store.writePrivate(posterKey, videoOutput.poster, 'image/jpeg')
 			return this.db.$transaction(async (tx) => {
 				await this.workspaceLock(tx, media.listing.vendor.workspaceId)
 				const updated = await tx.mediaAsset.updateMany({
@@ -1274,7 +1648,7 @@ export class PostgresFoundation {
 						renditionKey,
 						posterKey,
 						scanVerdict: 'clean',
-						durationSeconds: output.durationSeconds,
+						durationSeconds: videoOutput?.durationSeconds ?? null,
 						sourceWidth: output.sourceWidth,
 						sourceHeight: output.sourceHeight,
 						outputWidth: output.outputWidth,
@@ -1300,7 +1674,7 @@ export class PostgresFoundation {
 				await this.workspaceLock(tx, media.listing.vendor.workspaceId)
 				const updated = await tx.mediaAsset.updateMany({
 					where: { id: media.id, state: 'quarantined', sealedKey: media.sealedKey },
-					data: { state: 'rejected', quarantineReason: error.message, version: { increment: 1 } },
+					data: { state: 'rejected', ...rejectionRetention(), quarantineReason: error.message, version: { increment: 1 } },
 				})
 				if (updated.count !== 1) return { processed: false }
 				await this.enqueue(
@@ -1333,6 +1707,7 @@ export class PostgresFoundation {
 			return MediaReviewQueueSchema.parse({
 				items: page.map((media) => ({
 					id: media.id,
+					kind: media.kind,
 					listingId: media.listingId,
 					listingTitle: media.listing.title,
 					vendorName: media.listing.vendor.displayName,
@@ -1363,14 +1738,17 @@ export class PostgresFoundation {
 		const store = this.requireMediaStore()
 		if (!media.renditionKey || !media.posterKey) throw new AccessDeniedError()
 		const expiresIn = 300
-		const [videoUrl, posterUrl] = await Promise.all([
+		const [renditionUrl, posterUrl] = await Promise.all([
 			store.createReadGrant(media.renditionKey, expiresIn),
 			store.createReadGrant(media.posterKey, expiresIn),
 		])
+		const isImage = media.kind === 'listing_image'
 		return MediaPreviewSchema.parse({
 			mediaId,
-			videoUrl,
-			posterUrl,
+			kind: media.kind,
+			videoUrl: isImage ? null : renditionUrl,
+			posterUrl: isImage ? null : posterUrl,
+			imageUrl: isImage ? renditionUrl : null,
 			captionText: media.captionText,
 			noSpeechDeclared: media.noSpeechDeclared,
 			description: media.description,
@@ -1400,6 +1778,7 @@ export class PostgresFoundation {
 					},
 					data: {
 						state: command.decision === 'approve' ? 'ready' : 'rejected',
+						...(command.decision === 'reject' ? rejectionRetention() : {}),
 						moderatedBy: this.actorId(context),
 						moderatedAt: new Date(),
 						moderationNote: command.note,
@@ -1428,12 +1807,12 @@ export class PostgresFoundation {
 		})
 	}
 
-	async readPublicMedia(mediaId: string, kind: 'video' | 'poster' | 'captions') {
+	async readPublicMedia(mediaId: string, kind: 'video' | 'poster' | 'captions' | 'image') {
 		this.requireResourceId(mediaId)
 		const media = await this.db.mediaAsset.findFirst({
 			where: {
 				id: mediaId,
-				kind: 'short_video',
+				kind: kind === 'image' ? 'listing_image' : 'short_video',
 				state: 'ready',
 				scanVerdict: 'clean',
 				listing: {
@@ -1448,10 +1827,10 @@ export class PostgresFoundation {
 			if (!media.captionText) throw new AccessDeniedError()
 			return { body: Buffer.from(media.captionText, 'utf8'), contentType: 'text/vtt; charset=utf-8' }
 		}
-		const objectKey = kind === 'video' ? media.renditionKey : media.posterKey
+		const objectKey = kind === 'video' || kind === 'image' ? media.renditionKey : media.posterKey
 		if (!objectKey) throw new AccessDeniedError()
 		const contentType = kind === 'video' ? 'video/mp4' : 'image/jpeg'
-		const maxBytes = kind === 'video' ? Phase01MediaLimits.maxUploadBytes : 2 * 1024 * 1024
+		const maxBytes = kind === 'video' ? Phase01MediaLimits.maxUploadBytes : kind === 'image' ? Phase01ImageLimits.maxUploadBytes : 2 * 1024 * 1024
 		return { body: await this.requireMediaStore().readPrivate(objectKey, maxBytes, contentType), contentType }
 	}
 
@@ -1616,25 +1995,56 @@ export class PostgresFoundation {
 
 	async browsePublicListings(queryInput: unknown) {
 		const query = PublicListingBrowseQuerySchema.parse(queryInput)
-		const documents = await this.db.searchDocument.findMany({
-			where: {
-				kind: query.kind,
-				category: query.category,
-				...(query.q ? { title: { contains: query.q, mode: 'insensitive' } } : {}),
-				listing: {
-					state: 'published',
-					vendor: { applicationState: 'approved', publishedAt: { not: null }, workspace: { kind: this.publicWorkspaceKind } },
+		const where = {
+			kind: query.kind,
+			category: query.category,
+			...(query.q ? { title: { contains: query.q, mode: 'insensitive' as const } } : {}),
+			...(query.minPriceCents !== undefined || query.maxPriceCents !== undefined
+				? {
+						priceCents: {
+							...(query.minPriceCents === undefined ? {} : { gte: query.minPriceCents }),
+							...(query.maxPriceCents === undefined ? {} : { lte: query.maxPriceCents }),
+						},
+					}
+				: {}),
+			listing: {
+				state: 'published',
+				vendor: {
+					applicationState: 'approved',
+					publishedAt: { not: null },
+					workspace: { kind: this.publicWorkspaceKind },
+					...(query.vendor ? { publicSlug: query.vendor } : {}),
 				},
 			},
-			orderBy: { listingId: 'asc' },
-			take: query.limit + 1,
-			...(query.cursor ? { cursor: { listingId: query.cursor }, skip: 1 } : {}),
-			include: {
-				listing: { include: { variants: true, media: { where: { state: 'ready', scanVerdict: 'clean' }, orderBy: { moderatedAt: 'desc' }, take: 1 } } },
-			},
-		})
-		const items = documents.slice(0, query.limit).map(({ listing }) => this.listingResult(listing))
-		return PublicListingPageSchema.parse({ items, nextCursor: documents.length > query.limit ? (items.at(-1)?.id ?? null) : null })
+		}
+		if (query.cursor && !(await this.db.searchDocument.findFirst({ where: { ...where, listingId: query.cursor }, select: { listingId: true } })))
+			throw new AccessDeniedError()
+		const orderBy =
+			query.sort === 'price_asc'
+				? [{ priceCents: 'asc' as const }, { listingId: 'asc' as const }]
+				: query.sort === 'price_desc'
+					? [{ priceCents: 'desc' as const }, { listingId: 'asc' as const }]
+					: [{ listing: { publishedAt: 'desc' as const } }, { listingId: 'asc' as const }]
+		const [documents, total] = await Promise.all([
+			this.db.searchDocument.findMany({
+				where,
+				orderBy,
+				take: query.limit + 1,
+				...(query.cursor ? { cursor: { listingId: query.cursor }, skip: 1 } : {}),
+				include: {
+					listing: {
+						include: {
+							variants: true,
+							media: { where: { state: 'ready', scanVerdict: 'clean' }, orderBy: { moderatedAt: 'desc' } },
+							vendor: { select: { id: true, publicSlug: true, displayName: true } },
+						},
+					},
+				},
+			}),
+			this.db.searchDocument.count({ where }),
+		])
+		const items = documents.slice(0, query.limit).map(({ listing }) => this.publicListingResult(listing))
+		return PublicListingPageSchema.parse({ items, nextCursor: documents.length > query.limit ? (items.at(-1)?.id ?? null) : null, total })
 	}
 
 	async setDiscoveryPreference(sessionId: string | undefined, input: unknown) {
@@ -1751,13 +2161,20 @@ export class PostgresFoundation {
 	async rebuildSearchDocuments() {
 		const listings = await this.db.listing.findMany({
 			where: { state: 'published' },
-			select: { id: true, kind: true, title: true, category: true, version: true },
+			select: { id: true, kind: true, title: true, category: true, priceCents: true, version: true, variants: { select: { priceCents: true } } },
 		})
 		await this.db.$transaction(async (tx) => {
 			await tx.searchDocument.deleteMany()
 			for (const listing of listings)
 				await tx.searchDocument.create({
-					data: { listingId: listing.id, kind: listing.kind, title: listing.title, category: listing.category, version: listing.version },
+					data: {
+						listingId: listing.id,
+						kind: listing.kind,
+						title: listing.title,
+						category: listing.category,
+						priceCents: this.listingSearchPrice(listing),
+						version: listing.version,
+					},
 				})
 		})
 		return { rebuilt: listings.length }
@@ -1878,7 +2295,7 @@ export class PostgresFoundation {
 					await this.requireMediaStore().deletePrivate(current.uploadKey)
 					await tx.mediaAsset.update({
 						where: { id: current.id },
-						data: { state: 'rejected', quarantineReason: 'Upload intent expired.', version: { increment: 1 } },
+						data: { state: 'rejected', ...rejectionRetention(now), quarantineReason: 'Upload intent expired.', version: { increment: 1 } },
 					})
 					await this.enqueue(
 						tx,
@@ -1893,6 +2310,221 @@ export class PostgresFoundation {
 			)
 		}
 		return expired
+	}
+
+	async setMediaRetentionHold(sessionId: string | undefined, keyInput: string | undefined, mediaId: string, input: unknown) {
+		this.requireResourceId(mediaId)
+		const command = MediaRetentionHoldCommandSchema.parse(input)
+		const key = IdempotencyKeySchema.parse(keyInput)
+		return this.db.$transaction(async (tx) => {
+			const context = await this.derive(tx, sessionId)
+			if (!context.capabilities.includes('platform:vendor:review')) throw new AccessDeniedError()
+			if (context.actor.kind === 'user') assertRequiredMfa(context)
+			const result = await this.replayOrCreate(tx, context, key, 'POST /v1/platform/media/:mediaId/retention-hold', { mediaId, command }, async () => {
+				const media = await tx.mediaAsset.findFirst({
+					where: {
+						id: mediaId,
+						version: command.expectedVersion,
+						retentionDeletedAt: null,
+						listing: { vendor: { workspaceId: context.workspaceId } },
+					},
+				})
+				if (!media) throw new AccessDeniedError('The media version is stale or its files were already deleted.')
+				if (!this.deletionJournal) throw new Error('Independent media deletion journal is not configured.')
+				if (await this.deletionJournal.get(mediaId)) throw new AccessDeniedError('Irreversible media deletion has already started.')
+				const now = new Date()
+				const updated = await tx.mediaAsset.update({
+					where: { id: mediaId },
+					data: {
+						retentionHoldReason: command.held ? command.reason : null,
+						...(!command.held && media.state === 'rejected'
+							? {
+									retentionDueAt: new Date(
+										Math.max(media.retentionDueAt?.getTime() ?? 0, now.getTime() + rejectedMediaRetentionDays * 86400000),
+									),
+									retentionNextAttemptAt: null,
+								}
+							: {}),
+						version: { increment: 1 },
+					},
+				})
+				await tx.auditLog.create({
+					data: {
+						workspaceId: context.workspaceId,
+						actorId: this.actorId(context),
+						action: command.held ? 'media.retention-held' : 'media.retention-hold-released',
+						correlationId: randomUUID(),
+						metadata: json({ mediaId, reason: command.reason, version: updated.version }),
+					},
+				})
+				return MediaRetentionResultSchema.parse({
+					mediaId,
+					version: updated.version,
+					held: Boolean(updated.retentionHoldReason),
+					dueAt: updated.retentionDueAt?.toISOString() ?? null,
+					deletedAt: updated.retentionDeletedAt?.toISOString() ?? null,
+				})
+			})
+			return result.outcome
+		})
+	}
+
+	async cleanupRejectedMedia(now = new Date()) {
+		if (!this.mediaStore) return { deleted: 0, failed: 0 }
+		const eligible = {
+			state: 'rejected',
+			retentionPolicy: rejectedMediaRetentionPolicy,
+			retentionDueAt: { lte: now },
+			retentionDeletedAt: null,
+			retentionHoldReason: null,
+			OR: [{ retentionNextAttemptAt: null }, { retentionNextAttemptAt: { lte: now } }],
+			listing: { vendor: { workspace: { kind: 'real' } } },
+		}
+		const candidates = await this.db.mediaAsset.findMany({
+			where: eligible,
+			orderBy: { retentionDueAt: 'asc' },
+			take: 25,
+			include: { listing: { include: { vendor: true } } },
+		})
+		let deleted = 0
+		let failed = 0
+		for (const candidate of candidates) {
+			const workspaceId = candidate.listing.vendor.workspaceId
+			try {
+				const completed = await this.db.$transaction(
+					async (tx) => {
+						await this.workspaceLock(tx, workspaceId)
+						const media = await tx.mediaAsset.findFirst({ where: { ...eligible, id: candidate.id } })
+						if (!media) return false
+						const keys = [
+							...new Set([media.uploadKey, media.sealedKey, media.renditionKey, media.posterKey].filter((key): key is string => Boolean(key))),
+						]
+						if (!this.deletionJournal) throw new Error('Independent media deletion journal is not configured.')
+						// Persist before any destructive effect; replay remains safe across DB rollback/PITR.
+						await this.deletionJournal.record({
+							format: 1,
+							mediaId: media.id,
+							workspaceId,
+							policy: rejectedMediaRetentionPolicy,
+							decidedAt: now.toISOString(),
+							keys,
+						})
+						for (const key of keys) await this.requireMediaStore().deletePrivate(key)
+						await tx.mediaAsset.update({
+							where: { id: media.id },
+							data: {
+								uploadKey: null,
+								sealedKey: null,
+								renditionKey: null,
+								posterKey: null,
+								retentionDeletedAt: now,
+								retentionNextAttemptAt: null,
+								retentionDeleteAttempts: { increment: 1 },
+								version: { increment: 1 },
+							},
+						})
+						await tx.auditLog.create({
+							data: {
+								workspaceId,
+								action: 'media.retention-deleted',
+								correlationId: randomUUID(),
+								metadata: json({
+									mediaId: media.id,
+									policy: rejectedMediaRetentionPolicy,
+									objects: keys.length,
+									attempt: media.retentionDeleteAttempts + 1,
+								}),
+							},
+						})
+						return true
+					},
+					{ timeout: 30_000 },
+				)
+				if (completed) deleted++
+			} catch {
+				failed++
+				await this.db.$transaction(async (tx) => {
+					await this.workspaceLock(tx, workspaceId)
+					const current = await tx.mediaAsset.findUnique({ where: { id: candidate.id } })
+					if (!current || current.retentionDeletedAt) return
+					const attempts = current.retentionDeleteAttempts + 1
+					const retryAt = new Date(now.getTime() + Math.min(86400000, 300000 * 2 ** Math.min(attempts - 1, 10)))
+					await tx.mediaAsset.update({ where: { id: current.id }, data: { retentionDeleteAttempts: attempts, retentionNextAttemptAt: retryAt } })
+					await tx.auditLog.create({
+						data: {
+							workspaceId,
+							action: 'media.retention-delete-failed',
+							correlationId: randomUUID(),
+							metadata: json({ mediaId: current.id, attempt: attempts, retryAt: retryAt.toISOString(), policy: rejectedMediaRetentionPolicy }),
+						},
+					})
+				})
+			}
+		}
+		return { deleted, failed }
+	}
+
+	async reconcileRestoredMedia() {
+		if (!this.deletionJournal) throw new Error('Independent media deletion journal is not configured.')
+		// Refuse to declare a restore reconciled when retained tombstones lack scope.
+		const purged = await this.db.mediaAsset.findMany({ where: { retentionDeletedAt: { not: null } }, select: { id: true } })
+		for (const media of purged)
+			if (!(await this.deletionJournal.get(media.id))) throw new Error('Purged media is missing its independent deletion journal entry.')
+		let reconciled = 0
+		for await (const entry of this.deletionJournal.entries()) {
+			await this.db.$transaction(
+				async (tx) => {
+					await this.workspaceLock(tx, entry.workspaceId)
+					const media = await tx.mediaAsset.findUnique({ where: { id: entry.mediaId }, include: { listing: { include: { vendor: true } } } })
+					if (media && media.listing.vendor.workspaceId !== entry.workspaceId) throw new Error('Deletion journal workspace mismatch.')
+					// Include older restore-point references as well as the original deletion keys.
+					const keys = [
+						...new Set([
+							...entry.keys,
+							...[media?.uploadKey, media?.sealedKey, media?.renditionKey, media?.posterKey].filter((key): key is string => Boolean(key)),
+						]),
+					]
+					for (const key of keys) await this.requireMediaStore().deletePrivate(key)
+					if (
+						!media ||
+						(media.retentionDeletedAt &&
+							media.state === 'rejected' &&
+							!media.uploadKey &&
+							!media.sealedKey &&
+							!media.renditionKey &&
+							!media.posterKey &&
+							!media.retentionHoldReason)
+					)
+						return
+					await tx.mediaAsset.update({
+						where: { id: media.id },
+						data: {
+							state: 'rejected',
+							uploadKey: null,
+							sealedKey: null,
+							renditionKey: null,
+							posterKey: null,
+							retentionPolicy: entry.policy,
+							retentionDeletedAt: new Date(entry.decidedAt),
+							retentionNextAttemptAt: null,
+							retentionHoldReason: null,
+							version: { increment: 1 },
+						},
+					})
+					await tx.auditLog.create({
+						data: {
+							workspaceId: entry.workspaceId,
+							action: 'media.retention-restore-reconciled',
+							correlationId: randomUUID(),
+							metadata: json({ mediaId: entry.mediaId, policy: entry.policy, objects: keys.length }),
+						},
+					})
+					reconciled++
+				},
+				{ timeout: 30_000 },
+			)
+		}
+		return { reconciled }
 	}
 
 	async reconcileOrphanMediaObjects(now = new Date()) {
@@ -2140,8 +2772,16 @@ export class PostgresFoundation {
 		state: string
 		version: number
 		variants?: Array<{ sku: string; label: string; priceCents: number }>
-		media?: Array<{ id: string; description: string | null; captionText: string | null }>
+		media?: Array<{
+			id: string
+			kind: string
+			description: string | null
+			captionText: string | null
+			outputWidth: number | null
+			outputHeight: number | null
+		}>
 	}) {
+		const video = listing.media?.find((media) => media.kind === 'short_video')
 		return ListingCommandResultSchema.parse({
 			id: listing.id,
 			kind: listing.kind,
@@ -2155,10 +2795,55 @@ export class PostgresFoundation {
 				: {}),
 			state: listing.state,
 			version: listing.version,
-			...(listing.media?.[0]
-				? { shortVideo: { id: listing.media[0].id, description: listing.media[0].description, hasCaptions: Boolean(listing.media[0].captionText) } }
+			...(video
+				? {
+						shortVideo: {
+							id: video.id,
+							description: video.description,
+							hasCaptions: Boolean(video.captionText),
+						},
+					}
 				: {}),
+			images: (listing.media ?? []).flatMap((media) =>
+				media.kind === 'listing_image' && media.description && media.outputWidth && media.outputHeight
+					? [{ id: media.id, alt: media.description, width: media.outputWidth, height: media.outputHeight }]
+					: [],
+			),
 			replayed: false,
+		})
+	}
+
+	private listingSearchPrice(listing: { priceCents: number | null; variants?: Array<{ priceCents: number }> }) {
+		if (listing.priceCents !== null) return listing.priceCents
+		if (!listing.variants?.length) return null
+		return Math.min(...listing.variants.map((variant) => variant.priceCents))
+	}
+
+	private publicListingResult(listing: {
+		id: string
+		kind: string
+		category: string
+		title: string
+		description: string
+		priceCents: number | null
+		durationMinutes: number | null
+		state: string
+		version: number
+		variants?: Array<{ sku: string; label: string; priceCents: number }>
+		media?: Array<{
+			id: string
+			kind: string
+			description: string | null
+			captionText: string | null
+			outputWidth: number | null
+			outputHeight: number | null
+		}>
+		vendor: { id: string; publicSlug: string | null; displayName: string | null }
+	}) {
+		if (!listing.vendor.publicSlug || !listing.vendor.displayName) throw new AccessDeniedError()
+		return PublicListingSummarySchema.parse({
+			...this.listingResult(listing),
+			vendor: { id: listing.vendor.id, slug: listing.vendor.publicSlug, displayName: listing.vendor.displayName },
 		})
 	}
 

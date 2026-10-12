@@ -1,0 +1,137 @@
+[
+	{
+		"surface": "home",
+		"heading": "Products and services, side by side.",
+		"overflow": [
+			{
+				"right": 340.609375,
+				"tag": "SPAN",
+				"text": "Approved and published",
+				"width": 158.46875
+			}
+		],
+		"scroll": 340,
+		"theme": "font-sans dark js-focus-visible",
+		"width": 320
+	},
+	{
+		"surface": "search",
+		"heading": "Products and services",
+		"overflow": [],
+		"scroll": 320,
+		"theme": "font-sans dark",
+		"width": 320
+	},
+	{
+		"surface": "gallery",
+		"heading": "Phase01 gallery product",
+		"overflow": [],
+		"scroll": 320,
+		"theme": "font-sans js-focus-visible dark",
+		"width": 320
+	},
+	{
+		"surface": "storefront",
+		"heading": "Phase 01 test Vendor",
+		"overflow": [],
+		"scroll": 320,
+		"theme": "font-sans js-focus-visible dark",
+		"width": 320
+	},
+	{
+		"surface": "home",
+		"heading": "Products and services, side by side.",
+		"overflow": [],
+		"scroll": 768,
+		"theme": "font-sans dark",
+		"width": 768
+	},
+	{
+		"surface": "search",
+		"heading": "Products and services",
+		"overflow": [],
+		"scroll": 768,
+		"theme": "font-sans js-focus-visible dark",
+		"width": 768
+	},
+	{
+		"surface": "gallery",
+		"heading": "Phase01 gallery product",
+		"overflow": [],
+		"scroll": 768,
+		"theme": "font-sans dark js-focus-visible",
+		"width": 768
+	},
+	{
+		"surface": "storefront",
+		"heading": "Phase 01 test Vendor",
+		"overflow": [],
+		"scroll": 768,
+		"theme": "font-sans js-focus-visible dark",
+		"width": 768
+	},
+	{
+		"surface": "home",
+		"heading": "Products and services, side by side.",
+		"overflow": [],
+		"scroll": 1024,
+		"theme": "font-sans dark js-focus-visible",
+		"width": 1024
+	},
+	{
+		"surface": "search",
+		"heading": "Products and services",
+		"overflow": [],
+		"scroll": 1024,
+		"theme": "font-sans js-focus-visible dark",
+		"width": 1024
+	},
+	{
+		"surface": "gallery",
+		"heading": "Phase01 gallery product",
+		"overflow": [],
+		"scroll": 1024,
+		"theme": "font-sans js-focus-visible dark",
+		"width": 1024
+	},
+	{
+		"surface": "storefront",
+		"heading": "Phase 01 test Vendor",
+		"overflow": [],
+		"scroll": 1024,
+		"theme": "font-sans js-focus-visible dark",
+		"width": 1024
+	},
+	{
+		"surface": "home",
+		"heading": "Products and services, side by side.",
+		"overflow": [],
+		"scroll": 1440,
+		"theme": "font-sans dark js-focus-visible",
+		"width": 1440
+	},
+	{
+		"surface": "search",
+		"heading": "Products and services",
+		"overflow": [],
+		"scroll": 1440,
+		"theme": "font-sans dark js-focus-visible",
+		"width": 1440
+	},
+	{
+		"surface": "gallery",
+		"heading": "Phase01 gallery product",
+		"overflow": [],
+		"scroll": 1440,
+		"theme": "font-sans dark js-focus-visible",
+		"width": 1440
+	},
+	{
+		"surface": "storefront",
+		"heading": "Phase 01 test Vendor",
+		"overflow": [],
+		"scroll": 1440,
+		"theme": "font-sans dark js-focus-visible",
+		"width": 1440
+	}
+]

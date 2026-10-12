@@ -35,3 +35,15 @@ The first public portfolio release includes goods, fixed-duration appointments, 
 - No release claim is allowed without current `TST-*` and `EVD-*` evidence.
 
 Detailed phase documents are the sole functional requirements source; [Cross-Phase NFRs](./CROSS-PHASE-NONFUNCTIONAL-REQUIREMENTS.md) applies to all phases.
+
+## Single-chunk workflow
+
+**User-confirmed workflow — 2026-10-12:** work starts with Phase 02, and each request to do the next thing on a phase selects and completes exactly one next chunk from that phase’s implementation table. Phase 00–01 are not rechunked by this plan. Chunk boundaries are derived planning defaults rather than new functional requirements.
+
+1. Read the requested phase’s chunk table and dated evidence. Select the earliest unfinished chunk whose dependencies are satisfied; resume an in-progress chunk before starting another. If no phase is named, use the active phase and next chunk recorded in [Documentation Status](../STATUS.md).
+2. Reconcile existing source changes with the selected scope. Preserve other work. Implement only the selected chunk and the prerequisites necessary to make it coherent; do not start subsequent chunks automatically.
+3. Develop and verify on the user’s local machine through the appropriate Nx targets. Record missing local/provider checks as limitations. Historical staging plans do not authorize remote development, checks or deployment.
+4. Update the phase document, relevant affected specifications/acceptance evidence and Documentation Status with actual results, remaining limitations and the next chunk ID. Mark local completion only when supported by evidence; phase acceptance remains a separate gate.
+5. Stop after this chunk and report what changed, local verification, open limitations and the next chunk. If a required dependency blocks it, document the blocker and keep it as next. Do not silently skip or start a different phase.
+
+The phase documents own the chunk lists: [Phase 02](./PHASE-02-GOODS-COMMERCE.md#implementation-chunks), [Phase 03](./PHASE-03-SERVICES-AND-BOOKINGS.md#implementation-chunks), [Phase 04](./PHASE-04-UNIFIED-COMMERCE-AND-FINANCE.md#implementation-chunks), [Phase 05](./PHASE-05-TRUST-OPERATIONS-AND-ENGAGEMENT.md#implementation-chunks), and [Phase 06](./PHASE-06-HARDENING-AND-PUBLIC-RELEASE.md#implementation-chunks).

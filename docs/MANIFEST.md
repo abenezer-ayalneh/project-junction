@@ -28,20 +28,20 @@ This is the authoritative inventory. `Owner` means normative owner, not a person
 
 ## Product and experience
 
-| Document                                                  | Status  | Purpose                                  | Owner          | Deps                            |
-| --------------------------------------------------------- | ------- | ---------------------------------------- | -------------- | ------------------------------- |
-| `docs/product/PRODUCT-DESCRIPTION.md`                     | S/NE/NV | product/actor experience                 | product        | decisions, scope                |
-| `docs/product/VISION-OUTCOMES-AND-SUCCESS.md`             | S/NE/NV | portfolio vision and success             | product        | claims/evidence                 |
-| `docs/product/AUDIENCE-PERSONAS-AND-JOBS.md`              | S/NE/NV | audience and jobs                        | product        | role model                      |
-| `docs/product/ROLES-PERMISSIONS-AND-RESPONSIBILITIES.md`  | S/NE/NV | product role responsibilities            | product        | access/security                 |
-| `docs/product/SCOPE-AND-EXCLUSIONS.md`                    | S/NE/NV | inclusion/exclusion boundary             | product        | deferred backlog                |
-| `docs/product/FEATURE-CATALOG.md`                         | S/NE/NV | public capability inventory              | product        | requirements                    |
-| `docs/product/END-TO-END-USER-JOURNEYS.md`                | S/NE/NV | Customer/Vendor/Platform journeys        | product        | policies/states                 |
-| `docs/product/PORTFOLIO-POSITIONING-AND-CLAIMS.md`        | S/NE/NV | truthful public positioning              | product        | evidence/demo                   |
-| `docs/product/UX-DESIGN-SYSTEM-AND-RESPONSIVENESS.md`     | S/NE/NV | target UX/design basis                   | product UX     | accessibility/frontend          |
-| `docs/product/MARKETPLACE-UI-UX-SPECIFICATION.md`         | S/NE/NV | marketplace composition and interactions | marketplace UX | design system, phases, research |
-| `docs/product/ACCESSIBILITY-I18N-AND-LOW-CONNECTIVITY.md` | S/NE/NV | inclusive/connectedness behavior         | product UX     | quality/security                |
-| `docs/product/SEED-CATEGORIES-AND-SYNTHETIC-CONTENT.md`   | S/NE/NV | synthetic seed boundary                  | product/demo   | future research                 |
+| Document                                                  | Status                     | Purpose                                  | Owner          | Deps                            |
+| --------------------------------------------------------- | -------------------------- | ---------------------------------------- | -------------- | ------------------------------- |
+| `docs/product/PRODUCT-DESCRIPTION.md`                     | S/NE/NV                    | product/actor experience                 | product        | decisions, scope                |
+| `docs/product/VISION-OUTCOMES-AND-SUCCESS.md`             | S/NE/NV                    | portfolio vision and success             | product        | claims/evidence                 |
+| `docs/product/AUDIENCE-PERSONAS-AND-JOBS.md`              | S/NE/NV                    | audience and jobs                        | product        | role model                      |
+| `docs/product/ROLES-PERMISSIONS-AND-RESPONSIBILITIES.md`  | S/NE/NV                    | product role responsibilities            | product        | access/security                 |
+| `docs/product/SCOPE-AND-EXCLUSIONS.md`                    | S/NE/NV                    | inclusion/exclusion boundary             | product        | deferred backlog                |
+| `docs/product/FEATURE-CATALOG.md`                         | S/NE/NV                    | public capability inventory              | product        | requirements                    |
+| `docs/product/END-TO-END-USER-JOURNEYS.md`                | S/NE/NV                    | Customer/Vendor/Platform journeys        | product        | policies/states                 |
+| `docs/product/PORTFOLIO-POSITIONING-AND-CLAIMS.md`        | S/NE/NV                    | truthful public positioning              | product        | evidence/demo                   |
+| `docs/product/UX-DESIGN-SYSTEM-AND-RESPONSIVENESS.md`     | S/NE/NV                    | target UX/design basis                   | product UX     | accessibility/frontend          |
+| `docs/product/MARKETPLACE-UI-UX-SPECIFICATION.md`         | Requires future validation | marketplace composition and interactions | marketplace UX | design system, phases, research |
+| `docs/product/ACCESSIBILITY-I18N-AND-LOW-CONNECTIVITY.md` | S/NE/NV                    | inclusive/connectedness behavior         | product UX     | quality/security                |
+| `docs/product/SEED-CATEGORIES-AND-SYNTHETIC-CONTENT.md`   | S/NE/NV                    | synthetic seed boundary                  | product/demo   | future research                 |
 
 ## Requirements
 
@@ -88,30 +88,34 @@ This is the authoritative inventory. `Owner` means normative owner, not a person
 
 ## State, data, and interfaces
 
-| Document                                                          | Status  | Purpose                            | Owner             | Deps                    |
-| ----------------------------------------------------------------- | ------- | ---------------------------------- | ----------------- | ----------------------- |
-| `docs/state-machines/STATE-MACHINE-INDEX.md`                      | S/NE/NV | lifecycle index                    | domain lifecycle  | all machines            |
-| `docs/state-machines/VENDOR-LISTING-AND-MEDIA.md`                 | S/NE/NV | supply/media transitions           | catalog           | policy/events           |
-| `docs/state-machines/INVENTORY-HOLD-CHECKOUT-AND-PAYMENT.md`      | S/NE/NV | inventory/hold/payment transitions | checkout/payments | ledger/events           |
-| `docs/state-machines/PURCHASE-ORDER-AND-FULFILLMENT.md`           | S/NE/NV | Order/fulfillment transitions      | ordering          | policy/events           |
-| `docs/state-machines/BOOKING-MEETING-AMENDMENT-AND-ATTENDANCE.md` | S/NE/NV | Booking lifecycle                  | booking           | policy/providers        |
-| `docs/state-machines/RETURN-DISPUTE-AND-SUPPORT-CASE.md`          | S/NE/NV | case transitions                   | trust/support     | policy/ledger           |
-| `docs/state-machines/EARNING-TRANSFER-AND-PAYOUT.md`              | S/NE/NV | earning/payout transitions         | finance           | ledger/reconciliation   |
-| `docs/state-machines/MODERATION-AND-DEMO-WORKSPACE.md`            | S/NE/NV | moderation/demo transitions        | trust/demo        | operations              |
-| `docs/data/CANONICAL-DATA-MODEL.md`                               | S/NE/NV | target entities/relationships      | data              | domain/interfaces       |
-| `docs/data/DATA-OWNERSHIP-AND-CONTEXT-BOUNDARIES.md`              | S/NE/NV | persistence ownership              | data              | architecture            |
-| `docs/data/MONEY-AND-DOUBLE-ENTRY-LEDGER.md`                      | S/NE/NV | financial truth                    | ledger            | policy/providers        |
-| `docs/data/LOCATION-ADDRESS-AND-GEOSPATIAL-MODEL.md`              | S/NE/NV | spatial/address semantics          | data              | map architecture        |
-| `docs/data/DATA-CLASSIFICATION-RETENTION-EXPORT-AND-DELETION.md`  | S/NE/NV | privacy lifecycle                  | data/privacy      | security/future law     |
-| `docs/data/MIGRATION-AND-COMPATIBILITY-STRATEGY.md`               | S/NE/NV | schema evolution                   | data              | deployment/recovery     |
-| `docs/interfaces/API-CONVENTIONS.md`                              | S/NE/NV | REST/OpenAPI convention            | interfaces        | access/data             |
-| `docs/interfaces/API-CAPABILITY-CATALOG.md`                       | S/NE/NV | API inventory                      | interfaces        | domain/requirements     |
-| `docs/interfaces/CANONICAL-PUBLIC-TYPES.md`                       | S/NE/NV | transport vocabulary               | interfaces        | data/domain             |
-| `docs/interfaces/ERRORS-PAGINATION-AND-IDEMPOTENCY.md`            | S/NE/NV | retry/collection contract          | interfaces        | Checkout/events         |
-| `docs/interfaces/EVENT-CATALOG.md`                                | S/NE/NV | event contracts                    | interfaces        | outbox/context          |
-| `docs/interfaces/WEBHOOK-CONTRACTS.md`                            | S/NE/NV | provider callback boundary         | interfaces        | provider/reconciliation |
-| `docs/interfaces/REALTIME-CONTRACTS.md`                           | S/NE/NV | WebSocket contract                 | interfaces        | access/projections      |
-| `docs/interfaces/MEDIA-UPLOAD-AND-PROCESSING-CONTRACTS.md`        | S/NE/NV | upload/process contract            | interfaces        | media/security          |
+| Document                                                          | Status                                  | Purpose                                                   | Owner             | Deps                                |
+| ----------------------------------------------------------------- | --------------------------------------- | --------------------------------------------------------- | ----------------- | ----------------------------------- |
+| `docs/state-machines/STATE-MACHINE-INDEX.md`                      | S/NE/NV                                 | lifecycle index                                           | domain lifecycle  | all machines                        |
+| `docs/state-machines/VENDOR-LISTING-AND-MEDIA.md`                 | S/NE/NV                                 | supply/media transitions                                  | catalog           | policy/events                       |
+| `docs/state-machines/INVENTORY-HOLD-CHECKOUT-AND-PAYMENT.md`      | S/NE/NV                                 | inventory/hold/payment transitions                        | checkout/payments | ledger/events                       |
+| `docs/state-machines/PURCHASE-ORDER-AND-FULFILLMENT.md`           | S/NE/NV                                 | Order/fulfillment transitions                             | ordering          | policy/events                       |
+| `docs/state-machines/BOOKING-MEETING-AMENDMENT-AND-ATTENDANCE.md` | S/NE/NV                                 | Booking lifecycle                                         | booking           | policy/providers                    |
+| `docs/state-machines/RETURN-DISPUTE-AND-SUPPORT-CASE.md`          | S/NE/NV                                 | case transitions                                          | trust/support     | policy/ledger                       |
+| `docs/state-machines/EARNING-TRANSFER-AND-PAYOUT.md`              | S/NE/NV                                 | earning/payout transitions                                | finance           | ledger/reconciliation               |
+| `docs/state-machines/MODERATION-AND-DEMO-WORKSPACE.md`            | S/NE/NV                                 | moderation/demo transitions                               | trust/demo        | operations                          |
+| `docs/data/CANONICAL-DATA-MODEL.md`                               | S/NE/NV                                 | target entities/relationships                             | data              | domain/interfaces                   |
+| `docs/data/DATA-OWNERSHIP-AND-CONTEXT-BOUNDARIES.md`              | S/NE/NV                                 | persistence ownership                                     | data              | architecture                        |
+| `docs/data/MONEY-AND-DOUBLE-ENTRY-LEDGER.md`                      | S/NE/NV                                 | financial truth                                           | ledger            | policy/providers                    |
+| `docs/data/LOCATION-ADDRESS-AND-GEOSPATIAL-MODEL.md`              | S/NE/NV                                 | spatial/address semantics                                 | data              | map architecture                    |
+| `docs/data/DATA-CLASSIFICATION-RETENTION-EXPORT-AND-DELETION.md`  | S/NE/NV                                 | privacy lifecycle                                         | data/privacy      | security/future law                 |
+| `docs/data/REJECTED-MEDIA-RETENTION.md`                           | Requires future validation              | operational policy and local backup reconciliation        | data/privacy      | media operations/recovery           |
+| `docs/data/REJECTED-MEDIA-RETENTION-DECISION.md`                  | Requires future validation              | pending jurisdiction and policy approval                  | data/privacy      | owner/counsel decision              |
+| `docs/data/GOVERNING-RETENTION-POLICY.md`                         | Draft; requires future validation       | governing controls and proposed project-wide schedule     | data/privacy      | jurisdiction/owner/recovery review  |
+| `docs/data/MEDIA-BACKUP-LIFECYCLE.md`                             | Implemented locally; activation pending | encrypted generation scheduling, expiry and local runbook | recovery/media    | retention journal/policy/operations |
+| `docs/data/MIGRATION-AND-COMPATIBILITY-STRATEGY.md`               | S/NE/NV                                 | schema evolution                                          | data              | deployment/recovery                 |
+| `docs/interfaces/API-CONVENTIONS.md`                              | S/NE/NV                                 | REST/OpenAPI convention                                   | interfaces        | access/data                         |
+| `docs/interfaces/API-CAPABILITY-CATALOG.md`                       | S/NE/NV                                 | API inventory                                             | interfaces        | domain/requirements                 |
+| `docs/interfaces/CANONICAL-PUBLIC-TYPES.md`                       | S/NE/NV                                 | transport vocabulary                                      | interfaces        | data/domain                         |
+| `docs/interfaces/ERRORS-PAGINATION-AND-IDEMPOTENCY.md`            | S/NE/NV                                 | retry/collection contract                                 | interfaces        | Checkout/events                     |
+| `docs/interfaces/EVENT-CATALOG.md`                                | S/NE/NV                                 | event contracts                                           | interfaces        | outbox/context                      |
+| `docs/interfaces/WEBHOOK-CONTRACTS.md`                            | S/NE/NV                                 | provider callback boundary                                | interfaces        | provider/reconciliation             |
+| `docs/interfaces/REALTIME-CONTRACTS.md`                           | S/NE/NV                                 | WebSocket contract                                        | interfaces        | access/projections                  |
+| `docs/interfaces/MEDIA-UPLOAD-AND-PROCESSING-CONTRACTS.md`        | S/NE/NV                                 | upload/process contract                                   | interfaces        | media/security                      |
 
 ## Architecture, environments, and deployment
 

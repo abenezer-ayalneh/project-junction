@@ -602,11 +602,11 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 	it('lists only explicitly published real Vendor summaries without leaking scope data', async () => {
 		await repository.db.vendor.update({
 			where: { id: vendorId },
-			data: { publicSlug: 'published-foundation', publishedAt: new Date(), applicationState: 'approved' },
+			data: { publicSlug: 'published-foundation', displayName: 'Foundation Vendor', publishedAt: new Date(), applicationState: 'approved' },
 		})
 		const unpublished = await repository.db.vendor.create({ data: { workspaceId } })
 		await expect(repository.browsePublicVendors({ limit: 1 })).resolves.toEqual({
-			items: [{ id: vendorId, slug: 'published-foundation' }],
+			items: [{ id: vendorId, slug: 'published-foundation', displayName: 'Foundation Vendor' }],
 			nextCursor: null,
 		})
 		expect(unpublished.publicSlug).toBeNull()
@@ -704,8 +704,20 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 			}),
 		).resolves.toMatchObject({ vendorId, replayed: false })
 		await repository.db.location.update({ where: { id: locationId }, data: { label: 'Foundation location', city: 'Addis Ababa' } })
-		await expect(repository.browsePublicListings({ kind: 'product' })).resolves.toMatchObject({
-			items: [expect.objectContaining({ id: listing.id, state: 'published' })],
+		const publicListings = await repository.browsePublicListings({ kind: 'product', sort: 'price_asc' })
+		expect(publicListings.total).toBeGreaterThanOrEqual(1)
+		expect(publicListings.items).toContainEqual(
+			expect.objectContaining({
+				id: listing.id,
+				state: 'published',
+				vendor: { id: vendorId, slug: 'published-foundation', displayName: 'Foundation Vendor' },
+			}),
+		)
+		await expect(repository.browsePublicListings({ q: listing.title, minPriceCents: 12501 })).resolves.toMatchObject({ total: 0, items: [] })
+		await expect(repository.readPublicListing(listing.id)).resolves.toMatchObject({
+			id: listing.id,
+			vendor: { id: vendorId, slug: 'published-foundation', displayName: 'Foundation Vendor' },
+			locations: [expect.objectContaining({ id: locationId })],
 		})
 		await expect(repository.readPublicStorefront('published-foundation')).resolves.toMatchObject({
 			id: vendorId,
@@ -776,6 +788,117 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 			repository.reviewVendorApplication(reviewerSession.id, randomUUID(), vendor.id, { decision: 'approve', note: 'stale approval' }),
 		).rejects.toThrow(AccessDeniedError)
 	})
+	it('reads public product availability with live publication, SKU, Location and workspace boundaries', async () => {
+		const vendor = await repository.db.vendor.create({
+			data: {
+				workspaceId,
+				applicationState: 'approved',
+				publishedAt: new Date(),
+				publicSlug: randomUUID(),
+				displayName: 'Availability vendor',
+			},
+		})
+		const location = await repository.db.location.create({ data: { vendorId: vendor.id, label: 'Shop', city: 'Test city' } })
+		const emptyLocation = await repository.db.location.create({ data: { vendorId: vendor.id, label: 'Branch', city: 'Test city' } })
+		const privateLocation = await repository.db.location.create({ data: { vendorId: vendor.id } })
+		const listing = await repository.db.listing.create({
+			data: {
+				vendorId: vendor.id,
+				kind: 'product',
+				state: 'published',
+				category: 'goods',
+				title: 'Stock item',
+				description: 'Public stock fixture',
+				priceCents: 1000,
+			},
+		})
+		const query = { locationId: location.id }
+		await expect(repository.readPublicProductAvailability(listing.id, query)).resolves.toMatchObject({ available: 0, canFulfill: false, sku: null })
+		await repository.db.inventoryMovement.create({
+			data: {
+				locationId: location.id,
+				listingId: listing.id,
+				reason: 'received',
+				onHandDelta: 5,
+				actorKind: 'user',
+				actorId: userId,
+			},
+		})
+		const result = await repository.readPublicProductAvailability(listing.id, { ...query, quantity: '3' })
+		expect(result).toEqual({
+			listingId: listing.id,
+			locationId: location.id,
+			sku: null,
+			available: 5,
+			requestedQuantity: 3,
+			canFulfill: true,
+			checkedAt: result.checkedAt,
+		})
+		expect(Number.isNaN(Date.parse(result.checkedAt))).toBe(false)
+		await expect(repository.readPublicProductAvailability(listing.id, { ...query, quantity: 6 })).resolves.toMatchObject({
+			available: 5,
+			canFulfill: false,
+		})
+		await expect(repository.readPublicProductAvailability(listing.id, { locationId: emptyLocation.id })).resolves.toMatchObject({ available: 0 })
+		for (const invalid of [{ ...query, sku: 'unknown' }, { locationId }, { locationId: privateLocation.id }])
+			await expect(repository.readPublicProductAvailability(listing.id, invalid)).rejects.toThrow(AccessDeniedError)
+		for (const quantity of ['0', '-1', '1.5', 'abc', '2147483648'])
+			await expect(repository.readPublicProductAvailability(listing.id, { ...query, quantity })).rejects.toThrow()
+		await expect(repository.readPublicProductAvailability('invalid', query)).rejects.toThrow()
+		await expect(repository.readPublicProductAvailability(randomUUID(), query)).rejects.toThrow(AccessDeniedError)
+		await repository.db.listing.update({ where: { id: listing.id }, data: { state: 'unpublished' } })
+		await expect(repository.readPublicProductAvailability(listing.id, query)).rejects.toThrow(AccessDeniedError)
+		await repository.db.listing.update({ where: { id: listing.id }, data: { state: 'published' } })
+		await repository.db.vendor.update({ where: { id: vendor.id }, data: { applicationState: 'restricted' } })
+		await expect(repository.readPublicProductAvailability(listing.id, query)).rejects.toThrow(AccessDeniedError)
+		await repository.db.vendor.update({ where: { id: vendor.id }, data: { applicationState: 'approved', publishedAt: null } })
+		await expect(repository.readPublicProductAvailability(listing.id, query)).rejects.toThrow(AccessDeniedError)
+		await repository.db.vendor.update({ where: { id: vendor.id }, data: { publishedAt: new Date() } })
+		const variants = await repository.db.listing.create({
+			data: {
+				vendorId: vendor.id,
+				kind: 'product',
+				state: 'published',
+				category: 'goods',
+				title: 'Variant item',
+				description: 'Public variant fixture',
+				variants: {
+					create: [
+						{ sku: 'small', label: 'Small', priceCents: 1000 },
+						{ sku: 'large', label: 'Large', priceCents: 2000 },
+					],
+				},
+			},
+		})
+		await repository.db.inventoryMovement.create({
+			data: {
+				locationId: location.id,
+				listingId: variants.id,
+				sku: 'small',
+				reason: 'received',
+				onHandDelta: 2,
+				actorKind: 'user',
+				actorId: userId,
+			},
+		})
+		await expect(repository.readPublicProductAvailability(variants.id, query)).rejects.toThrow(AccessDeniedError)
+		await expect(repository.readPublicProductAvailability(variants.id, { ...query, sku: ' small ' })).resolves.toMatchObject({ sku: 'small', available: 2 })
+		await expect(repository.readPublicProductAvailability(variants.id, { ...query, sku: 'large' })).resolves.toMatchObject({ available: 0 })
+		const service = await repository.db.listing.create({
+			data: {
+				vendorId: vendor.id,
+				kind: 'service',
+				state: 'published',
+				category: 'appointment',
+				title: 'Service',
+				description: 'Service fixture',
+				priceCents: 1000,
+				durationMinutes: 30,
+			},
+		})
+		await expect(repository.readPublicProductAvailability(service.id, query)).rejects.toThrow(AccessDeniedError)
+	})
+
 	it('records scoped inventory movements once, preserves variant stock, and never makes availability negative', async () => {
 		const listing = await repository.createListing(sessionId, randomUUID(), {
 			kind: 'product',
@@ -874,6 +997,365 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		).rejects.toThrow(AccessDeniedError)
 		expect(await repository.db.inventoryMovement.count({ where: { listingId: foreignListing.id } })).toBe(0)
 	})
+
+	it('transfers inventory atomically with scoped authority, replay and concurrent stock protection', async () => {
+		const destination = await repository.db.location.create({ data: { vendorId } })
+		await repository.db.vendorMembership.updateMany({ where: { userId, vendorId }, data: { locationIds: [locationId, destination.id] } })
+		const listing = await repository.createListing(sessionId, randomUUID(), {
+			kind: 'product',
+			category: 'goods',
+			title: 'Transfer verification tote',
+			description: 'A product used for local transfer verification.',
+			variants: [
+				{ sku: 'transfer-small', label: 'Small', priceCents: 1000 },
+				{ sku: 'transfer-large', label: 'Large', priceCents: 2000 },
+			],
+		})
+		await repository.createInventoryMovement(sessionId, randomUUID(), {
+			locationId,
+			listingId: listing.id,
+			sku: 'transfer-small',
+			reason: 'received',
+			quantityDelta: 5,
+		})
+		const command = {
+			sourceLocationId: locationId,
+			destinationLocationId: destination.id,
+			listingId: listing.id,
+			sku: 'transfer-small',
+			quantity: 2,
+			note: 'Move to the second Location',
+		}
+		const key = randomUUID()
+		const results = await Promise.all([repository.createInventoryTransfer(sessionId, key, command), other.createInventoryTransfer(sessionId, key, command)])
+		const first = results.find((result) => !result.replayed)!
+		expect(results.filter((result) => result.replayed)).toHaveLength(1)
+		expect(first.source).toMatchObject({ onHand: 3, available: 3, reserved: 0 })
+		expect(first.destination).toMatchObject({ onHand: 2, available: 2, reserved: 0 })
+		expect(results.find((result) => result.replayed)).toEqual({ ...first, replayed: true })
+		await expect(repository.createInventoryTransfer(sessionId, key, { ...command, quantity: 1 })).rejects.toThrow(IdempotencyConflictError)
+		const competing = await Promise.allSettled([
+			repository.createInventoryTransfer(sessionId, randomUUID(), command),
+			other.createInventoryTransfer(sessionId, randomUUID(), command),
+		])
+		expect(competing.filter((result) => result.status === 'fulfilled')).toHaveLength(1)
+		expect(competing.filter((result) => result.status === 'rejected')).toHaveLength(1)
+		expect(await repository.readInventoryAvailability(sessionId, listing.id, { locationId, sku: command.sku })).toMatchObject({ available: 1 })
+		expect(await repository.readInventoryAvailability(sessionId, listing.id, { locationId: destination.id, sku: command.sku })).toMatchObject({
+			available: 4,
+		})
+		expect(await repository.readInventoryAvailability(sessionId, listing.id, { locationId: destination.id, sku: 'transfer-large' })).toMatchObject({
+			available: 0,
+		})
+		const moves = await repository.db.inventoryMovement.findMany({ where: { listingId: listing.id, reason: 'transferred' } })
+		expect(moves).toHaveLength(4)
+		expect(moves.reduce((sum, movement) => sum + movement.onHandDelta, 0)).toBe(0)
+		expect(new Set(moves.map((movement) => movement.transferId)).size).toBe(2)
+		expect(
+			await repository.db.auditLog.count({ where: { action: 'inventory.stock-transferred', metadata: { path: ['listingId'], equals: listing.id } } }),
+		).toBe(2)
+		expect(await repository.db.outboxEvent.count({ where: { type: 'StockMoved', payload: { path: ['payload', 'listingId'], equals: listing.id } } })).toBe(
+			3,
+		)
+		const foreignVendor = await repository.db.vendor.create({ data: { workspaceId } })
+		const foreignLocation = await repository.db.location.create({ data: { vendorId: foreignVendor.id } })
+		await expect(
+			repository.createInventoryTransfer(sessionId, randomUUID(), { ...command, destinationLocationId: foreignLocation.id, quantity: 1 }),
+		).rejects.toThrow(AccessDeniedError)
+
+		const foreignWorkspace = await repository.db.workspace.create({ data: { kind: 'real' } })
+		const externalVendor = await repository.db.vendor.create({ data: { workspaceId: foreignWorkspace.id } })
+		const externalLocation = await repository.db.location.create({ data: { vendorId: externalVendor.id } })
+		await expect(
+			repository.createInventoryTransfer(sessionId, randomUUID(), { ...command, destinationLocationId: externalLocation.id, quantity: 1 }),
+		).rejects.toThrow(AccessDeniedError)
+		const service = await repository.createListing(sessionId, randomUUID(), {
+			kind: 'service',
+			category: 'appointment',
+			title: 'Transfer service denial',
+			description: 'A Service cannot have goods stock transferred.',
+			priceCents: 1000,
+			durationMinutes: 30,
+		})
+		await expect(
+			repository.createInventoryTransfer(sessionId, randomUUID(), { ...command, listingId: service.id, quantity: 1, sku: undefined }),
+		).rejects.toThrow(AccessDeniedError)
+		await expect(repository.createInventoryTransfer(undefined, randomUUID(), command)).rejects.toThrow(AccessDeniedError)
+		await expect(repository.createInventoryTransfer(sessionId, randomUUID(), { ...command, destinationLocationId: locationId })).rejects.toThrow()
+		await expect(repository.createInventoryTransfer(sessionId, randomUUID(), { ...command, sku: 'unknown' })).rejects.toThrow(AccessDeniedError)
+		await repository.db.vendorMembership.updateMany({ where: { userId, vendorId }, data: { locationIds: [locationId] } })
+		await expect(repository.createInventoryTransfer(sessionId, randomUUID(), { ...command, quantity: 1 })).rejects.toThrow(AccessDeniedError)
+		expect(await repository.db.inventoryMovement.count({ where: { listingId: listing.id } })).toBe(5)
+		// The destination can fail its database guard after a debit; the transaction must undo both effects.
+		await repository.db.vendorMembership.updateMany({ where: { userId, vendorId }, data: { locationIds: [locationId, destination.id] } })
+		const schema = new URL(process.env['DATABASE_URL']!).searchParams.get('schema')!
+		await repository.db.$executeRawUnsafe(
+			`CREATE FUNCTION "${schema}".reject_test_destination() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.location_id = '${destination.id}'::uuid AND NEW.reason = 'transferred' THEN RAISE EXCEPTION 'injected destination failure'; END IF; RETURN NEW; END; $$`,
+		)
+		await repository.db.$executeRawUnsafe(
+			`CREATE TRIGGER reject_test_destination BEFORE INSERT ON "${schema}".inventory_movements FOR EACH ROW EXECUTE FUNCTION "${schema}".reject_test_destination()`,
+		)
+		const rollbackKey = randomUUID()
+		const auditBefore = await repository.db.auditLog.count({ where: { action: 'inventory.stock-transferred' } })
+		const outboxBefore = await repository.db.outboxEvent.count({ where: { type: 'StockMoved' } })
+		try {
+			await expect(repository.createInventoryTransfer(sessionId, rollbackKey, { ...command, quantity: 1 })).rejects.toThrow()
+			expect(await repository.db.inventoryMovement.count({ where: { listingId: listing.id } })).toBe(5)
+			expect(await repository.db.idempotencyRecord.count({ where: { key: rollbackKey } })).toBe(0)
+			expect(await repository.db.auditLog.count({ where: { action: 'inventory.stock-transferred' } })).toBe(auditBefore)
+			expect(await repository.db.outboxEvent.count({ where: { type: 'StockMoved' } })).toBe(outboxBefore)
+		} finally {
+			await repository.db.$executeRawUnsafe(`DROP TRIGGER reject_test_destination ON "${schema}".inventory_movements`)
+			await repository.db.$executeRawUnsafe(`DROP FUNCTION "${schema}".reject_test_destination()`)
+		}
+		await expect(repository.createInventoryTransfer(sessionId, rollbackKey, { ...command, quantity: 1 })).resolves.toMatchObject({
+			source: { available: 0 },
+			destination: { available: 5 },
+		})
+		await repository.db.vendorMembership.updateMany({ where: { userId, vendorId }, data: { locationIds: [locationId] } })
+	})
+
+	it('enforces immutable inventory and conserving transfer pairs in PostgreSQL', async () => {
+		const destination = await repository.db.location.create({ data: { vendorId } })
+		const listing = await repository.createListing(sessionId, randomUUID(), {
+			kind: 'product',
+			category: 'goods',
+			title: 'Simple transfer test',
+			description: 'A simple product for database invariant verification.',
+			priceCents: 1000,
+		})
+		await repository.db.vendorMembership.updateMany({ where: { userId, vendorId }, data: { locationIds: [locationId, destination.id] } })
+		const movement = await repository.createInventoryMovement(sessionId, randomUUID(), {
+			locationId,
+			listingId: listing.id,
+			reason: 'received',
+			quantityDelta: 3,
+		})
+		const result = await repository.createInventoryTransfer(sessionId, randomUUID(), {
+			sourceLocationId: locationId,
+			destinationLocationId: destination.id,
+			listingId: listing.id,
+			quantity: 3,
+			note: 'Move simple Product stock',
+		})
+		expect(result.source.available).toBe(0)
+		expect(result.destination.available).toBe(3)
+		await expect(repository.db.inventoryMovement.update({ where: { id: movement.movementId }, data: { onHandDelta: 100 } })).rejects.toThrow('immutable')
+		await expect(repository.db.inventoryMovement.delete({ where: { id: result.sourceMovementId } })).rejects.toThrow('immutable')
+		const data = {
+			listingId: listing.id,
+			locationId,
+			sku: null,
+			reason: 'transferred',
+			transferId: randomUUID(),
+			onHandDelta: -1,
+			reservedDelta: 0,
+			actorKind: 'user',
+			actorId: userId,
+			note: 'Invalid transfer pair',
+		}
+		await expect(repository.db.inventoryMovement.create({ data })).rejects.toThrow('conserving pair')
+		await expect(
+			repository.db.$transaction(async (tx) => {
+				await tx.inventoryMovement.create({ data })
+				await tx.inventoryMovement.create({ data: { ...data, locationId: destination.id, onHandDelta: 2 } })
+			}),
+		).rejects.toThrow('conserving pair')
+		expect(await repository.db.inventoryMovement.count({ where: { listingId: listing.id } })).toBe(3)
+		await repository.db.vendorMembership.updateMany({ where: { userId, vendorId }, data: { locationIds: [locationId] } })
+	})
+	it('retains rejected media evidence holds and retries bounded retention cleanup', async () => {
+		const now = new Date()
+		const objects = new Set<string>()
+		const calls: string[] = []
+		let failOnce = true
+		const store: MediaStore = {
+			createUploadGrant: () => Promise.reject(new Error('Not used')),
+			sealUpload: () => Promise.reject(new Error('Not used')),
+			readPrivate: () => Promise.reject(new Error('Not used')),
+			writePrivate: () => Promise.reject(new Error('Not used')),
+			createReadGrant: () => Promise.reject(new Error('Not used')),
+			listPrivate: noMediaObjects,
+			deletePrivate: (key) => {
+				calls.push(key)
+				if (failOnce && key.endsWith('/poster')) {
+					failOnce = false
+					return Promise.reject(new Error('Storage temporarily unavailable'))
+				}
+				objects.delete(key)
+				return Promise.resolve()
+			},
+		}
+		const journalEntries = new Map<string, import('./media-retention.js').MediaDeletionEntry>()
+		const journal: import('./media-retention.js').DeletionJournal = {
+			get: (id) => Promise.resolve(journalEntries.get(id)),
+			record: (entry) => {
+				if (!journalEntries.has(entry.mediaId)) journalEntries.set(entry.mediaId, entry)
+				return Promise.resolve()
+			},
+			entries: async function* () {
+				await Promise.resolve()
+				yield* journalEntries.values()
+			},
+		}
+		const cleanup = new PostgresFoundation(process.env['DATABASE_URL']!, undefined, store, undefined, journal)
+		try {
+			const listing = await repository.db.listing.create({
+				data: {
+					vendorId,
+					kind: 'product',
+					category: 'goods',
+					title: 'Retention fixture',
+					description: 'Rejected-media retention fixture.',
+					priceCents: 1000,
+				},
+			})
+			const id = randomUUID()
+			const keys = [`quarantine/uploads/${id}`, `quarantine/sealed/${id}`, `private/processed/${id}/poster`]
+			keys.forEach((key) => objects.add(key))
+			await repository.db.mediaAsset.create({
+				data: {
+					id,
+					listingId: listing.id,
+					kind: 'listing_image',
+					state: 'rejected',
+					rejectedAt: new Date(now.getTime() - 31 * 86400000),
+					retentionPolicy: 'rejected-media-v1',
+					retentionDueAt: new Date(now.getTime() - 86400000),
+					uploadKey: keys[0],
+					sealedKey: keys[1],
+					renditionKey: keys[2],
+					posterKey: keys[2],
+					moderationNote: 'Rejected image evidence',
+					uploadSha256: 'a'.repeat(64),
+				},
+			})
+			const reviewer = await createReviewerSession(repository, workspaceId)
+			await expect(
+				cleanup.setMediaRetentionHold(sessionId, randomUUID(), id, { expectedVersion: 1, held: true, reason: 'Vendor cannot hold evidence' }),
+			).rejects.toThrow(AccessDeniedError)
+			const holdKey = randomUUID()
+			const holdCommand = { expectedVersion: 1, held: true, reason: 'Active moderation appeal' }
+			const held = await cleanup.setMediaRetentionHold(reviewer.id, holdKey, id, holdCommand)
+			expect(await cleanup.setMediaRetentionHold(reviewer.id, holdKey, id, holdCommand)).toEqual(held)
+			expect(await cleanup.cleanupRejectedMedia(now)).toEqual({ deleted: 0, failed: 0 })
+			expect(calls).toHaveLength(0)
+			const released = await cleanup.setMediaRetentionHold(reviewer.id, randomUUID(), id, {
+				expectedVersion: held.version,
+				held: false,
+				reason: 'Appeal resolved; release preservation',
+			})
+			expect(Date.parse(released.dueAt!)).toBeGreaterThanOrEqual(now.getTime() + 30 * 86400000)
+			expect(await cleanup.cleanupRejectedMedia(now)).toEqual({ deleted: 0, failed: 0 })
+			const due = new Date(Date.parse(released.dueAt!) + 1)
+			const unavailable = new PostgresFoundation(process.env['DATABASE_URL']!, undefined, store, undefined, {
+				...journal,
+				record: () => Promise.reject(new Error('Journal unavailable')),
+			})
+			try {
+				expect(await unavailable.cleanupRejectedMedia(due)).toEqual({ deleted: 0, failed: 1 })
+				expect(calls).toHaveLength(0)
+				expect(journalEntries.size).toBe(0)
+			} finally {
+				await unavailable.close()
+			}
+			// Reset retry clock only in this disposable fixture to test the next independent failure.
+			await repository.db.mediaAsset.update({ where: { id }, data: { retentionDeleteAttempts: 0, retentionNextAttemptAt: null } })
+
+			expect(await cleanup.cleanupRejectedMedia(due)).toEqual({ deleted: 0, failed: 1 })
+			const failed = await repository.db.mediaAsset.findUniqueOrThrow({ where: { id } })
+			expect(failed.retentionDeletedAt).toBeNull()
+			expect(failed.retentionDeleteAttempts).toBe(1)
+			expect(failed.uploadKey).toBe(keys[0])
+			expect(journalEntries.get(id)?.keys).toEqual(keys)
+			await expect(
+				cleanup.setMediaRetentionHold(reviewer.id, randomUUID(), id, {
+					expectedVersion: failed.version,
+					held: true,
+					reason: 'Too late after irreversible deletion',
+				}),
+			).rejects.toThrow('Irreversible')
+
+			expect(await cleanup.cleanupRejectedMedia(new Date(due.getTime() + 299999))).toEqual({ deleted: 0, failed: 0 })
+			const results = await Promise.all([
+				cleanup.cleanupRejectedMedia(new Date(due.getTime() + 300000)),
+				cleanup.cleanupRejectedMedia(new Date(due.getTime() + 300000)),
+			])
+			expect(results.reduce((sum, result) => sum + result.deleted, 0)).toBe(1)
+			expect(objects.size).toBe(0)
+			const deleted = await repository.db.mediaAsset.findUniqueOrThrow({ where: { id } })
+			expect(deleted).toMatchObject({
+				state: 'rejected',
+				uploadKey: null,
+				sealedKey: null,
+				renditionKey: null,
+				posterKey: null,
+				moderationNote: 'Rejected image evidence',
+				uploadSha256: 'a'.repeat(64),
+				retentionDeleteAttempts: 2,
+			})
+			expect(deleted.retentionDeletedAt).not.toBeNull()
+			await expect(
+				cleanup.setMediaRetentionHold(reviewer.id, randomUUID(), id, {
+					expectedVersion: deleted.version,
+					held: true,
+					reason: 'Cannot resurrect purged files',
+				}),
+			).rejects.toThrow(AccessDeniedError)
+			const audits = await repository.db.auditLog.findMany({ where: { workspaceId, action: { startsWith: 'media.retention-' } } })
+			expect(audits.map((row) => row.action)).toEqual(
+				expect.arrayContaining(['media.retention-held', 'media.retention-hold-released', 'media.retention-delete-failed', 'media.retention-deleted']),
+			)
+			expect(audits.filter((row) => row.action === 'media.retention-deleted')).toHaveLength(1)
+			// Simulate a pre-deletion database and media restore. Current journal survives.
+			keys.forEach((key) => objects.add(key))
+			await repository.db.mediaAsset.update({
+				where: { id },
+				data: {
+					state: 'ready',
+					retentionDeletedAt: null,
+					uploadKey: keys[0],
+					sealedKey: keys[1],
+					renditionKey: keys[2],
+					posterKey: keys[2],
+					retentionHoldReason: 'Historical hold',
+					moderatedBy: userId,
+					moderatedAt: now,
+					scanVerdict: 'clean',
+					processedAt: now,
+				},
+			})
+			expect(await cleanup.reconcileRestoredMedia()).toEqual({ reconciled: 1 })
+			expect(objects.size).toBe(0)
+			expect(await cleanup.reconcileRestoredMedia()).toEqual({ reconciled: 0 })
+			expect(await repository.db.mediaAsset.findUniqueOrThrow({ where: { id } })).toMatchObject({
+				state: 'rejected',
+				uploadKey: null,
+				retentionHoldReason: null,
+			})
+
+			await repository.db.mediaAsset.create({
+				data: {
+					listingId: listing.id,
+					kind: 'listing_image',
+					state: 'ready',
+					retentionPolicy: 'rejected-media-v1',
+					retentionDueAt: now,
+					moderatedBy: userId,
+					moderatedAt: now,
+					scanVerdict: 'clean',
+					renditionKey: `private/processed/${randomUUID()}/image`,
+					posterKey: `private/processed/${randomUUID()}/poster`,
+					processedAt: now,
+				},
+			})
+			await repository.db.mediaAsset.create({ data: { listingId: listing.id, kind: 'listing_image', state: 'rejected', retentionDueAt: now } })
+			expect(await cleanup.cleanupRejectedMedia(new Date(due.getTime() + 86400000))).toEqual({ deleted: 0, failed: 0 })
+		} finally {
+			await cleanup.close()
+		}
+	})
+
 	it('retains unsafe video in quarantine and produces replay-safe CSV preview and commit evidence', async () => {
 		await repository.db.vendor.update({ where: { id: vendorId }, data: { applicationState: 'approved', publishedAt: new Date() } })
 		const listing = await repository.createListing(sessionId, randomUUID(), {
@@ -1111,7 +1593,9 @@ suite('Phase 00 and Phase 01 real PostgreSQL', () => {
 		await repository.db.searchDocument.create({
 			data: { listingId: listing.id, kind: listing.kind, category: listing.category, title: listing.title, version: listing.version },
 		})
-		expect((await repository.browsePublicVendors({})).items).toContainEqual({ id: vendor.id, slug })
+		expect((await repository.browsePublicVendors({})).items).toContainEqual(
+			expect.objectContaining({ id: vendor.id, slug, displayName: 'Restricted test Vendor' }),
+		)
 		expect((await repository.browsePublicListings({ q: listing.title })).items).toContainEqual(expect.objectContaining({ id: listing.id }))
 		expect((await repository.recommendPublicListings(undefined)).items).toContainEqual(expect.objectContaining({ id: listing.id }))
 		await expect(repository.readPublicStorefront(slug)).resolves.toMatchObject({ id: vendor.id })

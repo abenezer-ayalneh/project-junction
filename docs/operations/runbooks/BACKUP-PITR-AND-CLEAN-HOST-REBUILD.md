@@ -17,10 +17,11 @@
 
 1. Verify backup repository availability, encryption/recovery material access, media-copy scope, target timestamp, migration history, and compatible application artifact without exposing recovered data publicly.
 2. Rebuild the target host from the documented source of truth, using isolated network access and least-privilege replacement credentials. Restore the authoritative database to the approved point and required immutable media/configuration references.
-3. Validate integrity before opening traffic: schema head, migration history, row/count/checksum controls, committed references before the recovery point, policy snapshots, and balanced ledger postings.
-4. Rebuild non-authoritative Redis/BullMQ, search, realtime, and analytics projections from authoritative state/events. Replay only safe, idempotent outbox work after checking for provider effects around the recovery boundary.
-5. Reconcile provider callbacks, pending Checkouts, Purchase/Order/Booking commitments, refunds, earnings, and payout eligibility. Do not infer a missing provider result as success.
-6. Run critical synthetic journeys, verify origin/health/monitoring/backup heartbeats, then perform a controlled cutover only when all declared acceptance conditions pass.
+3. Obtain the latest independent rejected-media deletion journal, reconcile every restored object version and restored media row according to [rejected-media-v1](../../data/REJECTED-MEDIA-RETENTION.md), and record completion before exposing reviewer/public access. Older recovery-point holds or approvals do not reverse a recorded deletion. Keep traffic fenced if the journal is unavailable/incomplete or any locked copied object cannot be removed.
+4. Validate integrity before opening traffic: schema head, migration history, row/count/checksum controls, committed references before the recovery point, policy snapshots, and balanced ledger postings.
+5. Rebuild non-authoritative Redis/BullMQ, search, realtime, and analytics projections from authoritative state/events. Replay only safe, idempotent outbox work after checking for provider effects around the recovery boundary.
+6. Reconcile provider callbacks, pending Checkouts, Purchase/Order/Booking commitments, refunds, earnings, and payout eligibility. Do not infer a missing provider result as success.
+7. Run critical synthetic journeys, verify origin/health/monitoring/backup heartbeats, then perform a controlled cutover only when all declared acceptance conditions pass.
 
 ## Rollback, recovery, and escalation
 
@@ -29,6 +30,8 @@
 - Escalate immediately if recovery material, media, provider callback verification, ledger balance, or environment isolation cannot be proven.
 
 ## Verification and evidence
+
+For the implemented local media generation scheduler, locked/archive expiry, holds and fenced media restore, follow [Media Backup Lifecycle](../../data/MEDIA-BACKUP-LIFECYCLE.md). Its synthetic rehearsal is separate from this runbook's unexecuted total-host recovery procedure. Do not treat a media-only restore or snapshot as a complete PITR point.
 
 Create restricted `EVD-OPS-*` evidence with incident/drill ID, selected recovery point, backup/restore integrity result, restored scope, achieved RPO/RTO, missing data assessment, reconciliation result, clean-host validation, cutover decision, approvals, and remediation owner. Future drills must provide the evidence required by `TST-P06-002`.
 

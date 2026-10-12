@@ -9,7 +9,9 @@
 		"test-local-scopes": {
 			"executor": "nx:run-commands",
 			"cache": false,
-			"options": { "command": "node --env-file=.env tools/check-local-owner-scopes.mjs" },
+			"options": {
+				"command": "node --env-file=.env tools/check-local-owner-scopes.mjs"
+			},
 			"dependsOn": ["build"]
 		},
 		"test-integration": {
@@ -40,6 +42,73 @@
 		},
 		"typecheck": {
 			"dependsOn": ["generate-client"]
+		},
+		"media-backup-rotate": {
+			"executor": "nx:run-commands",
+			"cache": false,
+			"dependsOn": ["build"],
+			"options": {
+				"command": "node tools/reconcile-media-backups.mjs rotate"
+			}
+		},
+		"media-restore-reconcile": {
+			"executor": "nx:run-commands",
+			"cache": false,
+			"dependsOn": ["build"],
+			"options": {
+				"command": "node tools/reconcile-media-backups.mjs restore"
+			}
+		},
+		"test-media-restore": {
+			"executor": "nx:run-commands",
+			"cache": false,
+			"dependsOn": ["build"],
+			"options": {
+				"command": "MEDIA_RESTORE_REHEARSAL=1 node tools/check-restore-rehearsal.mjs"
+			}
+		},
+		"media-backup-status": {
+			"executor": "nx:run-commands",
+			"cache": false,
+			"dependsOn": ["build"],
+			"options": { "command": "node tools/media-backup-controller.mjs status" }
+		},
+		"media-backup-run": {
+			"executor": "nx:run-commands",
+			"cache": false,
+			"dependsOn": ["build"],
+			"options": { "command": "node tools/media-backup-controller.mjs run" }
+		},
+		"media-backup-watch": {
+			"executor": "nx:run-commands",
+			"cache": false,
+			"continuous": true,
+			"dependsOn": ["build"],
+			"options": { "command": "node tools/media-backup-controller.mjs watch" }
+		},
+		"media-backup-import": {
+			"executor": "nx:run-commands",
+			"cache": false,
+			"dependsOn": ["build"],
+			"options": { "command": "node tools/media-backup-controller.mjs import" }
+		},
+		"media-backup-hold": {
+			"executor": "nx:run-commands",
+			"cache": false,
+			"dependsOn": ["build"],
+			"options": { "command": "node tools/media-backup-controller.mjs hold" }
+		},
+		"media-backup-release": {
+			"executor": "nx:run-commands",
+			"cache": false,
+			"dependsOn": ["build"],
+			"options": { "command": "node tools/media-backup-controller.mjs release" }
+		},
+		"media-backup-restore": {
+			"executor": "nx:run-commands",
+			"cache": false,
+			"dependsOn": ["build"],
+			"options": { "command": "node tools/media-backup-controller.mjs restore" }
 		}
 	}
 }

@@ -40,6 +40,12 @@ const migrations = [
 	'prisma/migrations/20260929000000_retire_synthetic_schema/migration.sql',
 	'prisma/migrations/20261001000000_durable_didit_sessions/migration.sql',
 	'prisma/migrations/20261002000000_durable_realtime_cursor/migration.sql',
+	'prisma/migrations/20261006000000_phase_01_marketplace_discovery/migration.sql',
+	'prisma/migrations/20261006010000_phase_01_listing_images/migration.sql',
+	'prisma/migrations/20261006020000_phase_01_storefront_branding/migration.sql',
+	'prisma/migrations/20261009000000_rejected_media_retention/migration.sql',
+	'prisma/migrations/20261012000000_inventory_transfers/migration.sql',
+	'prisma/migrations/20261012010000_goods_quotes_and_holds/migration.sql',
 ]
 
 try {
@@ -74,7 +80,33 @@ try {
 		JSON.stringify({ legacy: true }),
 	])
 
-	for (const migration of migrations.slice(1)) await client.query(await readFile(migration, 'utf8'))
+	const inventoryListing = randomUUID()
+	const inventoryMovement = randomUUID()
+	for (const migration of migrations.slice(1)) {
+		if (migration.endsWith('20261012000000_inventory_transfers/migration.sql')) {
+			await client.query(
+				'INSERT INTO listings (id, vendor_id, kind, category, title, description, price_cents, updated_at) VALUES ($1, $2, $3, $4, $5, $6, 1000, now())',
+				[
+					inventoryListing,
+					ids.vendor,
+					'product',
+					'goods',
+					'Populated inventory upgrade fixture',
+					'Verify historical stock survives the transfer migration',
+				],
+			)
+			await client.query(
+				'INSERT INTO inventory_movements (id, location_id, listing_id, reason, on_hand_delta, actor_kind, actor_id) VALUES ($1, $2, $3, $4, 7, $5, $6)',
+				[inventoryMovement, ids.location, inventoryListing, 'received', 'user', ids.user],
+			)
+		}
+		await client.query(await readFile(migration, 'utf8'))
+	}
+	assert.deepEqual(
+		(await client.query('SELECT on_hand_delta, reserved_delta, transfer_id FROM inventory_movements WHERE id = $1', [inventoryMovement])).rows,
+		[{ on_hand_delta: 7, reserved_delta: 0, transfer_id: null }],
+	)
+	await assert.rejects(client.query('UPDATE inventory_movements SET on_hand_delta = 8 WHERE id = $1', [inventoryMovement]), /immutable/)
 
 	const session = await client.query(
 		'SELECT "user_id" AS "userId", "workspace_id" AS "workspaceId", "active_vendor_id" AS "activeVendorId", "active_role" AS "activeRole", "realtime_cursor" AS "realtimeCursor" FROM "sessions" WHERE id = $1::uuid',

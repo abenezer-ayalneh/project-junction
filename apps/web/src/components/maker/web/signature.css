@@ -1,0 +1,81 @@
+/* Scoped global styles: shared by the React and Angular adapters. */
+.aa-maker {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	text-align: center;
+	color: inherit;
+	font: inherit;
+}
+
+.aa-maker .aa-maker__link {
+	box-sizing: border-box;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	min-inline-size: 44px;
+	min-block-size: 44px;
+	padding: 8px;
+	border-radius: 4px;
+	color: inherit;
+	font: inherit;
+	font-size: 0.8125rem;
+	line-height: 1.5;
+	text-decoration: none;
+	text-align: center;
+}
+
+.aa-maker .aa-maker__link:focus-visible {
+	outline: 2px solid currentColor;
+	outline-offset: 3px;
+}
+
+.aa-maker .aa-maker__mark {
+	display: block;
+	flex: none;
+	width: 32px;
+	height: 24px;
+	overflow: visible;
+}
+
+.aa-maker__tooltip {
+	box-sizing: border-box;
+	position: fixed;
+	inset: auto;
+	z-index: 2147483647;
+	width: max-content;
+	max-width: calc(100vw - 16px);
+	margin: 0;
+	padding: 8px;
+	border: 0;
+	background: transparent;
+	color: #ffffff;
+	text-align: center;
+	line-height: 1.4;
+	pointer-events: auto;
+	overflow: visible;
+}
+
+.aa-maker__tooltip::backdrop {
+	background: transparent;
+	pointer-events: none;
+}
+
+.aa-maker__tooltip-label {
+	display: block;
+	padding: 8px 12px;
+	border-radius: 5px;
+	background: #202720;
+	color: #ffffff;
+	font-size: 0.8125rem;
+	overflow-wrap: anywhere;
+}
+
+@media (forced-colors: active) {
+	.aa-maker__tooltip-label {
+		border: 1px solid CanvasText;
+		background: Canvas;
+		color: CanvasText;
+	}
+}

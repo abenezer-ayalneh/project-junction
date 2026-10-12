@@ -11,6 +11,12 @@ The PostgreSQL recovery-point objective is 15 minutes and the total-host recover
 
 Backups must cover PostgreSQL, required MinIO media versions, deployment manifests/digests, migration history, Caddy/Compose configuration, encrypted secret sources, and enough infrastructure documentation to rebuild. Redis, BullMQ, and Meilisearch are rebuilt from PostgreSQL and do not require authoritative backup.
 
+## Rejected-media deletion boundary
+
+Local implementations now provide an independent deletion journal and Nx targets for versioned media-copy rotation and isolated database/media restore reconciliation. See [rejected-media-v1](../data/REJECTED-MEDIA-RETENTION.md) for exact commands, required configuration, archive limitations, and fail-closed behavior. These tools do not implement the future pgBackRest/B2 copy scheduler or rewrite immutable archives. Every generation must reconcile the current journal before rotation completion and again after restoration; locked copies remain inaccessible and pending expiry, never marked purged. Preserve journal durability independently of all recovery points.
+
+The [local generation controller](../data/MEDIA-BACKUP-LIFECYCLE.md) separately implements scheduled encrypted media snapshots, registered standalone archive expiry, preservation holds, durable retry and verified version removal after actual lock expiry. Its explicit policy snapshots original recovery-point age and has no approved production retention default. Local SDK/CLI integration has evidence; offsite provisioning/activation, pgBackRest dependency-aware rotation and provider acceptance remain unverified. The controller's media-only restore does not establish a matching database recovery point or total-host RPO/RTO.
+
 ## Target backup validation
 
 **Procedure status: Specified — Not Executed — Not Verified.**

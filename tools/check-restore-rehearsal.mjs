@@ -46,6 +46,7 @@ async function fixtureCounts() {
 	return result.rows[0]
 }
 
+let mediaFixture
 try {
 	composePort()
 	run('pnpm', ['exec', 'prisma', 'migrate', 'deploy'], { ...process.env, DATABASE_URL: schemaUrl.toString() })
@@ -83,6 +84,10 @@ try {
 		[ids.workspace, ids.user, 'restore.fixture', ids.event, JSON.stringify({ fixture: true })],
 	)
 
+	if (process.env.MEDIA_RESTORE_REHEARSAL === '1') {
+		const { createMediaRestoreFixture } = await import('./media-restore-fixture.mjs')
+		mediaFixture = await createMediaRestoreFixture(pool, schemaUrl.toString(), ids)
+	}
 	const expected = await fixtureCounts()
 	run('docker', [
 		'compose',
@@ -101,6 +106,7 @@ try {
 		'--file',
 		dumpPath,
 	])
+	await mediaFixture?.deleteAfterBackup()
 	await pool.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`)
 	run('docker', [
 		'compose',
@@ -118,9 +124,17 @@ try {
 		dumpPath,
 	])
 	assert.deepEqual(await fixtureCounts(), expected)
+	await mediaFixture?.reconcileAfterRestore()
 	process.stdout.write('Disposable PostgreSQL restore rehearsal passed.\n')
 } finally {
-	await pool.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`)
-	await pool.end()
-	spawnSync('docker', ['compose', 'exec', '-T', 'postgres', 'rm', '-f', dumpPath], { stdio: 'ignore' })
+	try {
+		await mediaFixture?.dispose()
+	} finally {
+		try {
+			await pool.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`)
+		} finally {
+			await pool.end()
+			spawnSync('docker', ['compose', 'exec', '-T', 'postgres', 'rm', '-f', dumpPath], { stdio: 'ignore' })
+		}
+	}
 }

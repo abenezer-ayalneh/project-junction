@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { promisify } from 'node:util'
 
-import { Phase01MediaLimits } from 'contracts'
+import { Phase01ImageLimits, Phase01MediaLimits } from 'contracts'
 
 const execFileAsync = promisify(execFile)
 const probeTimeoutMs = 15_000
@@ -260,6 +260,60 @@ export class VideoProcessor {
 				outputHeight: outputVideo.height,
 				hasAudio: audio.length > 0,
 			}
+		} finally {
+			await rm(directory, { recursive: true, force: true })
+		}
+	}
+
+	async processImage(input: { body: Buffer; contentType: 'image/jpeg' | 'image/png' }) {
+		if (input.body.length < 4 || input.body.length > Phase01ImageLimits.maxUploadBytes) throw new MediaRejectedError('Image exceeds the accepted profile.')
+		const isJpeg = input.body[0] === 0xff && input.body[1] === 0xd8
+		const isPng = input.body.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
+		if ((input.contentType === 'image/jpeg' && !isJpeg) || (input.contentType === 'image/png' && !isPng))
+			throw new MediaRejectedError('Source image type does not match its declared type.')
+		const scan = await this.scanner.scan(input.body)
+		if (scan === 'infected') throw new MediaRejectedError('Malware was detected.')
+		const directory = await mkdtemp(join(tmpdir(), 'junction-image-'))
+		try {
+			const sourcePath = join(directory, input.contentType === 'image/jpeg' ? 'source.jpg' : 'source.png')
+			const outputPath = join(directory, 'processed.jpg')
+			await writeFile(sourcePath, input.body, { mode: 0o600 })
+			const probe = await this.probe(sourcePath)
+			const image = probe.streams?.find((stream) => stream.codec_type === 'video')
+			const width = image?.width ?? 0
+			const height = image?.height ?? 0
+			if (!image || width < 2 || height < 2 || width > Phase01ImageLimits.maxSourceWidth || height > Phase01ImageLimits.maxSourceHeight)
+				throw new MediaRejectedError('Image dimensions exceed the accepted profile.')
+			await execFileAsync(
+				this.ffmpegPath,
+				[
+					'-hide_banner',
+					'-nostdin',
+					'-loglevel',
+					'error',
+					'-i',
+					sourcePath,
+					'-frames:v',
+					'1',
+					'-vf',
+					`scale=${Phase01ImageLimits.maxProcessedLongEdge}:${Phase01ImageLimits.maxProcessedLongEdge}:force_original_aspect_ratio=decrease`,
+					'-q:v',
+					'3',
+					'-map_metadata',
+					'-1',
+					'-y',
+					outputPath,
+				],
+				{ timeout: transformTimeoutMs, maxBuffer: 256 * 1024 },
+			)
+			const processed = await readFile(outputPath)
+			if (processed.length < 4 || processed.length > maxPosterBytes || processed[0] !== 0xff || processed[1] !== 0xd8)
+				throw new MediaRejectedError('Processed image failed safe output validation.')
+			const outputProbe = await this.probe(outputPath)
+			const outputImage = outputProbe.streams?.find((stream) => stream.codec_type === 'video')
+			if (!outputImage?.width || !outputImage.height || Math.max(outputImage.width, outputImage.height) > Phase01ImageLimits.maxProcessedLongEdge)
+				throw new MediaRejectedError('Processed image dimensions exceed the accepted profile.')
+			return { processed, sourceWidth: width, sourceHeight: height, outputWidth: outputImage.width, outputHeight: outputImage.height }
 		} finally {
 			await rm(directory, { recursive: true, force: true })
 		}

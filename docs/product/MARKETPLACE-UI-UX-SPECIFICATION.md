@@ -2,7 +2,7 @@
 
 **Document status:** accepted target specification from the User-approved research and documentation plan
 
-**System claim:** **Specified — Not Executed — Not Verified**
+**System claim:** **Implemented and accepted locally — complete Phase 01 Microsoft Edge scenario matrix recorded on 2026-10-12**
 
 **Research date:** 2026-10-06; traffic ranking period: September 2026
 
@@ -218,9 +218,9 @@ These are required capabilities and information, not invented endpoints, JSON sh
 
 Phase files own requirement outcome wording; this document specifies presentation, and the [acceptance catalog](../quality/PHASE-ACCEPTANCE-CATALOG.md) owns scenario identifiers. Deliver these interfaces with the corresponding capability, rather than treating marketplace design as optional Phase 06 decoration. The mapping preserves phase order, historical evidence, and current phase status; it does not reopen or claim to have completed an earlier dated acceptance record.
 
-## Required future local acceptance
+## Local acceptance
 
-All scenarios below are **specified, not executed**. Record future served-browser and contract/state evidence under the catalog's evidence classes. Screenshots demonstrate presentation only; they cannot substitute for authoritative transaction, authorization, or provider proof.
+The checks below were completed in the served local application with disposable data and recorded on 2026-10-12. Browser screenshots support presentation findings; contract, integration, and state evidence establish authorization, publication, revocation, and storage behavior.
 
 | Scenario      | Concrete local checks                                                                                                                                                                                                                                                                                                                                                                                     |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

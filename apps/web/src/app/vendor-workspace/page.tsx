@@ -3,7 +3,9 @@
 import {
 	type CatalogImportResult,
 	CatalogImportResultSchema,
+	ImageUploadIntentSchema,
 	MediaUploadIntentSchema,
+	Phase01ImageLimits,
 	Phase01MediaLimits,
 	VendorApplicationResultSchema,
 	type VendorCatalog,
@@ -181,6 +183,8 @@ export default function VendorWorkspace() {
 				displayName: formValue(form, 'displayName'),
 				slug: formValue(form, 'slug'),
 				description: formValue(form, 'description'),
+				logoMediaId: formValue(form, 'logoMediaId') || null,
+				coverMediaId: formValue(form, 'coverMediaId') || null,
 			})
 			await loadCatalog()
 			setMessage('Storefront details saved.')
@@ -242,6 +246,30 @@ export default function VendorWorkspace() {
 			setMessage('Video sealed in quarantine. Processing and Platform moderation are pending.')
 		})
 	}
+
+	function uploadImage(event: FormEvent<HTMLFormElement>, listingId: string) {
+		event.preventDefault()
+		const form = new FormData(event.currentTarget)
+		const file = form.get('image')
+		const alt = formValue(form, 'alt')
+		if (!(file instanceof File)) return
+		void run(async () => {
+			if (!['image/jpeg', 'image/png'].includes(file.type)) throw new Error('Choose a JPEG or PNG image.')
+			if (file.size > Phase01ImageLimits.maxUploadBytes) throw new Error('Image exceeds the 10 MiB limit.')
+			const bytes = await file.arrayBuffer()
+			const digest = await crypto.subtle.digest('SHA-256', bytes)
+			const sha256 = [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('')
+			const intent = ImageUploadIntentSchema.parse(
+				await apiRequest(`/listings/${listingId}/image-upload-intents`, { alt, bytes: file.size, contentType: file.type, sha256 }),
+			)
+			const uploaded = await fetch(intent.url, { method: intent.method, headers: intent.headers, body: file })
+			if (!uploaded.ok) throw new Error(`Private image upload failed (${uploaded.status}).`)
+			await apiRequest(`/media/${intent.mediaId}/complete-image-upload`, { sha256 })
+			setMessage('Image sealed in quarantine. Processing and Platform moderation are pending.')
+		})
+	}
+
+	const storefrontImages = catalog?.listings.flatMap((listing) => listing.images.map((image) => ({ ...image, listingTitle: listing.title })))
 
 	return (
 		<main className="mx-auto min-h-svh max-w-5xl px-5 py-8 sm:px-8">
@@ -355,6 +383,31 @@ export default function VendorWorkspace() {
 									className="rounded-lg border bg-background p-3"
 								/>
 							</label>
+							<label className="grid gap-1 text-sm">
+								Storefront logo
+								<select name="logoMediaId" defaultValue={catalog.logoImage?.id ?? ''} className="h-10 rounded-lg border bg-background px-3">
+									<option value="">No logo image</option>
+									{storefrontImages?.map((image) => (
+										<option key={image.id} value={image.id}>
+											{image.listingTitle} — {image.alt}
+										</option>
+									))}
+								</select>
+							</label>
+							<label className="grid gap-1 text-sm">
+								Storefront cover
+								<select name="coverMediaId" defaultValue={catalog.coverImage?.id ?? ''} className="h-10 rounded-lg border bg-background px-3">
+									<option value="">No cover image</option>
+									{storefrontImages?.map((image) => (
+										<option key={image.id} value={image.id}>
+											{image.listingTitle} — {image.alt}
+										</option>
+									))}
+								</select>
+							</label>
+							<p className="text-xs leading-5 text-muted-foreground sm:col-span-2">
+								Only your ready, clean listing images can be used. Images remain public only while their listing stays published.
+							</p>
 							<Button disabled={busy} type="submit" variant="outline" className="sm:w-fit">
 								Save storefront
 							</Button>
@@ -399,6 +452,30 @@ export default function VendorWorkspace() {
 											</label>
 											<Button type="submit" variant="outline" disabled={busy} className="w-fit">
 												Upload for moderation
+											</Button>
+										</form>
+										<form onSubmit={(event) => uploadImage(event, listing.id)} className="mt-5 grid gap-2 border-t pt-4">
+											<p className="text-sm font-medium">Listing image</p>
+											<p className="text-xs leading-5 text-muted-foreground">
+												JPEG or PNG, up to 10 MiB. Images are private until scanning, processing, and Platform approval finish.
+											</p>
+											<label className="grid gap-1 text-xs">
+												Image file
+												<input name="image" type="file" accept="image/jpeg,image/png" required className="text-sm" />
+											</label>
+											<label className="grid gap-1 text-xs">
+												Describe this image
+												<textarea
+													name="alt"
+													required
+													minLength={3}
+													maxLength={1000}
+													rows={2}
+													className="rounded-lg border bg-background p-2"
+												/>
+											</label>
+											<Button type="submit" variant="outline" disabled={busy} className="w-fit">
+												Upload image for moderation
 											</Button>
 										</form>
 										{['draft', 'rejected', 'unpublished'].includes(listing.state) && (

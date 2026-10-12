@@ -395,6 +395,1289 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
         "type": "object",
       },
+      "GoodsHoldCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "quoteId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "quoteId",
+        ],
+        "type": "object",
+      },
+      "GoodsHoldRead": {
+        "additionalProperties": false,
+        "properties": {
+          "currency": {
+            "enum": [
+              "ETB",
+            ],
+            "type": "string",
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "holdId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "quoteId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "snapshot": {
+            "additionalProperties": false,
+            "properties": {
+              "currency": {
+                "enum": [
+                  "ETB",
+                ],
+                "type": "string",
+              },
+              "groups": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "configurationVersion": {
+                      "exclusiveMinimum": true,
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "deliveryFeeCents": {
+                      "maximum": 2147483647,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "deliveryZone": {
+                      "additionalProperties": false,
+                      "nullable": true,
+                      "properties": {
+                        "etaMinutes": {
+                          "maximum": 10080,
+                          "minimum": 1,
+                          "type": "integer",
+                        },
+                        "feeCents": {
+                          "maximum": 2147483647,
+                          "minimum": 0,
+                          "type": "integer",
+                        },
+                        "freeDeliveryThresholdCents": {
+                          "maximum": 2147483647,
+                          "minimum": 0,
+                          "nullable": true,
+                          "type": "integer",
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string",
+                        },
+                        "label": {
+                          "maxLength": 80,
+                          "minLength": 1,
+                          "type": "string",
+                        },
+                        "minimumCents": {
+                          "maximum": 2147483647,
+                          "minimum": 0,
+                          "type": "integer",
+                        },
+                        "polygon": {
+                          "items": {
+                            "items": {
+                              "anyOf": [
+                                {
+                                  "maximum": 180,
+                                  "minimum": -180,
+                                  "type": "number",
+                                },
+                                {
+                                  "maximum": 90,
+                                  "minimum": -90,
+                                  "type": "number",
+                                },
+                              ],
+                            },
+                            "maxItems": 2,
+                            "minItems": 2,
+                            "type": "array",
+                          },
+                          "maxItems": 100,
+                          "minItems": 4,
+                          "type": "array",
+                        },
+                      },
+                      "required": [
+                        "id",
+                        "label",
+                        "polygon",
+                        "feeCents",
+                        "minimumCents",
+                        "freeDeliveryThresholdCents",
+                        "etaMinutes",
+                      ],
+                      "type": "object",
+                    },
+                    "etaMinutes": {
+                      "exclusiveMinimum": true,
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "nullable": true,
+                      "type": "integer",
+                    },
+                    "failedDeliveryRetryHours": {
+                      "enum": [
+                        48,
+                      ],
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "fulfillment": {
+                      "oneOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "method": {
+                              "enum": [
+                                "pickup",
+                              ],
+                              "type": "string",
+                            },
+                          },
+                          "required": [
+                            "method",
+                          ],
+                          "type": "object",
+                        },
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "address": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "address": {
+                                  "maxLength": 300,
+                                  "minLength": 1,
+                                  "type": "string",
+                                },
+                                "contactName": {
+                                  "maxLength": 120,
+                                  "minLength": 1,
+                                  "type": "string",
+                                },
+                                "instructions": {
+                                  "maxLength": 500,
+                                  "type": "string",
+                                },
+                                "locality": {
+                                  "maxLength": 120,
+                                  "minLength": 1,
+                                  "type": "string",
+                                },
+                                "phone": {
+                                  "maxLength": 40,
+                                  "minLength": 5,
+                                  "type": "string",
+                                },
+                                "point": {
+                                  "items": {
+                                    "anyOf": [
+                                      {
+                                        "maximum": 180,
+                                        "minimum": -180,
+                                        "type": "number",
+                                      },
+                                      {
+                                        "maximum": 90,
+                                        "minimum": -90,
+                                        "type": "number",
+                                      },
+                                    ],
+                                  },
+                                  "maxItems": 2,
+                                  "minItems": 2,
+                                  "type": "array",
+                                },
+                              },
+                              "required": [
+                                "contactName",
+                                "phone",
+                                "locality",
+                                "address",
+                                "point",
+                              ],
+                              "type": "object",
+                            },
+                            "method": {
+                              "enum": [
+                                "delivery",
+                              ],
+                              "type": "string",
+                            },
+                            "zoneId": {
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string",
+                            },
+                          },
+                          "required": [
+                            "method",
+                            "zoneId",
+                            "address",
+                          ],
+                          "type": "object",
+                        },
+                      ],
+                    },
+                    "lines": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "listingId": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string",
+                          },
+                          "listingVersion": {
+                            "exclusiveMinimum": true,
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                          "policy": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "changeOfMindDays": {
+                                "anyOf": [
+                                  {
+                                    "enum": [
+                                      7,
+                                    ],
+                                    "type": "number",
+                                  },
+                                  {
+                                    "enum": [
+                                      14,
+                                    ],
+                                    "type": "number",
+                                  },
+                                ],
+                              },
+                              "faultProtectionDays": {
+                                "enum": [
+                                  30,
+                                ],
+                                "type": "number",
+                              },
+                              "restockingFeeCents": {
+                                "enum": [
+                                  0,
+                                ],
+                                "type": "number",
+                              },
+                              "returnTemplate": {
+                                "enum": [
+                                  "standard",
+                                  "flexible",
+                                ],
+                                "type": "string",
+                              },
+                              "startsAt": {
+                                "enum": [
+                                  "verified_handoff",
+                                ],
+                                "type": "string",
+                              },
+                            },
+                            "required": [
+                              "returnTemplate",
+                              "changeOfMindDays",
+                              "faultProtectionDays",
+                              "restockingFeeCents",
+                              "startsAt",
+                            ],
+                            "type": "object",
+                          },
+                          "quantity": {
+                            "exclusiveMinimum": true,
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                          "sku": {
+                            "nullable": true,
+                            "type": "string",
+                          },
+                          "subtotalCents": {
+                            "maximum": 2147483647,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                          "unitPriceCents": {
+                            "maximum": 2147483647,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                        },
+                        "required": [
+                          "listingId",
+                          "listingVersion",
+                          "sku",
+                          "quantity",
+                          "unitPriceCents",
+                          "subtotalCents",
+                          "policy",
+                        ],
+                        "type": "object",
+                      },
+                      "minItems": 1,
+                      "type": "array",
+                    },
+                    "locationId": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "pickupGraceHours": {
+                      "enum": [
+                        48,
+                      ],
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "pickupWindowHours": {
+                      "enum": [
+                        72,
+                      ],
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "vendorId": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "vendorId",
+                    "locationId",
+                    "configurationVersion",
+                    "fulfillment",
+                    "deliveryZone",
+                    "deliveryFeeCents",
+                    "etaMinutes",
+                    "pickupWindowHours",
+                    "pickupGraceHours",
+                    "failedDeliveryRetryHours",
+                    "lines",
+                  ],
+                  "type": "object",
+                },
+                "minItems": 1,
+                "type": "array",
+              },
+              "totalCents": {
+                "maximum": 2147483647,
+                "minimum": 0,
+                "type": "integer",
+              },
+            },
+            "required": [
+              "currency",
+              "totalCents",
+              "groups",
+            ],
+            "type": "object",
+          },
+          "state": {
+            "enum": [
+              "holding",
+              "released",
+              "expired",
+            ],
+            "type": "string",
+          },
+          "totalCents": {
+            "maximum": 2147483647,
+            "minimum": 0,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "holdId",
+          "quoteId",
+          "expiresAt",
+          "currency",
+          "totalCents",
+          "state",
+          "snapshot",
+        ],
+        "type": "object",
+      },
+      "GoodsHoldReleaseResult": {
+        "additionalProperties": false,
+        "properties": {
+          "holdId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "replayed": {
+            "type": "boolean",
+          },
+          "state": {
+            "enum": [
+              "released",
+              "expired",
+            ],
+            "type": "string",
+          },
+        },
+        "required": [
+          "holdId",
+          "state",
+          "replayed",
+        ],
+        "type": "object",
+      },
+      "GoodsHoldResult": {
+        "additionalProperties": false,
+        "properties": {
+          "currency": {
+            "enum": [
+              "ETB",
+            ],
+            "type": "string",
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "holdId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "quoteId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "replayed": {
+            "type": "boolean",
+          },
+          "totalCents": {
+            "maximum": 2147483647,
+            "minimum": 0,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "holdId",
+          "quoteId",
+          "expiresAt",
+          "currency",
+          "totalCents",
+          "replayed",
+        ],
+        "type": "object",
+      },
+      "GoodsLocationConfigurationCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "configuration": {
+            "additionalProperties": false,
+            "properties": {
+              "deliveryZones": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "etaMinutes": {
+                      "maximum": 10080,
+                      "minimum": 1,
+                      "type": "integer",
+                    },
+                    "feeCents": {
+                      "maximum": 2147483647,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "freeDeliveryThresholdCents": {
+                      "maximum": 2147483647,
+                      "minimum": 0,
+                      "nullable": true,
+                      "type": "integer",
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "label": {
+                      "maxLength": 80,
+                      "minLength": 1,
+                      "type": "string",
+                    },
+                    "minimumCents": {
+                      "maximum": 2147483647,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "polygon": {
+                      "items": {
+                        "items": {
+                          "anyOf": [
+                            {
+                              "maximum": 180,
+                              "minimum": -180,
+                              "type": "number",
+                            },
+                            {
+                              "maximum": 90,
+                              "minimum": -90,
+                              "type": "number",
+                            },
+                          ],
+                        },
+                        "maxItems": 2,
+                        "minItems": 2,
+                        "type": "array",
+                      },
+                      "maxItems": 100,
+                      "minItems": 4,
+                      "type": "array",
+                    },
+                  },
+                  "required": [
+                    "id",
+                    "label",
+                    "polygon",
+                    "feeCents",
+                    "minimumCents",
+                    "freeDeliveryThresholdCents",
+                    "etaMinutes",
+                  ],
+                  "type": "object",
+                },
+                "maxItems": 20,
+                "type": "array",
+              },
+              "pickupEnabled": {
+                "type": "boolean",
+              },
+              "returnTemplate": {
+                "enum": [
+                  "standard",
+                  "flexible",
+                ],
+                "type": "string",
+              },
+            },
+            "required": [
+              "pickupEnabled",
+              "returnTemplate",
+              "deliveryZones",
+            ],
+            "type": "object",
+          },
+          "expectedVersion": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "expectedVersion",
+          "configuration",
+        ],
+        "type": "object",
+      },
+      "GoodsLocationConfigurationResult": {
+        "additionalProperties": false,
+        "properties": {
+          "configuration": {
+            "additionalProperties": false,
+            "nullable": true,
+            "properties": {
+              "deliveryZones": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "etaMinutes": {
+                      "maximum": 10080,
+                      "minimum": 1,
+                      "type": "integer",
+                    },
+                    "feeCents": {
+                      "maximum": 2147483647,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "freeDeliveryThresholdCents": {
+                      "maximum": 2147483647,
+                      "minimum": 0,
+                      "nullable": true,
+                      "type": "integer",
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "label": {
+                      "maxLength": 80,
+                      "minLength": 1,
+                      "type": "string",
+                    },
+                    "minimumCents": {
+                      "maximum": 2147483647,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "polygon": {
+                      "items": {
+                        "items": {
+                          "anyOf": [
+                            {
+                              "maximum": 180,
+                              "minimum": -180,
+                              "type": "number",
+                            },
+                            {
+                              "maximum": 90,
+                              "minimum": -90,
+                              "type": "number",
+                            },
+                          ],
+                        },
+                        "maxItems": 2,
+                        "minItems": 2,
+                        "type": "array",
+                      },
+                      "maxItems": 100,
+                      "minItems": 4,
+                      "type": "array",
+                    },
+                  },
+                  "required": [
+                    "id",
+                    "label",
+                    "polygon",
+                    "feeCents",
+                    "minimumCents",
+                    "freeDeliveryThresholdCents",
+                    "etaMinutes",
+                  ],
+                  "type": "object",
+                },
+                "maxItems": 20,
+                "type": "array",
+              },
+              "pickupEnabled": {
+                "type": "boolean",
+              },
+              "returnTemplate": {
+                "enum": [
+                  "standard",
+                  "flexible",
+                ],
+                "type": "string",
+              },
+            },
+            "required": [
+              "pickupEnabled",
+              "returnTemplate",
+              "deliveryZones",
+            ],
+            "type": "object",
+          },
+          "locationId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "replayed": {
+            "type": "boolean",
+          },
+          "version": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "locationId",
+          "version",
+          "configuration",
+          "replayed",
+        ],
+        "type": "object",
+      },
+      "GoodsQuoteCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "groups": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "fulfillment": {
+                  "oneOf": [
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "method": {
+                          "enum": [
+                            "pickup",
+                          ],
+                          "type": "string",
+                        },
+                      },
+                      "required": [
+                        "method",
+                      ],
+                      "type": "object",
+                    },
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "address": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "address": {
+                              "maxLength": 300,
+                              "minLength": 1,
+                              "type": "string",
+                            },
+                            "contactName": {
+                              "maxLength": 120,
+                              "minLength": 1,
+                              "type": "string",
+                            },
+                            "instructions": {
+                              "maxLength": 500,
+                              "type": "string",
+                            },
+                            "locality": {
+                              "maxLength": 120,
+                              "minLength": 1,
+                              "type": "string",
+                            },
+                            "phone": {
+                              "maxLength": 40,
+                              "minLength": 5,
+                              "type": "string",
+                            },
+                            "point": {
+                              "items": {
+                                "anyOf": [
+                                  {
+                                    "maximum": 180,
+                                    "minimum": -180,
+                                    "type": "number",
+                                  },
+                                  {
+                                    "maximum": 90,
+                                    "minimum": -90,
+                                    "type": "number",
+                                  },
+                                ],
+                              },
+                              "maxItems": 2,
+                              "minItems": 2,
+                              "type": "array",
+                            },
+                          },
+                          "required": [
+                            "contactName",
+                            "phone",
+                            "locality",
+                            "address",
+                            "point",
+                          ],
+                          "type": "object",
+                        },
+                        "method": {
+                          "enum": [
+                            "delivery",
+                          ],
+                          "type": "string",
+                        },
+                        "zoneId": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string",
+                        },
+                      },
+                      "required": [
+                        "method",
+                        "zoneId",
+                        "address",
+                      ],
+                      "type": "object",
+                    },
+                  ],
+                },
+                "lines": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "listingId": {
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                        "type": "string",
+                      },
+                      "quantity": {
+                        "maximum": 2147483647,
+                        "minimum": 1,
+                        "type": "integer",
+                      },
+                      "sku": {
+                        "maxLength": 80,
+                        "minLength": 1,
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "listingId",
+                      "quantity",
+                    ],
+                    "type": "object",
+                  },
+                  "maxItems": 50,
+                  "minItems": 1,
+                  "type": "array",
+                },
+                "locationId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "vendorId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "vendorId",
+                "locationId",
+                "fulfillment",
+                "lines",
+              ],
+              "type": "object",
+            },
+            "maxItems": 10,
+            "minItems": 1,
+            "type": "array",
+          },
+        },
+        "required": [
+          "groups",
+        ],
+        "type": "object",
+      },
+      "GoodsQuoteResult": {
+        "additionalProperties": false,
+        "properties": {
+          "expiresAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "quoteId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "replayed": {
+            "type": "boolean",
+          },
+          "snapshot": {
+            "additionalProperties": false,
+            "properties": {
+              "currency": {
+                "enum": [
+                  "ETB",
+                ],
+                "type": "string",
+              },
+              "groups": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "configurationVersion": {
+                      "exclusiveMinimum": true,
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "deliveryFeeCents": {
+                      "maximum": 2147483647,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "deliveryZone": {
+                      "additionalProperties": false,
+                      "nullable": true,
+                      "properties": {
+                        "etaMinutes": {
+                          "maximum": 10080,
+                          "minimum": 1,
+                          "type": "integer",
+                        },
+                        "feeCents": {
+                          "maximum": 2147483647,
+                          "minimum": 0,
+                          "type": "integer",
+                        },
+                        "freeDeliveryThresholdCents": {
+                          "maximum": 2147483647,
+                          "minimum": 0,
+                          "nullable": true,
+                          "type": "integer",
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string",
+                        },
+                        "label": {
+                          "maxLength": 80,
+                          "minLength": 1,
+                          "type": "string",
+                        },
+                        "minimumCents": {
+                          "maximum": 2147483647,
+                          "minimum": 0,
+                          "type": "integer",
+                        },
+                        "polygon": {
+                          "items": {
+                            "items": {
+                              "anyOf": [
+                                {
+                                  "maximum": 180,
+                                  "minimum": -180,
+                                  "type": "number",
+                                },
+                                {
+                                  "maximum": 90,
+                                  "minimum": -90,
+                                  "type": "number",
+                                },
+                              ],
+                            },
+                            "maxItems": 2,
+                            "minItems": 2,
+                            "type": "array",
+                          },
+                          "maxItems": 100,
+                          "minItems": 4,
+                          "type": "array",
+                        },
+                      },
+                      "required": [
+                        "id",
+                        "label",
+                        "polygon",
+                        "feeCents",
+                        "minimumCents",
+                        "freeDeliveryThresholdCents",
+                        "etaMinutes",
+                      ],
+                      "type": "object",
+                    },
+                    "etaMinutes": {
+                      "exclusiveMinimum": true,
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "nullable": true,
+                      "type": "integer",
+                    },
+                    "failedDeliveryRetryHours": {
+                      "enum": [
+                        48,
+                      ],
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "fulfillment": {
+                      "oneOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "method": {
+                              "enum": [
+                                "pickup",
+                              ],
+                              "type": "string",
+                            },
+                          },
+                          "required": [
+                            "method",
+                          ],
+                          "type": "object",
+                        },
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "address": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "address": {
+                                  "maxLength": 300,
+                                  "minLength": 1,
+                                  "type": "string",
+                                },
+                                "contactName": {
+                                  "maxLength": 120,
+                                  "minLength": 1,
+                                  "type": "string",
+                                },
+                                "instructions": {
+                                  "maxLength": 500,
+                                  "type": "string",
+                                },
+                                "locality": {
+                                  "maxLength": 120,
+                                  "minLength": 1,
+                                  "type": "string",
+                                },
+                                "phone": {
+                                  "maxLength": 40,
+                                  "minLength": 5,
+                                  "type": "string",
+                                },
+                                "point": {
+                                  "items": {
+                                    "anyOf": [
+                                      {
+                                        "maximum": 180,
+                                        "minimum": -180,
+                                        "type": "number",
+                                      },
+                                      {
+                                        "maximum": 90,
+                                        "minimum": -90,
+                                        "type": "number",
+                                      },
+                                    ],
+                                  },
+                                  "maxItems": 2,
+                                  "minItems": 2,
+                                  "type": "array",
+                                },
+                              },
+                              "required": [
+                                "contactName",
+                                "phone",
+                                "locality",
+                                "address",
+                                "point",
+                              ],
+                              "type": "object",
+                            },
+                            "method": {
+                              "enum": [
+                                "delivery",
+                              ],
+                              "type": "string",
+                            },
+                            "zoneId": {
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string",
+                            },
+                          },
+                          "required": [
+                            "method",
+                            "zoneId",
+                            "address",
+                          ],
+                          "type": "object",
+                        },
+                      ],
+                    },
+                    "lines": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "listingId": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string",
+                          },
+                          "listingVersion": {
+                            "exclusiveMinimum": true,
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                          "policy": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "changeOfMindDays": {
+                                "anyOf": [
+                                  {
+                                    "enum": [
+                                      7,
+                                    ],
+                                    "type": "number",
+                                  },
+                                  {
+                                    "enum": [
+                                      14,
+                                    ],
+                                    "type": "number",
+                                  },
+                                ],
+                              },
+                              "faultProtectionDays": {
+                                "enum": [
+                                  30,
+                                ],
+                                "type": "number",
+                              },
+                              "restockingFeeCents": {
+                                "enum": [
+                                  0,
+                                ],
+                                "type": "number",
+                              },
+                              "returnTemplate": {
+                                "enum": [
+                                  "standard",
+                                  "flexible",
+                                ],
+                                "type": "string",
+                              },
+                              "startsAt": {
+                                "enum": [
+                                  "verified_handoff",
+                                ],
+                                "type": "string",
+                              },
+                            },
+                            "required": [
+                              "returnTemplate",
+                              "changeOfMindDays",
+                              "faultProtectionDays",
+                              "restockingFeeCents",
+                              "startsAt",
+                            ],
+                            "type": "object",
+                          },
+                          "quantity": {
+                            "exclusiveMinimum": true,
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                          "sku": {
+                            "nullable": true,
+                            "type": "string",
+                          },
+                          "subtotalCents": {
+                            "maximum": 2147483647,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                          "unitPriceCents": {
+                            "maximum": 2147483647,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                        },
+                        "required": [
+                          "listingId",
+                          "listingVersion",
+                          "sku",
+                          "quantity",
+                          "unitPriceCents",
+                          "subtotalCents",
+                          "policy",
+                        ],
+                        "type": "object",
+                      },
+                      "minItems": 1,
+                      "type": "array",
+                    },
+                    "locationId": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "pickupGraceHours": {
+                      "enum": [
+                        48,
+                      ],
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "pickupWindowHours": {
+                      "enum": [
+                        72,
+                      ],
+                      "nullable": true,
+                      "type": "number",
+                    },
+                    "vendorId": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "vendorId",
+                    "locationId",
+                    "configurationVersion",
+                    "fulfillment",
+                    "deliveryZone",
+                    "deliveryFeeCents",
+                    "etaMinutes",
+                    "pickupWindowHours",
+                    "pickupGraceHours",
+                    "failedDeliveryRetryHours",
+                    "lines",
+                  ],
+                  "type": "object",
+                },
+                "minItems": 1,
+                "type": "array",
+              },
+              "totalCents": {
+                "maximum": 2147483647,
+                "minimum": 0,
+                "type": "integer",
+              },
+            },
+            "required": [
+              "currency",
+              "totalCents",
+              "groups",
+            ],
+            "type": "object",
+          },
+        },
+        "required": [
+          "quoteId",
+          "expiresAt",
+          "snapshot",
+          "replayed",
+        ],
+        "type": "object",
+      },
       "HealthResponse": {
         "additionalProperties": false,
         "properties": {
@@ -472,6 +1755,39 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         },
         "required": [
           "status",
+        ],
+        "type": "object",
+      },
+      "ImageUploadIntentCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "alt": {
+            "maxLength": 1000,
+            "minLength": 3,
+            "type": "string",
+          },
+          "bytes": {
+            "maximum": 10485760,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "contentType": {
+            "enum": [
+              "image/jpeg",
+              "image/png",
+            ],
+            "type": "string",
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "alt",
+          "bytes",
+          "contentType",
+          "sha256",
         ],
         "type": "object",
       },
@@ -631,6 +1947,174 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
         "type": "object",
       },
+      "InventoryTransferCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "destinationLocationId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "listingId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "note": {
+            "maxLength": 500,
+            "minLength": 5,
+            "type": "string",
+          },
+          "quantity": {
+            "maximum": 2147483647,
+            "minimum": 1,
+            "type": "integer",
+          },
+          "sku": {
+            "maxLength": 80,
+            "minLength": 1,
+            "type": "string",
+          },
+          "sourceLocationId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "sourceLocationId",
+          "destinationLocationId",
+          "listingId",
+          "quantity",
+          "note",
+        ],
+        "type": "object",
+      },
+      "InventoryTransferResult": {
+        "additionalProperties": false,
+        "properties": {
+          "destination": {
+            "additionalProperties": false,
+            "properties": {
+              "available": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "listingId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "locationId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "onHand": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "reserved": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "sku": {
+                "nullable": true,
+                "type": "string",
+              },
+            },
+            "required": [
+              "locationId",
+              "listingId",
+              "sku",
+              "onHand",
+              "reserved",
+              "available",
+            ],
+            "type": "object",
+          },
+          "destinationMovementId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "quantity": {
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "replayed": {
+            "type": "boolean",
+          },
+          "source": {
+            "additionalProperties": false,
+            "properties": {
+              "available": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "listingId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "locationId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "onHand": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "reserved": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "sku": {
+                "nullable": true,
+                "type": "string",
+              },
+            },
+            "required": [
+              "locationId",
+              "listingId",
+              "sku",
+              "onHand",
+              "reserved",
+              "available",
+            ],
+            "type": "object",
+          },
+          "sourceMovementId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "transferId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "transferId",
+          "sourceMovementId",
+          "destinationMovementId",
+          "source",
+          "destination",
+          "quantity",
+          "replayed",
+        ],
+        "type": "object",
+      },
       "ListingCommandResult": {
         "additionalProperties": false,
         "properties": {
@@ -660,6 +2144,43 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
             "type": "string",
+          },
+          "images": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "alt": {
+                  "maxLength": 1000,
+                  "minLength": 3,
+                  "type": "string",
+                },
+                "height": {
+                  "exclusiveMinimum": true,
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+                "id": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "width": {
+                  "exclusiveMinimum": true,
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+              },
+              "required": [
+                "id",
+                "alt",
+                "width",
+                "height",
+              ],
+              "type": "object",
+            },
+            "type": "array",
           },
           "kind": {
             "enum": [
@@ -762,6 +2283,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           "id",
           "state",
           "version",
+          "images",
           "replayed",
         ],
         "type": "object",
@@ -1037,6 +2559,18 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
             "type": "string",
           },
+          "imageUrl": {
+            "format": "uri",
+            "nullable": true,
+            "type": "string",
+          },
+          "kind": {
+            "enum": [
+              "short_video",
+              "listing_image",
+            ],
+            "type": "string",
+          },
           "mediaId": {
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
@@ -1047,17 +2581,21 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
           "posterUrl": {
             "format": "uri",
+            "nullable": true,
             "type": "string",
           },
           "videoUrl": {
             "format": "uri",
+            "nullable": true,
             "type": "string",
           },
         },
         "required": [
           "mediaId",
+          "kind",
           "videoUrl",
           "posterUrl",
+          "imageUrl",
           "captionText",
           "noSpeechDeclared",
           "description",
@@ -1083,6 +2621,70 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         },
         "required": [
           "noSpeechDeclared",
+        ],
+        "type": "object",
+      },
+      "MediaRetentionHoldCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "expectedVersion": {
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "held": {
+            "type": "boolean",
+          },
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 3,
+            "type": "string",
+          },
+        },
+        "required": [
+          "expectedVersion",
+          "held",
+          "reason",
+        ],
+        "type": "object",
+      },
+      "MediaRetentionResult": {
+        "additionalProperties": false,
+        "properties": {
+          "deletedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "dueAt": {
+            "format": "date-time",
+            "nullable": true,
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "held": {
+            "type": "boolean",
+          },
+          "mediaId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "version": {
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "mediaId",
+          "version",
+          "held",
+          "dueAt",
+          "deletedAt",
         ],
         "type": "object",
       },
@@ -1132,11 +2734,19 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
                 "durationSeconds": {
                   "exclusiveMinimum": true,
                   "minimum": 0,
+                  "nullable": true,
                   "type": "number",
                 },
                 "id": {
                   "format": "uuid",
                   "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "kind": {
+                  "enum": [
+                    "short_video",
+                    "listing_image",
+                  ],
                   "type": "string",
                 },
                 "listingId": {
@@ -1175,6 +2785,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
               },
               "required": [
                 "id",
+                "kind",
                 "listingId",
                 "listingTitle",
                 "vendorName",
@@ -1433,6 +3044,43 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
                       "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
                       "type": "string",
                     },
+                    "images": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "alt": {
+                            "maxLength": 1000,
+                            "minLength": 3,
+                            "type": "string",
+                          },
+                          "height": {
+                            "exclusiveMinimum": true,
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string",
+                          },
+                          "width": {
+                            "exclusiveMinimum": true,
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                        },
+                        "required": [
+                          "id",
+                          "alt",
+                          "width",
+                          "height",
+                        ],
+                        "type": "object",
+                      },
+                      "type": "array",
+                    },
                     "kind": {
                       "enum": [
                         "product",
@@ -1531,6 +3179,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
                     "id",
                     "state",
                     "version",
+                    "images",
                   ],
                   "type": "object",
                 },
@@ -1568,6 +3217,232 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
         "type": "object",
       },
+      "PublicListingDetail": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "enum": [
+              "goods",
+              "home",
+              "fashion",
+              "beauty",
+              "appointment",
+              "education",
+              "repair",
+            ],
+            "type": "string",
+          },
+          "description": {
+            "maxLength": 4000,
+            "minLength": 10,
+            "type": "string",
+          },
+          "durationMinutes": {
+            "maximum": 480,
+            "minimum": 15,
+            "type": "integer",
+          },
+          "id": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "images": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "alt": {
+                  "maxLength": 1000,
+                  "minLength": 3,
+                  "type": "string",
+                },
+                "height": {
+                  "exclusiveMinimum": true,
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+                "id": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "width": {
+                  "exclusiveMinimum": true,
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+              },
+              "required": [
+                "id",
+                "alt",
+                "width",
+                "height",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "kind": {
+            "enum": [
+              "product",
+              "service",
+            ],
+            "type": "string",
+          },
+          "locations": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "city": {
+                  "maxLength": 120,
+                  "minLength": 2,
+                  "type": "string",
+                },
+                "id": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "label": {
+                  "maxLength": 120,
+                  "minLength": 2,
+                  "type": "string",
+                },
+              },
+              "required": [
+                "id",
+                "label",
+                "city",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "priceCents": {
+            "exclusiveMinimum": true,
+            "maximum": 100000000,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "shortVideo": {
+            "additionalProperties": false,
+            "properties": {
+              "description": {
+                "nullable": true,
+                "type": "string",
+              },
+              "hasCaptions": {
+                "type": "boolean",
+              },
+              "id": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+            },
+            "required": [
+              "id",
+              "description",
+              "hasCaptions",
+            ],
+            "type": "object",
+          },
+          "state": {
+            "enum": [
+              "draft",
+              "pending_review",
+              "published",
+              "rejected",
+              "unpublished",
+            ],
+            "type": "string",
+          },
+          "title": {
+            "maxLength": 160,
+            "minLength": 3,
+            "type": "string",
+          },
+          "variants": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "label": {
+                  "maxLength": 120,
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "priceCents": {
+                  "exclusiveMinimum": true,
+                  "maximum": 100000000,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+                "sku": {
+                  "maxLength": 80,
+                  "minLength": 1,
+                  "type": "string",
+                },
+              },
+              "required": [
+                "sku",
+                "label",
+                "priceCents",
+              ],
+              "type": "object",
+            },
+            "maxItems": 100,
+            "minItems": 2,
+            "type": "array",
+          },
+          "vendor": {
+            "additionalProperties": false,
+            "properties": {
+              "displayName": {
+                "maxLength": 120,
+                "minLength": 3,
+                "type": "string",
+              },
+              "id": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "slug": {
+                "maxLength": 120,
+                "minLength": 1,
+                "type": "string",
+              },
+            },
+            "required": [
+              "id",
+              "slug",
+              "displayName",
+            ],
+            "type": "object",
+          },
+          "version": {
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "kind",
+          "category",
+          "title",
+          "description",
+          "id",
+          "state",
+          "version",
+          "images",
+          "vendor",
+          "locations",
+        ],
+        "type": "object",
+      },
       "PublicListingPage": {
         "additionalProperties": false,
         "properties": {
@@ -1601,6 +3476,43 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
                   "format": "uuid",
                   "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
                   "type": "string",
+                },
+                "images": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "alt": {
+                        "maxLength": 1000,
+                        "minLength": 3,
+                        "type": "string",
+                      },
+                      "height": {
+                        "exclusiveMinimum": true,
+                        "maximum": 9007199254740991,
+                        "minimum": 0,
+                        "type": "integer",
+                      },
+                      "id": {
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                        "type": "string",
+                      },
+                      "width": {
+                        "exclusiveMinimum": true,
+                        "maximum": 9007199254740991,
+                        "minimum": 0,
+                        "type": "integer",
+                      },
+                    },
+                    "required": [
+                      "id",
+                      "alt",
+                      "width",
+                      "height",
+                    ],
+                    "type": "object",
+                  },
+                  "type": "array",
                 },
                 "kind": {
                   "enum": [
@@ -1685,6 +3597,32 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
                   "minItems": 2,
                   "type": "array",
                 },
+                "vendor": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "displayName": {
+                      "maxLength": 120,
+                      "minLength": 3,
+                      "type": "string",
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "slug": {
+                      "maxLength": 120,
+                      "minLength": 1,
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "id",
+                    "slug",
+                    "displayName",
+                  ],
+                  "type": "object",
+                },
                 "version": {
                   "exclusiveMinimum": true,
                   "maximum": 9007199254740991,
@@ -1700,6 +3638,8 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
                 "id",
                 "state",
                 "version",
+                "images",
+                "vendor",
               ],
               "type": "object",
             },
@@ -1711,16 +3651,104 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
             "type": "string",
           },
+          "total": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
         },
         "required": [
           "items",
           "nextCursor",
+          "total",
+        ],
+        "type": "object",
+      },
+      "PublicProductAvailability": {
+        "additionalProperties": false,
+        "properties": {
+          "available": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "canFulfill": {
+            "type": "boolean",
+          },
+          "checkedAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "listingId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "locationId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "requestedQuantity": {
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "sku": {
+            "nullable": true,
+            "type": "string",
+          },
+        },
+        "required": [
+          "listingId",
+          "locationId",
+          "sku",
+          "available",
+          "requestedQuantity",
+          "canFulfill",
+          "checkedAt",
         ],
         "type": "object",
       },
       "PublicStorefront": {
         "additionalProperties": false,
         "properties": {
+          "coverImage": {
+            "additionalProperties": false,
+            "properties": {
+              "alt": {
+                "maxLength": 1000,
+                "minLength": 3,
+                "type": "string",
+              },
+              "height": {
+                "exclusiveMinimum": true,
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "id": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "width": {
+                "exclusiveMinimum": true,
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+            },
+            "required": [
+              "id",
+              "alt",
+              "width",
+              "height",
+            ],
+            "type": "object",
+          },
           "description": {
             "maxLength": 2000,
             "minLength": 10,
@@ -1767,6 +3795,43 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
                   "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
                   "type": "string",
                 },
+                "images": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "alt": {
+                        "maxLength": 1000,
+                        "minLength": 3,
+                        "type": "string",
+                      },
+                      "height": {
+                        "exclusiveMinimum": true,
+                        "maximum": 9007199254740991,
+                        "minimum": 0,
+                        "type": "integer",
+                      },
+                      "id": {
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                        "type": "string",
+                      },
+                      "width": {
+                        "exclusiveMinimum": true,
+                        "maximum": 9007199254740991,
+                        "minimum": 0,
+                        "type": "integer",
+                      },
+                    },
+                    "required": [
+                      "id",
+                      "alt",
+                      "width",
+                      "height",
+                    ],
+                    "type": "object",
+                  },
+                  "type": "array",
+                },
                 "kind": {
                   "enum": [
                     "product",
@@ -1865,6 +3930,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
                 "id",
                 "state",
                 "version",
+                "images",
               ],
               "type": "object",
             },
@@ -1899,6 +3965,40 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             },
             "type": "array",
           },
+          "logoImage": {
+            "additionalProperties": false,
+            "properties": {
+              "alt": {
+                "maxLength": 1000,
+                "minLength": 3,
+                "type": "string",
+              },
+              "height": {
+                "exclusiveMinimum": true,
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "id": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "width": {
+                "exclusiveMinimum": true,
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+            },
+            "required": [
+              "id",
+              "alt",
+              "width",
+              "height",
+            ],
+            "type": "object",
+          },
           "slug": {
             "maxLength": 120,
             "minLength": 1,
@@ -1922,6 +4022,11 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             "items": {
               "additionalProperties": false,
               "properties": {
+                "displayName": {
+                  "maxLength": 120,
+                  "minLength": 3,
+                  "type": "string",
+                },
                 "id": {
                   "format": "uuid",
                   "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
@@ -1936,6 +4041,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
               "required": [
                 "id",
                 "slug",
+                "displayName",
               ],
               "type": "object",
             },
@@ -1957,6 +4063,12 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
       "StorefrontUpdate": {
         "additionalProperties": false,
         "properties": {
+          "coverMediaId": {
+            "format": "uuid",
+            "nullable": true,
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
           "description": {
             "maxLength": 2000,
             "minLength": 10,
@@ -1965,6 +4077,12 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           "displayName": {
             "maxLength": 120,
             "minLength": 3,
+            "type": "string",
+          },
+          "logoMediaId": {
+            "format": "uuid",
+            "nullable": true,
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
             "type": "string",
           },
           "slug": {
@@ -2152,6 +4270,41 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             ],
             "type": "string",
           },
+          "coverImage": {
+            "additionalProperties": false,
+            "nullable": true,
+            "properties": {
+              "alt": {
+                "maxLength": 1000,
+                "minLength": 3,
+                "type": "string",
+              },
+              "height": {
+                "exclusiveMinimum": true,
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "id": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "width": {
+                "exclusiveMinimum": true,
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+            },
+            "required": [
+              "id",
+              "alt",
+              "width",
+              "height",
+            ],
+            "type": "object",
+          },
           "description": {
             "nullable": true,
             "type": "string",
@@ -2195,6 +4348,43 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
                   "format": "uuid",
                   "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
                   "type": "string",
+                },
+                "images": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "alt": {
+                        "maxLength": 1000,
+                        "minLength": 3,
+                        "type": "string",
+                      },
+                      "height": {
+                        "exclusiveMinimum": true,
+                        "maximum": 9007199254740991,
+                        "minimum": 0,
+                        "type": "integer",
+                      },
+                      "id": {
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                        "type": "string",
+                      },
+                      "width": {
+                        "exclusiveMinimum": true,
+                        "maximum": 9007199254740991,
+                        "minimum": 0,
+                        "type": "integer",
+                      },
+                    },
+                    "required": [
+                      "id",
+                      "alt",
+                      "width",
+                      "height",
+                    ],
+                    "type": "object",
+                  },
+                  "type": "array",
                 },
                 "kind": {
                   "enum": [
@@ -2294,6 +4484,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
                 "id",
                 "state",
                 "version",
+                "images",
               ],
               "type": "object",
             },
@@ -2331,6 +4522,41 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             },
             "type": "array",
           },
+          "logoImage": {
+            "additionalProperties": false,
+            "nullable": true,
+            "properties": {
+              "alt": {
+                "maxLength": 1000,
+                "minLength": 3,
+                "type": "string",
+              },
+              "height": {
+                "exclusiveMinimum": true,
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "id": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "width": {
+                "exclusiveMinimum": true,
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+            },
+            "required": [
+              "id",
+              "alt",
+              "width",
+              "height",
+            ],
+            "type": "object",
+          },
           "slug": {
             "nullable": true,
             "type": "string",
@@ -2342,6 +4568,8 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           "slug",
           "displayName",
           "description",
+          "logoImage",
+          "coverImage",
           "locations",
           "listings",
         ],
@@ -2616,6 +4844,180 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
         ],
         "summary": "Read the current Customer saved listings, followed Vendors, and personalization preference.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/customer/goods/holds": {
+      "post": {
+        "operationId": "AppController_createGoodsHold",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoodsHoldCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoodsHoldResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Revalidate a quote and reserve all goods atomically for fifteen minutes.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/customer/goods/holds/{holdId}": {
+      "get": {
+        "operationId": "AppController_readGoodsHold",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "holdId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoodsHoldRead",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Read the current state and snapshots of the Customer’s goods hold; expired holds release once.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/customer/goods/holds/{holdId}/release": {
+      "post": {
+        "operationId": "AppController_releaseGoodsHold",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "holdId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoodsHoldReleaseResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Release all uncommitted goods reservations once. A new attempt requires a fresh quote.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/customer/goods/quotes": {
+      "post": {
+        "operationId": "AppController_createGoodsQuote",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoodsQuoteCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoodsQuoteResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Quote goods across Vendor groups with current stock, prices, fulfillment and policy snapshots. No stock is reserved.",
         "tags": [
           "foundation",
         ],
@@ -2915,6 +5317,52 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
       },
     },
+    "/v1/inventory/transfers": {
+      "post": {
+        "operationId": "AppController_createInventoryTransfer",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InventoryTransferCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryTransferResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Transfer stock atomically between two assigned Locations of the active Vendor.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
     "/v1/listings": {
       "post": {
         "operationId": "AppController_createListing",
@@ -2956,6 +5404,60 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
         ],
         "summary": "Create a private Vendor-owned fixed-price listing.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/listings/{listingId}/image-upload-intents": {
+      "post": {
+        "operationId": "AppController_createImageUploadIntent",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "listingId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImageUploadIntentCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaUploadIntent",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Create a scoped signed PUT grant for a Listing image held in private quarantine.",
         "tags": [
           "foundation",
         ],
@@ -3286,6 +5788,142 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
       },
     },
+    "/v1/locations/{locationId}/goods-configuration": {
+      "get": {
+        "operationId": "AppController_readGoodsConfiguration",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "locationId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoodsLocationConfigurationResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Read goods fulfillment settings for an assigned Owner Location.",
+        "tags": [
+          "foundation",
+        ],
+      },
+      "put": {
+        "operationId": "AppController_configureGoodsLocation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "locationId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoodsLocationConfigurationCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoodsLocationConfigurationResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Configure pickup, PostGIS delivery zones and goods policy for an assigned Owner Location.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/media/{mediaId}/complete-image-upload": {
+      "post": {
+        "operationId": "AppController_completeImageUpload",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mediaId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaUploadCompleteCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaAsset",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Verify and seal an uploaded Listing image in private quarantine; safe processing is still required.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
     "/v1/media/{mediaId}/complete-upload": {
       "post": {
         "operationId": "AppController_completeVideoUpload",
@@ -3443,6 +6081,60 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
       },
     },
+    "/v1/platform/media/{mediaId}/retention-hold": {
+      "post": {
+        "operationId": "AppController_setMediaRetentionHold",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mediaId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaRetentionHoldCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaRetentionResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Place or release an evidence-preservation hold on a scoped media version.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
     "/v1/platform/media/{mediaId}/review": {
       "post": {
         "operationId": "AppController_reviewMedia",
@@ -3576,6 +6268,100 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
       },
     },
+    "/v1/public/listings/{listingId}": {
+      "get": {
+        "operationId": "AppController_publicListing",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "listingId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicListingDetail",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "summary": "Read one approved, published Listing with its public Vendor and locations.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/public/listings/{listingId}/availability": {
+      "get": {
+        "operationId": "AppController_publicProductAvailability",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "listingId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+          {
+            "in": "query",
+            "name": "quantity",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 2147483647,
+              "minimum": 1,
+              "type": "integer",
+            },
+          },
+          {
+            "in": "query",
+            "name": "sku",
+            "required": false,
+            "schema": {
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string",
+            },
+          },
+          {
+            "in": "query",
+            "name": "locationId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicProductAvailability",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "summary": "Check current Product stock for a selected Location and SKU. This does not reserve stock.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
     "/v1/public/media/{mediaId}/captions.vtt": {
       "get": {
         "operationId": "AppController_publicCaptions",
@@ -3595,6 +6381,30 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
         },
         "summary": "Read reviewed WebVTT captions for a currently published video.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/public/media/{mediaId}/image": {
+      "get": {
+        "operationId": "AppController_publicImage",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mediaId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+          },
+        },
+        "summary": "Read an approved listing image only while its Listing and Vendor remain published.",
         "tags": [
           "foundation",
         ],

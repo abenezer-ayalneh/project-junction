@@ -24,7 +24,7 @@
 		"env:local:down": "docker compose down",
 		"env:local:reset": "docker compose down --volumes --remove-orphans",
 		"db:validate": "prisma validate",
-		"db:migrate:local": "prisma migrate deploy",
+		"db:migrate:local": "node --env-file=.env node_modules/prisma/build/index.js migrate deploy",
 		"db:auth:migrate": "node tools/apply-auth-migrations.mjs",
 		"staging:reviewer": "node tools/manage-staging-reviewer.mjs",
 		"local:reviewer": "node tools/manage-local-reviewer.mjs",

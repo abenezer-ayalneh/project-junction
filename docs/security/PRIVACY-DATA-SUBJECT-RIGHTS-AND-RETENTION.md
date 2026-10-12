@@ -16,3 +16,5 @@ Project Junction’s portfolio target uses synthetic content and must minimize p
 | Demo synthetic        | personas, orders, verification fixtures              | isolated, labeled, automatically purged no later than 24 hours                        |
 
 Requests and exceptions must be recorded as Support Cases or privacy cases without exposing requester data to unrelated Vendor staff. Retention durations are `REQUIRES-FUTURE-VALIDATION` until counsel and local policy review; the data model must make them configurable and testable.
+
+The [governing retention policy draft](../data/GOVERNING-RETENTION-POLICY.md) contains the proposed registry, hold governance, backup boundary and adoption requirements. New business periods remain proposals until approved; the existing rejected-media default remains provisional.

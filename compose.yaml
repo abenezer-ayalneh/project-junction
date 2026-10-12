@@ -47,7 +47,10 @@ services:
             - '127.0.0.1:1025:1025'
 
     minio:
-        image: minio/minio:latest
+        image: junction-minio-local:source
+        build:
+            context: .
+            dockerfile: ops/local/minio.Dockerfile
         command: server /data --console-address ':9001'
         environment:
             MINIO_ROOT_USER: junction-local
@@ -60,7 +63,7 @@ services:
             - junction_minio:/data
 
     minio-init:
-        image: minio/minio:latest
+        image: junction-minio-local:source
         depends_on:
             minio:
                 condition: service_started
@@ -70,6 +73,9 @@ services:
             - |
                 until mc alias set junction http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD"; do sleep 1; done
                 mc mb --ignore-existing junction/"$$MINIO_BUCKET"
+                mc mb --ignore-existing junction/junction-deletion-journal-local
+                mc mb --ignore-existing --with-lock junction/junction-media-backups-local
+                mc mb --ignore-existing --with-versioning junction/junction-backup-catalog-local
         environment:
             MINIO_BUCKET: junction-media-local
             MINIO_ROOT_USER: junction-local

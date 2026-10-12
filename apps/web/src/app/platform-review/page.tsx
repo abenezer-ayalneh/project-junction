@@ -3,6 +3,8 @@
 import {
 	type CatalogHealth,
 	CatalogHealthSchema,
+	type MediaPreview,
+	MediaPreviewSchema,
 	type MediaReviewQueue,
 	MediaReviewQueueSchema,
 	type PlatformReviewQueue,
@@ -47,7 +49,7 @@ export default function PlatformReview() {
 	const [queue, setQueue] = useState<PlatformReviewQueue | null>(null)
 	const [mediaQueue, setMediaQueue] = useState<MediaReviewQueue | null>(null)
 	const [catalogHealth, setCatalogHealth] = useState<CatalogHealth | null>(null)
-	const [mediaPreview, setMediaPreview] = useState<{ mediaId: string; videoUrl: string; posterUrl: string; captionText: string | null } | null>(null)
+	const [mediaPreview, setMediaPreview] = useState<MediaPreview | null>(null)
 	const [message, setMessage] = useState('')
 	const [busy, setBusy] = useState(false)
 
@@ -154,7 +156,7 @@ export default function PlatformReview() {
 					)}
 					<section aria-labelledby="media-queue-heading">
 						<h2 id="media-queue-heading" className="border-b pb-3 text-2xl font-semibold">
-							Video moderation
+							Media moderation
 						</h2>
 						{mediaQueue?.items.length ? (
 							<ul className="mt-5 grid gap-4 lg:grid-cols-2">
@@ -162,8 +164,11 @@ export default function PlatformReview() {
 									<li key={item.id} className="rounded-xl border p-5">
 										<h3 className="text-lg font-medium">{item.listingTitle}</h3>
 										<p className="mt-2 text-sm text-muted-foreground">
-											{item.vendorName ?? 'Vendor'} · {item.durationSeconds.toFixed(1)} seconds · {item.outputWidth} × {item.outputHeight}{' '}
-											· {item.captioned ? 'Captioned' : 'No speech declared'} · version {item.version}
+											{item.vendorName ?? 'Vendor'} ·{' '}
+											{item.kind === 'listing_image' ? 'Listing image' : `${item.durationSeconds?.toFixed(1)} seconds`} ·{' '}
+											{item.outputWidth} × {item.outputHeight}
+											{item.kind === 'short_video' ? ` · ${item.captioned ? 'Captioned' : 'No speech declared'}` : ''} · version{' '}
+											{item.version}
 										</p>
 										{item.description && <p className="mt-2 text-sm">{item.description}</p>}
 										<Button
@@ -173,36 +178,39 @@ export default function PlatformReview() {
 											className="mt-4"
 											onClick={() =>
 												void run(async () => {
-													const preview = (await apiRequest(`/platform/media/${item.id}/preview`)) as {
-														mediaId: string
-														videoUrl: string
-														posterUrl: string
-														captionText: string | null
-													}
-													setMediaPreview(preview)
+													setMediaPreview(MediaPreviewSchema.parse(await apiRequest(`/platform/media/${item.id}/preview`)))
 												})
 											}>
 											Load private preview
 										</Button>
 										{mediaPreview?.mediaId === item.id && (
 											<div className="mt-4">
-												<video
-													controls
-													preload="metadata"
-													poster={mediaPreview.posterUrl}
-													className="aspect-video w-full rounded-lg bg-black object-contain"
-													aria-label={`Review video for ${item.listingTitle}`}>
-													<source src={mediaPreview.videoUrl} type="video/mp4" />
-													{mediaPreview.captionText && (
-														<track
-															kind="captions"
-															src={`data:text/vtt;charset=utf-8,${encodeURIComponent(mediaPreview.captionText)}`}
-															srcLang="en"
-															label="English"
-															default
-														/>
-													)}
-												</video>
+												{mediaPreview.kind === 'listing_image' && mediaPreview.imageUrl ? (
+													<img
+														alt={mediaPreview.description ?? `Review image for ${item.listingTitle}`}
+														className="aspect-video w-full rounded-lg bg-muted object-contain"
+														src={mediaPreview.imageUrl}
+													/>
+												) : null}
+												{mediaPreview.kind === 'short_video' && mediaPreview.videoUrl && mediaPreview.posterUrl ? (
+													<video
+														controls
+														preload="metadata"
+														poster={mediaPreview.posterUrl}
+														className="aspect-video w-full rounded-lg bg-black object-contain"
+														aria-label={`Review video for ${item.listingTitle}`}>
+														<source src={mediaPreview.videoUrl} type="video/mp4" />
+														{mediaPreview.captionText && (
+															<track
+																kind="captions"
+																src={`data:text/vtt;charset=utf-8,${encodeURIComponent(mediaPreview.captionText)}`}
+																srcLang="en"
+																label="English"
+																default
+															/>
+														)}
+													</video>
+												) : null}
 												{mediaPreview.captionText && (
 													<pre className="mt-2 max-h-32 overflow-auto whitespace-pre-wrap text-xs">{mediaPreview.captionText}</pre>
 												)}
@@ -240,7 +248,7 @@ export default function PlatformReview() {
 								))}
 							</ul>
 						) : (
-							<p className="mt-5 text-sm text-muted-foreground">No processed videos awaiting moderation.</p>
+							<p className="mt-5 text-sm text-muted-foreground">No processed media is awaiting moderation.</p>
 						)}
 					</section>
 					<section aria-labelledby="application-queue-heading">

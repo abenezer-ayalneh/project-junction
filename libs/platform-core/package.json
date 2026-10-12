@@ -32,7 +32,8 @@
 		"nodemailer": "^10.0.14",
 		"pg": "^8.23.0",
 		"resend": "^6.29.0",
-		"tslib": "^2.3.0"
+		"tslib": "^2.3.0",
+		"zod": "^4.5.4"
 	},
 	"devDependencies": {
 		"@types/nodemailer": "^8.0.2",

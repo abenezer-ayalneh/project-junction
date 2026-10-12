@@ -49,6 +49,8 @@ try {
 			],
 			{ JUNCTION_RUNTIME_MODE: 'local' },
 		)
+	if (!authProbe && (!focusedTestName || /inventory/i.test(focusedTestName)))
+		run(['exec', 'node', 'tools/check-inventory-transfers.mjs'], { JUNCTION_RUNTIME_MODE: 'local' })
 } finally {
 	try {
 		// Auth uses its fixed schema; remove only identities owned by this run's

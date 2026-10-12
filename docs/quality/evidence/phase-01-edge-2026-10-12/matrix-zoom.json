@@ -1,0 +1,66 @@
+[
+	{
+		"surface": "home",
+		"zoom": 200,
+		"dpr": 4,
+		"heading": "Products and services, side by side.",
+		"scroll": 1024,
+		"width": 1024
+	},
+	{
+		"surface": "search",
+		"zoom": 200,
+		"dpr": 4,
+		"heading": "Products and services",
+		"scroll": 1024,
+		"width": 1024
+	},
+	{
+		"surface": "gallery",
+		"zoom": 200,
+		"dpr": 4,
+		"heading": "Phase01 gallery product",
+		"scroll": 1024,
+		"width": 1024
+	},
+	{
+		"surface": "storefront",
+		"zoom": 200,
+		"dpr": 4,
+		"heading": "Phase 01 test Vendor",
+		"scroll": 1024,
+		"width": 1024
+	},
+	{
+		"surface": "home",
+		"zoom": 400,
+		"dpr": 8,
+		"heading": "Products and services, side by side.",
+		"scroll": 512,
+		"width": 512
+	},
+	{
+		"surface": "search",
+		"zoom": 400,
+		"dpr": 8,
+		"heading": "Products and services",
+		"scroll": 512,
+		"width": 512
+	},
+	{
+		"surface": "gallery",
+		"zoom": 400,
+		"dpr": 8,
+		"heading": "Phase01 gallery product",
+		"scroll": 512,
+		"width": 512
+	},
+	{
+		"surface": "storefront",
+		"zoom": 400,
+		"dpr": 8,
+		"heading": "Phase 01 test Vendor",
+		"scroll": 512,
+		"width": 512
+	}
+]

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 
 import { type ArgumentsHost, Catch, type ExceptionFilter, HttpException, HttpStatus, Logger, type LoggerService } from '@nestjs/common'
-import { AccessDeniedError, IdempotencyConflictError } from 'platform-core'
+import { AccessDeniedError, GoodsCheckoutConflictError, IdempotencyConflictError } from 'platform-core'
 
 import type { RequestWithContext } from './request-context'
 
@@ -35,6 +35,10 @@ export class ApiExceptionFilter implements ExceptionFilter {
 
 	private toPublicError(exception: unknown): { status: number; code: string; message: string } {
 		if (exception instanceof IdempotencyConflictError) {
+			return { status: 409, code: exception.code, message: exception.message }
+		}
+
+		if (exception instanceof GoodsCheckoutConflictError) {
 			return { status: 409, code: exception.code, message: exception.message }
 		}
 

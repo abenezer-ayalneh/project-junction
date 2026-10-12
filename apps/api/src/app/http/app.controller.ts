@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, Param, Post, Query, Req, Res } from '@nestjs/common'
+import { Body, Controller, Get, Headers, Param, Post, Put, Query, Req, Res } from '@nestjs/common'
 import {
 	ApiBody,
 	ApiCreatedResponse,
@@ -98,6 +98,18 @@ export class AppController {
 			.end(body)
 	}
 
+	@Get('public/media/:mediaId/image')
+	@ApiOperation({ summary: 'Read an approved listing image only while its Listing and Vendor remain published.' })
+	async publicImage(@Param('mediaId') mediaId: string, @Res() response: MediaResponse) {
+		const { body, contentType } = await this.foundation.readPublicMedia(mediaId, 'image')
+		response
+			.setHeader('Content-Type', contentType)
+			.setHeader('Cache-Control', 'no-store')
+			.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
+			.setHeader('Content-Length', body.length)
+			.end(body)
+	}
+
 	@Get('public/media/:mediaId/captions.vtt')
 	@ApiOperation({ summary: 'Read reviewed WebVTT captions for a currently published video.' })
 	async publicCaptions(@Param('mediaId') mediaId: string, @Res() response: MediaResponse) {
@@ -176,6 +188,25 @@ export class AppController {
 		return this.foundation.browsePublicListings(query)
 	}
 
+	@Get('public/listings/:listingId/availability')
+	@ApiOperation({ summary: 'Check current Product stock for a selected Location and SKU. This does not reserve stock.' })
+	@ApiParam({ name: 'listingId', schema: { type: 'string', format: 'uuid' } })
+	@ApiQuery({ name: 'locationId', required: true, schema: { type: 'string', format: 'uuid' } })
+	@ApiQuery({ name: 'sku', required: false, schema: { type: 'string', minLength: 1, maxLength: 80 } })
+	@ApiQuery({ name: 'quantity', required: false, schema: { type: 'integer', minimum: 1, maximum: 2147483647, default: 1 } })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.publicProductAvailability })
+	publicProductAvailability(@Param('listingId') listingId: string, @Query() query: unknown) {
+		return this.foundation.readPublicProductAvailability(listingId, query)
+	}
+
+	@Get('public/listings/:listingId')
+	@ApiOperation({ summary: 'Read one approved, published Listing with its public Vendor and locations.' })
+	@ApiParam({ name: 'listingId', schema: { type: 'string', format: 'uuid' } })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.publicListingDetail })
+	publicListing(@Param('listingId') listingId: string) {
+		return this.foundation.readPublicListing(listingId)
+	}
+
 	@Get('public/recommendations')
 	@ApiOperation({ summary: 'Return deterministic public discovery recommendations with an explainable reason.' })
 	recommendations(@AuthenticatedSession() sessionId: string | undefined) {
@@ -211,6 +242,74 @@ export class AppController {
 		return this.foundation.followVendor(sessionId, vendorId, body.following === true)
 	}
 
+	@Get('locations/:locationId/goods-configuration')
+	@ApiOperation({ summary: 'Read goods fulfillment settings for an assigned Owner Location.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiParam({ name: 'locationId', schema: { type: 'string', format: 'uuid' } })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.goodsLocationConfigurationResult })
+	readGoodsConfiguration(@AuthenticatedSession() sessionId: string | undefined, @Param('locationId') locationId: string) {
+		return this.foundation.readGoodsLocationConfiguration(sessionId, locationId)
+	}
+
+	@Put('locations/:locationId/goods-configuration')
+	@ApiOperation({ summary: 'Configure pickup, PostGIS delivery zones and goods policy for an assigned Owner Location.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiParam({ name: 'locationId', schema: { type: 'string', format: 'uuid' } })
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.goodsLocationConfigurationCommand })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.goodsLocationConfigurationResult })
+	configureGoodsLocation(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('locationId') locationId: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.configureGoodsLocation(sessionId, key, locationId, body)
+	}
+
+	@Post('customer/goods/quotes')
+	@ApiOperation({ summary: 'Quote goods across Vendor groups with current stock, prices, fulfillment and policy snapshots. No stock is reserved.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.goodsQuoteCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.goodsQuoteResult })
+	createGoodsQuote(@AuthenticatedSession() sessionId: string | undefined, @Headers('idempotency-key') key: string | undefined, @Body() body: unknown) {
+		return this.foundation.createGoodsQuote(sessionId, key, body)
+	}
+
+	@Post('customer/goods/holds')
+	@ApiOperation({ summary: 'Revalidate a quote and reserve all goods atomically for fifteen minutes.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.goodsHoldCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.goodsHoldResult })
+	createGoodsHold(@AuthenticatedSession() sessionId: string | undefined, @Headers('idempotency-key') key: string | undefined, @Body() body: unknown) {
+		return this.foundation.createGoodsHold(sessionId, key, body)
+	}
+
+	@Get('customer/goods/holds/:holdId')
+	@ApiOperation({ summary: 'Read the current state and snapshots of the Customer’s goods hold; expired holds release once.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiParam({ name: 'holdId', schema: { type: 'string', format: 'uuid' } })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.goodsHoldRead })
+	readGoodsHold(@AuthenticatedSession() sessionId: string | undefined, @Param('holdId') holdId: string) {
+		return this.foundation.readGoodsHold(sessionId, holdId)
+	}
+
+	@Post('customer/goods/holds/:holdId/release')
+	@ApiOperation({ summary: 'Release all uncommitted goods reservations once. A new attempt requires a fresh quote.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiParam({ name: 'holdId', schema: { type: 'string', format: 'uuid' } })
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.goodsHoldReleaseResult })
+	releaseGoodsHold(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('holdId') holdId: string,
+	) {
+		return this.foundation.releaseGoodsHold(sessionId, key, holdId)
+	}
+
 	@Get('inventory/listings/:listingId/availability')
 	@ApiOperation({ summary: 'Read derived stock availability for a Product at an assigned Vendor Location.' })
 	@ApiSecurity('junction-auth-cookie')
@@ -220,6 +319,16 @@ export class AppController {
 	@ApiOkResponse({ schema: OpenApiSchemaRefs.inventoryAvailability })
 	readInventoryAvailability(@AuthenticatedSession() sessionId: string | undefined, @Param('listingId') listingId: string, @Query() query: unknown) {
 		return this.foundation.readInventoryAvailability(sessionId, listingId, query)
+	}
+
+	@Post('inventory/transfers')
+	@ApiOperation({ summary: 'Transfer stock atomically between two assigned Locations of the active Vendor.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.inventoryTransferCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.inventoryTransferResult })
+	createInventoryTransfer(@AuthenticatedSession() sessionId: string | undefined, @Headers('idempotency-key') key: string | undefined, @Body() body: unknown) {
+		return this.foundation.createInventoryTransfer(sessionId, key, body)
 	}
 
 	@Post('inventory/movements')
@@ -332,6 +441,21 @@ export class AppController {
 		return this.foundation.createVideoUploadIntent(sessionId, key, listingId, body)
 	}
 
+	@Post('listings/:listingId/image-upload-intents')
+	@ApiOperation({ summary: 'Create a scoped signed PUT grant for a Listing image held in private quarantine.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.imageUploadIntentCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.mediaUploadIntent })
+	createImageUploadIntent(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('listingId') listingId: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.createImageUploadIntent(sessionId, key, listingId, body)
+	}
+
 	@Post('media/:mediaId/complete-upload')
 	@ApiOperation({ summary: 'Verify and seal an uploaded MP4 in private quarantine; safe processing is still required.' })
 	@ApiSecurity('junction-auth-cookie')
@@ -339,6 +463,15 @@ export class AppController {
 	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.mediaAsset })
 	completeVideoUpload(@AuthenticatedSession() sessionId: string | undefined, @Param('mediaId') mediaId: string, @Body() body: unknown) {
 		return this.foundation.completeVideoUpload(sessionId, mediaId, body)
+	}
+
+	@Post('media/:mediaId/complete-image-upload')
+	@ApiOperation({ summary: 'Verify and seal an uploaded Listing image in private quarantine; safe processing is still required.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiBody({ schema: OpenApiSchemaRefs.mediaUploadCompleteCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.mediaAsset })
+	completeImageUpload(@AuthenticatedSession() sessionId: string | undefined, @Param('mediaId') mediaId: string, @Body() body: unknown) {
+		return this.foundation.completeImageUpload(sessionId, mediaId, body)
 	}
 
 	@Get('platform/media-review-queue')
@@ -372,6 +505,21 @@ export class AppController {
 		@Body() body: unknown,
 	) {
 		return this.foundation.reviewMedia(sessionId, key, mediaId, body)
+	}
+
+	@Post('platform/media/:mediaId/retention-hold')
+	@ApiOperation({ summary: 'Place or release an evidence-preservation hold on a scoped media version.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.mediaRetentionHoldCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.mediaRetentionResult })
+	setMediaRetentionHold(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('mediaId') mediaId: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.setMediaRetentionHold(sessionId, key, mediaId, body)
 	}
 
 	@Post('catalog-imports')

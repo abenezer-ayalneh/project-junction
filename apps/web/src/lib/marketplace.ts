@@ -1,4 +1,12 @@
-import { type PublicListingPage, PublicListingPageSchema, PublicStorefrontSchema, type PublicVendorPage, PublicVendorPageSchema } from 'contracts'
+import {
+	type PublicListingDetail,
+	PublicListingDetailSchema,
+	type PublicListingPage,
+	PublicListingPageSchema,
+	PublicStorefrontSchema,
+	type PublicVendorPage,
+	PublicVendorPageSchema,
+} from 'contracts'
 
 function apiBaseUrl(): string {
 	return (
@@ -23,7 +31,7 @@ async function readApi<T>(path: string, parse: (input: unknown) => T, missingIsE
 
 export function getPublicListings(query: URLSearchParams): Promise<PublicListingPage | null> {
 	const params = new URLSearchParams()
-	for (const key of ['kind', 'category', 'q', 'cursor', 'limit']) {
+	for (const key of ['kind', 'category', 'q', 'vendor', 'minPriceCents', 'maxPriceCents', 'sort', 'cursor', 'limit']) {
 		const value = query.get(key)
 		if (value) params.set(key, value)
 	}
@@ -39,7 +47,17 @@ export function getPublicStorefront(slug: string) {
 	return readApi(`/public/vendors/${encodeURIComponent(slug)}`, (input) => PublicStorefrontSchema.parse(input), true)
 }
 
+export function getPublicListing(listingId: string): Promise<PublicListingDetail | null> {
+	return readApi(`/public/listings/${encodeURIComponent(listingId)}`, (input) => PublicListingDetailSchema.parse(input), true)
+}
+
 export function formatPrice(priceCents: number | undefined): string {
 	if (priceCents === undefined) return 'See options'
 	return new Intl.NumberFormat('en-ET', { style: 'currency', currency: 'ETB', maximumFractionDigits: 0 }).format(priceCents / 100)
+}
+
+export function formatListingPrice(listing: { priceCents?: number; variants?: Array<{ priceCents: number }> }): string {
+	if (listing.priceCents !== undefined) return formatPrice(listing.priceCents)
+	if (!listing.variants?.length) return 'Price unavailable'
+	return `From ${formatPrice(Math.min(...listing.variants.map((variant) => variant.priceCents)))}`
 }

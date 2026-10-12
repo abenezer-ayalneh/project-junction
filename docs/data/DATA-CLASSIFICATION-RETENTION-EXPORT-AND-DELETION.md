@@ -36,6 +36,12 @@ Demo workspace expiry is stricter: Junction-owned records, MinIO objects, search
 
 Exact retention durations for real-account Orders, messages, support, evidence, security logs, exports, and provider data were not selected in the conversation. They are `REQUIRES-FUTURE-VALIDATION`, not silent defaults. Before implementation, a versioned registry must assign owner, purpose, legal/business basis, duration, trigger, deletion/pseudonymization action, backup behavior, and derived-store propagation for every record class.
 
+The [governing retention policy draft](./GOVERNING-RETENTION-POLICY.md) now provides a project-wide schedule for review, proposed business periods, preservation and backup rules, implementation gaps, and an adoption record. It is not adopted: jurisdiction, operating entity, legal review, owner approval, and implementation evidence remain pending. Its proposed durations do not change existing jobs or resolve the validation requirement above.
+
+Phase 01 rejected-media storage now has an explicit operational registry: [rejected-media-v1](./REJECTED-MEDIA-RETENTION.md). Its 30-day window and evidence holds are derived implementation defaults; independent policy approval remains a release gate. Independent deletion-journal, local versioned-copy/restore reconciliation, and the registered encrypted-media generation scheduler/expiry controller are implemented. Offsite activation and dependency-aware database backup rotation remain open. Other record classes retain the validation requirement above.
+
+The [media backup lifecycle](./MEDIA-BACKUP-LIFECYCLE.md) now has local scheduler and registered-generation/archive-expiry evidence, including actual lock-expiry retries. Provider activation, unsupported archive/dependency adapters and approved periods remain open. Metadata/journal disposal is separately governed and is not enabled by that controller.
+
 ## Related documents
 
 - [Canonical data model](CANONICAL-DATA-MODEL.md)

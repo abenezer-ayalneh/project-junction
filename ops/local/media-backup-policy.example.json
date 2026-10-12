@@ -1,0 +1,8 @@
+{
+	"version": "local-synthetic-backup-v1",
+	"approvalReference": "LOCAL-SYNTHETIC-REHEARSAL-ONLY",
+	"maxAgeDays": 1,
+	"intervalSeconds": 600,
+	"lockDays": 0,
+	"keyId": "local-backup-key-v1"
+}

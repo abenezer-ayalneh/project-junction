@@ -1,12 +1,19 @@
 import { createHash } from 'node:crypto'
 
-import { DeleteObjectCommand, GetObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import { GetObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { Phase01MediaLimits } from 'contracts'
 
+import { purgeObjectVersions } from './media-retention.js'
+
 export interface MediaStore {
-	createUploadGrant(key: string, bytes: number, expiresIn: number): Promise<{ url: string; method: 'PUT'; headers: Record<string, string> }>
-	sealUpload(uploadKey: string, sealedKey: string, bytes: number, sha256: string): Promise<void>
+	createUploadGrant(
+		key: string,
+		bytes: number,
+		expiresIn: number,
+		contentType: string,
+	): Promise<{ url: string; method: 'PUT'; headers: Record<string, string> }>
+	sealUpload(uploadKey: string, sealedKey: string, bytes: number, sha256: string, contentType: string): Promise<void>
 	readPrivate(key: string, maxBytes: number, contentType?: string): Promise<Buffer>
 	writePrivate(key: string, body: Buffer, contentType: string): Promise<void>
 	deletePrivate(key: string): Promise<void>
@@ -36,20 +43,23 @@ export class S3MediaStore implements MediaStore {
 		return new S3MediaStore(bucket, endpoint, region, accessKeyId, secretAccessKey)
 	}
 
-	async createUploadGrant(key: string, bytes: number, expiresIn: number) {
-		const url = await getSignedUrl(this.client, new PutObjectCommand({ Bucket: this.bucket, Key: key, ContentType: 'video/mp4', ContentLength: bytes }), {
+	async createUploadGrant(key: string, bytes: number, expiresIn: number, contentType: string) {
+		const url = await getSignedUrl(this.client, new PutObjectCommand({ Bucket: this.bucket, Key: key, ContentType: contentType, ContentLength: bytes }), {
 			expiresIn,
 			signableHeaders: new Set(['content-type', 'content-length']),
 		})
-		return { url, method: 'PUT' as const, headers: { 'Content-Type': 'video/mp4' } }
+		return { url, method: 'PUT' as const, headers: { 'Content-Type': contentType } }
 	}
 
-	async sealUpload(uploadKey: string, sealedKey: string, bytes: number, sha256: string) {
-		const body = await this.readPrivate(uploadKey, bytes)
+	async sealUpload(uploadKey: string, sealedKey: string, bytes: number, sha256: string, contentType: string) {
+		const body = await this.readPrivate(uploadKey, bytes, contentType)
 		if (bytes > Phase01MediaLimits.maxUploadBytes || body.length !== bytes) throw new Error('Quarantine object admission failed.')
-		if (body.length < 12 || body.toString('ascii', 4, 8) !== 'ftyp') throw new Error('Quarantine object is not MP4.')
+		if (contentType === 'video/mp4' && (body.length < 12 || body.toString('ascii', 4, 8) !== 'ftyp')) throw new Error('Quarantine object is not MP4.')
+		if (contentType === 'image/jpeg' && (body.length < 4 || body[0] !== 0xff || body[1] !== 0xd8)) throw new Error('Quarantine object is not JPEG.')
+		if (contentType === 'image/png' && (body.length < 8 || !body.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))))
+			throw new Error('Quarantine object is not PNG.')
 		if (createHash('sha256').update(body).digest('hex') !== sha256) throw new Error('Quarantine object checksum mismatch.')
-		await this.writePrivate(sealedKey, body, 'video/mp4')
+		await this.writePrivate(sealedKey, body, contentType)
 	}
 
 	async readPrivate(key: string, maxBytes: number, contentType = 'video/mp4') {
@@ -73,7 +83,7 @@ export class S3MediaStore implements MediaStore {
 	}
 
 	async deletePrivate(key: string) {
-		await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }))
+		await purgeObjectVersions(this.client, this.bucket, key)
 	}
 
 	async *listPrivate(prefix: string) {

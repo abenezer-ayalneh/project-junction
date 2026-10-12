@@ -120,12 +120,223 @@ export const InventoryAvailabilitySchema = z.object({
 	available: z.number().int().nonnegative(),
 })
 
+// Public stock checks are advisory; only a future checkout hold reserves stock.
+export const PublicProductAvailabilityQuerySchema = InventoryAvailabilityQuerySchema.extend({
+	quantity: z.coerce.number().int().min(1).max(2_147_483_647).default(1),
+}).strict()
+
+export const PublicProductAvailabilitySchema = z
+	.object({
+		listingId: z.string().uuid(),
+		locationId: z.string().uuid(),
+		sku: z.string().nullable(),
+		available: z.number().int().nonnegative(),
+		requestedQuantity: z.number().int().positive(),
+		canFulfill: z.boolean(),
+		checkedAt: z.string().datetime(),
+	})
+	.strict()
+
 export const InventoryMovementResultSchema = InventoryAvailabilitySchema.extend({
 	movementId: z.string().uuid(),
 	reason: z.enum(['received', 'adjusted', 'damaged']),
 	quantityDelta: z.number().int(),
 	replayed: z.boolean(),
 })
+
+export const InventoryTransferCommandSchema = z
+	.object({
+		sourceLocationId: z.string().uuid(),
+		destinationLocationId: z.string().uuid(),
+		listingId: z.string().uuid(),
+		sku: z.string().trim().min(1).max(80).optional(),
+		quantity: z.number().int().min(1).max(2_147_483_647),
+		note: z.string().trim().min(5).max(500),
+	})
+	.refine((value) => value.sourceLocationId !== value.destinationLocationId, {
+		path: ['destinationLocationId'],
+		message: 'Choose a different destination Location.',
+	})
+
+export const InventoryTransferResultSchema = z.object({
+	transferId: z.string().uuid(),
+	sourceMovementId: z.string().uuid(),
+	destinationMovementId: z.string().uuid(),
+	source: InventoryAvailabilitySchema,
+	destination: InventoryAvailabilitySchema,
+	quantity: z.number().int().positive(),
+	replayed: z.boolean(),
+})
+
+const GoodsMoneySchema = z.number().int().min(0).max(2_147_483_647)
+const GoodsPointSchema = z.tuple([z.number().min(-180).max(180), z.number().min(-90).max(90)])
+export const GoodsDeliveryZoneSchema = z
+	.object({
+		id: z.string().uuid(),
+		label: z.string().trim().min(1).max(80),
+		polygon: z.array(GoodsPointSchema).min(4).max(100),
+		feeCents: GoodsMoneySchema,
+		minimumCents: GoodsMoneySchema,
+		freeDeliveryThresholdCents: GoodsMoneySchema.nullable(),
+		etaMinutes: z.number().int().min(1).max(10080),
+	})
+	.strict()
+	.refine(({ polygon }) => polygon[0][0] === polygon[polygon.length - 1][0] && polygon[0][1] === polygon[polygon.length - 1][1], {
+		path: ['polygon'],
+		message: 'Close the polygon with its first point.',
+	})
+export const GoodsLocationConfigurationSchema = z
+	.object({
+		pickupEnabled: z.boolean(),
+		returnTemplate: z.enum(['standard', 'flexible']),
+		deliveryZones: z.array(GoodsDeliveryZoneSchema).max(20),
+	})
+	.strict()
+	.refine(({ deliveryZones }) => new Set(deliveryZones.map(({ id }) => id)).size === deliveryZones.length, {
+		path: ['deliveryZones'],
+		message: 'Zone IDs must be unique.',
+	})
+export const GoodsLocationConfigurationCommandSchema = z
+	.object({
+		expectedVersion: z.number().int().nonnegative(),
+		configuration: GoodsLocationConfigurationSchema,
+	})
+	.strict()
+export const GoodsLocationConfigurationResultSchema = z
+	.object({
+		locationId: z.string().uuid(),
+		version: z.number().int().nonnegative(),
+		configuration: GoodsLocationConfigurationSchema.nullable(),
+		replayed: z.boolean(),
+	})
+	.strict()
+export const GoodsAddressSnapshotSchema = z
+	.object({
+		contactName: z.string().trim().min(1).max(120),
+		phone: z.string().trim().min(5).max(40),
+		locality: z.string().trim().min(1).max(120),
+		address: z.string().trim().min(1).max(300),
+		instructions: z.string().trim().max(500).optional(),
+		point: GoodsPointSchema,
+	})
+	.strict()
+export const GoodsFulfillmentSelectionSchema = z.discriminatedUnion('method', [
+	z.object({ method: z.literal('pickup') }).strict(),
+	z.object({ method: z.literal('delivery'), zoneId: z.string().uuid(), address: GoodsAddressSnapshotSchema }).strict(),
+])
+export const GoodsQuoteLineSelectionSchema = z
+	.object({
+		listingId: z.string().uuid(),
+		sku: z.string().trim().min(1).max(80).optional(),
+		quantity: z.number().int().min(1).max(2_147_483_647),
+	})
+	.strict()
+export const GoodsQuoteCommandSchema = z
+	.object({
+		groups: z
+			.array(
+				z
+					.object({
+						vendorId: z.string().uuid(),
+						locationId: z.string().uuid(),
+						fulfillment: GoodsFulfillmentSelectionSchema,
+						lines: z.array(GoodsQuoteLineSelectionSchema).min(1).max(50),
+					})
+					.strict(),
+			)
+			.min(1)
+			.max(10),
+	})
+	.strict()
+	.superRefine(({ groups }, ctx) => {
+		if (new Set(groups.map(({ vendorId }) => vendorId)).size !== groups.length)
+			ctx.addIssue({ code: 'custom', path: ['groups'], message: 'Select one Location and fulfillment method per Vendor.' })
+		for (const [index, group] of groups.entries()) {
+			const keys = group.lines.map(({ listingId, sku }) => JSON.stringify([listingId, sku ?? null]))
+			if (new Set(keys).size !== keys.length)
+				ctx.addIssue({ code: 'custom', path: ['groups', index, 'lines'], message: 'Combine duplicate line quantities.' })
+		}
+	})
+export type GoodsQuoteCommand = z.infer<typeof GoodsQuoteCommandSchema>
+export const GoodsPolicySnapshotSchema = z
+	.object({
+		returnTemplate: z.enum(['standard', 'flexible']),
+		changeOfMindDays: z.union([z.literal(7), z.literal(14)]),
+		faultProtectionDays: z.literal(30),
+		restockingFeeCents: z.literal(0),
+		startsAt: z.literal('verified_handoff'),
+	})
+	.strict()
+export const GoodsQuoteSnapshotSchema = z
+	.object({
+		currency: z.literal('ETB'),
+		totalCents: GoodsMoneySchema,
+		groups: z
+			.array(
+				z
+					.object({
+						vendorId: z.string().uuid(),
+						locationId: z.string().uuid(),
+						configurationVersion: z.number().int().positive(),
+						fulfillment: GoodsFulfillmentSelectionSchema,
+						deliveryZone: GoodsDeliveryZoneSchema.nullable(),
+						deliveryFeeCents: GoodsMoneySchema,
+						etaMinutes: z.number().int().positive().nullable(),
+						pickupWindowHours: z.literal(72).nullable(),
+						pickupGraceHours: z.literal(48).nullable(),
+						failedDeliveryRetryHours: z.literal(48).nullable(),
+						lines: z
+							.array(
+								z
+									.object({
+										listingId: z.string().uuid(),
+										listingVersion: z.number().int().positive(),
+										sku: z.string().nullable(),
+										quantity: z.number().int().positive(),
+										unitPriceCents: GoodsMoneySchema,
+										subtotalCents: GoodsMoneySchema,
+										policy: GoodsPolicySnapshotSchema,
+									})
+									.strict(),
+							)
+							.min(1),
+					})
+					.strict(),
+			)
+			.min(1),
+	})
+	.strict()
+export type GoodsQuoteSnapshot = z.infer<typeof GoodsQuoteSnapshotSchema>
+export const GoodsQuoteResultSchema = z
+	.object({
+		quoteId: z.string().uuid(),
+		expiresAt: z.string().datetime(),
+		snapshot: GoodsQuoteSnapshotSchema,
+		replayed: z.boolean(),
+	})
+	.strict()
+export const GoodsHoldCommandSchema = z.object({ quoteId: z.string().uuid() }).strict()
+export const GoodsHoldResultSchema = z
+	.object({
+		holdId: z.string().uuid(),
+		quoteId: z.string().uuid(),
+		expiresAt: z.string().datetime(),
+		currency: z.literal('ETB'),
+		totalCents: GoodsMoneySchema,
+		replayed: z.boolean(),
+	})
+	.strict()
+export const GoodsHoldReadSchema = GoodsHoldResultSchema.omit({ replayed: true }).extend({
+	state: z.enum(['holding', 'released', 'expired']),
+	snapshot: GoodsQuoteSnapshotSchema,
+})
+export const GoodsHoldReleaseResultSchema = z
+	.object({
+		holdId: z.string().uuid(),
+		state: z.enum(['released', 'expired']),
+		replayed: z.boolean(),
+	})
+	.strict()
 
 export const PublicVendorBrowseQuerySchema = z.object({
 	cursor: z.string().uuid().optional(),
@@ -137,6 +348,7 @@ export type PublicVendorBrowseQuery = z.infer<typeof PublicVendorBrowseQuerySche
 export const PublicVendorSummarySchema = z.object({
 	id: z.string().uuid(),
 	slug: z.string().min(1).max(120),
+	displayName: z.string().min(3).max(120),
 })
 
 export type PublicVendorSummary = z.infer<typeof PublicVendorSummarySchema>
@@ -191,8 +403,25 @@ export const ListingSummarySchema = ListingDraftObjectSchema.extend({
 	state: z.enum(['draft', 'pending_review', 'published', 'rejected', 'unpublished']),
 	version: z.number().int().positive(),
 	shortVideo: z.object({ id: z.string().uuid(), description: z.string().nullable(), hasCaptions: z.boolean() }).optional(),
+	images: z.array(
+		z.object({ id: z.string().uuid(), alt: z.string().min(3).max(1000), width: z.number().int().positive(), height: z.number().int().positive() }),
+	),
 })
 export type ListingSummary = z.infer<typeof ListingSummarySchema>
+
+export const PublicListingVendorSchema = z.object({
+	id: z.string().uuid(),
+	slug: z.string().min(1).max(120),
+	displayName: z.string().min(3).max(120),
+})
+
+export const PublicListingSummarySchema = ListingSummarySchema.extend({ vendor: PublicListingVendorSchema })
+export type PublicListingSummary = z.infer<typeof PublicListingSummarySchema>
+
+export const PublicListingDetailSchema = PublicListingSummarySchema.extend({
+	locations: z.array(z.object({ id: z.string().uuid(), label: z.string().min(2).max(120), city: z.string().min(2).max(120) })),
+})
+export type PublicListingDetail = z.infer<typeof PublicListingDetailSchema>
 
 export const ListingCommandResultSchema = ListingSummarySchema.extend({ replayed: z.boolean() })
 export type ListingCommandResult = z.infer<typeof ListingCommandResultSchema>
@@ -202,6 +431,12 @@ export const PublicStorefrontSchema = z.object({
 	slug: z.string().min(1).max(120),
 	displayName: z.string().min(3).max(120),
 	description: z.string().min(10).max(2000),
+	logoImage: z
+		.object({ id: z.string().uuid(), alt: z.string().min(3).max(1000), width: z.number().int().positive(), height: z.number().int().positive() })
+		.optional(),
+	coverImage: z
+		.object({ id: z.string().uuid(), alt: z.string().min(3).max(1000), width: z.number().int().positive(), height: z.number().int().positive() })
+		.optional(),
 	locations: z.array(z.object({ id: z.string().uuid(), label: z.string().min(2).max(120), city: z.string().min(2).max(120) })),
 	listings: z.array(ListingSummarySchema),
 })
@@ -212,6 +447,12 @@ export const VendorCatalogSchema = z.object({
 	slug: z.string().nullable(),
 	displayName: z.string().nullable(),
 	description: z.string().nullable(),
+	logoImage: z
+		.object({ id: z.string().uuid(), alt: z.string().min(3).max(1000), width: z.number().int().positive(), height: z.number().int().positive() })
+		.nullable(),
+	coverImage: z
+		.object({ id: z.string().uuid(), alt: z.string().min(3).max(1000), width: z.number().int().positive(), height: z.number().int().positive() })
+		.nullable(),
 	locations: z.array(z.object({ id: z.string().uuid(), label: z.string().nullable(), city: z.string().nullable(), address: z.string().nullable() })),
 	listings: z.array(ListingSummarySchema),
 })
@@ -279,10 +520,9 @@ const StorefrontFieldsSchema = z.object({
 		.regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
 	description: z.string().trim().min(10).max(2000),
 })
-export const StorefrontUpdateSchema = StorefrontFieldsSchema.partial().refine(
-	(value) => Object.values(value).some((field) => field !== undefined),
-	'At least one storefront field is required.',
-)
+export const StorefrontUpdateSchema = StorefrontFieldsSchema.partial()
+	.extend({ logoMediaId: z.string().uuid().nullable().optional(), coverMediaId: z.string().uuid().nullable().optional() })
+	.refine((value) => Object.values(value).some((field) => field !== undefined), 'At least one storefront field is required.')
 export type StorefrontUpdate = z.infer<typeof StorefrontUpdateSchema>
 export const StorefrontUpdateResultSchema = z.object({ vendorId: z.string().uuid(), replayed: z.boolean() })
 export const VendorApplicationCommandSchema = z.object({
@@ -303,14 +543,33 @@ export const VendorApplicationResultSchema = z.object({
 	replayed: z.boolean(),
 })
 
-export const PublicListingBrowseQuerySchema = z.object({
-	kind: ListingKindSchema.optional(),
-	category: ListingCategorySchema.optional(),
-	q: z.string().trim().min(1).max(100).optional(),
-	cursor: z.string().uuid().optional(),
-	limit: z.coerce.number().int().min(1).max(100).default(20),
+export const PublicListingBrowseQuerySchema = z
+	.object({
+		kind: ListingKindSchema.optional(),
+		category: ListingCategorySchema.optional(),
+		q: z.string().trim().min(1).max(100).optional(),
+		vendor: z
+			.string()
+			.trim()
+			.min(3)
+			.max(120)
+			.regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+			.optional(),
+		minPriceCents: z.coerce.number().int().positive().max(100_000_000).optional(),
+		maxPriceCents: z.coerce.number().int().positive().max(100_000_000).optional(),
+		sort: z.enum(['newest', 'price_asc', 'price_desc']).default('newest'),
+		cursor: z.string().uuid().optional(),
+		limit: z.coerce.number().int().min(1).max(100).default(20),
+	})
+	.superRefine((value, ctx) => {
+		if (value.minPriceCents !== undefined && value.maxPriceCents !== undefined && value.minPriceCents > value.maxPriceCents)
+			ctx.addIssue({ code: 'custom', path: ['maxPriceCents'], message: 'must be greater than or equal to minPriceCents' })
+	})
+export const PublicListingPageSchema = z.object({
+	items: z.array(PublicListingSummarySchema),
+	nextCursor: z.string().uuid().nullable(),
+	total: z.number().int().nonnegative(),
 })
-export const PublicListingPageSchema = z.object({ items: z.array(ListingSummarySchema), nextCursor: z.string().uuid().nullable() })
 export type PublicListingPage = z.infer<typeof PublicListingPageSchema>
 
 export const Phase01MediaLimits = {
@@ -321,6 +580,14 @@ export const Phase01MediaLimits = {
 	maxProcessedLongEdge: 1280,
 	maxProcessedShortEdge: 720,
 	maxCaptionBytes: 100 * 1024,
+	uploadIntentSeconds: 10 * 60,
+} as const
+
+export const Phase01ImageLimits = {
+	maxUploadBytes: 10 * 1024 * 1024,
+	maxSourceWidth: 4096,
+	maxSourceHeight: 4096,
+	maxProcessedLongEdge: 1600,
 	uploadIntentSeconds: 10 * 60,
 } as const
 
@@ -340,11 +607,12 @@ export const MediaReviewQueueSchema = z.object({
 	items: z.array(
 		z.object({
 			id: z.string().uuid(),
+			kind: z.enum(['short_video', 'listing_image']),
 			listingId: z.string().uuid(),
 			listingTitle: z.string(),
 			vendorName: z.string().nullable(),
 			version: z.number().int().positive(),
-			durationSeconds: z.number().positive(),
+			durationSeconds: z.number().positive().nullable(),
 			outputWidth: z.number().int().positive(),
 			outputHeight: z.number().int().positive(),
 			captioned: z.boolean(),
@@ -361,6 +629,18 @@ export const MediaReviewCommandSchema = z.object({
 	expectedVersion: z.number().int().positive(),
 	note: z.string().trim().min(3).max(1000),
 })
+export const MediaRetentionHoldCommandSchema = z.object({
+	expectedVersion: z.number().int().positive(),
+	held: z.boolean(),
+	reason: z.string().trim().min(3).max(1000),
+})
+export const MediaRetentionResultSchema = z.object({
+	mediaId: z.string().uuid(),
+	version: z.number().int().positive(),
+	held: z.boolean(),
+	dueAt: z.string().datetime().nullable(),
+	deletedAt: z.string().datetime().nullable(),
+})
 export const MediaReviewResultSchema = z.object({
 	id: z.string().uuid(),
 	state: z.enum(['ready', 'rejected']),
@@ -370,13 +650,16 @@ export const MediaReviewResultSchema = z.object({
 
 export const MediaPreviewSchema = z.object({
 	mediaId: z.string().uuid(),
-	videoUrl: z.string().url(),
-	posterUrl: z.string().url(),
+	kind: z.enum(['short_video', 'listing_image']),
+	videoUrl: z.string().url().nullable(),
+	posterUrl: z.string().url().nullable(),
+	imageUrl: z.string().url().nullable(),
 	captionText: z.string().nullable(),
 	noSpeechDeclared: z.boolean(),
 	description: z.string().nullable(),
 	expiresAt: z.string().datetime(),
 })
+export type MediaPreview = z.infer<typeof MediaPreviewSchema>
 
 export const MediaUploadIntentCommandSchema = MediaProcessingCommandSchema.extend({
 	bytes: z.number().int().min(1).max(Phase01MediaLimits.maxUploadBytes),
@@ -397,6 +680,14 @@ export const MediaUploadIntentSchema = z.object({
 })
 
 export const MediaUploadCompleteCommandSchema = z.object({ sha256: z.string().regex(/^[0-9a-f]{64}$/) })
+
+export const ImageUploadIntentCommandSchema = z.object({
+	alt: z.string().trim().min(3).max(1000),
+	bytes: z.number().int().min(1).max(Phase01ImageLimits.maxUploadBytes),
+	contentType: z.enum(['image/jpeg', 'image/png']),
+	sha256: z.string().regex(/^[0-9a-f]{64}$/),
+})
+export const ImageUploadIntentSchema = MediaUploadIntentSchema
 
 export const CatalogImportCommandSchema = z.object({
 	templateVersion: z.literal('v1'),
@@ -493,3 +784,27 @@ export const HealthResponseSchema = z.object({
 	storage: z.literal('postgresql'),
 	requestId: z.string().uuid(),
 })
+
+// Private operational journal: persisted independently of database PITR.
+export const MediaDeletionEntrySchema = z
+	.object({
+		format: z.literal(1),
+		mediaId: z.string().uuid(),
+		workspaceId: z.string().uuid(),
+		policy: z.literal('rejected-media-v1'),
+		decidedAt: z.string().datetime(),
+		keys: z.array(z.string().min(1)).max(4),
+	})
+	.strict()
+	.superRefine((entry, context) => {
+		for (const key of entry.keys) {
+			const segments = key.split('/')
+			const managed =
+				key.startsWith('quarantine/uploads/') || key.startsWith('quarantine/sealed/')
+					? segments.at(-1) === entry.mediaId
+					: key.startsWith('private/processed/') && segments[2] === entry.mediaId
+			if (!managed || segments.includes('..') || [...key].some((character) => character.charCodeAt(0) < 32))
+				context.addIssue({ code: 'custom', path: ['keys'], message: 'Deletion key must belong to this media asset.' })
+		}
+	})
+export type MediaDeletionEntry = z.infer<typeof MediaDeletionEntrySchema>

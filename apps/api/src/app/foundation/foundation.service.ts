@@ -9,17 +9,21 @@ import {
 	IdempotencyKeySchema,
 	IdentityVerificationSessionSchema,
 	IdentityVerificationStatusSchema,
+	ImageUploadIntentCommandSchema,
 	InventoryAvailabilityQuerySchema,
 	InventoryMovementCommandSchema,
+	InventoryTransferCommandSchema,
 	ListingDraftSchema,
 	ListingReviewCommandSchema,
 	ListingRevisionCommandSchema,
 	MediaProcessingCommandSchema,
+	MediaRetentionHoldCommandSchema,
 	MediaReviewCommandSchema,
 	MediaReviewQueueQuerySchema,
 	MediaUploadCompleteCommandSchema,
 	MediaUploadIntentCommandSchema,
 	PublicListingBrowseQuerySchema,
+	PublicProductAvailabilityQuerySchema,
 	StorefrontUpdateSchema,
 	VendorApplicationCommandSchema,
 	VendorApplicationReviewSchema,
@@ -197,11 +201,20 @@ export class FoundationService {
 		return this.durable.browsePublicListings(query)
 	}
 
+	readPublicProductAvailability(listingId: string, query: unknown) {
+		PublicProductAvailabilityQuerySchema.parse(query)
+		return this.durable.readPublicProductAvailability(listingId, query)
+	}
+
+	readPublicListing(listingId: string) {
+		return this.durable.readPublicListing(listingId)
+	}
+
 	readPublicStorefront(slug: string) {
 		return this.durable.readPublicStorefront(slug)
 	}
 
-	readPublicMedia(mediaId: string, kind: 'video' | 'poster' | 'captions') {
+	readPublicMedia(mediaId: string, kind: 'video' | 'poster' | 'captions' | 'image') {
 		return this.durable.readPublicMedia(mediaId, kind)
 	}
 
@@ -240,9 +253,34 @@ export class FoundationService {
 		return this.durable.followVendor(sessionId, vendorId, following)
 	}
 
+	readGoodsLocationConfiguration(sessionId: string | undefined, locationId: string) {
+		return this.durable.readGoodsLocationConfiguration(sessionId, locationId)
+	}
+	configureGoodsLocation(sessionId: string | undefined, key: string | undefined, locationId: string, input: unknown) {
+		return this.durable.configureGoodsLocation(sessionId, key, locationId, input)
+	}
+	createGoodsQuote(sessionId: string | undefined, key: string | undefined, input: unknown) {
+		return this.durable.createGoodsQuote(sessionId, key, input)
+	}
+	createGoodsHold(sessionId: string | undefined, key: string | undefined, input: unknown) {
+		return this.durable.createGoodsHold(sessionId, key, input)
+	}
+	readGoodsHold(sessionId: string | undefined, holdId: string) {
+		return this.durable.readGoodsHold(sessionId, holdId)
+	}
+	releaseGoodsHold(sessionId: string | undefined, key: string | undefined, holdId: string) {
+		return this.durable.releaseGoodsHold(sessionId, key, holdId)
+	}
+
 	readInventoryAvailability(sessionId: string | undefined, listingId: string, query: unknown) {
 		InventoryAvailabilityQuerySchema.parse(query)
 		return this.durable.readInventoryAvailability(sessionId, listingId, query)
+	}
+
+	createInventoryTransfer(sessionId: string | undefined, idempotencyKey: string | undefined, body: unknown) {
+		InventoryTransferCommandSchema.parse(body)
+		IdempotencyKeySchema.parse(idempotencyKey)
+		return this.durable.createInventoryTransfer(sessionId, idempotencyKey, body)
 	}
 
 	createInventoryMovement(sessionId: string | undefined, idempotencyKey: string | undefined, body: unknown) {
@@ -289,9 +327,20 @@ export class FoundationService {
 		return this.durable.createVideoUploadIntent(sessionId, idempotencyKey, listingId, body)
 	}
 
+	createImageUploadIntent(sessionId: string | undefined, idempotencyKey: string | undefined, listingId: string, body: unknown) {
+		ImageUploadIntentCommandSchema.parse(body)
+		IdempotencyKeySchema.parse(idempotencyKey)
+		return this.durable.createImageUploadIntent(sessionId, idempotencyKey, listingId, body)
+	}
+
 	completeVideoUpload(sessionId: string | undefined, mediaId: string, body: unknown) {
 		MediaUploadCompleteCommandSchema.parse(body)
 		return this.durable.completeVideoUpload(sessionId, mediaId, body)
+	}
+
+	completeImageUpload(sessionId: string | undefined, mediaId: string, body: unknown) {
+		MediaUploadCompleteCommandSchema.parse(body)
+		return this.durable.completeImageUpload(sessionId, mediaId, body)
 	}
 
 	readPlatformMediaQueue(sessionId: string | undefined, query: unknown) {
@@ -306,6 +355,11 @@ export class FoundationService {
 	reviewMedia(sessionId: string | undefined, idempotencyKey: string | undefined, mediaId: string, body: unknown) {
 		MediaReviewCommandSchema.parse(body)
 		return this.durable.reviewMedia(sessionId, idempotencyKey, mediaId, body)
+	}
+
+	setMediaRetentionHold(sessionId: string | undefined, idempotencyKey: string | undefined, mediaId: string, body: unknown) {
+		MediaRetentionHoldCommandSchema.parse(body)
+		return this.durable.setMediaRetentionHold(sessionId, idempotencyKey, mediaId, body)
 	}
 
 	importCatalogCsv(sessionId: string | undefined, idempotencyKey: string | undefined, body: unknown) {

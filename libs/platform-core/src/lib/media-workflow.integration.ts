@@ -29,8 +29,8 @@ const suite =
 		? describe
 		: describe.skip
 
-suite('Phase 01 sealed video worker path', () => {
-	it('moves a scanned clip to private moderation without granting public delivery', async () => {
+suite('Phase 01 sealed media worker path', () => {
+	it('keeps scanned video and image uploads private until moderation, then revokes delivery on unpublish', async () => {
 		if (!databaseUrl || !endpoint || !bucket || !region || !accessKeyId || !secretAccessKey)
 			throw new Error('Local media integration configuration is incomplete.')
 		if (!['127.0.0.1', 'localhost'].includes(new URL(endpoint).hostname)) throw new Error('Media integration requires a loopback object store.')
@@ -43,7 +43,16 @@ suite('Phase 01 sealed video worker path', () => {
 			const user = await repository.db.user.create({
 				data: { email: `${randomUUID()}@example.invalid`, adultVerificationState: 'verified', verifiedAt: new Date() },
 			})
-			const vendor = await repository.db.vendor.create({ data: { workspaceId: workspace.id, applicationState: 'approved', publishedAt: new Date() } })
+			const vendor = await repository.db.vendor.create({
+				data: {
+					workspaceId: workspace.id,
+					applicationState: 'approved',
+					publishedAt: new Date(),
+					publicSlug: `sealed-media-${randomUUID().slice(0, 8)}`,
+					displayName: 'Sealed media fixture',
+					description: 'A local Vendor fixture for sealed media workflow verification.',
+				},
+			})
 			const location = await repository.db.location.create({ data: { vendorId: vendor.id } })
 			await repository.db.vendorMembership.create({ data: { userId: user.id, vendorId: vendor.id, role: 'vendor_owner', locationIds: [location.id] } })
 			const session = await repository.db.session.create({
@@ -147,6 +156,7 @@ suite('Phase 01 sealed video worker path', () => {
 			const queue = await repository.readPlatformMediaQueue(reviewerSession.id, {})
 			expect(queue.items).toMatchObject([{ id: intent.mediaId, version: after.version, captioned: false, noSpeechDeclared: true }])
 			const preview = await repository.previewMediaForReview(reviewerSession.id, intent.mediaId)
+			if (!preview.videoUrl || !preview.posterUrl) throw new Error('Video preview grants were not issued.')
 			expect((await fetch(preview.videoUrl)).status).toBe(200)
 			expect((await fetch(preview.posterUrl)).status).toBe(200)
 			const reviewKey = randomUUID()
@@ -177,13 +187,97 @@ suite('Phase 01 sealed video worker path', () => {
 			expect((await repository.readPublicMedia(intent.mediaId, 'video')).body.subarray(4, 8).toString()).toBe('ftyp')
 			expect((await repository.readPublicMedia(intent.mediaId, 'poster')).contentType).toBe('image/jpeg')
 			await expect(repository.readPublicMedia(intent.mediaId, 'captions')).rejects.toThrow(AccessDeniedError)
+
+			const imagePath = join(directory, 'listing-image.png')
+			await execFileAsync(
+				'ffmpeg',
+				[
+					'-hide_banner',
+					'-nostdin',
+					'-loglevel',
+					'error',
+					'-f',
+					'lavfi',
+					'-i',
+					'color=c=royalblue:s=320x180',
+					'-frames:v',
+					'1',
+					'-c:v',
+					'png',
+					'-threads',
+					'1',
+					'-y',
+					imagePath,
+				],
+				{ timeout: 15_000 },
+			)
+			const imageSource = await readFile(imagePath)
+			const imageSha256 = createHash('sha256').update(imageSource).digest('hex')
+			const imageIntent = await repository.createImageUploadIntent(session.id, randomUUID(), listing.id, {
+				alt: 'Blue repair service workbench image.',
+				bytes: imageSource.length,
+				contentType: 'image/png',
+				sha256: imageSha256,
+			})
+			const imageUploaded = await fetch(imageIntent.url, { method: imageIntent.method, headers: imageIntent.headers, body: new Uint8Array(imageSource) })
+			expect(imageUploaded.ok).toBe(true)
+			expect((await repository.completeImageUpload(session.id, imageIntent.mediaId, { sha256: imageSha256 })).state).toBe('quarantined')
+			const imageBefore = await repository.db.mediaAsset.findUniqueOrThrow({ where: { id: imageIntent.mediaId } })
+			if (!imageBefore.uploadKey || !imageBefore.sealedKey) throw new Error('Image quarantine keys were not persisted.')
+			keys.push(imageBefore.uploadKey, imageBefore.sealedKey)
+			expect(await repository.processQuarantinedMedia(imageIntent.mediaId)).toMatchObject({ processed: true, state: 'needs_moderation' })
+			const imageAfter = await repository.db.mediaAsset.findUniqueOrThrow({ where: { id: imageIntent.mediaId } })
+			expect(imageAfter).toMatchObject({
+				kind: 'listing_image',
+				state: 'needs_moderation',
+				scanVerdict: 'clean',
+				durationSeconds: null,
+				contentType: 'image/png',
+			})
+			if (!imageAfter.renditionKey || !imageAfter.posterKey) throw new Error('Processed image keys were not persisted.')
+			expect(imageAfter.posterKey).toBe(imageAfter.renditionKey)
+			keys.push(imageAfter.renditionKey)
+			await expect(repository.readPublicMedia(imageIntent.mediaId, 'image')).rejects.toThrow(AccessDeniedError)
+			const imageQueue = await repository.readPlatformMediaQueue(reviewerSession.id, {})
+			expect(imageQueue.items).toMatchObject([
+				{
+					id: imageIntent.mediaId,
+					kind: 'listing_image',
+					version: imageAfter.version,
+					durationSeconds: null,
+					captioned: false,
+					noSpeechDeclared: false,
+				},
+			])
+			const imagePreview = await repository.previewMediaForReview(reviewerSession.id, imageIntent.mediaId)
+			expect(imagePreview.videoUrl).toBeNull()
+			expect(imagePreview.posterUrl).toBeNull()
+			if (!imagePreview.imageUrl) throw new Error('Image preview grant was not issued.')
+			expect((await fetch(imagePreview.imageUrl)).status).toBe(200)
+			expect(
+				await repository.reviewMedia(reviewerSession.id, randomUUID(), imageIntent.mediaId, {
+					decision: 'approve',
+					expectedVersion: imageAfter.version,
+					note: 'The processed listing image is safe and relevant.',
+				}),
+			).toMatchObject({ state: 'ready' })
+			await repository.updateStorefront(session.id, randomUUID(), { logoMediaId: imageIntent.mediaId, coverMediaId: imageIntent.mediaId })
+			if (!vendor.publicSlug) throw new Error('Public storefront slug was not created.')
+			await expect(repository.readPublicStorefront(vendor.publicSlug)).resolves.toMatchObject({
+				logoImage: { id: imageIntent.mediaId },
+				coverImage: { id: imageIntent.mediaId },
+			})
+			const publicImage = await repository.readPublicMedia(imageIntent.mediaId, 'image')
+			expect(publicImage.contentType).toBe('image/jpeg')
+			expect(publicImage.body.subarray(0, 2)).toEqual(Buffer.from([0xff, 0xd8]))
 			await repository.db.listing.update({ where: { id: listing.id }, data: { state: 'unpublished' } })
 			await expect(repository.readPublicMedia(intent.mediaId, 'video')).rejects.toThrow(AccessDeniedError)
+			await expect(repository.readPublicMedia(imageIntent.mediaId, 'image')).rejects.toThrow(AccessDeniedError)
 		} finally {
 			await Promise.all(keys.map((Key) => client.send(new DeleteObjectCommand({ Bucket: bucket, Key })).catch(() => undefined)))
 			await rm(directory, { recursive: true, force: true })
 			await repository.close()
 			client.destroy()
 		}
-	})
+	}, 60_000)
 })

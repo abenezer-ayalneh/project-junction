@@ -29,6 +29,8 @@ pnpm db:auth:migrate
 pnpm dev
 ```
 
+The first local startup builds MinIO and its bucket initialization client from pinned official source releases using `ops/local/minio.Dockerfile`, because the former `minio/minio` image is unavailable. Docker needs network access for the build tools and Go modules; later starts reuse the local image. This image is only for local development.
+
 The web development server binds to `127.0.0.1:3000`; the API binds to `127.0.0.1:3001`. Open Mailpit at `http://localhost:8025` to complete email verification and password recovery. Keep the terminal that runs `pnpm dev` open while using the local browser journeys. After changing `.env`, stop the existing `pnpm dev`, source the updated file in that terminal, then start `pnpm dev` again so the API and web server receive the same local OAuth values:
 
 ```sh

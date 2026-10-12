@@ -31,8 +31,11 @@ function shutdown(): Promise<void> {
 async function tick() {
 	tickRunning = true
 	try {
+		await repository.expireGoodsHolds()
 		await repository.expirePendingVideoUploads()
 		if (Date.now() - lastMediaSweep >= 10 * 60 * 1000) {
+			const retention = await repository.cleanupRejectedMedia()
+			if (retention.deleted || retention.failed) process.stdout.write(`${JSON.stringify({ type: 'worker.media-retention', ...retention })}\n`)
 			await repository.reconcileOrphanMediaObjects()
 			lastMediaSweep = Date.now()
 		}

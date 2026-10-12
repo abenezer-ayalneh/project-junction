@@ -58,6 +58,7 @@ export function CustomerDiscovery({ listings, vendors }: { listings: PublicListi
 		const saved = !state.savedListingIds.includes(listingId)
 		void run(async () => {
 			await request(`/listings/${listingId}/save`, { saved })
+			window.dispatchEvent(new Event('junction:discovery-changed'))
 			setState(CustomerDiscoveryStateSchema.parse(await request('/customer/discovery')))
 			setMessage(saved ? 'Listing saved.' : 'Listing removed from saved items.')
 		})

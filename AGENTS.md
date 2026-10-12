@@ -5,6 +5,16 @@
 - If a check cannot be completed locally, report the limitation instead of falling back to staging. Historical staging runbooks and acceptance plans do not authorize remote work.
 - Include this policy in delegated agent instructions and handoffs so every agent working on this project follows it.
 
+# Project memory: phase execution
+
+- Git workflow preference (2026-10-12): use `main` as the integrated local baseline and one temporary `codex/` branch per implementation chunk. Start each chunk from clean, updated `main`; merge locally verified work and evidence before starting another chunk. Keep at most two active work branches. Use separate worktrees for simultaneous work. Exclude package stores from commits.
+
+- User preference (2026-10-12): start chunked delivery at Phase 02. Phases 02–06 have ordered implementation chunks in their requirement documents.
+- When asked to do the next thing on a phase, select and complete exactly one next unfinished chunk, then stop. Resume an in-progress chunk first; do not execute the entire phase or automatically continue to another chunk/phase.
+- Read `docs/STATUS.md` for the active phase/next chunk and the requested phase document for scope, dependencies and evidence. If no phase is specified, use that recorded active phase.
+- Preserve existing work; source files alone do not establish completion. Verify locally, update the phase chunk status and dated evidence plus affected docs and `docs/STATUS.md`, then report the next chunk. Keep blocked chunks open and record the missing dependency instead of skipping.
+- The workflow is documented in `docs/requirements/MULTIPHASE-REQUIREMENTS.md#single-chunk-workflow`; phase/public-release gates remain separate from local chunk completion.
+
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->
 
