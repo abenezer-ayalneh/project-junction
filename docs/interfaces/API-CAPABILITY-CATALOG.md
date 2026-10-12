@@ -38,3 +38,13 @@ Phase 02 `P02-C08` private cancellation APIs:
 Purchase/Order reads now expose original snapshots plus cancelled/remaining quantities and scoped cancellation/refund references. Customer payment reads distinguish cumulative pending/completed refunds and partially_refunded/full refunded state. No caller amount/price/authority fields are accepted. These are local controlled proof surfaces; final live providers/discounts/ledger remain Phase 04. See [P02-C08 evidence](../requirements/PHASE-02-GOODS-COMMERCE.md#p02-c08--partial-cancellation-and-refund-allocation--2026-10-12).
 
 Local `P02-C09` adds Customer/assigned Vendor reads at `/v1/{customer|vendor}/goods/orders/:orderId/fulfillment`, Vendor prepare/ready/collect/inspect at `/v1/vendor/goods/fulfillments/:fulfillmentId/*`, and Customer fallback acknowledgement at `/v1/customer/goods/fulfillments/:fulfillmentId/acknowledgements`. Every mutation is idempotent. Vendor reads omit the private code; Customer reads return active code/QR only. Staff must have explicit live fulfillment permission and Location assignment; Owner alone inspects financial recovery. Structured evidence is private text; no public attachment route exists.
+
+Phase 02 `P02-C10` local delivery APIs:
+
+- `POST /v1/vendor/goods/fulfillments/:fulfillmentId/delivery-milestones` records dispatch, evidenced failure and one corrected retry under live Owner or explicitly enabled assigned Fulfillment Staff authority. Retry uses the Customer's matching acknowledgement and original paid zone; its deadline stays 48 hours from first failure.
+- `GET /v1/customer/goods/fulfillments/:fulfillmentId/delivery` exposes the Customer's active code/QR only; the corresponding Vendor read omits proof.
+- `POST /v1/customer/goods/fulfillments/:fulfillmentId/delivery-acknowledgements` records authenticated confirmation of the corrected address or fallback receipt.
+- `POST /v1/vendor/goods/fulfillments/:fulfillmentId/delivery-handoff` accepts code/QR or fresh Customer acknowledgement plus distinct assigned witness. Five rejected primary attempts lock proof; terminal handoff removes it.
+- `POST /v1/vendor/goods/fulfillments/:fulfillmentId/delivery-inspection` requires an assigned Owner and all frozen undelivered quantities. It atomically records disposition, scoped refund allocation and inspection completion; ordinary cancellation remains denied after dispatch.
+
+Each mutation requires an idempotency key. Fulfillment reads derive delivery state, verified handoff time and inspection recovery from immutable delivery records. Worker expiry preserves evidence without automatic resale.

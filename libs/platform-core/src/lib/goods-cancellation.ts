@@ -82,12 +82,12 @@ export class GoodsCancellation {
 		orderId: string,
 		command: z.infer<typeof GoodsOrderCancellationCommandSchema>,
 		actor: 'vendor' | 'platform',
-		origin: 'pre_fulfillment' | 'pickup_expiry',
+		origin: 'pre_fulfillment' | 'pickup_expiry' | 'delivery_failure',
 	) {
 		const order = await tx.goodsVendorOrder.findUnique({
 			where: { id: orderId },
 			include: {
-				fulfillment: true,
+				fulfillment: { include: { delivery: true } },
 				purchase: true,
 				cancellations: { include: { refund: true } },
 				lines: { include: { holdLine: true, cancellationLines: true } },
@@ -100,17 +100,23 @@ export class GoodsCancellation {
 			tx,
 			context,
 			key,
-			origin === 'pickup_expiry'
+			origin !== 'pre_fulfillment'
 				? 'POST /v1/vendor/goods/fulfillments/:fulfillmentId/inspection-effects'
 				: `POST /v1/${actor}/goods/orders/:orderId/cancellations`,
 			{ orderId, command },
 			async () => {
 				if (!['confirmed', 'partially_cancelled'].includes(order.state))
 					throw new GoodsCheckoutConflictError('This Order cannot be cancelled before fulfillment. Use the appropriate aftercare flow.')
-				if (origin === 'pre_fulfillment' && order.fulfillment && !['pending', 'preparing'].includes(order.fulfillment.state))
+				if (
+					origin === 'pre_fulfillment' &&
+					order.fulfillment &&
+					(!['pending', 'preparing'].includes(order.fulfillment.state) || !!order.fulfillment.delivery)
+				)
 					throw new GoodsCheckoutConflictError('Fulfillment has advanced. Use the relevant inspection or return path.')
 				if (origin === 'pickup_expiry' && (order.fulfillment?.state !== 'inspection_pending' || order.fulfillment.method !== 'pickup'))
 					throw new GoodsCheckoutConflictError('Pickup must expire into inspection first.')
+				if (origin === 'delivery_failure' && order.fulfillment?.delivery?.state !== 'inspection_pending')
+					throw new GoodsCheckoutConflictError('Delivery must enter inspection before recovery.')
 				const group = GoodsQuoteSnapshotSchema.shape.groups.element.parse(order.snapshot)
 				let itemRefundCents = 0
 				const selected = command.lines.map((selection) => {

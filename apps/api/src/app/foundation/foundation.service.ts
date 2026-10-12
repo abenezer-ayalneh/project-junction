@@ -317,6 +317,24 @@ export class FoundationService {
 		return this.durable.inspectGoodsPickup(sessionId, key, id, input)
 	}
 
+	acknowledgeDelivery(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.durable.acknowledgeDelivery(sessionId, key, id, input)
+	}
+	inspectDelivery(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.durable.inspectDelivery(sessionId, key, id, input)
+	}
+
+	deliveryHandoff(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.durable.deliveryHandoff(sessionId, key, id, input)
+	}
+
+	deliveryMilestone(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.durable.deliveryMilestone(sessionId, key, id, input)
+	}
+	readDelivery(sessionId: string | undefined, id: string, customer = false) {
+		return this.durable.readDelivery(sessionId, id, customer)
+	}
+
 	readInventoryAvailability(sessionId: string | undefined, listingId: string, query: unknown) {
 		InventoryAvailabilityQuerySchema.parse(query)
 		return this.durable.readInventoryAvailability(sessionId, listingId, query)

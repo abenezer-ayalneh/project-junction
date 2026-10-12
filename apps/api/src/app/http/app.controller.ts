@@ -535,6 +535,88 @@ export class AppController {
 		return this.foundation.inspectGoodsPickup(sessionId, key, id, body)
 	}
 
+	@Post('customer/goods/fulfillments/:fulfillmentId/delivery-acknowledgements')
+	@ApiOperation({ summary: 'Record Customer confirmation for an address correction or witnessed handoff.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiParam({ name: 'fulfillmentId', schema: { type: 'string', format: 'uuid' } })
+	@ApiBody({ schema: OpenApiSchemaRefs.goodsDeliveryAcknowledgementCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.goodsDeliveryAcknowledgementResult })
+	acknowledgeDelivery(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('fulfillmentId') id: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.acknowledgeDelivery(sessionId, key, id, body)
+	}
+
+	@Post('vendor/goods/fulfillments/:fulfillmentId/delivery-inspection')
+	@ApiOperation({ summary: 'Inspect every undelivered quantity and allocate stock recovery and refunds once.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiParam({ name: 'fulfillmentId', schema: { type: 'string', format: 'uuid' } })
+	@ApiBody({ schema: OpenApiSchemaRefs.goodsPickupInspectionCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.goodsDeliveryMilestoneResult })
+	inspectDelivery(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('fulfillmentId') id: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.inspectDelivery(sessionId, key, id, body)
+	}
+
+	@Post('vendor/goods/fulfillments/:fulfillmentId/delivery-milestones')
+	@ApiOperation({ summary: 'Record ordered Vendor delivery dispatch, failure or one corrected retry within the original paid zone and 48-hour policy.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiParam({ name: 'fulfillmentId', schema: { type: 'string', format: 'uuid' } })
+	@ApiBody({ schema: OpenApiSchemaRefs.goodsDeliveryMilestoneCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.goodsDeliveryMilestoneResult })
+	deliveryMilestone(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('fulfillmentId') id: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.deliveryMilestone(sessionId, key, id, body)
+	}
+
+	@Get('vendor/goods/fulfillments/:fulfillmentId/delivery')
+	@ApiOperation({ summary: 'Read current Vendor delivery milestones under assigned live fulfillment authority.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiParam({ name: 'fulfillmentId', schema: { type: 'string', format: 'uuid' } })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.goodsDeliveryProgressRead })
+	readVendorDelivery(@AuthenticatedSession() sessionId: string | undefined, @Param('fulfillmentId') id: string) {
+		return this.foundation.readDelivery(sessionId, id, false)
+	}
+
+	@Get('customer/goods/fulfillments/:fulfillmentId/delivery')
+	@ApiOperation({ summary: 'Read only the Customer own goods delivery attempt, corrected address and ordered milestones.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiParam({ name: 'fulfillmentId', schema: { type: 'string', format: 'uuid' } })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.goodsCustomerDeliveryRead })
+	readCustomerDelivery(@AuthenticatedSession() sessionId: string | undefined, @Param('fulfillmentId') id: string) {
+		return this.foundation.readDelivery(sessionId, id, true)
+	}
+
+	@Post('vendor/goods/fulfillments/:fulfillmentId/delivery-handoff')
+	@ApiOperation({ summary: 'Complete Vendor delivery once using Customer-only code or fulfillment-bound QR. Browser success is not authoritative.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiParam({ name: 'fulfillmentId', schema: { type: 'string', format: 'uuid' } })
+	@ApiBody({ schema: OpenApiSchemaRefs.goodsDeliveryHandoffCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.goodsDeliveryMilestoneResult })
+	deliveryHandoff(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('fulfillmentId') id: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.deliveryHandoff(sessionId, key, id, body)
+	}
+
 	@Get('inventory/listings/:listingId/availability')
 	@ApiOperation({ summary: 'Read derived stock availability for a Product at an assigned Vendor Location.' })
 	@ApiSecurity('junction-auth-cookie')

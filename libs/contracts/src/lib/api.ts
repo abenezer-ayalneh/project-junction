@@ -982,7 +982,18 @@ export const GoodsFulfillmentReadSchema = z
 		fulfillmentId: z.string().uuid(),
 		orderId: z.string().uuid(),
 		method: z.enum(['pickup', 'delivery']),
-		state: z.enum(['pending', 'preparing', 'ready_for_pickup', 'collected', 'inspection_pending', 'inspection_completed', 'cancelled']),
+		state: z.enum([
+			'pending',
+			'preparing',
+			'ready_for_pickup',
+			'collected',
+			'out_for_delivery',
+			'delivery_failed',
+			'delivered',
+			'inspection_pending',
+			'inspection_completed',
+			'cancelled',
+		]),
 		version: z.number().int().positive(),
 		snapshot: GoodsQuoteSnapshotSchema.shape.groups.element,
 		remainingLines: z.array(
@@ -1018,3 +1029,73 @@ export const GoodsFulfillmentResultSchema = GoodsFulfillmentReadSchema.extend({ 
 export const GoodsCustomerPickupReadSchema = GoodsFulfillmentReadSchema.extend({
 	collectionProof: z.object({ code: z.string(), qrPayload: z.string(), qrSvgDataUri: z.string() }).strict().nullable(),
 })
+
+export const GoodsDeliveryMilestoneCommandSchema = z.discriminatedUnion('action', [
+	z.object({ action: z.literal('dispatch') }).strict(),
+	z
+		.object({
+			action: z.literal('failed'),
+			reason: z.enum(['customer_unavailable', 'address_inaccessible', 'vendor_failure']),
+			evidence: z.string().trim().min(10).max(1000),
+		})
+		.strict(),
+	z
+		.object({
+			action: z.literal('retry'),
+			acknowledgementId: z.string().uuid(),
+			address: GoodsAddressSnapshotSchema,
+			correction: z.string().trim().min(10).max(1000),
+		})
+		.strict(),
+])
+export const GoodsDeliveryProgressReadSchema = z
+	.object({
+		fulfillmentId: z.string().uuid(),
+		state: z.enum(['out_for_delivery', 'delivery_failed', 'delivered', 'inspection_pending', 'inspection_completed']),
+		attempt: z.number().int().min(1).max(2),
+		address: GoodsAddressSnapshotSchema,
+		version: z.number().int().positive(),
+		codeLocked: z.boolean(),
+		quantitySnapshot: z.array(z.object({ lineId: z.string().uuid(), quantity: z.number().int().positive() }).strict()),
+		failedAt: z.string().datetime().nullable(),
+		retryDeadline: z.string().datetime().nullable(),
+		milestones: z.array(
+			z
+				.object({
+					action: z.enum(['dispatch', 'failed', 'retry', 'delivered', 'expire', 'proof_rejected', 'inspected']),
+					occurredAt: z.string().datetime(),
+					version: z.number().int().positive(),
+				})
+				.strict(),
+		),
+	})
+	.strict()
+export const GoodsDeliveryMilestoneResultSchema = GoodsDeliveryProgressReadSchema.extend({ replayed: z.boolean() })
+
+export const GoodsDeliveryHandoffCommandSchema = z
+	.object({
+		proof: z.discriminatedUnion('method', [
+			z.object({ method: z.literal('code'), code: z.string().trim().min(1).max(80) }).strict(),
+			z.object({ method: z.literal('qr'), payload: z.string().min(1).max(300) }).strict(),
+			z
+				.object({
+					method: z.literal('fallback'),
+					acknowledgementId: z.string().uuid(),
+					reason: z.enum(['code_unavailable', 'accessibility']),
+					witnessStatement: GoodsEvidenceTextSchema,
+				})
+				.strict(),
+		]),
+	})
+	.strict()
+export const GoodsCustomerDeliveryReadSchema = GoodsDeliveryProgressReadSchema.extend({
+	collectionProof: z.object({ code: z.string(), qrPayload: z.string(), qrSvgDataUri: z.string() }).strict().nullable(),
+})
+
+export const GoodsDeliveryAcknowledgementCommandSchema = z.discriminatedUnion('purpose', [
+	z.object({ purpose: z.literal('correction'), address: GoodsAddressSnapshotSchema, statement: GoodsEvidenceTextSchema }).strict(),
+	z.object({ purpose: z.literal('handoff'), reason: z.enum(['code_unavailable', 'accessibility']), statement: GoodsEvidenceTextSchema }).strict(),
+])
+export const GoodsDeliveryAcknowledgementResultSchema = z
+	.object({ acknowledgementId: z.string().uuid(), fulfillmentId: z.string().uuid(), purpose: z.enum(['correction', 'handoff']), replayed: z.boolean() })
+	.strict()

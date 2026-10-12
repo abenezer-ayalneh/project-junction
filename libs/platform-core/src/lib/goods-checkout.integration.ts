@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion -- integration suite requires DATABASE_URL */
 import { randomUUID } from 'node:crypto'
 
-import { GoodsCustomerPickupReadSchema, type GoodsQuoteCommand } from 'contracts'
+import { GoodsCustomerDeliveryReadSchema, GoodsCustomerPickupReadSchema, type GoodsQuoteCommand } from 'contracts'
 
 import { AccessDeniedError } from './access.js'
 import { GoodsCheckoutConflictError } from './goods-checkout.js'
@@ -1401,5 +1401,284 @@ suite('Phase 02 goods quotes and holds PostgreSQL', () => {
 				lines: [{ lineId: order.lines[0].lineId, quantity: 1, stockDisposition: 'restock' }],
 			}),
 		).rejects.toThrow(GoodsCheckoutConflictError)
+	})
+
+	it('goods delivery durable milestones preserve paid terms and permit one in-zone correction', async () => {
+		const fixture = await createVendor(3)
+		const address = { contactName: 'Customer', phone: '0911000000', locality: 'City', address: 'Original gate', point: [41.5, 9.5] as [number, number] }
+		const { purchase } = await cancellationPurchase({
+			groups: [{ ...fixture.selection.groups[0], fulfillment: { method: 'delivery', zoneId: fixture.zone.id, address } }],
+		})
+		const order = purchase.orders[0]
+		const fulfillment = await repository.readGoodsFulfillment(fixture.owner.sessionId, order.orderId)
+		await repository.prepareGoodsFulfillment(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId)
+		const key = randomUUID()
+		const dispatch = await repository.deliveryMilestone(fixture.owner.sessionId, key, fulfillment.fulfillmentId, { action: 'dispatch' })
+		await expect(repository.deliveryMilestone(fixture.owner.sessionId, key, fulfillment.fulfillmentId, { action: 'dispatch' })).resolves.toEqual({
+			...dispatch,
+			replayed: true,
+		})
+		await expect(repository.deliveryMilestone(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId, { action: 'dispatch' })).rejects.toThrow(
+			GoodsCheckoutConflictError,
+		)
+		await repository.deliveryMilestone(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId, {
+			action: 'failed',
+			reason: 'address_inaccessible',
+			evidence: 'The documented gate was inaccessible during the delivery attempt.',
+		})
+		const outsideAck = await repository.acknowledgeDelivery(customer.sessionId, randomUUID(), fulfillment.fulfillmentId, {
+			purpose: 'correction',
+			address: { ...address, point: [43, 9.5] },
+			statement: 'I confirm this corrected destination.',
+		})
+		await expect(
+			repository.deliveryMilestone(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId, {
+				action: 'retry',
+				acknowledgementId: outsideAck.acknowledgementId,
+				address: { ...address, point: [43, 9.5] },
+				correction: 'Customer supplied a corrected destination outside the paid zone.',
+			}),
+		).rejects.toThrow(GoodsCheckoutConflictError)
+		const correctedAck = await repository.acknowledgeDelivery(customer.sessionId, randomUUID(), fulfillment.fulfillmentId, {
+			purpose: 'correction',
+			address: { ...address, address: 'Corrected accessible gate' },
+			statement: 'I confirm the accessible corrected gate.',
+		})
+		const retry = await repository.deliveryMilestone(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId, {
+			action: 'retry',
+			acknowledgementId: correctedAck.acknowledgementId,
+			address: { ...address, address: 'Corrected accessible gate' },
+			correction: 'Customer confirmed the accessible gate within the original paid zone.',
+		})
+		expect(retry).toMatchObject({ state: 'out_for_delivery', attempt: 2, version: 3 })
+		await expect(repository.readDelivery(customer.sessionId, fulfillment.fulfillmentId, true)).resolves.toMatchObject({
+			attempt: 2,
+			milestones: [{ action: 'dispatch' }, { action: 'failed' }, { action: 'retry' }],
+		})
+		await expect(repository.cancelGoodsOrder(fixture.owner.sessionId, randomUUID(), order.orderId, cancelCommand(order.lines[0].lineId))).rejects.toThrow(
+			GoodsCheckoutConflictError,
+		)
+		expect((await repository.readGoodsPurchase(customer.sessionId, purchase.purchaseId)).snapshot).toEqual(purchase.snapshot)
+		await expect(
+			repository.db.goodsDeliveryEvent.updateMany({ where: { progress: { fulfillmentId: fulfillment.fulfillmentId } }, data: { evidence: {} } }),
+		).rejects.toThrow()
+	})
+
+	it('goods delivery denies late correction and foreign authority without creating milestone effects', async () => {
+		const fixture = await createVendor()
+		const address = { contactName: 'Customer', phone: '0911000000', locality: 'City', address: 'Original gate', point: [41.5, 9.5] as [number, number] }
+		const { purchase } = await cancellationPurchase({
+			groups: [{ ...fixture.selection.groups[0], fulfillment: { method: 'delivery', zoneId: fixture.zone.id, address } }],
+		})
+		const fulfillment = await repository.readGoodsFulfillment(fixture.owner.sessionId, purchase.orders[0].orderId)
+		await repository.prepareGoodsFulfillment(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId)
+		await expect(repository.deliveryMilestone(customer.sessionId, randomUUID(), fulfillment.fulfillmentId, { action: 'dispatch' })).rejects.toThrow(
+			AccessDeniedError,
+		)
+		await repository.deliveryMilestone(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId, { action: 'dispatch' })
+		const failed = await repository.deliveryMilestone(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId, {
+			action: 'failed',
+			reason: 'customer_unavailable',
+			evidence: 'Customer was unavailable when the Vendor reached the destination.',
+		})
+		const lateAck = await repository.acknowledgeDelivery(customer.sessionId, randomUUID(), fulfillment.fulfillmentId, {
+			purpose: 'correction',
+			address,
+			statement: 'I confirm the original delivery address.',
+		})
+		now = new Date(failed.retryDeadline!)
+		await expect(
+			repository.deliveryMilestone(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId, {
+				action: 'retry',
+				acknowledgementId: lateAck.acknowledgementId,
+				address,
+				correction: 'Customer is available at the original delivery address now.',
+			}),
+		).rejects.toThrow(GoodsCheckoutConflictError)
+		expect((await repository.readDelivery(fixture.owner.sessionId, fulfillment.fulfillmentId)).milestones).toHaveLength(2)
+		await Promise.all([repository.expireGoodsDeliveries(), other.expireGoodsDeliveries()])
+		await expect(repository.readDelivery(fixture.owner.sessionId, fulfillment.fulfillmentId)).resolves.toMatchObject({
+			state: 'inspection_pending',
+			version: 3,
+		})
+		expect(await repository.db.inventoryMovement.count({ where: { orderLineId: purchase.orders[0].lines[0].lineId, reason: 'returned' } })).toBe(0)
+		const inspection = {
+			evidence: 'All undelivered units recovered intact after the retry deadline.',
+			lines: [{ lineId: purchase.orders[0].lines[0].lineId, quantity: 1, stockDisposition: 'restock' }],
+		}
+		const inspectionKey = randomUUID()
+		const inspected = await repository.inspectDelivery(fixture.owner.sessionId, inspectionKey, fulfillment.fulfillmentId, inspection)
+		expect(inspected.state).toBe('inspection_completed')
+		await expect(repository.inspectDelivery(fixture.owner.sessionId, inspectionKey, fulfillment.fulfillmentId, inspection)).resolves.toMatchObject({
+			replayed: true,
+		})
+		expect(await repository.db.inventoryMovement.count({ where: { orderLineId: purchase.orders[0].lines[0].lineId, reason: 'returned' } })).toBe(1)
+		await expect(repository.readGoodsFulfillment(fixture.owner.sessionId, purchase.orders[0].orderId)).resolves.toMatchObject({
+			state: 'inspection_completed',
+			inspection: { refundState: 'pending' },
+		})
+	})
+
+	it('goods delivery second failure enters inspection and rolls back incomplete recovery', async () => {
+		const fixture = await createVendor(3)
+		const address = { contactName: 'Customer', phone: '0911000000', locality: 'City', address: 'Gate', point: [41.5, 9.5] as [number, number] }
+		const { purchase, payment } = await cancellationPurchase({
+			groups: [{ ...fixture.selection.groups[0], fulfillment: { method: 'delivery', zoneId: fixture.zone.id, address } }],
+		})
+		const order = purchase.orders[0],
+			fulfillment = await repository.readGoodsFulfillment(fixture.owner.sessionId, order.orderId)
+		await repository.prepareGoodsFulfillment(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId)
+		const dispatchKey = randomUUID()
+		const dispatches = await Promise.all([
+			repository.deliveryMilestone(fixture.owner.sessionId, dispatchKey, fulfillment.fulfillmentId, { action: 'dispatch' }),
+			other.deliveryMilestone(fixture.owner.sessionId, dispatchKey, fulfillment.fulfillmentId, { action: 'dispatch' }),
+		])
+		expect(dispatches.filter((result) => result.replayed)).toHaveLength(1)
+		const failure = { action: 'failed', reason: 'customer_unavailable', evidence: 'Customer was unavailable at the agreed destination.' }
+		await repository.deliveryMilestone(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId, failure)
+		const ack = await repository.acknowledgeDelivery(customer.sessionId, randomUUID(), fulfillment.fulfillmentId, {
+			purpose: 'correction',
+			address,
+			statement: 'I confirm availability at this delivery address.',
+		})
+		await repository.deliveryMilestone(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId, {
+			action: 'retry',
+			address,
+			acknowledgementId: ack.acknowledgementId,
+			correction: 'Customer confirmed availability for the corrected attempt.',
+		})
+		await expect(repository.deliveryMilestone(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId, failure)).resolves.toMatchObject({
+			state: 'inspection_pending',
+			attempt: 2,
+		})
+		const command = {
+				evidence: 'The undelivered unit is quarantined after inspection.',
+				lines: [{ lineId: order.lines[0].lineId, quantity: 1, stockDisposition: 'quarantine' }],
+			},
+			key = randomUUID()
+		await repository.db.$executeRawUnsafe(
+			"CREATE FUNCTION reject_test_delivery_inspection() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'Deliberate delivery inspection failure'; END; $$",
+		)
+		await repository.db.$executeRawUnsafe(
+			'CREATE TRIGGER reject_test_delivery_inspection_trigger BEFORE INSERT ON goods_delivery_inspections FOR EACH ROW EXECUTE FUNCTION reject_test_delivery_inspection()',
+		)
+		try {
+			await expect(repository.inspectDelivery(fixture.owner.sessionId, key, fulfillment.fulfillmentId, command)).rejects.toThrow()
+			expect(await repository.db.goodsOrderCancellation.count({ where: { orderId: order.orderId } })).toBe(0)
+			expect(await repository.db.goodsRefundOperation.count({ where: { paymentId: payment.paymentId } })).toBe(0)
+			expect(await repository.db.inventoryMovement.count({ where: { orderLineId: order.lines[0].lineId, reason: 'returned' } })).toBe(0)
+		} finally {
+			await repository.db.$executeRawUnsafe('DROP TRIGGER reject_test_delivery_inspection_trigger ON goods_delivery_inspections')
+			await repository.db.$executeRawUnsafe('DROP FUNCTION reject_test_delivery_inspection()')
+		}
+		const inspected = await Promise.all([
+			repository.inspectDelivery(fixture.owner.sessionId, key, fulfillment.fulfillmentId, command),
+			other.inspectDelivery(fixture.owner.sessionId, key, fulfillment.fulfillmentId, command),
+		])
+		expect(inspected.filter((result) => result.replayed)).toHaveLength(1)
+		await repository.reconcileGoodsRefunds()
+		await expect(repository.readGoodsPayment(customer.sessionId, payment.paymentId)).resolves.toMatchObject({ state: 'refunded' })
+		expect(await repository.db.inventoryMovement.count({ where: { orderLineId: order.lines[0].lineId, reason: 'quarantined' } })).toBe(1)
+	})
+
+	it('goods delivery locks rejected proofs and permits only fresh Customer fallback with a distinct witness', async () => {
+		const fixture = await createVendor(3)
+		const address = { contactName: 'Customer', phone: '0911000000', locality: 'City', address: 'Gate', point: [41.5, 9.5] as [number, number] }
+		const { purchase } = await cancellationPurchase({
+			groups: [{ ...fixture.selection.groups[0], fulfillment: { method: 'delivery', zoneId: fixture.zone.id, address } }],
+		})
+		const order = purchase.orders[0]
+		const fulfillment = await repository.readGoodsFulfillment(fixture.owner.sessionId, order.orderId)
+		await repository.prepareGoodsFulfillment(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId)
+		await repository.deliveryMilestone(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId, { action: 'dispatch' })
+		for (let attempt = 0; attempt < 6; attempt++)
+			await expect(
+				repository.deliveryHandoff(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId, { proof: { method: 'code', code: 'invalid' } }),
+			).rejects.toThrow(GoodsCheckoutConflictError)
+		await expect(repository.readDelivery(customer.sessionId, fulfillment.fulfillmentId, true)).resolves.toMatchObject({
+			codeLocked: true,
+			collectionProof: null,
+			version: 6,
+		})
+		await expect(
+			repository.acknowledgeDelivery(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId, {
+				purpose: 'handoff',
+				reason: 'code_unavailable',
+				statement: 'I acknowledge receipt of my delivery.',
+			}),
+		).rejects.toThrow(AccessDeniedError)
+		const staleAck = await repository.acknowledgeDelivery(customer.sessionId, randomUUID(), fulfillment.fulfillmentId, {
+			purpose: 'handoff',
+			reason: 'code_unavailable',
+			statement: 'I acknowledge delivery receipt with a witness.',
+		})
+		now = new Date(now.getTime() + 16 * 60000)
+		await expect(
+			repository.deliveryHandoff(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId, {
+				proof: {
+					method: 'fallback',
+					acknowledgementId: staleAck.acknowledgementId,
+					reason: 'code_unavailable',
+					witnessStatement: 'I witnessed Customer receipt of these goods.',
+				},
+			}),
+		).rejects.toThrow(AccessDeniedError)
+		const ack = await repository.acknowledgeDelivery(customer.sessionId, randomUUID(), fulfillment.fulfillmentId, {
+			purpose: 'handoff',
+			reason: 'code_unavailable',
+			statement: 'I acknowledge receipt of the delivered goods.',
+		})
+		const command = {
+			proof: {
+				method: 'fallback',
+				acknowledgementId: ack.acknowledgementId,
+				reason: 'code_unavailable',
+				witnessStatement: 'I witnessed the Customer receive these goods.',
+			},
+		}
+		const key = randomUUID()
+		await expect(repository.deliveryHandoff(fixture.owner.sessionId, key, fulfillment.fulfillmentId, command)).resolves.toMatchObject({
+			state: 'delivered',
+		})
+		await expect(repository.deliveryHandoff(fixture.owner.sessionId, key, fulfillment.fulfillmentId, command)).resolves.toMatchObject({ replayed: true })
+		await expect(repository.readGoodsFulfillment(fixture.owner.sessionId, order.orderId)).resolves.toMatchObject({
+			state: 'delivered',
+			handoff: { method: 'fallback' },
+			handoffAt: now.toISOString(),
+		})
+	})
+
+	it('goods delivery private Customer QR commits one immutable handoff without another inventory movement', async () => {
+		const fixture = await createVendor(3)
+		const address = { contactName: 'Customer', phone: '0911000000', locality: 'City', address: 'Original gate', point: [41.5, 9.5] as [number, number] }
+		const { purchase } = await cancellationPurchase({
+			groups: [{ ...fixture.selection.groups[0], fulfillment: { method: 'delivery', zoneId: fixture.zone.id, address } }],
+		})
+		const order = purchase.orders[0],
+			fulfillment = await repository.readGoodsFulfillment(fixture.owner.sessionId, order.orderId)
+		await repository.prepareGoodsFulfillment(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId)
+		await repository.deliveryMilestone(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId, { action: 'dispatch' })
+		const read = GoodsCustomerDeliveryReadSchema.parse(await repository.readDelivery(customer.sessionId, fulfillment.fulfillmentId, true)),
+			proof = read.collectionProof!
+		expect(proof.qrPayload).toContain(`junction-delivery-v1:${fulfillment.fulfillmentId}:`)
+		expect(JSON.stringify(await repository.readDelivery(fixture.owner.sessionId, fulfillment.fulfillmentId))).not.toContain(proof.code)
+		await expect(
+			repository.deliveryHandoff(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId, { proof: { method: 'code', code: 'invalid' } }),
+		).rejects.toThrow(GoodsCheckoutConflictError)
+		const before = await repository.db.inventoryMovement.count({ where: { orderLineId: order.lines[0].lineId } }),
+			key = randomUUID(),
+			command = { proof: { method: 'qr', payload: proof.qrPayload } }
+		const handed = await repository.deliveryHandoff(fixture.owner.sessionId, key, fulfillment.fulfillmentId, command)
+		expect(handed.state).toBe('delivered')
+		await expect(repository.deliveryHandoff(fixture.owner.sessionId, key, fulfillment.fulfillmentId, command)).resolves.toEqual({
+			...handed,
+			replayed: true,
+		})
+		await expect(repository.deliveryHandoff(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId, command)).rejects.toThrow(
+			GoodsCheckoutConflictError,
+		)
+		expect(await repository.db.inventoryMovement.count({ where: { orderLineId: order.lines[0].lineId } })).toBe(before)
+		await expect(repository.readDelivery(customer.sessionId, fulfillment.fulfillmentId, true)).resolves.toMatchObject({ collectionProof: null })
+		expect(await repository.db.goodsDeliveryHandoff.count({ where: { progress: { fulfillmentId: fulfillment.fulfillmentId } } })).toBe(1)
 	})
 })

@@ -24,6 +24,7 @@ import { z } from 'zod'
 import { Prisma } from '../../generated/prisma/index.js'
 import { AccessDeniedError, assertScope } from './access.js'
 import { GoodsCancellation } from './goods-cancellation.js'
+import { GoodsDelivery } from './goods-delivery.js'
 import { GoodsPickup } from './goods-pickup.js'
 import { goodsAudit, GoodsCheckoutConflictError, type GoodsDependencies, goodsEmit } from './goods-support.js'
 import { stableHash } from './idempotency.js'
@@ -40,11 +41,13 @@ export { GoodsCheckoutConflictError } from './goods-support.js'
 
 /** Goods-only quote, reservation and controlled local payment commitment lifecycle. */
 export class GoodsCheckout {
+	private readonly delivery: GoodsDelivery
 	private readonly pickup: GoodsPickup
 	private readonly cancellations: GoodsCancellation
 	private readonly payments: LocalGoodsPaymentAdapter
 	constructor(private readonly dependencies: GoodsDependencies) {
 		this.cancellations = new GoodsCancellation(dependencies)
+		this.delivery = new GoodsDelivery(dependencies, this.cancellations)
 		this.pickup = new GoodsPickup(dependencies, this.cancellations)
 		this.payments = dependencies.payments ?? new LocalGoodsPaymentAdapter()
 	}
@@ -847,6 +850,28 @@ export class GoodsCheckout {
 	}
 	expireGoodsPickups() {
 		return this.pickup.expire()
+	}
+
+	deliveryMilestone(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.delivery.milestone(sessionId, key, id, input)
+	}
+	readDelivery(sessionId: string | undefined, id: string, customer = false) {
+		return this.delivery.read(sessionId, id, customer)
+	}
+
+	acknowledgeDelivery(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.delivery.acknowledge(sessionId, key, id, input)
+	}
+	inspectDelivery(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.delivery.inspect(sessionId, key, id, input)
+	}
+
+	deliveryHandoff(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.delivery.handoff(sessionId, key, id, input)
+	}
+
+	expireGoodsDeliveries() {
+		return this.delivery.expire()
 	}
 
 	private async stockEvent(

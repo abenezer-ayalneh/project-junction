@@ -23,3 +23,5 @@ Every transition defines actor, guard, side effect/event, timeout/terminal outco
 | `STATE-DEMO-001`    | demo workspace                     | Demo controller                     |
 
 Projection state (search, analytics, realtime) is not lifecycle authority and may be rebuilt/reconciled from events.
+
+Local `P02-C10` delivery progress starts at dispatch (`out_for_delivery`, attempt 1). First evidenced failure enters `delivery_failed` with a fixed 48-hour deadline. One Customer-confirmed correction inside the paid zone enters `out_for_delivery`, attempt 2, without changing that deadline or paid snapshots. Verified handoff enters `delivered`; second failure or deadline expiry enters `inspection_pending`. Only complete quantity inspection and atomic stock/refund allocation enter `inspection_completed`. Five rejected primary proofs lock code/QR while controlled fallback remains available. Generic fulfillment reads derive delivery state and authoritative time from this progress record.

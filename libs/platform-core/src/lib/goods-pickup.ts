@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, createHash, randomBytes, timingSafeEqual } from 'node:crypto'
+import { randomBytes, timingSafeEqual } from 'node:crypto'
 
 import {
 	type AccessContext,
@@ -18,6 +18,7 @@ import { z } from 'zod'
 import { type Prisma } from '../../generated/prisma/index.js'
 import { AccessDeniedError, assertRequiredMfa, assertScope } from './access.js'
 import { GoodsCancellation } from './goods-cancellation.js'
+import { GoodsHandoffCodec } from './goods-handoff-codec.js'
 import { goodsAudit, GoodsCheckoutConflictError, type GoodsDependencies, goodsEmit, goodsJson } from './goods-support.js'
 
 type Transaction = Prisma.TransactionClient
@@ -25,44 +26,19 @@ const quantities = z.array(z.object({ lineId: z.string().uuid(), quantity: z.num
 const hour = 3600000
 const loaded = {
 	order: { include: { purchase: true, lines: { include: { cancellationLines: true } } } },
+	delivery: { include: { handoff: true, inspection: { include: { cancellation: { include: { refund: true } } } } } },
 	handoff: true,
 	inspection: { include: { cancellation: { include: { refund: true } } } },
 } as const
 
 export class GoodsPickup {
+	private readonly codec = new GoodsHandoffCodec()
 	constructor(
 		private readonly dependencies: GoodsDependencies,
 		private readonly cancellations: GoodsCancellation,
 	) {}
 	private async lock(tx: Transaction) {
 		await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended('junction:goods-checkout', 0))`
-	}
-	private key() {
-		const secret = process.env['JUNCTION_GOODS_HANDOFF_SECRET']
-		if (!secret || secret.length < 32 || secret.startsWith('replace-with-'))
-			throw new Error('Configure a stable JUNCTION_GOODS_HANDOFF_SECRET of at least 32 characters before pickup readiness.')
-		return createHash('sha256')
-			.update('junction:goods:handoff:v1:' + secret)
-			.digest()
-	}
-	private encrypt(code: string, id: string) {
-		const nonce = randomBytes(12)
-		const cipher = createCipheriv('aes-256-gcm', this.key(), nonce)
-		cipher.setAAD(Buffer.from(id))
-		const encrypted = Buffer.concat([cipher.update(code, 'utf8'), cipher.final()])
-		return [nonce, cipher.getAuthTag(), encrypted].map((part) => part.toString('base64url')).join('.')
-	}
-	private decrypt(ciphertext: string, id: string) {
-		const [nonce, tag, data] = ciphertext.split('.').map((part) => Buffer.from(part, 'base64url'))
-		const cipher = createDecipheriv('aes-256-gcm', this.key(), nonce)
-		cipher.setAAD(Buffer.from(id))
-		cipher.setAuthTag(tag)
-		return Buffer.concat([cipher.update(data), cipher.final()]).toString('utf8')
-	}
-	private digest(id: string, code: string) {
-		return createHash('sha256')
-			.update(id + ':' + code)
-			.digest('hex')
 	}
 	private authorize(context: AccessContext, order: { vendorId: string; vendorWorkspaceId: string; locationId: string }, ownerOnly = false) {
 		if (
@@ -85,14 +61,16 @@ export class GoodsPickup {
 	private async view(tx: Transaction, id: string) {
 		const row = await this.load(tx, id)
 		const now = this.dependencies.now()
+		const handoff = row.delivery?.handoff ?? row.handoff
+		const inspection = row.delivery?.inspection ?? row.inspection
 		return GoodsFulfillmentReadSchema.parse({
 			fulfillmentId: row.id,
 			orderId: row.orderId,
 			method: row.method,
-			state: row.state,
-			version: row.version,
+			state: row.delivery?.state ?? row.state,
+			version: row.version + (row.delivery?.version ?? 0),
 			snapshot: row.snapshot,
-			quantitySnapshot: row.quantitySnapshot,
+			quantitySnapshot: row.delivery?.quantitySnapshot ?? row.quantitySnapshot,
 			remainingLines: row.order.lines.map((line) => {
 				const original = GoodsQuoteSnapshotSchema.shape.groups.element.shape.lines.element.parse(line.snapshot)
 				return {
@@ -106,7 +84,7 @@ export class GoodsPickup {
 			readyAt: row.readyAt?.toISOString() ?? null,
 			pickupWindowEndsAt: row.pickupWindowEndsAt?.toISOString() ?? null,
 			pickupGraceEndsAt: row.pickupGraceEndsAt?.toISOString() ?? null,
-			handoffAt: row.handoffAt?.toISOString() ?? null,
+			handoffAt: handoff?.handedOffAt.toISOString() ?? null,
 			pickupPhase:
 				row.state !== 'ready_for_pickup'
 					? row.readyAt
@@ -115,15 +93,15 @@ export class GoodsPickup {
 					: row.pickupWindowEndsAt && now >= row.pickupWindowEndsAt
 						? 'grace'
 						: 'window',
-			codeLocked: row.failedCodeAttempts >= 5,
-			handoff: row.handoff ? { handoffId: row.handoff.id, method: row.handoff.method, handedOffAt: row.handoff.handedOffAt.toISOString() } : null,
-			inspection: row.inspection
+			codeLocked: (row.delivery?.rejectedProofs ?? row.failedCodeAttempts) >= 5,
+			handoff: handoff ? { handoffId: handoff.id, method: handoff.method, handedOffAt: handoff.handedOffAt.toISOString() } : null,
+			inspection: inspection
 				? {
-						inspectionId: row.inspection.id,
-						inspectedAt: row.inspection.inspectedAt.toISOString(),
-						cancellationId: row.inspection.cancellationId,
-						refundId: row.inspection.cancellation.refundId,
-						refundState: row.inspection.cancellation.refund.state,
+						inspectionId: inspection.id,
+						inspectedAt: inspection.inspectedAt.toISOString(),
+						cancellationId: inspection.cancellationId,
+						refundId: inspection.cancellation.refundId,
+						refundState: inspection.cancellation.refund.state,
 					}
 				: null,
 		})
@@ -183,7 +161,7 @@ export class GoodsPickup {
 				if (!customer) return base
 				let collectionProof = null
 				if (current.state === 'ready_for_pickup' && current.codeCiphertext && current.failedCodeAttempts < 5) {
-					const code = this.decrypt(current.codeCiphertext, current.id)
+					const code = this.codec.decrypt(current.codeCiphertext, current.id)
 					const qrPayload = `junction-pickup-v1:${current.id}:${code}`
 					const svg = await QRCode.toString(qrPayload, { type: 'svg', errorCorrectionLevel: 'M', margin: 2 })
 					collectionProof = {
@@ -272,8 +250,8 @@ export class GoodsPickup {
 								readyAt,
 								pickupWindowEndsAt: new Date(readyAt.getTime() + (group.pickupWindowHours ?? 72) * hour),
 								pickupGraceEndsAt: new Date(readyAt.getTime() + ((group.pickupWindowHours ?? 72) + (group.pickupGraceHours ?? 48)) * hour),
-								codeCiphertext: this.encrypt(code, id),
-								codeDigest: this.digest(id, code),
+								codeCiphertext: this.codec.encrypt(code, id),
+								codeDigest: this.codec.digest(id, code),
 								version: { increment: 1 },
 							},
 						})
@@ -367,7 +345,7 @@ export class GoodsPickup {
 							: proof.payload.startsWith(`junction-pickup-v1:${id}:`)
 								? proof.payload.slice(`junction-pickup-v1:${id}:`.length)
 								: ''
-					const supplied = this.digest(id, code)
+					const supplied = this.codec.digest(id, code)
 					if (row.failedCodeAttempts >= 5 || !row.codeDigest || !timingSafeEqual(Buffer.from(supplied, 'hex'), Buffer.from(row.codeDigest, 'hex'))) {
 						if (row.failedCodeAttempts < 5) {
 							await tx.goodsFulfillment.update({ where: { id }, data: { failedCodeAttempts: { increment: 1 }, version: { increment: 1 } } })

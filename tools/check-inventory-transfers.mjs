@@ -352,6 +352,105 @@ try {
 	assert.equal(refunded.body.pendingRefundCents, 0)
 	assert.equal((await goodsRequest(`/goods/cancellations/${cancelled.body.cancellationId}`, 'GET')).body.refund.state, 'succeeded')
 	assert.equal((await (await publicCheck({ locationId: destination.id })).json()).available, 2)
+	const deliveryZoneId = randomUUID()
+	await repository.configureGoodsLocation(sessionId, randomUUID(), destination.id, {
+		expectedVersion: process.env.FOUNDATION_BROWSER_GOODS === '1' ? 2 : 1,
+		configuration: {
+			pickupEnabled: true,
+			returnTemplate: 'standard',
+			deliveryZones: [
+				{
+					id: deliveryZoneId,
+					label: 'Local delivery',
+					polygon: [
+						[41, 9],
+						[42, 9],
+						[42, 10],
+						[41, 10],
+						[41, 9],
+					],
+					feeCents: 200,
+					minimumCents: 1000,
+					freeDeliveryThresholdCents: null,
+					etaMinutes: 60,
+				},
+			],
+		},
+	})
+	const deliveryAddress = { contactName: 'Customer', phone: '0911000000', locality: 'City', address: 'Original gate', point: [41.5, 9.5] }
+	const deliveryQuote = await goodsRequest('/customer/goods/quotes', 'POST', {
+		groups: [
+			{
+				...selection.groups[0],
+				lines: [{ listingId: listing.id, quantity: 1 }],
+				fulfillment: { method: 'delivery', zoneId: deliveryZoneId, address: deliveryAddress },
+			},
+		],
+	})
+	assert.equal(deliveryQuote.status, 201, JSON.stringify(deliveryQuote.body))
+	const deliveryHold = await goodsRequest('/customer/goods/holds', 'POST', { quoteId: deliveryQuote.body.quoteId })
+	const deliveryPayment = await goodsRequest('/customer/goods/payments', 'POST', { holdId: deliveryHold.body.holdId })
+	await goodsRequest(`/customer/goods/payments/${deliveryPayment.body.paymentId}/local-result`, 'POST', { outcome: 'succeeded' })
+	const deliveryPaid = await goodsRequest(`/customer/goods/payments/${deliveryPayment.body.paymentId}`, 'GET')
+	const deliveryPurchase = await goodsRequest(`/customer/goods/purchases/${deliveryPaid.body.purchaseId}`, 'GET')
+	const deliveryFulfillment = await goodsRequest(`/vendor/goods/orders/${deliveryPurchase.body.orders[0].orderId}/fulfillment`, 'GET')
+	const deliveryId = deliveryFulfillment.body.fulfillmentId,
+		deliveryPath = `/vendor/goods/fulfillments/${deliveryId}`
+	await goodsRequest(`${deliveryPath}/prepare`, 'POST', {})
+	const dispatchKey = randomUUID(),
+		dispatch = await goodsRequest(`${deliveryPath}/delivery-milestones`, 'POST', { action: 'dispatch' }, dispatchKey)
+	assert.equal(dispatch.status, 201, JSON.stringify(dispatch.body))
+	assert.equal((await goodsRequest(`${deliveryPath}/delivery-milestones`, 'POST', { action: 'dispatch' }, dispatchKey)).body.replayed, true)
+	await goodsRequest(`${deliveryPath}/delivery-milestones`, 'POST', {
+		action: 'failed',
+		reason: 'address_inaccessible',
+		evidence: 'Vendor reached the address but the documented gate was inaccessible.',
+	})
+	const outsideAck = await goodsRequest(`/customer/goods/fulfillments/${deliveryId}/delivery-acknowledgements`, 'POST', {
+		purpose: 'correction',
+		address: { ...deliveryAddress, point: [43, 9.5] },
+		statement: 'I confirm this corrected address.',
+	})
+	const correctedAck = await goodsRequest(`/customer/goods/fulfillments/${deliveryId}/delivery-acknowledgements`, 'POST', {
+		purpose: 'correction',
+		address: { ...deliveryAddress, address: 'Corrected gate' },
+		statement: 'I confirm this corrected gate.',
+	})
+	assert.equal(
+		(
+			await goodsRequest(`${deliveryPath}/delivery-milestones`, 'POST', {
+				action: 'retry',
+				acknowledgementId: outsideAck.body.acknowledgementId,
+				address: { ...deliveryAddress, point: [43, 9.5] },
+				correction: 'Corrected address lies outside the original delivery zone.',
+			})
+		).status,
+		409,
+	)
+	assert.equal(
+		(
+			await goodsRequest(`${deliveryPath}/delivery-milestones`, 'POST', {
+				action: 'retry',
+				acknowledgementId: correctedAck.body.acknowledgementId,
+				address: { ...deliveryAddress, address: 'Corrected gate' },
+				correction: 'Customer clarified the accessible gate inside the paid delivery zone.',
+			})
+		).status,
+		201,
+	)
+	const deliveryProof = await goodsRequest(`/customer/goods/fulfillments/${deliveryId}/delivery`, 'GET')
+	assert.ok(deliveryProof.body.collectionProof)
+	const handoffKey = randomUUID(),
+		handoff = { proof: { method: 'code', code: deliveryProof.body.collectionProof.code } }
+	const delivered = await goodsRequest(`${deliveryPath}/delivery-handoff`, 'POST', handoff, handoffKey)
+	assert.equal(delivered.status, 201, JSON.stringify(delivered.body))
+	assert.equal(delivered.body.state, 'delivered')
+	assert.equal((await goodsRequest(`${deliveryPath}/delivery-handoff`, 'POST', handoff, handoffKey)).body.replayed, true)
+	assert.equal((await goodsRequest(`/customer/goods/fulfillments/${deliveryId}/delivery`, 'GET')).body.collectionProof, null)
+	console.log(
+		'Built local delivery progress smoke passed: dispatch replay, failure, outside-zone correction denial, one corrected retry, private Customer proof and one-time delivered handoff.',
+	)
+
 	await repository.db.vendor.update({ where: { id: vendor.id }, data: { applicationState: 'restricted' } })
 	assert.equal((await goodsRequest(`/vendor/goods/orders/${order.orderId}`, 'GET')).status, 200)
 	assert.equal(

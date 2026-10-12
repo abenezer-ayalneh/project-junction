@@ -614,6 +614,28 @@ export class PostgresFoundation {
 		return this.goods.expireGoodsPickups()
 	}
 
+	deliveryMilestone(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.goods.deliveryMilestone(sessionId, key, id, input)
+	}
+	readDelivery(sessionId: string | undefined, id: string, customer = false) {
+		return this.goods.readDelivery(sessionId, id, customer)
+	}
+
+	acknowledgeDelivery(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.goods.acknowledgeDelivery(sessionId, key, id, input)
+	}
+	inspectDelivery(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.goods.inspectDelivery(sessionId, key, id, input)
+	}
+
+	deliveryHandoff(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.goods.deliveryHandoff(sessionId, key, id, input)
+	}
+
+	expireGoodsDeliveries() {
+		return this.goods.expireGoodsDeliveries()
+	}
+
 	async readInventoryAvailability(sessionId: string | undefined, listingId: string, queryInput: unknown) {
 		this.requireResourceId(listingId)
 		const query = InventoryAvailabilityQuerySchema.parse(queryInput)

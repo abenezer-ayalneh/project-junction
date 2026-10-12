@@ -44,6 +44,7 @@ export const DomainEventSchema = z.object({
 		'GoodsPickupExpired',
 		'GoodsPickupInspected',
 		'GoodsFulfillmentCancelled',
+		'GoodsDeliveryMilestoneRecorded',
 	]),
 	aggregateId: z.string().uuid(),
 	aggregateVersion: z.number().int().positive(),

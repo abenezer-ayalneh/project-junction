@@ -638,20 +638,21 @@ model GoodsRefundOperation {
 }
 
 model GoodsOrderCancellation {
-  origin              String                  @default("pre_fulfillment")
+  deliveryInspection  GoodsDeliveryInspection?
+  origin              String                   @default("pre_fulfillment")
   pickupInspection    GoodsPickupInspection?
-  id                  String                  @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  orderId             String                  @map("order_id") @db.Uuid
-  order               GoodsVendorOrder        @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  refundId            String                  @unique @map("refund_id") @db.Uuid
-  refund              GoodsRefundOperation    @relation(fields: [refundId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  actorId             String                  @map("actor_id") @db.Uuid
-  actorKind           String                  @map("actor_kind")
+  id                  String                   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orderId             String                   @map("order_id") @db.Uuid
+  order               GoodsVendorOrder         @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  refundId            String                   @unique @map("refund_id") @db.Uuid
+  refund              GoodsRefundOperation     @relation(fields: [refundId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  actorId             String                   @map("actor_id") @db.Uuid
+  actorKind           String                   @map("actor_kind")
   note                String
-  itemRefundCents     Int                     @map("item_refund_cents")
-  deliveryRefundCents Int                     @map("delivery_refund_cents")
-  reviewRequired      Boolean                 @default(true) @map("review_required")
-  createdAt           DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  itemRefundCents     Int                      @map("item_refund_cents")
+  deliveryRefundCents Int                      @map("delivery_refund_cents")
+  reviewRequired      Boolean                  @default(true) @map("review_required")
+  createdAt           DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
   lines               GoodsCancellationLine[]
 
   @@index([orderId, createdAt])
@@ -695,6 +696,7 @@ model GoodsCancellationGrant {
 }
 
 model GoodsFulfillment {
+  delivery           GoodsDeliveryProgress?
   id                 String                       @id @default(dbgenerated("uuidv7()")) @db.Uuid
   orderId            String                       @unique @map("order_id") @db.Uuid
   order              GoodsVendorOrder             @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -761,4 +763,83 @@ model GoodsPickupInspection {
   inspectedAt    DateTime               @map("inspected_at") @db.Timestamptz(6)
 
   @@map("goods_pickup_inspections")
+}
+
+model GoodsDeliveryProgress {
+  quantitySnapshot Json                           @map("quantity_snapshot")
+  rejectedProofs   Int                            @default(0) @map("rejected_proofs")
+  acknowledgements GoodsDeliveryAcknowledgement[]
+  inspection       GoodsDeliveryInspection?
+  codeCiphertext   String                         @map("code_ciphertext")
+  codeDigest       String                         @map("code_digest")
+  handoff          GoodsDeliveryHandoff?
+  id               String                         @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  fulfillmentId    String                         @unique @map("fulfillment_id") @db.Uuid
+  fulfillment      GoodsFulfillment               @relation(fields: [fulfillmentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  state            String                         @default("out_for_delivery")
+  attempt          Int                            @default(1)
+  address          Json
+  failedAt         DateTime?                      @map("failed_at") @db.Timestamptz(6)
+  retryDeadline    DateTime?                      @map("retry_deadline") @db.Timestamptz(6)
+  version          Int                            @default(1)
+  events           GoodsDeliveryEvent[]
+
+  @@index([state, retryDeadline])
+  @@map("goods_delivery_progress")
+}
+
+model GoodsDeliveryEvent {
+  id         String                @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  progressId String                @map("progress_id") @db.Uuid
+  progress   GoodsDeliveryProgress @relation(fields: [progressId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  version    Int
+  action     String
+  actorId    String?               @map("actor_id") @db.Uuid
+  evidence   Json
+  occurredAt DateTime              @map("occurred_at") @db.Timestamptz(6)
+
+  @@unique([progressId, version])
+  @@map("goods_delivery_events")
+}
+
+model GoodsDeliveryHandoff {
+  acknowledgementId String?                       @unique @map("acknowledgement_id") @db.Uuid
+  acknowledgement   GoodsDeliveryAcknowledgement? @relation(fields: [acknowledgementId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                String                        @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  progressId        String                        @unique @map("progress_id") @db.Uuid
+  progress          GoodsDeliveryProgress         @relation(fields: [progressId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  actorId           String                        @map("actor_id") @db.Uuid
+  customerId        String                        @map("customer_id") @db.Uuid
+  method            String
+  evidence          Json
+  handedOffAt       DateTime                      @map("handed_off_at") @db.Timestamptz(6)
+
+  @@map("goods_delivery_handoffs")
+}
+
+model GoodsDeliveryAcknowledgement {
+  id             String                @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  progressId     String                @map("progress_id") @db.Uuid
+  progress       GoodsDeliveryProgress @relation(fields: [progressId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  customerId     String                @map("customer_id") @db.Uuid
+  purpose        String
+  evidence       Json
+  acknowledgedAt DateTime              @map("acknowledged_at") @db.Timestamptz(6)
+  handoff        GoodsDeliveryHandoff?
+
+  @@index([progressId])
+  @@map("goods_delivery_acknowledgements")
+}
+
+model GoodsDeliveryInspection {
+  id             String                 @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  progressId     String                 @unique @map("progress_id") @db.Uuid
+  progress       GoodsDeliveryProgress  @relation(fields: [progressId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  cancellationId String                 @unique @map("cancellation_id") @db.Uuid
+  cancellation   GoodsOrderCancellation @relation(fields: [cancellationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  actorId        String                 @map("actor_id") @db.Uuid
+  evidence       Json
+  inspectedAt    DateTime               @map("inspected_at") @db.Timestamptz(6)
+
+  @@map("goods_delivery_inspections")
 }
