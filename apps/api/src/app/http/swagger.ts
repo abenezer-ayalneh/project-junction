@@ -9,6 +9,11 @@ import {
 	BookingHoldReadSchema,
 	BookingHoldReleaseResultSchema,
 	BookingHoldResultSchema,
+	BookingPaymentReadSchema,
+	BookingPaymentReceiptCommandSchema,
+	BookingPaymentResultSchema,
+	BookingPaymentStartSchema,
+	BookingReadSchema,
 	CatalogHealthSchema,
 	CatalogImportCommandSchema,
 	CatalogImportResultSchema,
@@ -113,6 +118,12 @@ function schemaFor(schema: z.ZodType): SchemaObject {
 }
 
 export const OpenApiSchemaRefs = {
+	bookingPaymentStart: { $ref: '#/components/schemas/BookingPaymentStart' },
+	bookingPaymentReceiptCommand: { $ref: '#/components/schemas/BookingPaymentReceiptCommand' },
+	bookingPaymentRead: { $ref: '#/components/schemas/BookingPaymentRead' },
+	bookingPaymentResult: { $ref: '#/components/schemas/BookingPaymentResult' },
+	bookingRead: { $ref: '#/components/schemas/BookingRead' },
+
 	bookingHoldCommand: { $ref: '#/components/schemas/BookingHoldCommand' },
 	bookingHoldRead: { $ref: '#/components/schemas/BookingHoldRead' },
 	bookingHoldResult: { $ref: '#/components/schemas/BookingHoldResult' },
@@ -241,6 +252,11 @@ function publicSchemas(): Record<string, SchemaObject> {
 		CatalogHealth: schemaFor(CatalogHealthSchema),
 		CustomerDiscoveryState: schemaFor(CustomerDiscoveryStateSchema),
 		HealthResponse: schemaFor(HealthResponseSchema),
+		BookingPaymentStart: schemaFor(BookingPaymentStartSchema),
+		BookingPaymentReceiptCommand: schemaFor(BookingPaymentReceiptCommandSchema),
+		BookingPaymentRead: schemaFor(BookingPaymentReadSchema),
+		BookingPaymentResult: schemaFor(BookingPaymentResultSchema),
+		BookingRead: schemaFor(BookingReadSchema),
 		BookingHoldCommand: schemaFor(BookingHoldCommandSchema),
 		BookingHoldRead: schemaFor(BookingHoldReadSchema),
 		BookingHoldResult: schemaFor(BookingHoldResultSchema),

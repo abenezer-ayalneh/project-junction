@@ -1,0 +1,35 @@
+{
+	"chunk": "P03-C05",
+	"date": "2026-10-12",
+	"baseline": "3794cc8894f7bde8a6a01589b99ae2539fc71551",
+	"environment": "local machine only; loopback disposable PostgreSQL/Redis/built API",
+	"results": {
+		"paid_confirmation_postgresql": 9,
+		"phase03_combined_postgresql": 51,
+		"built_paid_booking_http_smoke": "passed",
+		"phase03_http_regressions": "passed",
+		"actual_worker_expiry": "passed",
+		"workspace_lint_typecheck_test": "passed",
+		"migration_compatibility": "37 migrations; no schema difference",
+		"populated_upgrade": "passed",
+		"api_worker_build": "passed; six existing API warnings"
+	},
+	"commands": [
+		"FOUNDATION_TEST_NAME=\"Phase 03 (paid Booking confirmation|atomic Booking holds|authoritative scheduling|Service definitions)\" pnpm nx run platform-core:test-integration",
+		"FOUNDATION_TEST_NAME=\"Phase 03 paid Booking confirmation\" pnpm nx run platform-core:test-integration",
+		"pnpm nx run-many -t lint,typecheck,test --projects=contracts,platform-core,api,worker,web --parallel=3",
+		"node --env-file=.env tools/check-migration-compatibility.mjs",
+		"node --env-file=.env tools/check-populated-upgrade.mjs"
+	],
+	"limits": [
+		"local-controlled simulation; no live money/provider acceptance",
+		"promotion/commission null pending Phase 04",
+		"browser payment and later lifecycle/formal phase gates open"
+	],
+	"next": "P03-C06",
+	"sha256": {
+		"libs/platform-core/src/lib/bookings.ts": "fe80fb7b28cd4853714f0b4e043c03d91240699923ac352292428490e458a542",
+		"libs/platform-core/src/lib/bookings.integration.ts": "6028bb384307b0bc329c9c30965ba78c1c190f472da4ea08412935b00c560c18",
+		"prisma/migrations/20261012100000_paid_bookings/migration.sql": "64f7db3ae534259fab681f9468ddf863f26da341908c9c565c0b554e6bd3f1ac"
+	}
+}

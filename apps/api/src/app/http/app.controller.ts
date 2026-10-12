@@ -243,6 +243,47 @@ export class AppController {
 		return this.foundation.followVendor(sessionId, vendorId, body.following === true)
 	}
 
+	@Post('customer/bookings/payments')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Start a controlled local appointment payment without extending the hold.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.bookingPaymentStart })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.bookingPaymentResult })
+	startBookingPayment(@AuthenticatedSession() sessionId: string | undefined, @Headers('idempotency-key') key: string | undefined, @Body() body: unknown) {
+		return this.foundation.startBookingPayment(sessionId, key, body)
+	}
+	@Post('customer/bookings/payments/:paymentId/local-result')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Persist a controlled local appointment payment result for reconciliation.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.bookingPaymentReceiptCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.bookingPaymentResult })
+	recordLocalBookingPaymentResult(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('paymentId') id: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.recordLocalBookingPaymentResult(sessionId, key, id, body)
+	}
+	@Get('customer/bookings/payments/:paymentId')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Read and reconcile a Customer-owned appointment payment.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.bookingPaymentRead })
+	readBookingPayment(@AuthenticatedSession() sessionId: string | undefined, @Param('paymentId') id: string) {
+		return this.foundation.readBookingPayment(sessionId, id)
+	}
+	@Get('customer/bookings/:bookingId')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Read a Customer-owned paid Booking and immutable purchase terms.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.bookingRead })
+	readBooking(@AuthenticatedSession() sessionId: string | undefined, @Param('bookingId') id: string) {
+		return this.foundation.readBooking(sessionId, id)
+	}
 	@Post('customer/bookings/holds')
 	@Header('Cache-Control', 'no-store')
 	@ApiOperation({

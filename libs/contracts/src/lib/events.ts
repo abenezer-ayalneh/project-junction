@@ -5,6 +5,10 @@ export const DomainEventSchema = z.object({
 	type: z.enum([
 		'FoundationCommandAccepted',
 		'ServiceConfigured',
+		'BookingPaymentStarted',
+		'BookingPaymentResultRecorded',
+		'BookingConfirmed',
+		'BookingRefundCompleted',
 		'BookingHoldCreated',
 		'BookingHoldReleased',
 		'BookingHoldExpired',

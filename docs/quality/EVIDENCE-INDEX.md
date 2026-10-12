@@ -37,3 +37,7 @@ Phase 02 local requirement/scenario coverage and unresolved formal gates are con
 ## Phase 03 C04 — 2026-10-12
 
 [C04 local evidence](./PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c04--service-selection-and-booking-intent-ui--2026-10-12) and [verification record](./evidence/phase-03-c04-2026-10-12/verification.json) record exact selection, timezone, real slot-loss/read/offline recovery, unreserved Cart intent edit/remove and local browser captures/review. Workspace, PostgreSQL/HTTP, actual worker and web build checks pass. Paid lifecycle and formal acceptance remain open. Next is C05.
+
+## Phase 03 C05 — 2026-10-12
+
+[C05 local evidence](./PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c05--paid-booking-confirmation--2026-10-12) and [verification record](./evidence/phase-03-c05-2026-10-12/verification.json) record controlled payment, once-only confirmed allocation, immutable snapshots/attendee, late-success compensation and durable recovery. Local PostgreSQL/HTTP/worker, workspace and migration checks pass. C06 cancellation and later lifecycle/formal gates remain open.

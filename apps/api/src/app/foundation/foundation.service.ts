@@ -57,6 +57,18 @@ export class FoundationService {
 		this.durable = new PostgresFoundation(this.databaseUrl())
 	}
 
+	startBookingPayment(sessionId: string | undefined, key: string | undefined, input: unknown) {
+		return this.durable.startBookingPayment(sessionId, key, input)
+	}
+	recordLocalBookingPaymentResult(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.durable.recordLocalBookingPaymentResult(sessionId, key, id, input)
+	}
+	readBookingPayment(sessionId: string | undefined, id: string) {
+		return this.durable.readBookingPayment(sessionId, id)
+	}
+	readBooking(sessionId: string | undefined, id: string) {
+		return this.durable.readBooking(sessionId, id)
+	}
 	createBookingHold(sessionId: string | undefined, key: string | undefined, input: unknown) {
 		return this.durable.createBookingHold(sessionId, key, input)
 	}

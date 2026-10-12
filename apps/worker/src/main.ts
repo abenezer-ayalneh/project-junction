@@ -31,11 +31,13 @@ function shutdown(): Promise<void> {
 async function tick() {
 	tickRunning = true
 	try {
+		await repository.reconcileBookingPayments()
 		await repository.expireBookingHolds()
 		await repository.expireGoodsHolds()
 		await repository.expireGoodsPickups()
 		await repository.expireGoodsDeliveries()
 		await repository.reconcileGoodsRefunds()
+		await repository.reconcileBookingRefunds()
 		await repository.expirePendingVideoUploads()
 		if (Date.now() - lastMediaSweep >= 10 * 60 * 1000) {
 			const retention = await repository.cleanupRejectedMedia()

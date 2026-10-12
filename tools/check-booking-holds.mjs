@@ -295,12 +295,40 @@ try {
 			clearTimeout(workerTimer)
 		}
 	}
+	const paidHold = await request(path, 'POST', { ...current, start: `${tomorrow}T13:00:00Z` })
+	assert.equal(paidHold.status, 201)
+	const paymentKey = randomUUID()
+	const paid = await request('/customer/bookings/payments', 'POST', { holdId: paidHold.body.holdId, attendee: { name: 'Guest' } }, paymentKey)
+	assert.equal(paid.status, 201, JSON.stringify(paid.body))
+	assert.equal(paid.body.expiresAt, paidHold.body.expiresAt)
+	assert.equal(
+		(await request('/customer/bookings/payments', 'POST', { holdId: paidHold.body.holdId, attendee: { name: 'Guest' } }, paymentKey)).body.replayed,
+		true,
+	)
+	const paymentPath = `/customer/bookings/payments/${paid.body.paymentId}`
+	assert.equal((await request(`${paymentPath}/local-result`, 'POST', { outcome: 'succeeded', amountCents: 1 })).status, 400)
+	assert.equal((await request(paymentPath, 'GET', undefined, '', false)).status, 403)
+	assert.equal((await request(`${paymentPath}/local-result`, 'POST', { outcome: 'succeeded' })).status, 201)
+	const confirmed = await request(paymentPath)
+	assert.equal(confirmed.status, 200, JSON.stringify(confirmed.body))
+	assert.equal(confirmed.body.state, 'succeeded')
+	const booking = await request(`/customer/bookings/${confirmed.body.bookingId}`)
+	assert.equal(booking.status, 200, JSON.stringify(booking.body))
+	assert.equal(booking.body.snapshot.priceCents, 1500)
+	assert.equal(booking.body.snapshot.optionPriceCents, 1200)
+	assert.equal(booking.body.snapshot.attendee.name, 'Guest')
+	assert.equal(booking.body.snapshot.policy.template, 'standard')
+	assert.equal((await request(`/customer/bookings/${confirmed.body.bookingId}`, 'GET', undefined, '', false)).status, 403)
+	assert.equal((await request(`${path}/${paidHold.body.holdId}/release`, 'POST')).status, 409)
+	console.log(
+		'Built local paid Booking HTTP smoke passed: adult cookie scope, exact amount/deadline, attendee, policy, durable receipt, once-only commitment and terminal release denial.',
+	)
 	if (process.env.SERVICE_BROWSER_CHECK === '1') {
 		const { checkServiceSelectionBrowser } = await import('./check-service-selection-browser.mjs')
 		await checkServiceSelectionBrowser({ repository, sessionId, vendor, location: source, origin })
 	}
 	console.log(
-		'Built local atomic Booking hold HTTP smoke passed: cookie/adult scope, fixed fifteen-minute terms, private any-Staff/named selection, current slot revalidation, replay/conflict/validation/anonymous denial, cross-mode capacity, release/replay, stale versions, concurrent last-Staff race and expired read recovery. No payment or Booking committed.',
+		'Built local atomic Booking hold HTTP smoke passed: cookie/adult scope, fixed fifteen-minute terms, private any-Staff/named selection, current slot revalidation, replay/conflict/validation/anonymous denial, cross-mode capacity, release/replay, stale versions, concurrent last-Staff race and expired read recovery. Paid confirmation smoke runs separately above.',
 	)
 } finally {
 	if (child && child.exitCode === null) {

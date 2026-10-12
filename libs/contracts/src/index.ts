@@ -1,6 +1,7 @@
 export * from './lib/access-context.js'
 export * from './lib/api.js'
 export * from './lib/booking-holds.js'
+export * from './lib/bookings.js'
 export * from './lib/events.js'
 export * from './lib/scheduling.js'
 export * from './lib/services.js'

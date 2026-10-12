@@ -74,6 +74,7 @@ import {
 import { Prisma, PrismaClient } from '../../generated/prisma/index.js'
 import { AccessDeniedError, assertElevatedSession, assertRequiredMfa, assertScope } from './access.js'
 import { BookingHolds } from './booking-holds.js'
+import { Bookings } from './bookings.js'
 import { CATALOG_CSV_HEADER, decodeCatalogCsvText, encodeCatalogCsvField, parseCatalogCsv } from './catalog-csv.js'
 import { DiditSandboxAdapter } from './didit.js'
 import { type ExternalEffectAdapter, UnconfiguredExternalEffectAdapter } from './external-effects.js'
@@ -136,6 +137,7 @@ function hasRequiredIdentity(user: { adultVerificationState: string; verifiedAt:
 /** Prisma owns CRUD; parameterized SQL below is restricted to concurrency locks/claims. */
 export class PostgresFoundation {
 	readonly db: PrismaClient
+	private readonly bookings: Bookings
 	private readonly bookingHolds: BookingHolds
 	private readonly scheduling: ServiceScheduling
 	private readonly services: ServiceDefinitions
@@ -163,6 +165,14 @@ export class PostgresFoundation {
 			lockWorkspace: (tx, id) => this.workspaceLock(tx, id),
 			replay: (tx, context, key, method, request, create) => this.replayOrCreate(tx, context, key, method, request, create),
 			now: goodsClock,
+		})
+		this.bookings = new Bookings({
+			db: this.db,
+			derive: (tx, sessionId, options) => this.derive(tx, sessionId, options),
+			lockWorkspace: (tx, id) => this.workspaceLock(tx, id),
+			replay: (tx, context, key, method, request, create) => this.replayOrCreate(tx, context, key, method, request, create),
+			now: goodsClock,
+			payments: goodsPayments,
 		})
 		this.bookingHolds = new BookingHolds(
 			{
@@ -570,6 +580,24 @@ export class PostgresFoundation {
 		})
 	}
 
+	startBookingPayment(sessionId: string | undefined, key: string | undefined, input: unknown) {
+		return this.bookings.start(sessionId, key, input)
+	}
+	recordLocalBookingPaymentResult(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.bookings.receipt(sessionId, key, id, input)
+	}
+	readBookingPayment(sessionId: string | undefined, id: string) {
+		return this.bookings.readPayment(sessionId, id)
+	}
+	readBooking(sessionId: string | undefined, id: string) {
+		return this.bookings.read(sessionId, id)
+	}
+	reconcileBookingPayments() {
+		return this.bookings.reconcilePayments()
+	}
+	reconcileBookingRefunds() {
+		return this.bookings.reconcileRefunds()
+	}
 	createBookingHold(sessionId: string | undefined, key: string | undefined, input: unknown) {
 		return this.bookingHolds.create(sessionId, key, input)
 	}

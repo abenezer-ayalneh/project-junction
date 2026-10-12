@@ -56,8 +56,13 @@ export const ServiceConfigurationSchema = z
 	})
 	.refine((value) => new Set(value.options.map((option) => option.id)).size === value.options.length, 'Option IDs must be unique')
 export type ServiceConfiguration = z.infer<typeof ServiceConfigurationSchema>
-export const ServiceConfigurationCommandSchema = z.strictObject({ expectedVersion: z.number().int().min(0), configuration: ServiceConfigurationSchema })
+export const ServiceConfigurationCommandSchema = z.strictObject({
+	expectedVersion: z.number().int().min(0),
+	configuration: ServiceConfigurationSchema,
+	bookingPolicy: z.enum(['flexible', 'standard']).optional(),
+})
 export const ServiceConfigurationResultSchema = z.object({
+	bookingPolicy: z.enum(['flexible', 'standard']).optional(),
 	listingId: id,
 	version: z.number().int().min(0),
 	configuration: ServiceConfigurationSchema.nullable(),
@@ -75,6 +80,7 @@ export const StaffProfileResultSchema = z.object({
 })
 export const StaffProfilesSchema = z.object({ items: z.array(StaffProfileResultSchema) })
 export const PublicServiceDefinitionSchema = z.object({
+	bookingPolicy: z.enum(['flexible', 'standard']).optional(),
 	scheduling: ServiceSchedulingRulesSchema.extend({ version: z.number().int().positive() }).nullable().optional(),
 	listingId: id,
 	version: z.number().int().positive(),

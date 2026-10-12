@@ -156,6 +156,7 @@ model DiscoveryPreference {
 }
 
 model Listing {
+  bookingPolicy String @default("standard") @map("booking_policy")
   schedulingRules Json? @map("scheduling_rules")
   schedulingRulesVersion Int @default(0) @map("scheduling_rules_version")
   /// Versioned fixed commercial definitions and Vendor-validated Staff qualifications; no allocation state.
@@ -902,6 +903,7 @@ model GoodsReturnEvent {
 
 // Authoritative occupancy read seam. Hold/Booking lifecycle writes belong to later chunks.
 model StaffAllocation {
+  booking Booking?
   holdId String? @unique @map("hold_id") @db.Uuid
   hold BookingHold? @relation(fields: [holdId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -918,6 +920,8 @@ model StaffAllocation {
 }
 
 model BookingHold {
+  payment BookingPayment?
+  booking Booking?
   id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
   customerId String @map("customer_id") @db.Uuid
   workspaceId String @map("workspace_id") @db.Uuid
@@ -935,4 +939,55 @@ model BookingHold {
   @@index([state, expiresAt])
   @@index([customerId, workspaceId])
   @@map("booking_holds")
+}
+
+model BookingPayment {
+  id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  holdId String @unique @map("hold_id") @db.Uuid
+  hold BookingHold @relation(fields: [holdId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  amountCents Int @map("amount_cents")
+  state String @default("processing")
+  attendee Json?
+  policySnapshot Json @map("policy_snapshot")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  result BookingPaymentReceipt?
+  booking Booking?
+  refunds BookingRefund[]
+  @@map("booking_payments")
+}
+
+model BookingPaymentReceipt {
+  id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  paymentId String @unique @map("payment_id") @db.Uuid
+  payment BookingPayment @relation(fields: [paymentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  outcome String
+  receivedAt DateTime @map("received_at") @db.Timestamptz(6)
+  @@map("booking_payment_receipts")
+}
+
+model Booking {
+  id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  holdId String @unique @map("hold_id") @db.Uuid
+  hold BookingHold @relation(fields: [holdId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  paymentId String @unique @map("payment_id") @db.Uuid
+  payment BookingPayment @relation(fields: [paymentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  allocationId String @unique @map("allocation_id") @db.Uuid
+  allocation StaffAllocation @relation(fields: [allocationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  snapshot Json
+  state String @default("confirmed")
+  version Int @default(1)
+  confirmedAt DateTime @map("confirmed_at") @db.Timestamptz(6)
+  @@map("bookings")
+}
+
+model BookingRefund {
+  id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  paymentId String @map("payment_id") @db.Uuid
+  payment BookingPayment @relation(fields: [paymentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  semanticKey String @unique @map("semantic_key")
+  amountCents Int @map("amount_cents")
+  state String @default("pending")
+  reference String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  @@map("booking_refunds")
 }

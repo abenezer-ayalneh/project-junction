@@ -63,6 +63,7 @@ export class ServiceDefinitions {
 				listingId,
 				version: listing.serviceConfigurationVersion,
 				configuration: listing.serviceConfiguration,
+				bookingPolicy: listing.bookingPolicy,
 				replayed: false,
 			})
 		})
@@ -96,7 +97,11 @@ export class ServiceDefinitions {
 					if (staff.length !== staffIds.length) throw new AccessDeniedError()
 					const updated = await tx.listing.update({
 						where: { id: listingId },
-						data: { serviceConfiguration: goodsJson(command.configuration), serviceConfigurationVersion: { increment: 1 } },
+						data: {
+							serviceConfiguration: goodsJson(command.configuration),
+							serviceConfigurationVersion: { increment: 1 },
+							...(command.bookingPolicy ? { bookingPolicy: command.bookingPolicy } : {}),
+						},
 					})
 					await goodsAudit(tx, context.workspaceId, context.actor.userId, 'service.configured', {
 						listingId,
@@ -109,6 +114,7 @@ export class ServiceDefinitions {
 						listingId,
 						version: updated.serviceConfigurationVersion,
 						configuration: command.configuration,
+						bookingPolicy: updated.bookingPolicy,
 						replayed: false,
 					})
 				},
@@ -229,6 +235,7 @@ export class ServiceDefinitions {
 				listingId,
 				version: listing.serviceConfigurationVersion,
 				capacity: configuration.capacity,
+				bookingPolicy: listing.bookingPolicy,
 				scheduling: listing.schedulingRules
 					? { ...ServiceSchedulingRulesSchema.parse(listing.schedulingRules), version: listing.schedulingRulesVersion }
 					: null,
