@@ -1403,6 +1403,259 @@ suite('Phase 02 goods quotes and holds PostgreSQL', () => {
 		).rejects.toThrow(GoodsCheckoutConflictError)
 	})
 
+	async function returnFixture(template: 'standard' | 'flexible' = 'standard', quantity = 1, delivery = false) {
+		const fixture = await createVendor(5)
+		if (template === 'flexible')
+			await repository.configureGoodsLocation(fixture.owner.sessionId, randomUUID(), fixture.location.id, {
+				expectedVersion: 1,
+				configuration: { ...fixture.configuration, returnTemplate: 'flexible' },
+			})
+		const address = { contactName: 'Customer', phone: '0911000000', locality: 'City', address: 'Gate', point: [41.5, 9.5] as [number, number] }
+		const { purchase, payment } = await cancellationPurchase({
+			groups: [
+				{
+					...fixture.selection.groups[0],
+					lines: [{ listingId: fixture.listing.id, quantity }],
+					...(delivery ? { fulfillment: { method: 'delivery' as const, zoneId: fixture.zone.id, address } } : {}),
+				},
+			],
+		})
+		const order = purchase.orders[0],
+			fulfillment = await repository.readGoodsFulfillment(fixture.owner.sessionId, order.orderId)
+		await repository.prepareGoodsFulfillment(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId)
+		if (delivery) {
+			await repository.deliveryMilestone(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId, { action: 'dispatch' })
+			const read = GoodsCustomerDeliveryReadSchema.parse(await repository.readDelivery(customer.sessionId, fulfillment.fulfillmentId, true))
+			await repository.deliveryHandoff(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId, {
+				proof: { method: 'code', code: read.collectionProof!.code },
+			})
+		} else {
+			await repository.readyGoodsPickup(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId)
+			const read = GoodsCustomerPickupReadSchema.parse(await repository.readGoodsFulfillment(customer.sessionId, order.orderId, true))
+			await repository.collectGoodsPickup(fixture.owner.sessionId, randomUUID(), fulfillment.fulfillmentId, {
+				proof: { method: 'code', code: read.collectionProof!.code },
+			})
+		}
+		return { fixture, order, purchase, payment, handoffAt: new Date(now) }
+	}
+	async function inspectReturn(fixture: Awaited<ReturnType<typeof createVendor>>, id: string, stockDisposition = 'restock') {
+		await repository.actOnGoodsReturn(
+			fixture.owner.sessionId,
+			randomUUID(),
+			id,
+			{ action: 'approve', instructions: 'Return the exact approved goods to this original Location.' },
+			'vendor',
+		)
+		await repository.actOnGoodsReturn(
+			customer.sessionId,
+			randomUUID(),
+			id,
+			{ action: 'ship', evidence: 'I handed the approved goods to the return carrier.' },
+			'customer',
+		)
+		await repository.actOnGoodsReturn(
+			fixture.owner.sessionId,
+			randomUUID(),
+			id,
+			{ action: 'receive', evidence: 'The exact approved goods and quantities were received.' },
+			'vendor',
+		)
+		return repository.actOnGoodsReturn(
+			fixture.owner.sessionId,
+			randomUUID(),
+			id,
+			{ action: 'inspect', evidence: 'I inspected every received unit and recorded its condition.', stockDisposition },
+			'vendor',
+		)
+	}
+	it.each([
+		['standard', 'change_of_mind', 7],
+		['flexible', 'change_of_mind', 14],
+		['standard', 'fault', 30],
+		['flexible', 'wrong_item', 30],
+	] as const)('goods returns enforce %s %s calendar-day boundary %i from verified handoff', async (template, reason, days) => {
+		const { fixture, order, handoffAt } = await returnFixture(template)
+		const command = { lineId: order.lines[0].lineId, quantity: 1, reason, unused: true, evidence: 'The goods are unused or have the documented fault.' }
+		await repository.configureGoodsLocation(fixture.owner.sessionId, randomUUID(), fixture.location.id, {
+			expectedVersion: template === 'flexible' ? 2 : 1,
+			configuration: { ...fixture.configuration, returnTemplate: template === 'standard' ? 'flexible' : 'standard' },
+		})
+		now = new Date(handoffAt.getTime() + days * 86400000 - 1)
+		const accepted = await repository.submitGoodsReturn(customer.sessionId, randomUUID(), order.orderId, command)
+		expect(accepted.policySnapshot.changeOfMindDays).toBe(template === 'standard' ? 7 : 14)
+		expect(accepted.logisticsPayer).toBe(reason === 'change_of_mind' ? 'customer' : 'vendor')
+		await repository.actOnGoodsReturn(
+			fixture.owner.sessionId,
+			randomUUID(),
+			accepted.returnId,
+			{ action: 'decline', evidence: 'The submitted evidence requires a corrected separate claim.' },
+			'vendor',
+		)
+		now = new Date(handoffAt.getTime() + days * 86400000)
+		await expect(repository.submitGoodsReturn(customer.sessionId, randomUUID(), order.orderId, command)).rejects.toThrow(GoodsCheckoutConflictError)
+	})
+	it('goods returns require handoff, preserve unaffected Vendor components and record no-refund evidence', async () => {
+		const first = await createVendor(),
+			second = await createVendor()
+		const { purchase, payment } = await cancellationPurchase({ groups: [first.selection.groups[0], second.selection.groups[0]] })
+		const order = purchase.orders.find((item) => item.vendorId === first.vendor.id)!
+		const command = {
+			lineId: order.lines[0].lineId,
+			quantity: 1,
+			reason: 'material_misdescription',
+			unused: false,
+			evidence: 'The handed-over item differs materially from its paid description.',
+		}
+		await expect(repository.submitGoodsReturn(customer.sessionId, randomUUID(), order.orderId, command)).rejects.toThrow(GoodsCheckoutConflictError)
+		const fulfillment = await repository.readGoodsFulfillment(first.owner.sessionId, order.orderId)
+		await repository.prepareGoodsFulfillment(first.owner.sessionId, randomUUID(), fulfillment.fulfillmentId)
+		await repository.readyGoodsPickup(first.owner.sessionId, randomUUID(), fulfillment.fulfillmentId)
+		const read = GoodsCustomerPickupReadSchema.parse(await repository.readGoodsFulfillment(customer.sessionId, order.orderId, true))
+		await repository.collectGoodsPickup(first.owner.sessionId, randomUUID(), fulfillment.fulfillmentId, {
+			proof: { method: 'code', code: read.collectionProof!.code },
+		})
+		const submitted = await repository.submitGoodsReturn(customer.sessionId, randomUUID(), order.orderId, command)
+		await expect(repository.readGoodsReturn(second.owner.sessionId, submitted.returnId, 'vendor')).rejects.toThrow(AccessDeniedError)
+		await inspectReturn(first, submitted.returnId)
+		await repository.actOnGoodsReturn(
+			first.owner.sessionId,
+			randomUUID(),
+			submitted.returnId,
+			{ action: 'no_refund', evidence: 'Inspection evidence did not confirm the alleged description mismatch.' },
+			'vendor',
+		)
+		await expect(repository.readGoodsReturn(customer.sessionId, submitted.returnId, 'customer')).resolves.toMatchObject({
+			state: 'resolved_no_refund',
+			refund: null,
+		})
+		const fresh = await repository.submitGoodsReturn(customer.sessionId, randomUUID(), order.orderId, {
+			...command,
+			evidence: 'New additional evidence documents the original misdescription.',
+		})
+		await inspectReturn(first, fresh.returnId)
+		await repository.actOnGoodsReturn(
+			first.owner.sessionId,
+			randomUUID(),
+			fresh.returnId,
+			{ action: 'refund', evidence: 'New evidence confirms refund for the one affected component.' },
+			'vendor',
+		)
+		await repository.reconcileGoodsRefunds()
+		const purchaseRead = await repository.readGoodsPurchase(customer.sessionId, purchase.purchaseId)
+		expect(purchaseRead.orders.find((item) => item.vendorId === second.vendor.id)).toEqual(
+			purchase.orders.find((item) => item.vendorId === second.vendor.id),
+		)
+		await expect(repository.readGoodsPayment(customer.sessionId, payment.paymentId)).resolves.toMatchObject({ state: 'partially_refunded' })
+	})
+
+	it('goods returns reserve exact quantities under concurrency and reject wrong authority or out-of-order recovery', async () => {
+		const { fixture, order } = await returnFixture('standard', 2)
+		const command = {
+				lineId: order.lines[0].lineId,
+				quantity: 2,
+				reason: 'change_of_mind',
+				unused: true,
+				evidence: 'I am returning both unused purchased units.',
+			},
+			key = randomUUID()
+		const results = await Promise.all([
+			repository.submitGoodsReturn(customer.sessionId, key, order.orderId, command),
+			other.submitGoodsReturn(customer.sessionId, key, order.orderId, command),
+		])
+		expect(results.filter((result) => result.replayed)).toHaveLength(1)
+		await expect(repository.submitGoodsReturn(customer.sessionId, randomUUID(), order.orderId, { ...command, quantity: 1 })).rejects.toThrow(
+			GoodsCheckoutConflictError,
+		)
+		await expect(repository.submitGoodsReturn(customer.sessionId, randomUUID(), order.orderId, { ...command, unused: false })).rejects.toThrow(
+			GoodsCheckoutConflictError,
+		)
+		await expect(repository.db.goodsReturnCase.update({ where: { id: results[0].returnId }, data: { quantity: 1 } })).rejects.toThrow()
+		await expect(repository.readGoodsReturn(fixture.owner.sessionId, results[0].returnId, 'customer')).rejects.toThrow(AccessDeniedError)
+		await expect(
+			repository.actOnGoodsReturn(
+				customer.sessionId,
+				randomUUID(),
+				results[0].returnId,
+				{ action: 'refund', evidence: 'Customer cannot approve their own refund.' },
+				'customer',
+			),
+		).rejects.toThrow(AccessDeniedError)
+		await expect(
+			repository.actOnGoodsReturn(
+				fixture.owner.sessionId,
+				randomUUID(),
+				results[0].returnId,
+				{ action: 'refund', evidence: 'Inspection has not yet been completed.' },
+				'vendor',
+			),
+		).rejects.toThrow(GoodsCheckoutConflictError)
+	})
+	it.each(['change_of_mind', 'fault'] as const)('goods returns inspect delivered %s without restocking fees and reconcile scoped refunds', async (reason) => {
+		const { fixture, order, payment } = await returnFixture('standard', 1, true)
+		const submitted = await repository.submitGoodsReturn(customer.sessionId, randomUUID(), order.orderId, {
+			lineId: order.lines[0].lineId,
+			quantity: 1,
+			reason,
+			unused: true,
+			evidence: 'The delivered goods are returned with condition evidence.',
+		})
+		await inspectReturn(fixture, submitted.returnId, reason === 'fault' ? 'quarantine' : 'restock')
+		expect(await repository.db.inventoryMovement.count({ where: { orderLineId: order.lines[0].lineId, reason: 'returned' } })).toBe(0)
+		const key = randomUUID(),
+			command = { action: 'refund', evidence: 'Inspection confirms this eligible exact quantity refund.' }
+		const refunded = await repository.actOnGoodsReturn(fixture.owner.sessionId, key, submitted.returnId, command, 'vendor')
+		expect(refunded).toMatchObject({ state: 'refund_pending', refund: { amountCents: reason === 'fault' ? 1200 : 1000, state: 'pending' } })
+		await expect(repository.actOnGoodsReturn(fixture.owner.sessionId, key, submitted.returnId, command, 'vendor')).resolves.toMatchObject({
+			replayed: true,
+		})
+		await repository.reconcileGoodsRefunds()
+		await expect(repository.readGoodsReturn(customer.sessionId, submitted.returnId, 'customer')).resolves.toMatchObject({
+			state: 'refunded',
+			refund: { state: 'succeeded' },
+		})
+		await expect(repository.readGoodsPayment(customer.sessionId, payment.paymentId)).resolves.toMatchObject({
+			state: reason === 'fault' ? 'refunded' : 'partially_refunded',
+		})
+		await expect(repository.readPublicProductAvailability(fixture.listing.id, { locationId: fixture.location.id })).resolves.toMatchObject({
+			available: reason === 'fault' ? 4 : 5,
+		})
+		await expect(repository.db.goodsReturnEvent.updateMany({ where: { returnId: submitted.returnId }, data: { evidence: {} } })).rejects.toThrow()
+	})
+	it('goods returns roll back refund and stock on missing final evidence and preserve unaffected quantities', async () => {
+		const { fixture, order, payment, purchase } = await returnFixture('standard', 2)
+		const submitted = await repository.submitGoodsReturn(customer.sessionId, randomUUID(), order.orderId, {
+			lineId: order.lines[0].lineId,
+			quantity: 1,
+			reason: 'fault',
+			unused: false,
+			evidence: 'One of two goods has the documented manufacturing fault.',
+		})
+		await inspectReturn(fixture, submitted.returnId, 'damaged')
+		const key = randomUUID(),
+			command = { action: 'refund', evidence: 'The faulty unit is eligible for a scoped refund.' }
+		await repository.db.$executeRawUnsafe(
+			"CREATE FUNCTION reject_test_return_event() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.action='refund' THEN RAISE EXCEPTION 'Deliberate return evidence failure'; END IF; RETURN NEW; END; $$",
+		)
+		await repository.db.$executeRawUnsafe(
+			'CREATE TRIGGER reject_test_return_event_trigger BEFORE INSERT ON goods_return_events FOR EACH ROW EXECUTE FUNCTION reject_test_return_event()',
+		)
+		try {
+			await expect(repository.actOnGoodsReturn(fixture.owner.sessionId, key, submitted.returnId, command, 'vendor')).rejects.toThrow()
+			expect(await repository.db.goodsOrderCancellation.count({ where: { orderId: order.orderId } })).toBe(0)
+			expect(await repository.db.goodsRefundOperation.count({ where: { paymentId: payment.paymentId } })).toBe(0)
+		} finally {
+			await repository.db.$executeRawUnsafe('DROP TRIGGER reject_test_return_event_trigger ON goods_return_events')
+			await repository.db.$executeRawUnsafe('DROP FUNCTION reject_test_return_event()')
+		}
+		await repository.actOnGoodsReturn(fixture.owner.sessionId, key, submitted.returnId, command, 'vendor')
+		await repository.reconcileGoodsRefunds()
+		const read = await repository.readGoodsPurchase(customer.sessionId, purchase.purchaseId)
+		expect(read.snapshot).toEqual(purchase.snapshot)
+		expect(read.orders[0].lines[0].remainingQuantity).toBe(1)
+		await expect(repository.readGoodsPayment(customer.sessionId, payment.paymentId)).resolves.toMatchObject({ state: 'partially_refunded' })
+		expect(await repository.db.inventoryMovement.count({ where: { orderLineId: order.lines[0].lineId, reason: 'damaged' } })).toBe(1)
+	})
+
 	it('goods delivery durable milestones preserve paid terms and permit one in-zone correction', async () => {
 		const fixture = await createVendor(3)
 		const address = { contactName: 'Customer', phone: '0911000000', locality: 'City', address: 'Original gate', point: [41.5, 9.5] as [number, number] }

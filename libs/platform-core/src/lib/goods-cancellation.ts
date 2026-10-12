@@ -82,14 +82,15 @@ export class GoodsCancellation {
 		orderId: string,
 		command: z.infer<typeof GoodsOrderCancellationCommandSchema>,
 		actor: 'vendor' | 'platform',
-		origin: 'pre_fulfillment' | 'pickup_expiry' | 'delivery_failure',
+		origin: 'pre_fulfillment' | 'pickup_expiry' | 'delivery_failure' | 'return_inspection',
+		refundDeliveryFee = true,
 	) {
 		const order = await tx.goodsVendorOrder.findUnique({
 			where: { id: orderId },
 			include: {
 				fulfillment: { include: { delivery: true } },
 				purchase: true,
-				cancellations: { include: { refund: true } },
+				cancellations: { include: { refund: true, returnCase: true } },
 				lines: { include: { holdLine: true, cancellationLines: true } },
 			},
 		})
@@ -117,6 +118,8 @@ export class GoodsCancellation {
 					throw new GoodsCheckoutConflictError('Pickup must expire into inspection first.')
 				if (origin === 'delivery_failure' && order.fulfillment?.delivery?.state !== 'inspection_pending')
 					throw new GoodsCheckoutConflictError('Delivery must enter inspection before recovery.')
+				if (origin === 'return_inspection' && order.fulfillment?.state !== 'collected' && order.fulfillment?.delivery?.state !== 'delivered')
+					throw new GoodsCheckoutConflictError('Returns require completed verified handoff.')
 				const group = GoodsQuoteSnapshotSchema.shape.groups.element.parse(order.snapshot)
 				let itemRefundCents = 0
 				const selected = command.lines.map((selection) => {
@@ -142,7 +145,12 @@ export class GoodsCancellation {
 				)
 				const state = remainingQuantity === 0 ? 'cancelled' : 'partially_cancelled'
 				const previousDeliveryRefund = order.cancellations.reduce((total, cancellation) => total + cancellation.deliveryRefundCents, 0)
-				const deliveryRefundCents = remainingQuantity === 0 ? group.deliveryFeeCents - previousDeliveryRefund : 0
+				const deliveryRefundCents =
+					remainingQuantity === 0 &&
+					refundDeliveryFee &&
+					!(origin === 'return_inspection' && order.cancellations.some((prior) => prior.returnCase?.reason === 'change_of_mind'))
+						? group.deliveryFeeCents - previousDeliveryRefund
+						: 0
 				const cancellationId = randomUUID()
 				const refund = await tx.goodsRefundOperation.create({
 					data: {

@@ -48,3 +48,12 @@ Phase 02 `P02-C10` local delivery APIs:
 - `POST /v1/vendor/goods/fulfillments/:fulfillmentId/delivery-inspection` requires an assigned Owner and all frozen undelivered quantities. It atomically records disposition, scoped refund allocation and inspection completion; ordinary cancellation remains denied after dispatch.
 
 Each mutation requires an idempotency key. Fulfillment reads derive delivery state, verified handoff time and inspection recovery from immutable delivery records. Worker expiry preserves evidence without automatic resale.
+
+Phase 02 `P02-C11` local returns APIs:
+
+- `POST /v1/customer/goods/orders/:orderId/returns` submits one eligible exact line/quantity under the Customer's paid policy and verified handoff clock. Active claims reserve quantity; no handoff, used change-of-mind goods, expired windows and overlapping quantities fail safely.
+- `POST /v1/customer/goods/returns/:returnId/actions` records shipment evidence only.
+- `POST /v1/vendor/goods/returns/:returnId/actions` records assigned Owner approval/instructions, decline, receipt, inspection/disposition and refund or no-refund outcome. Refund allocation and stock compensation commit atomically after inspection.
+- `GET /v1/customer/goods/returns/:returnId` and the corresponding Vendor route return only authorized case evidence and current provider reconciliation. Refund acceptance remains `refund_pending` until the controlled local operation succeeds.
+
+Mutation routes require idempotency keys. Exchange is a fresh Purchase. Return policies/quantity/handoff snapshots and event evidence are immutable; current membership, Location and MFA checks apply at mutation/read time.

@@ -34,3 +34,7 @@
 | Resolved → Closed                             | system/case owner                     | configured close condition and no pending formal action | preserve transcript/audit and close                            | reopening requires explicit event and reauthorization        |
 
 Missing/failed provider result leaves `ReconciliationRequired`, never fabricated resolution. Actor must be scoped; high-risk decision needs required approval.
+
+## P02-C11 local implementation — 2026-10-12
+
+The local goods ReturnCase API implements `submitted → approved/declined → in_transit → received → inspected → refund_pending/resolved_no_refund` with exact line/quantity reservation and immutable evidence at each action. Owner approval includes logistics instructions; only the owning Customer can submit shipment evidence. `refund_pending` is presented as `refunded` only after the existing controlled provider reconciliation records success. No browser response or inspection click invents provider success. A declined/no-refund case retains its decision and permits a fresh eligible claim with new evidence; formal appeal/Dispute remains separately planned. Policies are snapshotted at purchase, eligibility measured from verified handoff and exact deadline excluded. Original sale and unaffected components remain unchanged; recovery uses new movements/allocations.

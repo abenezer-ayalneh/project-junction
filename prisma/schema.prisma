@@ -608,6 +608,7 @@ model GoodsVendorOrder {
 }
 
 model GoodsOrderLine {
+  returns           GoodsReturnCase[]
   cancellationLines GoodsCancellationLine[]
   id                String                  @id @default(dbgenerated("uuidv7()")) @db.Uuid
   orderId           String                  @map("order_id") @db.Uuid
@@ -638,6 +639,7 @@ model GoodsRefundOperation {
 }
 
 model GoodsOrderCancellation {
+  returnCase          GoodsReturnCase?
   deliveryInspection  GoodsDeliveryInspection?
   origin              String                   @default("pre_fulfillment")
   pickupInspection    GoodsPickupInspection?
@@ -842,4 +844,41 @@ model GoodsDeliveryInspection {
   inspectedAt    DateTime               @map("inspected_at") @db.Timestamptz(6)
 
   @@map("goods_delivery_inspections")
+}
+
+model GoodsReturnCase {
+  id                String                  @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  orderLineId       String                  @map("order_line_id") @db.Uuid
+  orderLine         GoodsOrderLine          @relation(fields: [orderLineId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  customerId        String                  @map("customer_id") @db.Uuid
+  quantity          Int
+  reason            String
+  unused            Boolean
+  policySnapshot    Json                    @map("policy_snapshot")
+  verifiedHandoffAt DateTime                @map("verified_handoff_at") @db.Timestamptz(6)
+  eligibleUntil     DateTime                @map("eligible_until") @db.Timestamptz(6)
+  logisticsPayer    String                  @map("logistics_payer")
+  state             String                  @default("submitted")
+  version           Int                     @default(1)
+  cancellationId    String?                 @unique @map("cancellation_id") @db.Uuid
+  cancellation      GoodsOrderCancellation? @relation(fields: [cancellationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdAt         DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  events            GoodsReturnEvent[]
+
+  @@index([orderLineId, state])
+  @@map("goods_return_cases")
+}
+
+model GoodsReturnEvent {
+  id         String          @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  returnId   String          @map("return_id") @db.Uuid
+  returnCase GoodsReturnCase @relation(fields: [returnId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  version    Int
+  action     String
+  actorId    String          @map("actor_id") @db.Uuid
+  evidence   Json
+  occurredAt DateTime        @map("occurred_at") @db.Timestamptz(6)
+
+  @@unique([returnId, version])
+  @@map("goods_return_events")
 }

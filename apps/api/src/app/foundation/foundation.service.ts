@@ -317,6 +317,15 @@ export class FoundationService {
 		return this.durable.inspectGoodsPickup(sessionId, key, id, input)
 	}
 
+	submitGoodsReturn(sessionId: string | undefined, key: string | undefined, orderId: string, input: unknown) {
+		return this.durable.submitGoodsReturn(sessionId, key, orderId, input)
+	}
+	actOnGoodsReturn(sessionId: string | undefined, key: string | undefined, id: string, input: unknown, actor: 'customer' | 'vendor') {
+		return this.durable.actOnGoodsReturn(sessionId, key, id, input, actor)
+	}
+	readGoodsReturn(sessionId: string | undefined, id: string, actor: 'customer' | 'vendor') {
+		return this.durable.readGoodsReturn(sessionId, id, actor)
+	}
 	acknowledgeDelivery(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
 		return this.durable.acknowledgeDelivery(sessionId, key, id, input)
 	}

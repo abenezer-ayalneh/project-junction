@@ -5973,6 +5973,622 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
         "type": "object",
       },
+      "GoodsReturnActionCommand": {
+        "oneOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "action": {
+                "enum": [
+                  "approve",
+                ],
+                "type": "string",
+              },
+              "instructions": {
+                "maxLength": 1000,
+                "minLength": 10,
+                "type": "string",
+              },
+            },
+            "required": [
+              "action",
+              "instructions",
+            ],
+            "type": "object",
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "action": {
+                "enum": [
+                  "decline",
+                ],
+                "type": "string",
+              },
+              "evidence": {
+                "maxLength": 1000,
+                "minLength": 10,
+                "type": "string",
+              },
+            },
+            "required": [
+              "action",
+              "evidence",
+            ],
+            "type": "object",
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "action": {
+                "enum": [
+                  "ship",
+                ],
+                "type": "string",
+              },
+              "evidence": {
+                "maxLength": 1000,
+                "minLength": 10,
+                "type": "string",
+              },
+            },
+            "required": [
+              "action",
+              "evidence",
+            ],
+            "type": "object",
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "action": {
+                "enum": [
+                  "receive",
+                ],
+                "type": "string",
+              },
+              "evidence": {
+                "maxLength": 1000,
+                "minLength": 10,
+                "type": "string",
+              },
+            },
+            "required": [
+              "action",
+              "evidence",
+            ],
+            "type": "object",
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "action": {
+                "enum": [
+                  "inspect",
+                ],
+                "type": "string",
+              },
+              "evidence": {
+                "maxLength": 1000,
+                "minLength": 10,
+                "type": "string",
+              },
+              "stockDisposition": {
+                "enum": [
+                  "restock",
+                  "damaged",
+                  "quarantine",
+                  "lost",
+                ],
+                "type": "string",
+              },
+            },
+            "required": [
+              "action",
+              "evidence",
+              "stockDisposition",
+            ],
+            "type": "object",
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "action": {
+                "enum": [
+                  "refund",
+                ],
+                "type": "string",
+              },
+              "evidence": {
+                "maxLength": 1000,
+                "minLength": 10,
+                "type": "string",
+              },
+            },
+            "required": [
+              "action",
+              "evidence",
+            ],
+            "type": "object",
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "action": {
+                "enum": [
+                  "no_refund",
+                ],
+                "type": "string",
+              },
+              "evidence": {
+                "maxLength": 1000,
+                "minLength": 10,
+                "type": "string",
+              },
+            },
+            "required": [
+              "action",
+              "evidence",
+            ],
+            "type": "object",
+          },
+        ],
+      },
+      "GoodsReturnRead": {
+        "additionalProperties": false,
+        "properties": {
+          "eligibleUntil": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "events": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "action": {
+                  "type": "string",
+                },
+                "evidence": {},
+                "occurredAt": {
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                  "type": "string",
+                },
+                "version": {
+                  "exclusiveMinimum": true,
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+              },
+              "required": [
+                "action",
+                "evidence",
+                "occurredAt",
+                "version",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "lineId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "logisticsPayer": {
+            "enum": [
+              "customer",
+              "vendor",
+            ],
+            "type": "string",
+          },
+          "orderId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "policySnapshot": {
+            "additionalProperties": false,
+            "properties": {
+              "changeOfMindDays": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      7,
+                    ],
+                    "type": "number",
+                  },
+                  {
+                    "enum": [
+                      14,
+                    ],
+                    "type": "number",
+                  },
+                ],
+              },
+              "faultProtectionDays": {
+                "enum": [
+                  30,
+                ],
+                "type": "number",
+              },
+              "restockingFeeCents": {
+                "enum": [
+                  0,
+                ],
+                "type": "number",
+              },
+              "returnTemplate": {
+                "enum": [
+                  "standard",
+                  "flexible",
+                ],
+                "type": "string",
+              },
+              "startsAt": {
+                "enum": [
+                  "verified_handoff",
+                ],
+                "type": "string",
+              },
+            },
+            "required": [
+              "returnTemplate",
+              "changeOfMindDays",
+              "faultProtectionDays",
+              "restockingFeeCents",
+              "startsAt",
+            ],
+            "type": "object",
+          },
+          "quantity": {
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "reason": {
+            "enum": [
+              "change_of_mind",
+              "fault",
+              "wrong_item",
+              "material_misdescription",
+            ],
+            "type": "string",
+          },
+          "refund": {
+            "additionalProperties": false,
+            "nullable": true,
+            "properties": {
+              "amountCents": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "refundId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "state": {
+                "enum": [
+                  "pending",
+                  "succeeded",
+                ],
+                "type": "string",
+              },
+            },
+            "required": [
+              "refundId",
+              "amountCents",
+              "state",
+            ],
+            "type": "object",
+          },
+          "returnId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "state": {
+            "enum": [
+              "submitted",
+              "approved",
+              "declined",
+              "in_transit",
+              "received",
+              "inspected",
+              "refund_pending",
+              "refunded",
+              "resolved_no_refund",
+            ],
+            "type": "string",
+          },
+          "unused": {
+            "type": "boolean",
+          },
+          "verifiedHandoffAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "version": {
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "returnId",
+          "orderId",
+          "lineId",
+          "quantity",
+          "reason",
+          "unused",
+          "state",
+          "version",
+          "policySnapshot",
+          "verifiedHandoffAt",
+          "eligibleUntil",
+          "logisticsPayer",
+          "refund",
+          "events",
+        ],
+        "type": "object",
+      },
+      "GoodsReturnResult": {
+        "additionalProperties": false,
+        "properties": {
+          "eligibleUntil": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "events": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "action": {
+                  "type": "string",
+                },
+                "evidence": {},
+                "occurredAt": {
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                  "type": "string",
+                },
+                "version": {
+                  "exclusiveMinimum": true,
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+              },
+              "required": [
+                "action",
+                "evidence",
+                "occurredAt",
+                "version",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "lineId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "logisticsPayer": {
+            "enum": [
+              "customer",
+              "vendor",
+            ],
+            "type": "string",
+          },
+          "orderId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "policySnapshot": {
+            "additionalProperties": false,
+            "properties": {
+              "changeOfMindDays": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      7,
+                    ],
+                    "type": "number",
+                  },
+                  {
+                    "enum": [
+                      14,
+                    ],
+                    "type": "number",
+                  },
+                ],
+              },
+              "faultProtectionDays": {
+                "enum": [
+                  30,
+                ],
+                "type": "number",
+              },
+              "restockingFeeCents": {
+                "enum": [
+                  0,
+                ],
+                "type": "number",
+              },
+              "returnTemplate": {
+                "enum": [
+                  "standard",
+                  "flexible",
+                ],
+                "type": "string",
+              },
+              "startsAt": {
+                "enum": [
+                  "verified_handoff",
+                ],
+                "type": "string",
+              },
+            },
+            "required": [
+              "returnTemplate",
+              "changeOfMindDays",
+              "faultProtectionDays",
+              "restockingFeeCents",
+              "startsAt",
+            ],
+            "type": "object",
+          },
+          "quantity": {
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "reason": {
+            "enum": [
+              "change_of_mind",
+              "fault",
+              "wrong_item",
+              "material_misdescription",
+            ],
+            "type": "string",
+          },
+          "refund": {
+            "additionalProperties": false,
+            "nullable": true,
+            "properties": {
+              "amountCents": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "refundId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "state": {
+                "enum": [
+                  "pending",
+                  "succeeded",
+                ],
+                "type": "string",
+              },
+            },
+            "required": [
+              "refundId",
+              "amountCents",
+              "state",
+            ],
+            "type": "object",
+          },
+          "replayed": {
+            "type": "boolean",
+          },
+          "returnId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "state": {
+            "enum": [
+              "submitted",
+              "approved",
+              "declined",
+              "in_transit",
+              "received",
+              "inspected",
+              "refund_pending",
+              "refunded",
+              "resolved_no_refund",
+            ],
+            "type": "string",
+          },
+          "unused": {
+            "type": "boolean",
+          },
+          "verifiedHandoffAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "version": {
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+        },
+        "required": [
+          "returnId",
+          "orderId",
+          "lineId",
+          "quantity",
+          "reason",
+          "unused",
+          "state",
+          "version",
+          "policySnapshot",
+          "verifiedHandoffAt",
+          "eligibleUntil",
+          "logisticsPayer",
+          "refund",
+          "events",
+          "replayed",
+        ],
+        "type": "object",
+      },
+      "GoodsReturnSubmitCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "evidence": {
+            "maxLength": 1000,
+            "minLength": 10,
+            "type": "string",
+          },
+          "lineId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "quantity": {
+            "exclusiveMinimum": true,
+            "maximum": 1000,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "reason": {
+            "enum": [
+              "change_of_mind",
+              "fault",
+              "wrong_item",
+              "material_misdescription",
+            ],
+            "type": "string",
+          },
+          "unused": {
+            "type": "boolean",
+          },
+        },
+        "required": [
+          "lineId",
+          "quantity",
+          "reason",
+          "unused",
+          "evidence",
+        ],
+        "type": "object",
+      },
       "GoodsVendorOrderRead": {
         "additionalProperties": false,
         "properties": {
@@ -10110,6 +10726,61 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
       },
     },
+    "/v1/customer/goods/orders/{orderId}/returns": {
+      "post": {
+        "operationId": "AppController_submitGoodsReturn",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "orderId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoodsReturnSubmitCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoodsReturnResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Submit an eligible exact goods line quantity after verified handoff.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
     "/v1/customer/goods/payments": {
       "post": {
         "operationId": "AppController_startGoodsPayment",
@@ -10326,6 +10997,98 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
         ],
         "summary": "Quote goods across Vendor groups with current stock, prices, fulfillment and policy snapshots. No stock is reserved.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/customer/goods/returns/{returnId}": {
+      "get": {
+        "operationId": "AppController_customerReadReturn",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "returnId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoodsReturnRead",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Read scoped return evidence and current refund reconciliation.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/customer/goods/returns/{returnId}/actions": {
+      "post": {
+        "operationId": "AppController_customerReturnAction",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "returnId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoodsReturnActionCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoodsReturnResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Record scoped customer return lifecycle evidence or inspection outcome.",
         "tags": [
           "foundation",
         ],
@@ -12704,6 +13467,98 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
         ],
         "summary": "Read existing fulfillment for an assigned Owner or explicitly enabled Fulfillment Staff. Customer code is omitted.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/vendor/goods/returns/{returnId}": {
+      "get": {
+        "operationId": "AppController_vendorReadReturn",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "returnId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoodsReturnRead",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Read scoped return evidence and current refund reconciliation.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/vendor/goods/returns/{returnId}/actions": {
+      "post": {
+        "operationId": "AppController_vendorReturnAction",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "returnId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoodsReturnActionCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoodsReturnResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Record scoped vendor return lifecycle evidence or inspection outcome.",
         "tags": [
           "foundation",
         ],

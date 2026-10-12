@@ -26,6 +26,7 @@ import { AccessDeniedError, assertScope } from './access.js'
 import { GoodsCancellation } from './goods-cancellation.js'
 import { GoodsDelivery } from './goods-delivery.js'
 import { GoodsPickup } from './goods-pickup.js'
+import { GoodsReturns } from './goods-returns.js'
 import { goodsAudit, GoodsCheckoutConflictError, type GoodsDependencies, goodsEmit } from './goods-support.js'
 import { stableHash } from './idempotency.js'
 import { LocalGoodsPaymentAdapter } from './local-goods-payment.js'
@@ -41,12 +42,14 @@ export { GoodsCheckoutConflictError } from './goods-support.js'
 
 /** Goods-only quote, reservation and controlled local payment commitment lifecycle. */
 export class GoodsCheckout {
+	private readonly returns: GoodsReturns
 	private readonly delivery: GoodsDelivery
 	private readonly pickup: GoodsPickup
 	private readonly cancellations: GoodsCancellation
 	private readonly payments: LocalGoodsPaymentAdapter
 	constructor(private readonly dependencies: GoodsDependencies) {
 		this.cancellations = new GoodsCancellation(dependencies)
+		this.returns = new GoodsReturns(dependencies, this.cancellations)
 		this.delivery = new GoodsDelivery(dependencies, this.cancellations)
 		this.pickup = new GoodsPickup(dependencies, this.cancellations)
 		this.payments = dependencies.payments ?? new LocalGoodsPaymentAdapter()
@@ -859,6 +862,15 @@ export class GoodsCheckout {
 		return this.delivery.read(sessionId, id, customer)
 	}
 
+	submitGoodsReturn(sessionId: string | undefined, key: string | undefined, orderId: string, input: unknown) {
+		return this.returns.submit(sessionId, key, orderId, input)
+	}
+	actOnGoodsReturn(sessionId: string | undefined, key: string | undefined, id: string, input: unknown, actor: 'customer' | 'vendor') {
+		return this.returns.action(sessionId, key, id, input, actor)
+	}
+	readGoodsReturn(sessionId: string | undefined, id: string, actor: 'customer' | 'vendor') {
+		return this.returns.read(sessionId, id, actor)
+	}
 	acknowledgeDelivery(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
 		return this.delivery.acknowledge(sessionId, key, id, input)
 	}

@@ -535,6 +535,67 @@ export class AppController {
 		return this.foundation.inspectGoodsPickup(sessionId, key, id, body)
 	}
 
+	@Post('customer/goods/orders/:orderId/returns')
+	@ApiOperation({ summary: 'Submit an eligible exact goods line quantity after verified handoff.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiParam({ name: 'orderId', schema: { type: 'string', format: 'uuid' } })
+	@ApiBody({ schema: OpenApiSchemaRefs.goodsReturnSubmitCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.goodsReturnResult })
+	submitGoodsReturn(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('orderId') id: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.submitGoodsReturn(sessionId, key, id, body)
+	}
+	@Post('customer/goods/returns/:returnId/actions')
+	@ApiOperation({ summary: 'Record scoped customer return lifecycle evidence or inspection outcome.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiParam({ name: 'returnId', schema: { type: 'string', format: 'uuid' } })
+	@ApiBody({ schema: OpenApiSchemaRefs.goodsReturnActionCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.goodsReturnResult })
+	customerReturnAction(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('returnId') id: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.actOnGoodsReturn(sessionId, key, id, body, 'customer')
+	}
+	@Get('customer/goods/returns/:returnId')
+	@ApiOperation({ summary: 'Read scoped return evidence and current refund reconciliation.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiParam({ name: 'returnId', schema: { type: 'string', format: 'uuid' } })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.goodsReturnRead })
+	customerReadReturn(@AuthenticatedSession() sessionId: string | undefined, @Param('returnId') id: string) {
+		return this.foundation.readGoodsReturn(sessionId, id, 'customer')
+	}
+	@Post('vendor/goods/returns/:returnId/actions')
+	@ApiOperation({ summary: 'Record scoped vendor return lifecycle evidence or inspection outcome.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiParam({ name: 'returnId', schema: { type: 'string', format: 'uuid' } })
+	@ApiBody({ schema: OpenApiSchemaRefs.goodsReturnActionCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.goodsReturnResult })
+	vendorReturnAction(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('returnId') id: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.actOnGoodsReturn(sessionId, key, id, body, 'vendor')
+	}
+	@Get('vendor/goods/returns/:returnId')
+	@ApiOperation({ summary: 'Read scoped return evidence and current refund reconciliation.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiParam({ name: 'returnId', schema: { type: 'string', format: 'uuid' } })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.goodsReturnRead })
+	vendorReadReturn(@AuthenticatedSession() sessionId: string | undefined, @Param('returnId') id: string) {
+		return this.foundation.readGoodsReturn(sessionId, id, 'vendor')
+	}
 	@Post('customer/goods/fulfillments/:fulfillmentId/delivery-acknowledgements')
 	@ApiOperation({ summary: 'Record Customer confirmation for an address correction or witnessed handoff.' })
 	@ApiSecurity('junction-auth-cookie')

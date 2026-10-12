@@ -1099,3 +1099,48 @@ export const GoodsDeliveryAcknowledgementCommandSchema = z.discriminatedUnion('p
 export const GoodsDeliveryAcknowledgementResultSchema = z
 	.object({ acknowledgementId: z.string().uuid(), fulfillmentId: z.string().uuid(), purpose: z.enum(['correction', 'handoff']), replayed: z.boolean() })
 	.strict()
+
+export const GoodsReturnSubmitCommandSchema = z
+	.object({
+		lineId: z.string().uuid(),
+		quantity: z.number().int().positive().max(1000),
+		reason: z.enum(['change_of_mind', 'fault', 'wrong_item', 'material_misdescription']),
+		unused: z.boolean(),
+		evidence: GoodsEvidenceTextSchema,
+	})
+	.strict()
+export const GoodsReturnActionCommandSchema = z.discriminatedUnion('action', [
+	z.object({ action: z.literal('approve'), instructions: GoodsEvidenceTextSchema }).strict(),
+	z.object({ action: z.literal('decline'), evidence: GoodsEvidenceTextSchema }).strict(),
+	z.object({ action: z.literal('ship'), evidence: GoodsEvidenceTextSchema }).strict(),
+	z.object({ action: z.literal('receive'), evidence: GoodsEvidenceTextSchema }).strict(),
+	z
+		.object({ action: z.literal('inspect'), evidence: GoodsEvidenceTextSchema, stockDisposition: z.enum(['restock', 'damaged', 'quarantine', 'lost']) })
+		.strict(),
+	z.object({ action: z.literal('refund'), evidence: GoodsEvidenceTextSchema }).strict(),
+	z.object({ action: z.literal('no_refund'), evidence: GoodsEvidenceTextSchema }).strict(),
+])
+export const GoodsReturnReadSchema = z
+	.object({
+		returnId: z.string().uuid(),
+		orderId: z.string().uuid(),
+		lineId: z.string().uuid(),
+		quantity: z.number().int().positive(),
+		reason: GoodsReturnSubmitCommandSchema.shape.reason,
+		unused: z.boolean(),
+		state: z.enum(['submitted', 'approved', 'declined', 'in_transit', 'received', 'inspected', 'refund_pending', 'refunded', 'resolved_no_refund']),
+		version: z.number().int().positive(),
+		policySnapshot: GoodsQuoteSnapshotSchema.shape.groups.element.shape.lines.element.shape.policy,
+		verifiedHandoffAt: z.string().datetime(),
+		eligibleUntil: z.string().datetime(),
+		logisticsPayer: z.enum(['customer', 'vendor']),
+		refund: z
+			.object({ refundId: z.string().uuid(), amountCents: z.number().int().nonnegative(), state: z.enum(['pending', 'succeeded']) })
+			.strict()
+			.nullable(),
+		events: z.array(
+			z.object({ action: z.string(), evidence: z.unknown(), occurredAt: z.string().datetime(), version: z.number().int().positive() }).strict(),
+		),
+	})
+	.strict()
+export const GoodsReturnResultSchema = GoodsReturnReadSchema.extend({ replayed: z.boolean() })

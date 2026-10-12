@@ -451,6 +451,59 @@ try {
 		'Built local delivery progress smoke passed: dispatch replay, failure, outside-zone correction denial, one corrected retry, private Customer proof and one-time delivered handoff.',
 	)
 
+	const returnKey = randomUUID(),
+		returnCommand = {
+			lineId: deliveryPurchase.body.orders[0].lines[0].lineId,
+			quantity: 1,
+			reason: 'fault',
+			unused: false,
+			evidence: 'The delivered unit has a documented fault requiring return.',
+		}
+	const submittedReturn = await goodsRequest(`/customer/goods/orders/${deliveryPurchase.body.orders[0].orderId}/returns`, 'POST', returnCommand, returnKey)
+	assert.equal(submittedReturn.status, 201, JSON.stringify(submittedReturn.body))
+	assert.equal(
+		(await goodsRequest(`/customer/goods/orders/${deliveryPurchase.body.orders[0].orderId}/returns`, 'POST', returnCommand, returnKey)).body.replayed,
+		true,
+	)
+	const returnId = submittedReturn.body.returnId,
+		returnPath = `/vendor/goods/returns/${returnId}/actions`
+	assert.equal((await goodsRequest(returnPath, 'POST', { action: 'refund', evidence: 'No inspection has been completed yet.' })).status, 409)
+	assert.equal(
+		(await goodsRequest(returnPath, 'POST', { action: 'approve', instructions: 'Return the faulty unit to the paid fulfillment Location.' })).status,
+		201,
+	)
+	assert.equal(
+		(
+			await goodsRequest(`/customer/goods/returns/${returnId}/actions`, 'POST', {
+				action: 'ship',
+				evidence: 'Customer handed the unit to the return carrier.',
+			})
+		).status,
+		201,
+	)
+	assert.equal((await goodsRequest(returnPath, 'POST', { action: 'receive', evidence: 'The approved faulty quantity was received intact.' })).status, 201)
+	assert.equal(
+		(
+			await goodsRequest(returnPath, 'POST', {
+				action: 'inspect',
+				evidence: 'The fault was verified and the unit quarantined.',
+				stockDisposition: 'quarantine',
+			})
+		).status,
+		201,
+	)
+	const refundKey = randomUUID(),
+		refundCommand = { action: 'refund', evidence: 'Inspection confirms eligibility for this exact return refund.' }
+	const returnRefund = await goodsRequest(returnPath, 'POST', refundCommand, refundKey)
+	assert.equal(returnRefund.status, 201, JSON.stringify(returnRefund.body))
+	assert.equal(returnRefund.body.state, 'refund_pending')
+	assert.equal((await goodsRequest(returnPath, 'POST', refundCommand, refundKey)).body.replayed, true)
+	await repository.reconcileGoodsRefunds()
+	assert.equal((await goodsRequest(`/customer/goods/returns/${returnId}`, 'GET')).body.state, 'refunded')
+	console.log(
+		'Built local goods return smoke passed: Customer submit/replay, scoped approval/shipment/receipt/inspection, out-of-order denial, exact refund replay and provider reconciliation.',
+	)
+
 	await repository.db.vendor.update({ where: { id: vendor.id }, data: { applicationState: 'restricted' } })
 	assert.equal((await goodsRequest(`/vendor/goods/orders/${order.orderId}`, 'GET')).status, 200)
 	assert.equal(

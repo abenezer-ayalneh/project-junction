@@ -621,6 +621,15 @@ export class PostgresFoundation {
 		return this.goods.readDelivery(sessionId, id, customer)
 	}
 
+	submitGoodsReturn(sessionId: string | undefined, key: string | undefined, orderId: string, input: unknown) {
+		return this.goods.submitGoodsReturn(sessionId, key, orderId, input)
+	}
+	actOnGoodsReturn(sessionId: string | undefined, key: string | undefined, id: string, input: unknown, actor: 'customer' | 'vendor') {
+		return this.goods.actOnGoodsReturn(sessionId, key, id, input, actor)
+	}
+	readGoodsReturn(sessionId: string | undefined, id: string, actor: 'customer' | 'vendor') {
+		return this.goods.readGoodsReturn(sessionId, id, actor)
+	}
 	acknowledgeDelivery(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
 		return this.goods.acknowledgeDelivery(sessionId, key, id, input)
 	}
