@@ -5,6 +5,10 @@ import {
 	ActiveVendorSelectionResultSchema,
 	ActiveVendorSelectionSchema,
 	ApiErrorSchema,
+	BookingHoldCommandSchema,
+	BookingHoldReadSchema,
+	BookingHoldReleaseResultSchema,
+	BookingHoldResultSchema,
 	CatalogHealthSchema,
 	CatalogImportCommandSchema,
 	CatalogImportResultSchema,
@@ -109,6 +113,11 @@ function schemaFor(schema: z.ZodType): SchemaObject {
 }
 
 export const OpenApiSchemaRefs = {
+	bookingHoldCommand: { $ref: '#/components/schemas/BookingHoldCommand' },
+	bookingHoldRead: { $ref: '#/components/schemas/BookingHoldRead' },
+	bookingHoldResult: { $ref: '#/components/schemas/BookingHoldResult' },
+	bookingHoldReleaseResult: { $ref: '#/components/schemas/BookingHoldReleaseResult' },
+
 	locationScheduleCommand: { $ref: '#/components/schemas/LocationScheduleCommand' },
 	locationScheduleResult: { $ref: '#/components/schemas/LocationScheduleResult' },
 	staffScheduleCommand: { $ref: '#/components/schemas/StaffScheduleCommand' },
@@ -232,6 +241,11 @@ function publicSchemas(): Record<string, SchemaObject> {
 		CatalogHealth: schemaFor(CatalogHealthSchema),
 		CustomerDiscoveryState: schemaFor(CustomerDiscoveryStateSchema),
 		HealthResponse: schemaFor(HealthResponseSchema),
+		BookingHoldCommand: schemaFor(BookingHoldCommandSchema),
+		BookingHoldRead: schemaFor(BookingHoldReadSchema),
+		BookingHoldResult: schemaFor(BookingHoldResultSchema),
+		BookingHoldReleaseResult: schemaFor(BookingHoldReleaseResultSchema),
+
 		LocationScheduleCommand: schemaFor(LocationScheduleCommandSchema),
 		LocationScheduleResult: schemaFor(LocationScheduleResultSchema),
 		StaffScheduleCommand: schemaFor(StaffScheduleCommandSchema),

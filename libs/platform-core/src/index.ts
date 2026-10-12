@@ -1,4 +1,5 @@
 export * from './lib/access.js'
+export { BookingHoldConflictError } from './lib/booking-holds.js'
 export * from './lib/didit.js'
 export * from './lib/external-effects.js'
 export { GoodsCheckoutConflictError } from './lib/goods-checkout.js'

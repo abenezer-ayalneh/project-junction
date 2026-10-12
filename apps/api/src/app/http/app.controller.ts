@@ -243,6 +243,42 @@ export class AppController {
 		return this.foundation.followVendor(sessionId, vendorId, body.following === true)
 	}
 
+	@Post('customer/bookings/holds')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({
+		summary: 'Revalidate current Service terms and atomically hold one qualified Staff for fifteen minutes. No Booking or payment is committed.',
+	})
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.bookingHoldCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.bookingHoldResult })
+	createBookingHold(@AuthenticatedSession() sessionId: string | undefined, @Headers('idempotency-key') key: string | undefined, @Body() body: unknown) {
+		return this.foundation.createBookingHold(sessionId, key, body)
+	}
+
+	@Get('customer/bookings/holds/:holdId')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Read a Customer-owned appointment hold and its accepted terms; exact expiry frees capacity once.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.bookingHoldRead })
+	readBookingHold(@AuthenticatedSession() sessionId: string | undefined, @Param('holdId') holdId: string) {
+		return this.foundation.readBookingHold(sessionId, holdId)
+	}
+
+	@Post('customer/bookings/holds/:holdId/release')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Release only the Customer’s uncommitted appointment hold; retries never allocate again.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.bookingHoldReleaseResult })
+	releaseBookingHold(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('holdId') holdId: string,
+	) {
+		return this.foundation.releaseBookingHold(sessionId, key, holdId)
+	}
+
 	@Post('public/listings/:listingId/slots')
 	@Header('Cache-Control', 'no-store')
 	@HttpCode(200)

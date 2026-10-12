@@ -1,7 +1,13 @@
 import { randomUUID } from 'node:crypto'
 
 import { type ArgumentsHost, Catch, type ExceptionFilter, HttpException, HttpStatus, Logger, type LoggerService } from '@nestjs/common'
-import { AccessDeniedError, GoodsCheckoutConflictError, IdempotencyConflictError, ServiceDefinitionConflictError } from 'platform-core'
+import {
+	AccessDeniedError,
+	BookingHoldConflictError,
+	GoodsCheckoutConflictError,
+	IdempotencyConflictError,
+	ServiceDefinitionConflictError,
+} from 'platform-core'
 
 import type { RequestWithContext } from './request-context'
 
@@ -38,7 +44,11 @@ export class ApiExceptionFilter implements ExceptionFilter {
 			return { status: 409, code: exception.code, message: exception.message }
 		}
 
-		if (exception instanceof GoodsCheckoutConflictError || exception instanceof ServiceDefinitionConflictError) {
+		if (
+			exception instanceof BookingHoldConflictError ||
+			exception instanceof GoodsCheckoutConflictError ||
+			exception instanceof ServiceDefinitionConflictError
+		) {
 			return { status: 409, code: exception.code, message: exception.message }
 		}
 

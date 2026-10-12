@@ -57,6 +57,16 @@ export class FoundationService {
 		this.durable = new PostgresFoundation(this.databaseUrl())
 	}
 
+	createBookingHold(sessionId: string | undefined, key: string | undefined, input: unknown) {
+		return this.durable.createBookingHold(sessionId, key, input)
+	}
+	readBookingHold(sessionId: string | undefined, holdId: string) {
+		return this.durable.readBookingHold(sessionId, holdId)
+	}
+	releaseBookingHold(sessionId: string | undefined, key: string | undefined, holdId: string) {
+		return this.durable.releaseBookingHold(sessionId, key, holdId)
+	}
+
 	readLocationSchedule(sessionId: string | undefined, locationId: string) {
 		return this.durable.readLocationSchedule(sessionId, locationId)
 	}

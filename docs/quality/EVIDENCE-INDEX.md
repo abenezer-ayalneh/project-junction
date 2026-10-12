@@ -29,3 +29,7 @@ Phase 02 local requirement/scenario coverage and unresolved formal gates are con
 ## Phase 03 local authoritative availability — 2026-10-12
 
 [P03-C02 local evidence](./PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c02--authoritative-slot-calculation--2026-10-12) and [verification record](./evidence/phase-03-c02-2026-10-12/verification.json) record timezone-aware hours/date exceptions/breaks, duration/buffers, lead/horizon, current qualification/mode and controlled allocation filtering. Unit, PostgreSQL/HTTP, audited Scheduler CLI, migration and workspace checks pass. Atomic hold/no-double-booking, paid Booking, provider, UI and formal phase acceptance remain open. Next is C03.
+
+## Phase 03 local atomic Staff reservation — 2026-10-12
+
+[C03 local evidence](./PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c03--atomic-namedany-staff-holds--2026-10-12) and [verification record](./evidence/phase-03-c03-2026-10-12/verification.json) record local no-double-booking allocation/concurrency, private any-Staff, current revalidation, fixed deadline, release/worker expiry, retry and rollback proof. PostgreSQL/HTTP, actual worker, migration and workspace checks pass. UI, paid Booking/policies/providers, mixed checkout and formal phase exit remain open. Next is C04.

@@ -8,6 +8,7 @@ import {
 	ServiceSchedulingRulesCommandSchema,
 	ServiceSchedulingRulesResultSchema,
 	ServiceSchedulingRulesSchema,
+	type ServiceSlotSelection,
 	ServiceSlotSelectionSchema,
 	ServiceSlotsResultSchema,
 	type StaffSchedule,
@@ -162,93 +163,117 @@ export class ServiceScheduling {
 	async slots(idInput: string, input: unknown) {
 		const listingId = z.string().uuid().parse(idInput)
 		const selection = ServiceSlotSelectionSchema.parse(input)
-		return this.dependencies.db.$transaction(
-			async (tx) => {
-				const now = this.dependencies.now()
-				const listing = await tx.listing.findFirst({
-					where: {
-						id: listingId,
-						kind: 'service',
-						state: 'published',
-						vendor: { applicationState: 'approved', publishedAt: { not: null }, workspace: { kind: 'real' } },
-					},
-					include: { vendor: { include: { staff: true, locations: true } } },
-				})
-				if (!listing?.serviceConfiguration || !listing.schedulingRules) throw new AccessDeniedError()
-				const configuration = ServiceConfigurationSchema.parse(listing.serviceConfiguration)
-				const rules = ServiceSchedulingRulesSchema.parse(listing.schedulingRules)
-				const option = configuration.options.find((value) => value.id === selection.optionId)
-				if (!option || (selection.mode === 'online' ? !option.online : !option.locationIds.includes(selection.locationId ?? '')))
-					throw new AccessDeniedError()
-				const addons = selection.addonIds.map((addonId) => option.addons.find((addon) => addon.id === addonId))
-				if (addons.some((addon) => !addon)) throw new AccessDeniedError()
-				const durationMinutes = option.durationMinutes + addons.reduce((sum, addon) => sum + (addon?.durationMinutes ?? 0), 0)
-				const priceCents = option.priceCents + addons.reduce((sum, addon) => sum + (addon?.priceCents ?? 0), 0)
-				const location = selection.locationId ? listing.vendor.locations.find((value) => value.id === selection.locationId) : undefined
-				if (selection.mode === 'in_person' && (!location?.scheduleCalendar || !location.label || !location.city)) throw new AccessDeniedError()
-				const locationCalendar = location?.scheduleCalendar ? ScheduleCalendarSchema.parse(location.scheduleCalendar) : undefined
-				const qualifiedIds = option.qualifications
-					.filter((value) => (selection.mode === 'online' ? value.online : value.locationIds.includes(selection.locationId ?? '')))
-					.map((value) => value.staffId)
-				const qualified = listing.vendor.staff.filter((staff) => qualifiedIds.includes(staff.id))
-				if (
-					selection.staffId &&
-					!qualified.some((staff) => staff.id === selection.staffId && staff.publicConsentAt && staff.userId && staff.displayName)
-				)
-					throw new AccessDeniedError()
-				const selectedStaff = qualified.filter((staff) => !selection.staffId || staff.id === selection.staffId)
-				const from = new Date(selection.from)
-				const to = new Date(selection.to)
-				const rangeStart = new Date(from.getTime() - option.bufferBeforeMinutes * 60_000)
-				const rangeEnd = new Date(to.getTime() + (durationMinutes + option.bufferAfterMinutes) * 60_000)
-				// Occupancy spans all Services, Locations and modes for each concrete Staff member.
-				const allocations = await tx.staffAllocation.findMany({
-					where: {
-						staffId: { in: selectedStaff.map((staff) => staff.id) },
-						startAt: { lt: rangeEnd },
-						endAt: { gt: rangeStart },
-						OR: [{ state: 'booked' }, { state: 'held', expiresAt: { gt: now } }],
-					},
-				})
-				const staffCalendars = selectedStaff.flatMap((staff) => {
-					if (!staff.schedule) return []
-					const scope = StaffScheduleSchema.parse(staff.schedule).scopes.find(
-						(scope) => scope.mode === selection.mode && scope.locationId === selection.locationId,
-					)
-					return scope ? [{ calendar: scope.calendar, allocations: allocations.filter((allocation) => allocation.staffId === staff.id) }] : []
-				})
-				const timezone = locationCalendar?.timezone ?? rules.timezone
-				const slots = calculateSlots({
-					from,
-					to,
-					now,
-					rules,
-					timezone,
-					durationMinutes,
-					bufferBeforeMinutes: option.bufferBeforeMinutes,
-					bufferAfterMinutes: option.bufferAfterMinutes,
-					locationCalendar,
-					staff: staffCalendars,
-				})
-				return ServiceSlotsResultSchema.parse({
-					listingId,
-					optionId: option.id,
-					mode: selection.mode,
-					locationId: selection.locationId,
-					staffId: selection.staffId,
-					timezone,
-					configurationVersion: listing.serviceConfigurationVersion,
-					rulesVersion: listing.schedulingRulesVersion,
-					evaluatedAt: now.toISOString(),
-					durationMinutes,
-					priceCents,
-					bufferBeforeMinutes: option.bufferBeforeMinutes,
-					bufferAfterMinutes: option.bufferAfterMinutes,
-					reserved: false,
-					slots,
-				})
+		return this.dependencies.db.$transaction(async (tx) => (await this.evaluate(tx, listingId, selection, this.dependencies.now())).result, {
+			isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
+			timeout: 30_000,
+		})
+	}
+	/** Shared current-state evaluator; holds call this after the capacity/Vendor lock. */
+	async evaluate(tx: Transaction, listingId: string, selection: ServiceSlotSelection, now: Date, chooseAt?: string) {
+		const listing = await tx.listing.findFirst({
+			where: {
+				id: listingId,
+				kind: 'service',
+				state: 'published',
+				vendor: { applicationState: 'approved', publishedAt: { not: null }, workspace: { kind: 'real' } },
 			},
-			{ isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead, timeout: 30_000 },
-		)
+			include: { vendor: { include: { staff: true, locations: true } } },
+		})
+		if (!listing?.serviceConfiguration || !listing.schedulingRules) throw new AccessDeniedError()
+		const configuration = ServiceConfigurationSchema.parse(listing.serviceConfiguration)
+		const rules = ServiceSchedulingRulesSchema.parse(listing.schedulingRules)
+		const option = configuration.options.find((value) => value.id === selection.optionId)
+		if (!option || (selection.mode === 'online' ? !option.online : !option.locationIds.includes(selection.locationId ?? ''))) throw new AccessDeniedError()
+		const addons = selection.addonIds.map((addonId) => option.addons.find((addon) => addon.id === addonId))
+		if (addons.some((addon) => !addon)) throw new AccessDeniedError()
+		const durationMinutes = option.durationMinutes + addons.reduce((sum, addon) => sum + (addon?.durationMinutes ?? 0), 0)
+		const priceCents = option.priceCents + addons.reduce((sum, addon) => sum + (addon?.priceCents ?? 0), 0)
+		const location = selection.locationId ? listing.vendor.locations.find((value) => value.id === selection.locationId) : undefined
+		if (selection.mode === 'in_person' && (!location?.scheduleCalendar || !location.label || !location.city)) throw new AccessDeniedError()
+		const locationCalendar = location?.scheduleCalendar ? ScheduleCalendarSchema.parse(location.scheduleCalendar) : undefined
+		const qualifiedIds = option.qualifications
+			.filter((value) => (selection.mode === 'online' ? value.online : value.locationIds.includes(selection.locationId ?? '')))
+			.map((value) => value.staffId)
+		const qualified = listing.vendor.staff.filter((staff) => qualifiedIds.includes(staff.id))
+		if (selection.staffId && !qualified.some((staff) => staff.id === selection.staffId && staff.publicConsentAt && staff.userId && staff.displayName))
+			throw new AccessDeniedError()
+		const selectedStaff = qualified.filter((staff) => !selection.staffId || staff.id === selection.staffId)
+		const from = new Date(selection.from)
+		const to = new Date(selection.to)
+		const rangeStart = new Date(from.getTime() - option.bufferBeforeMinutes * 60_000)
+		const rangeEnd = new Date(to.getTime() + (durationMinutes + option.bufferAfterMinutes) * 60_000)
+		// Occupancy spans all Services, Locations and modes for each concrete Staff member.
+		const allocations = await tx.staffAllocation.findMany({
+			where: {
+				staffId: { in: selectedStaff.map((staff) => staff.id) },
+				startAt: { lt: rangeEnd },
+				endAt: { gt: rangeStart },
+				OR: [{ state: 'booked' }, { state: 'held', expiresAt: { gt: now } }],
+			},
+		})
+		const staffCalendars = selectedStaff.flatMap((staff) => {
+			if (!staff.schedule) return []
+			const scope = StaffScheduleSchema.parse(staff.schedule).scopes.find(
+				(scope) => scope.mode === selection.mode && scope.locationId === selection.locationId,
+			)
+			return scope ? [{ calendar: scope.calendar, allocations: allocations.filter((allocation) => allocation.staffId === staff.id) }] : []
+		})
+		const timezone = locationCalendar?.timezone ?? rules.timezone
+		const slots = calculateSlots({
+			from,
+			to,
+			now,
+			rules,
+			timezone,
+			durationMinutes,
+			bufferBeforeMinutes: option.bufferBeforeMinutes,
+			bufferAfterMinutes: option.bufferAfterMinutes,
+			locationCalendar,
+			staff: staffCalendars,
+		})
+		const result = ServiceSlotsResultSchema.parse({
+			listingId,
+			optionId: option.id,
+			mode: selection.mode,
+			locationId: selection.locationId,
+			staffId: selection.staffId,
+			timezone,
+			configurationVersion: listing.serviceConfigurationVersion,
+			rulesVersion: listing.schedulingRulesVersion,
+			evaluatedAt: now.toISOString(),
+			durationMinutes,
+			priceCents,
+			bufferBeforeMinutes: option.bufferBeforeMinutes,
+			bufferAfterMinutes: option.bufferAfterMinutes,
+			reserved: false,
+			slots,
+		})
+		const availableStaffIds = chooseAt
+			? selectedStaff
+					.filter((staff) => {
+						if (!staff.schedule) return false
+						const scope = StaffScheduleSchema.parse(staff.schedule).scopes.find(
+							(scope) => scope.mode === selection.mode && scope.locationId === selection.locationId,
+						)
+						return Boolean(
+							scope &&
+							calculateSlots({
+								from,
+								to,
+								now,
+								rules,
+								timezone,
+								durationMinutes,
+								bufferBeforeMinutes: option.bufferBeforeMinutes,
+								bufferAfterMinutes: option.bufferAfterMinutes,
+								locationCalendar,
+								staff: [{ calendar: scope.calendar, allocations: allocations.filter((allocation) => allocation.staffId === staff.id) }],
+							}).some((slot) => slot.start === chooseAt),
+						)
+					})
+					.map((staff) => staff.id)
+					.sort()
+			: []
+		return { result, availableStaffIds, listing, option, addons, location }
 	}
 }

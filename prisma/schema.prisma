@@ -8,6 +8,7 @@ datasource db {
 }
 
 model User {
+  bookingHolds BookingHold[]
   goodsCancellationGrants      GoodsCancellationGrant[]
   goodsPurchases               GoodsPurchase[]
   goodsQuotes                  GoodsQuote[]
@@ -30,6 +31,7 @@ model User {
 }
 
 model Workspace {
+  bookingHolds BookingHold[]
   goodsCancellationGrants      GoodsCancellationGrant[]
   goodsPurchases               GoodsPurchase[]
   goodsOrders                  GoodsVendorOrder[]
@@ -76,6 +78,7 @@ model Session {
 }
 
 model Vendor {
+  bookingHolds BookingHold[]
   goodsOrders           GoodsVendorOrder[]
   goodsHoldLines        GoodsHoldLine[]
   id                    String             @id @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -899,6 +902,8 @@ model GoodsReturnEvent {
 
 // Authoritative occupancy read seam. Hold/Booking lifecycle writes belong to later chunks.
 model StaffAllocation {
+  holdId String? @unique @map("hold_id") @db.Uuid
+  hold BookingHold? @relation(fields: [holdId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
   staffId String @map("staff_id") @db.Uuid
   startAt DateTime @map("start_at") @db.Timestamptz(6)
@@ -910,4 +915,24 @@ model StaffAllocation {
 
   @@index([staffId, startAt, endAt])
   @@map("staff_allocations")
+}
+
+model BookingHold {
+  id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  customerId String @map("customer_id") @db.Uuid
+  workspaceId String @map("workspace_id") @db.Uuid
+  vendorId String @map("vendor_id") @db.Uuid
+  state String @default("holding")
+  snapshot Json
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  releasedAt DateTime? @map("released_at") @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  customer User @relation(fields: [customerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  allocation StaffAllocation?
+
+  @@index([state, expiresAt])
+  @@index([customerId, workspaceId])
+  @@map("booking_holds")
 }

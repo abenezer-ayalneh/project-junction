@@ -31,6 +31,7 @@ function shutdown(): Promise<void> {
 async function tick() {
 	tickRunning = true
 	try {
+		await repository.expireBookingHolds()
 		await repository.expireGoodsHolds()
 		await repository.expireGoodsPickups()
 		await repository.expireGoodsDeliveries()

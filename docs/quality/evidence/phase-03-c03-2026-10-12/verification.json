@@ -1,0 +1,121 @@
+{
+	"date": "2026-10-12",
+	"chunk": "P03-C03",
+	"status": "complete_locally",
+	"baseline": "b73a76c5a2e091cc91b7b85484312a56ffdfaf3e",
+	"environment": "user local machine; loopback PostgreSQL/Redis; disposable schemas and identity fixtures; built API bound to 127.0.0.1; actual built worker",
+	"coverage": [
+		"REQ-P03-HOLD-001 atomic single-Staff hold/allocation",
+		"TST-P03-001 local allocation/concurrency/expiry/rollback portion only; formal lifecycle/phase exit remains open"
+	],
+	"checks": [
+		{
+			"command": "FOUNDATION_TEST_NAME=\"Phase 03 (atomic Booking holds|authoritative scheduling|Service definitions)\" pnpm nx run platform-core:test-integration (local .env loaded)",
+			"exitCode": 0,
+			"passed": 42,
+			"c03Passed": 18,
+			"c02RegressionPassed": 13,
+			"c01RegressionPassed": 11,
+			"unselected": 108,
+			"builtHttpSmokesPassed": 3,
+			"actualBuiltWorkerExpiry": "passed with loopback PostgreSQL/Redis",
+			"apiWorkerBuilds": "passed",
+			"existingApiWarnings": 6
+		},
+		{
+			"command": "pnpm nx run-many -t lint,typecheck,test --projects=contracts,platform-core,api,worker,web --parallel=3",
+			"exitCode": 0,
+			"unitPassed": 77,
+			"openApiSnapshotPassed": 1,
+			"existingWorkerSkipped": 1
+		},
+		{
+			"command": "pnpm db:compat:check (local .env loaded)",
+			"exitCode": 0,
+			"migrations": 36,
+			"schemaDifference": "none"
+		},
+		{
+			"command": "pnpm db:upgrade:check (local .env loaded)",
+			"exitCode": 0,
+			"populatedUpgrade": "passed",
+			"schemaDifference": "none"
+		},
+		{
+			"command": "pnpm db:migrate:local (loopback asserted)",
+			"exitCode": 0,
+			"migrationApplied": "20261012090000_atomic_booking_holds"
+		},
+		{
+			"command": "compare previous/current OpenAPI snapshot objects",
+			"result": "all existing endpoint/component schema contracts unchanged"
+		},
+		{
+			"command": "pnpm docs:check",
+			"exitCode": 0,
+			"manifestDocuments": 184
+		},
+		{
+			"command": "pnpm contracts:check",
+			"exitCode": 0
+		},
+		{
+			"command": "git diff --check",
+			"exitCode": 0
+		}
+	],
+	"invariants": {
+		"allocation": "exactly one unique hold-linked concrete Staff interval; fixed fifteen-minute deadline",
+		"terms": "current shared C02 revalidation; expected definition/rules versions; immutable accepted selection/commercial snapshot",
+		"privacy": "no private concrete Staff ID/name/allocation ID in any-Staff response; named requires current consent",
+		"capacity": "cross-Service/Location/mode Staff occupancy including both uniform buffers; half-open exact adjacency",
+		"database": "btree_gist UUID + tstzrange exclusion for held/booked; explicit expiry before reallocation",
+		"atomicity": "hold/allocation/audit/Customer+Vendor workspace outbox/replay outcomes commit or roll back together",
+		"replay": "original acceptance only; no renewal or resurrection; fresh GET returns current state",
+		"expiry": "server clock, exact deadline, read/create/worker recovery; no Customer session needed for worker expiry; 100 due holds per tick",
+		"authority": "strict verified-adult creation; Customer/original workspace read/release; release/expiry survive Vendor restriction",
+		"worker": "actual built tick expired a due hold and its allocation using loopback services"
+	},
+	"artifacts": [
+		{
+			"path": "libs/contracts/src/lib/booking-holds.ts",
+			"sha256": "f03bad2f59a644b08632b8c616fecdbc904f3dc0232cd6e8b341ceb06e9e170e"
+		},
+		{
+			"path": "libs/platform-core/src/lib/booking-holds.ts",
+			"sha256": "c9baaa565ccde4aa591028dbc9ccf7710c1d913d24b0a2ffcee89640bec4e78e"
+		},
+		{
+			"path": "libs/platform-core/src/lib/booking-holds.integration.ts",
+			"sha256": "8dbb0e220663ae4aabfdec45235cf39f12ea3730fd257290a36d092da41e638f"
+		},
+		{
+			"path": "libs/platform-core/src/lib/service-scheduling.ts",
+			"sha256": "fc8e293115a79fa51ab51e22617bd6252c08ef14f3b9827a88b12b5c75c41834"
+		},
+		{
+			"path": "tools/check-booking-holds.mjs",
+			"sha256": "9b7424205a93fbb519f6732a22e9b785e8f77792ed45df1bb206e36dd4525382"
+		},
+		{
+			"path": "apps/worker/src/main.ts",
+			"sha256": "f2485ad15785174045adf40b7a06b36597754203479b384b7f02acc1dcada366"
+		},
+		{
+			"path": "prisma/migrations/20261012090000_atomic_booking_holds/migration.sql",
+			"sha256": "0616c7ace912f89085a8d427a8ffb57da7de9fc5055c3a1031c5da59b01c3dda"
+		},
+		{
+			"path": "apps/api/src/app/http/__snapshots__/swagger.spec.ts.snap",
+			"sha256": "94c878eda270701017720291b361a50ab8d063ba61e1f0fe87b9867606910b09"
+		}
+	],
+	"limits": [
+		"One appointment intent only; Phase 04 mixed checkout is not implemented.",
+		"No charge, confirmed Booking, waitlist, meeting or UI workflow added in C03.",
+		"C04 and later phase chunks plus read-only iCal coverage, independent accessibility/provider/formal phase gates remain open.",
+		"Deterministic private Staff choice and shared checkout lock prove correctness locally, not fairness/throughput/public release.",
+		"Outbox proof records durable scoped lifecycle facts; remote delivery/provider acceptance is not claimed."
+	],
+	"nextChunk": "P03-C04"
+}

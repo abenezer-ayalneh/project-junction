@@ -1,6 +1,6 @@
 # Services, Staff Scheduling, and Bookings
 
-> **Status:** Service definitions/Staff qualification and authoritative slot calculation are locally verified under P03-C01–C02 (2026-10-12). Atomic holds, Booking and meeting integration remain planned and unverified.
+> **Status:** Service definitions, slot calculation and atomic Staff holds are locally verified under P03-C01–C03 (2026-10-12). Paid Booking and meeting integration remain planned and unverified.
 
 ## Service commercial model
 

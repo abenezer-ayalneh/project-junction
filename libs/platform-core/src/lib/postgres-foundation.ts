@@ -73,6 +73,7 @@ import {
 
 import { Prisma, PrismaClient } from '../../generated/prisma/index.js'
 import { AccessDeniedError, assertElevatedSession, assertRequiredMfa, assertScope } from './access.js'
+import { BookingHolds } from './booking-holds.js'
 import { CATALOG_CSV_HEADER, decodeCatalogCsvText, encodeCatalogCsvField, parseCatalogCsv } from './catalog-csv.js'
 import { DiditSandboxAdapter } from './didit.js'
 import { type ExternalEffectAdapter, UnconfiguredExternalEffectAdapter } from './external-effects.js'
@@ -135,6 +136,7 @@ function hasRequiredIdentity(user: { adultVerificationState: string; verifiedAt:
 /** Prisma owns CRUD; parameterized SQL below is restricted to concurrency locks/claims. */
 export class PostgresFoundation {
 	readonly db: PrismaClient
+	private readonly bookingHolds: BookingHolds
 	private readonly scheduling: ServiceScheduling
 	private readonly services: ServiceDefinitions
 	private readonly goods: GoodsCheckout
@@ -162,6 +164,16 @@ export class PostgresFoundation {
 			replay: (tx, context, key, method, request, create) => this.replayOrCreate(tx, context, key, method, request, create),
 			now: goodsClock,
 		})
+		this.bookingHolds = new BookingHolds(
+			{
+				db: this.db,
+				derive: (tx, sessionId, options) => this.derive(tx, sessionId, options),
+				lockWorkspace: (tx, id) => this.workspaceLock(tx, id),
+				replay: (tx, context, key, method, request, create) => this.replayOrCreate(tx, context, key, method, request, create),
+				now: goodsClock,
+			},
+			this.scheduling,
+		)
 		this.services = new ServiceDefinitions({
 			db: this.db,
 			derive: (tx, sessionId) => this.derive(tx, sessionId),
@@ -556,6 +568,19 @@ export class PostgresFoundation {
 			assertScope(context, { workspaceId: location.vendor.workspaceId, vendorId: location.vendorId, locationId: location.id })
 			return LocationReadSchema.parse({ id: location.id, vendorId: location.vendorId, workspaceId: location.vendor.workspaceId })
 		})
+	}
+
+	createBookingHold(sessionId: string | undefined, key: string | undefined, input: unknown) {
+		return this.bookingHolds.create(sessionId, key, input)
+	}
+	readBookingHold(sessionId: string | undefined, holdId: string) {
+		return this.bookingHolds.read(sessionId, holdId)
+	}
+	releaseBookingHold(sessionId: string | undefined, key: string | undefined, holdId: string) {
+		return this.bookingHolds.release(sessionId, key, holdId)
+	}
+	expireBookingHolds() {
+		return this.bookingHolds.expire()
 	}
 
 	readLocationSchedule(sessionId: string | undefined, locationId: string) {

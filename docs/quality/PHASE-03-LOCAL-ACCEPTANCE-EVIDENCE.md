@@ -1,6 +1,6 @@
 # Phase 03 local acceptance evidence
 
-**Recorded:** 2026-10-12. **Scope:** `P03-C01`–`P03-C02`, complete locally. Formal phase exit remains open.
+**Recorded:** 2026-10-12. **Scope:** `P03-C01`–`P03-C03`, complete locally. Formal phase exit remains open.
 
 Phase 00–01 entry dependencies have recorded local evidence; existing independent accessibility, retention, target storage/recovery and provider gates remain separate. All development and verification ran on the user's local machine, with disposable PostgreSQL schemas on loopback and a built API bound to loopback. No staging, remote acceptance testing or deployment was used.
 
@@ -65,4 +65,34 @@ Minute precision, at most seven elapsed days per read, local-grid alignment, spl
 
 Slot reads use a consistent snapshot and are advisory: a later hold must revalidate. C02 has no public allocation writer and no atomic exclusion guarantee. C03–C11 retain hold, UI, payment/Booking, policy/amendment, meeting/attendance and phase acceptance work. Formal `TST-P03-001` no-double-booking and `TST-P03-002`–`004`, read-only iCal phase coverage, independent accessibility, provider and other release gates remain open. No browser UI was changed or tested, and no remote development/check/deployment occurred.
 
-**Next:** `P03-C03` — Atomic named/any-Staff holds. Stop after C02 under the single-chunk workflow.
+**Next at C02 completion:** `P03-C03`; subsequently completed below.
+
+## P03-C03 — Atomic named/any-Staff holds — 2026-10-12
+
+**Complete locally.** Scope is `REQ-P03-HOLD-001` atomic Staff hold/allocation, using C01–C02 prerequisites. This supplies local `TST-P03-001` concurrency/expiry/rollback evidence, with formal phase/lifecycle acceptance still open.
+
+### Verified behavior
+
+[PostgreSQL scenarios](../../libs/platform-core/src/lib/booking-holds.integration.ts) prove exactly one full buffered allocation, fifteen-minute expiry and immutable accepted terms; competing named/any Customers and distinct any-Staff allocations; private identity filtering; simultaneous idempotent retries and changed payload rejection; cross-Service/Location/mode conflicts and adjacency; exact expiry/no renewal, release/worker races; revoked-session/identity and restricted-Vendor recovery; other Customer denial; current calendar/qualification/consent and commercial/rule/grid revalidation; database overlap rejection and independent bypass insertion races; terminal immutability; and injected late create/release rollback. The hold alone creates no payment or paid Booking.
+
+[Built HTTP smoke](../../tools/check-booking-holds.mjs) uses signed Better Auth cookies and disposable identities for adult Customer hold/read/release, privacy, current fixed terms, replay/conflict/invalid/anonymous denial, cross-mode occupancy, stale versions, concurrent last-Staff competition and expired read/release recovery. The same probe spawns the actual built worker against loopback PostgreSQL/Redis; a due fixture hold and its allocation become expired without a Customer session. All three C01–C03 HTTP smokes and prior qualification/calendar PostgreSQL suites pass.
+
+### Verification
+
+| Check                                                                                                                                                                       | Result                                                                                                                                               |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FOUNDATION_TEST_NAME="Phase 03 (atomic Booking holds\|authoritative scheduling\|Service definitions)" pnpm nx run platform-core:test-integration` with local `.env` loaded | 42 scenarios pass: 18 C03 + 13 C02 + 11 C01; three HTTP smokes and actual built worker expiry pass; 108 unrelated integration scenarios not selected |
+| `pnpm nx run-many -t lint,typecheck,test --projects=contracts,platform-core,api,worker,web --parallel=3`                                                                    | All five projects pass; 77 unit tests and one snapshot pass; one existing worker test skipped                                                        |
+| API/worker builds through integration dependencies                                                                                                                          | Pass; six existing optional dependency/source-map API warnings                                                                                       |
+| `pnpm db:compat:check` and `pnpm db:upgrade:check` with local `.env` loaded                                                                                                 | 36-migration compatibility and populated supported-foundation upgrade pass; no Prisma schema difference                                              |
+| `pnpm db:migrate:local` after asserting loopback hostname                                                                                                                   | C03 additive migration applied locally                                                                                                               |
+| OpenAPI additive comparison                                                                                                                                                 | Existing paths/component schemas unchanged                                                                                                           |
+| `pnpm docs:check`, `pnpm contracts:check`, `git diff --check`                                                                                                               | Pass                                                                                                                                                 |
+
+[Machine-readable verification record](./evidence/phase-03-c03-2026-10-12/verification.json). The overlap guard follows [PostgreSQL 18 range exclusions](https://www.postgresql.org/docs/18/rangetypes.html) with [UUID support in btree_gist](https://www.postgresql.org/docs/18/btree-gist.html). The extension lives in `public` to preserve operator classes across disposable schema cleanup. Evidence retains checksums/outcomes rather than credentials, raw provider data or identity records.
+
+### Limits and next chunk
+
+C03 holds one appointment intent and freezes uncommitted selection/commercial terms; C05 owns policy/timing snapshots and paid Booking confirmation. Creation replay is historical acceptance, not a renewed holding-state promise; current read supplies release/expiry. Any-Staff assignment is deterministic within the private transaction, with no fairness/throughput claim. The shared goods/appointment capacity lock is a derived local concurrency strategy; it does not implement Phase 04 mixed checkout. Read-only iCal, waitlists, UI/Booking/payment/provider lifecycles and independent/formal phase gates remain open. No browser UI, remote development/testing or deployment was performed.
+
+**Next:** `P03-C04` — Service selection and Booking intent UI. Stop after C03.

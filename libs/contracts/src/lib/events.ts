@@ -5,6 +5,9 @@ export const DomainEventSchema = z.object({
 	type: z.enum([
 		'FoundationCommandAccepted',
 		'ServiceConfigured',
+		'BookingHoldCreated',
+		'BookingHoldReleased',
+		'BookingHoldExpired',
 		'LocationScheduleUpdated',
 		'StaffScheduleUpdated',
 		'ServiceSchedulingRulesUpdated',
