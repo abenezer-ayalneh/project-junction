@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import { BookingHoldCommandSchema, BookingHoldSnapshotSchema } from './booking-holds.js'
+import { ServiceSlotSelectionSchema } from './scheduling.js'
 
 const id = z.string().uuid()
 export const BookingPolicySchema = z.strictObject({
@@ -68,3 +69,27 @@ export const BookingAmendmentResultSchema = z.object({
 	snapshot: BookingSnapshotSchema,
 	replayed: z.boolean(),
 })
+export const BookingSubstitutionCommandSchema = z.strictObject({
+	expectedVersion: z.number().int().positive(),
+	replacementStaffId: id,
+	reason: z.string().trim().min(1).max(500),
+})
+export const BookingSubstitutionDecisionSchema = z.strictObject({ decision: z.enum(['accept', 'decline', 'withdraw']) })
+export const BookingSubstitutionReadSchema = z.object({
+	proposalId: id,
+	bookingId: id,
+	state: z.enum(['pending', 'accepted', 'declined', 'withdrawn']),
+	replacementStaffId: id.nullable(),
+	replacementStaffName: z.string().nullable(),
+	expectedBookingVersion: z.number().int().positive(),
+})
+export const BookingSubstitutionResultSchema = BookingSubstitutionReadSchema.extend({ replayed: z.boolean() })
+export const BookingWaitlistCommandSchema = z.strictObject({ listingId: id, selection: ServiceSlotSelectionSchema })
+export const BookingWaitlistReadSchema = z.object({
+	waitlistId: id,
+	state: z.enum(['waiting', 'notified', 'removed']),
+	selection: ServiceSlotSelectionSchema,
+	listingId: id,
+	reserved: z.literal(false),
+})
+export const BookingWaitlistResultSchema = BookingWaitlistReadSchema.extend({ replayed: z.boolean() })

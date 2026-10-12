@@ -45,3 +45,7 @@ C06 uses purchased Flexible/Standard cutoffs for Customer refunds and full refun
 ## Local Booking amendment — 2026-10-12
 
 C07 stores immutable original and append-only amendment terms alongside current allocation/effective terms. Unchanged component prices retain purchased amounts; new/changed components use current prices. Replacement capacity, controlled delta settlement, allowance and event/retry records commit atomically; failures retain the original. Effective-value cancellation plus delta refunds accounts for additional controlled collections. Full ledger integration remains Phase 04. [C07 evidence](../quality/PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c07--atomic-amendments-and-price-delta--2026-10-12).
+
+## Local substitution and waitlists — 2026-10-12
+
+C08 preserves purchased timing/price and Customer allowance during Vendor Staff disruption. Any-Staff replacement remains private and sends notice; named replacement requires consent or full-refund cancellation. Unanswered named proposals cancel at start as a derived local safe deadline. Customer edits invalidate pending proposals. Waitlist entries only notify about currently available slots; no reservation, payment or confirmation is created. [C08 evidence](../quality/PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c08--staff-substitution-and-waitlists--2026-10-12).

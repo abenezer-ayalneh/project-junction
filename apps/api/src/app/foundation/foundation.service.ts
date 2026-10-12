@@ -57,6 +57,24 @@ export class FoundationService {
 		this.durable = new PostgresFoundation(this.databaseUrl())
 	}
 
+	proposeBookingSubstitution(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.durable.proposeBookingSubstitution(sessionId, key, id, input)
+	}
+	decideBookingSubstitution(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.durable.decideBookingSubstitution(sessionId, key, id, input)
+	}
+	readBookingSubstitution(sessionId: string | undefined, id: string) {
+		return this.durable.readBookingSubstitution(sessionId, id)
+	}
+	joinBookingWaitlist(sessionId: string | undefined, key: string | undefined, input: unknown) {
+		return this.durable.joinBookingWaitlist(sessionId, key, input)
+	}
+	removeBookingWaitlist(sessionId: string | undefined, id: string, key: string | undefined) {
+		return this.durable.removeBookingWaitlist(sessionId, id, key)
+	}
+	readBookingWaitlist(sessionId: string | undefined, id: string, key?: string) {
+		return this.durable.readBookingWaitlist(sessionId, id, key)
+	}
 	amendBooking(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
 		return this.durable.amendBooking(sessionId, key, id, input)
 	}

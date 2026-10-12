@@ -392,6 +392,7 @@ export class Bookings {
 							await tx.bookingRefund.create({
 								data: { paymentId: booking.paymentId, semanticKey: `amendment:${amendment.id}`, amountCents: -deltaCents, createdAt: now },
 							})
+						await tx.bookingSubstitution.updateMany({ where: { bookingId, state: 'pending' }, data: { state: 'withdrawn', decidedAt: now } })
 						await tx.booking.update({
 							where: { id: bookingId },
 							data: {
@@ -457,52 +458,62 @@ export class Bookings {
 					async () => {
 						if (booking.version !== command.expectedVersion || booking.state !== 'confirmed')
 							throw new BookingHoldConflictError('Booking changed or is no longer cancellable.')
-						const now = this.dependencies.now()
-						const refundCents = bookingCancellationRefund(snapshot.policy, snapshot.priceCents, new Date(snapshot.start), now, provider)
-						const cancellation = await tx.bookingCancellation.create({
-							data: {
-								bookingId,
-								actorId: context.actor.userId,
-								actorKind: provider ? 'vendor' : 'customer',
-								reason: command.reason,
-								refundCents,
-								policySnapshot: goodsJson(snapshot.policy),
-								cancelledAt: now,
-							},
-						})
-						await tx.booking.update({ where: { id: bookingId }, data: { state: 'cancelled', version: { increment: 1 } } })
-						await tx.staffAllocation.update({ where: { id: booking.allocationId }, data: { state: 'cancelled' } })
-						if (refundCents > 0)
-							await tx.bookingRefund.create({
-								data: { paymentId: booking.paymentId, semanticKey: `cancellation:${bookingId}`, amountCents: refundCents, createdAt: now },
-							})
-						for (const workspaceId of new Set([booking.hold.workspaceId, vendor.workspaceId])) {
-							await goodsAudit(tx, workspaceId, context.actor.userId, 'booking.cancelled', {
-								bookingId,
-								cancellationId: cancellation.id,
-								refundCents,
-								actorKind: cancellation.actorKind,
-							})
-							await goodsEmit(tx, () => this.dependencies.now(), workspaceId, 'BookingCancelled', bookingId, booking.version + 1, key, {
-								bookingId,
-								cancellationId: cancellation.id,
-								refundCents,
-							})
-						}
-						return BookingCancellationResultSchema.parse({
-							bookingId,
-							cancellationId: cancellation.id,
-							state: 'cancelled',
-							refundCents,
-							cancelledAt: now.toISOString(),
-							replayed: false,
-						})
+						return this.cancelInTransaction(tx, bookingId, context.actor.userId, provider, command.reason, key)
 					},
 				)
 				return BookingCancellationResultSchema.parse({ ...result.outcome, replayed: result.replayed })
 			},
 			{ timeout: 30_000 },
 		)
+	}
+
+	/** Internal only: caller must hold checkout/Vendor locks and establish actor authority. */
+	async cancelInTransaction(tx: Tx, bookingId: string, actorId: string | null, provider: boolean, reason: string, key: string | null) {
+		const booking = await tx.booking.findUniqueOrThrow({ where: { id: bookingId }, include: { hold: true, payment: true } })
+		if (booking.state !== 'confirmed') throw new BookingHoldConflictError('Booking is no longer cancellable.')
+		const vendor = await tx.vendor.findUniqueOrThrow({ where: { id: booking.hold.vendorId } })
+		const snapshot = BookingSnapshotSchema.parse(booking.currentSnapshot ?? booking.snapshot)
+		const now = this.dependencies.now()
+		const refundCents = bookingCancellationRefund(snapshot.policy, snapshot.priceCents, new Date(snapshot.start), now, provider)
+		const cancellation = await tx.bookingCancellation.create({
+			data: {
+				bookingId,
+				actorId: actorId ?? booking.hold.customerId,
+				actorKind: provider ? 'vendor' : 'customer',
+				reason: reason,
+				refundCents,
+				policySnapshot: goodsJson(snapshot.policy),
+				cancelledAt: now,
+			},
+		})
+		await tx.bookingSubstitution.updateMany({ where: { bookingId, state: 'pending' }, data: { state: 'withdrawn', decidedAt: now } })
+		await tx.booking.update({ where: { id: bookingId }, data: { state: 'cancelled', version: { increment: 1 } } })
+		await tx.staffAllocation.update({ where: { id: booking.allocationId }, data: { state: 'cancelled' } })
+		if (refundCents > 0)
+			await tx.bookingRefund.create({
+				data: { paymentId: booking.paymentId, semanticKey: `cancellation:${bookingId}`, amountCents: refundCents, createdAt: now },
+			})
+		for (const workspaceId of new Set([booking.hold.workspaceId, vendor.workspaceId])) {
+			await goodsAudit(tx, workspaceId, actorId, 'booking.cancelled', {
+				bookingId,
+				cancellationId: cancellation.id,
+				refundCents,
+				actorKind: cancellation.actorKind,
+			})
+			await goodsEmit(tx, () => this.dependencies.now(), workspaceId, 'BookingCancelled', bookingId, booking.version + 1, key, {
+				bookingId,
+				cancellationId: cancellation.id,
+				refundCents,
+			})
+		}
+		return BookingCancellationResultSchema.parse({
+			bookingId,
+			cancellationId: cancellation.id,
+			state: 'cancelled',
+			refundCents,
+			cancelledAt: now.toISOString(),
+			replayed: false,
+		})
 	}
 
 	async reconcileRefunds() {

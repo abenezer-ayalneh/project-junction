@@ -8,6 +8,7 @@ datasource db {
 }
 
 model User {
+  bookingWaitlists BookingWaitlist[]
   bookingHolds BookingHold[]
   goodsCancellationGrants      GoodsCancellationGrant[]
   goodsPurchases               GoodsPurchase[]
@@ -31,6 +32,7 @@ model User {
 }
 
 model Workspace {
+  bookingWaitlists BookingWaitlist[]
   bookingHolds BookingHold[]
   goodsCancellationGrants      GoodsCancellationGrant[]
   goodsPurchases               GoodsPurchase[]
@@ -386,6 +388,7 @@ model VendorMembership {
 }
 
 model Staff {
+  bookingSubstitutions BookingSubstitution[]
   schedule Json?
   scheduleVersion Int @default(0) @map("schedule_version")
   allocations StaffAllocation[]
@@ -966,6 +969,7 @@ model BookingPaymentReceipt {
 }
 
 model Booking {
+  substitutions BookingSubstitution[]
   currentSnapshot Json? @map("current_snapshot")
   customerAmendments Int @default(0) @map("customer_amendments")
   amendments BookingAmendment[]
@@ -982,6 +986,40 @@ model Booking {
   version Int @default(1)
   confirmedAt DateTime @map("confirmed_at") @db.Timestamptz(6)
   @@map("bookings")
+}
+
+model BookingSubstitution {
+  decisionDueAt DateTime @map("decision_due_at") @db.Timestamptz(6)
+  id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  bookingId String @map("booking_id") @db.Uuid
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replacementStaffId String @map("replacement_staff_id") @db.Uuid
+  replacementStaff Staff @relation(fields: [replacementStaffId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  expectedBookingVersion Int @map("expected_booking_version")
+  actorId String @map("actor_id") @db.Uuid
+  reason String
+  state String @default("pending")
+  createdAt DateTime @map("created_at") @db.Timestamptz(6)
+  decidedAt DateTime? @map("decided_at") @db.Timestamptz(6)
+  @@index([bookingId,state])
+  @@index([state,decisionDueAt])
+  @@map("booking_substitutions")
+}
+
+model BookingWaitlist {
+  checkedAt DateTime? @map("checked_at") @db.Timestamptz(6)
+  id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  customerId String @map("customer_id") @db.Uuid
+  customer User @relation(fields: [customerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  workspaceId String @map("workspace_id") @db.Uuid
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  listingId String @map("listing_id") @db.Uuid
+  selection Json
+  state String @default("waiting")
+  createdAt DateTime @map("created_at") @db.Timestamptz(6)
+  notifiedAt DateTime? @map("notified_at") @db.Timestamptz(6)
+  @@index([state,createdAt])
+  @@map("booking_waitlists")
 }
 
 model BookingAmendment {

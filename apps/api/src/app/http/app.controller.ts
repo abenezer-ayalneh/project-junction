@@ -288,6 +288,75 @@ export class AppController {
 	) {
 		return this.foundation.amendBooking(sessionId, key, id, body)
 	}
+	@Post('vendor/bookings/:bookingId/substitutions')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'proposeBookingSubstitution within scoped Booking authority.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.bookingSubstitutionCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.bookingSubstitutionResult })
+	proposeBookingSubstitution(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('bookingId') id: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.proposeBookingSubstitution(sessionId, key, id, body)
+	}
+	@Post('customer/bookings/substitutions/:proposalId/decision')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'decideBookingSubstitution within scoped Booking authority.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.bookingSubstitutionDecision })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.bookingSubstitutionResult })
+	decideBookingSubstitution(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('proposalId') id: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.decideBookingSubstitution(sessionId, key, id, body)
+	}
+	@Get('customer/bookings/substitutions/:proposalId')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'readBookingSubstitution within scoped Booking authority.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.bookingSubstitutionRead })
+	readBookingSubstitution(@AuthenticatedSession() sessionId: string | undefined, @Param('proposalId') id: string) {
+		return this.foundation.readBookingSubstitution(sessionId, id)
+	}
+	@Post('customer/bookings/waitlists')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'joinBookingWaitlist within scoped Booking authority.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.bookingWaitlistCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.bookingWaitlistResult })
+	joinBookingWaitlist(@AuthenticatedSession() sessionId: string | undefined, @Headers('idempotency-key') key: string | undefined, @Body() body: unknown) {
+		return this.foundation.joinBookingWaitlist(sessionId, key, body)
+	}
+	@Get('customer/bookings/waitlists/:waitlistId')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'readBookingWaitlist within scoped Booking authority.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.bookingWaitlistRead })
+	readBookingWaitlist(@AuthenticatedSession() sessionId: string | undefined, @Param('waitlistId') id: string) {
+		return this.foundation.readBookingWaitlist(sessionId, id)
+	}
+	@Post('customer/bookings/waitlists/:waitlistId/remove')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'removeBookingWaitlist within scoped Booking authority.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.bookingWaitlistResult })
+	removeBookingWaitlist(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('waitlistId') id: string,
+	) {
+		return this.foundation.removeBookingWaitlist(sessionId, id, key)
+	}
 	@Post('customer/bookings/payments')
 	@Header('Cache-Control', 'no-store')
 	@ApiOperation({ summary: 'Start a controlled local appointment payment without extending the hold.' })

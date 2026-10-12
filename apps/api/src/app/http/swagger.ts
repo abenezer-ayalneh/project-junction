@@ -18,6 +18,13 @@ import {
 	BookingPaymentResultSchema,
 	BookingPaymentStartSchema,
 	BookingReadSchema,
+	BookingSubstitutionCommandSchema,
+	BookingSubstitutionDecisionSchema,
+	BookingSubstitutionReadSchema,
+	BookingSubstitutionResultSchema,
+	BookingWaitlistCommandSchema,
+	BookingWaitlistReadSchema,
+	BookingWaitlistResultSchema,
 	CatalogHealthSchema,
 	CatalogImportCommandSchema,
 	CatalogImportResultSchema,
@@ -122,6 +129,14 @@ function schemaFor(schema: z.ZodType): SchemaObject {
 }
 
 export const OpenApiSchemaRefs = {
+	bookingSubstitutionCommand: { $ref: '#/components/schemas/BookingSubstitutionCommand' },
+	bookingSubstitutionDecision: { $ref: '#/components/schemas/BookingSubstitutionDecision' },
+	bookingSubstitutionRead: { $ref: '#/components/schemas/BookingSubstitutionRead' },
+	bookingSubstitutionResult: { $ref: '#/components/schemas/BookingSubstitutionResult' },
+	bookingWaitlistCommand: { $ref: '#/components/schemas/BookingWaitlistCommand' },
+	bookingWaitlistRead: { $ref: '#/components/schemas/BookingWaitlistRead' },
+	bookingWaitlistResult: { $ref: '#/components/schemas/BookingWaitlistResult' },
+
 	bookingAmendmentCommand: { $ref: '#/components/schemas/BookingAmendmentCommand' },
 	bookingAmendmentResult: { $ref: '#/components/schemas/BookingAmendmentResult' },
 
@@ -271,6 +286,13 @@ function publicSchemas(): Record<string, SchemaObject> {
 		BookingCancellationResult: schemaFor(BookingCancellationResultSchema),
 		BookingAmendmentCommand: schemaFor(BookingAmendmentCommandSchema),
 		BookingAmendmentResult: schemaFor(BookingAmendmentResultSchema),
+		BookingSubstitutionCommand: schemaFor(BookingSubstitutionCommandSchema),
+		BookingSubstitutionDecision: schemaFor(BookingSubstitutionDecisionSchema),
+		BookingSubstitutionRead: schemaFor(BookingSubstitutionReadSchema),
+		BookingSubstitutionResult: schemaFor(BookingSubstitutionResultSchema),
+		BookingWaitlistCommand: schemaFor(BookingWaitlistCommandSchema),
+		BookingWaitlistRead: schemaFor(BookingWaitlistReadSchema),
+		BookingWaitlistResult: schemaFor(BookingWaitlistResultSchema),
 		BookingHoldCommand: schemaFor(BookingHoldCommandSchema),
 		BookingHoldRead: schemaFor(BookingHoldReadSchema),
 		BookingHoldResult: schemaFor(BookingHoldResultSchema),

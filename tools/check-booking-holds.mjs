@@ -295,7 +295,18 @@ try {
 			clearTimeout(workerTimer)
 		}
 	}
-	const paidHold = await request(path, 'POST', { ...current, start: `${tomorrow}T13:00:00Z` })
+	const expanded = { ...namedOption, qualifications: [...namedOption.qualifications, { staffId: hidden.body.id, locationIds: [source.id], online: true }] }
+	assert.equal(
+		(
+			await request(`/listings/${listing.id}/service-configuration`, 'PUT', {
+				expectedVersion: 2,
+				configuration: { capacity: 'staff_only', options: [expanded] },
+			})
+		).status,
+		200,
+	)
+	const paidSelection = { ...current, expectedConfigurationVersion: 3, staffId: null }
+	const paidHold = await request(path, 'POST', { ...paidSelection, start: `${tomorrow}T13:00:00Z` })
 	assert.equal(paidHold.status, 201)
 	const paymentKey = randomUUID()
 	const paid = await request('/customer/bookings/payments', 'POST', { holdId: paidHold.body.holdId, attendee: { name: 'Guest' } }, paymentKey)
@@ -320,25 +331,36 @@ try {
 	assert.equal(booking.body.snapshot.policy.template, 'standard')
 	assert.equal((await request(`/customer/bookings/${confirmed.body.bookingId}`, 'GET', undefined, '', false)).status, 403)
 	assert.equal((await request(`${path}/${paidHold.body.holdId}/release`, 'POST')).status, 409)
+	const substitution = await request(`/vendor/bookings/${confirmed.body.bookingId}/substitutions`, 'POST', {
+		expectedVersion: 1,
+		replacementStaffId: hidden.body.id,
+		reason: 'Staff unavailable',
+	})
+	assert.equal(substitution.status, 201, JSON.stringify(substitution.body))
+	assert.equal(substitution.body.state, 'accepted')
+	assert.equal(substitution.body.replacementStaffId, null)
+	assert.equal((await request(`/customer/bookings/substitutions/${substitution.body.proposalId}`)).status, 200)
+	assert.equal((await request(`/customer/bookings/${confirmed.body.bookingId}`)).body.customerAmendments, 0)
+	console.log('Built local any-Staff substitution HTTP smoke passed: private replacement, Customer notice and preserved allowance.')
 	const amendmentKey = randomUUID()
 	const amended = await request(
 		`/customer/bookings/${confirmed.body.bookingId}/amend`,
 		'POST',
-		{ expectedVersion: 1, selection: { ...current, start: `${tomorrow}T15:00:00Z` }, extraPaymentOutcome: 'succeeded' },
+		{ expectedVersion: 2, selection: { ...paidSelection, start: `${tomorrow}T15:00:00Z` }, extraPaymentOutcome: 'succeeded' },
 		amendmentKey,
 	)
 	assert.equal(amended.status, 201, JSON.stringify(amended.body))
 	assert.equal(amended.body.deltaCents, 0)
-	assert.equal(amended.body.version, 2)
+	assert.equal(amended.body.version, 3)
 	assert.equal((await request(`/customer/bookings/${confirmed.body.bookingId}`)).body.originalSnapshot.start, booking.body.snapshot.start)
 	console.log('Built local Booking amendment HTTP smoke passed: atomic replacement, unchanged purchased price and immutable original snapshot.')
 	const cancelKey = randomUUID()
 	const cancellationPath = `/customer/bookings/${confirmed.body.bookingId}/cancel`
-	const cancelled = await request(cancellationPath, 'POST', { reason: 'Plans changed', expectedVersion: 2 }, cancelKey)
+	const cancelled = await request(cancellationPath, 'POST', { reason: 'Plans changed', expectedVersion: 3 }, cancelKey)
 	assert.equal(cancelled.status, 201, JSON.stringify(cancelled.body))
 	const remaining = new Date(booking.body.snapshot.start).getTime() - Date.now()
 	assert.equal(cancelled.body.refundCents, remaining >= 48 * 3600000 ? 1500 : remaining >= 12 * 3600000 ? 750 : 0)
-	assert.equal((await request(cancellationPath, 'POST', { reason: 'Plans changed', expectedVersion: 2 }, cancelKey)).body.replayed, true)
+	assert.equal((await request(cancellationPath, 'POST', { reason: 'Plans changed', expectedVersion: 3 }, cancelKey)).body.replayed, true)
 	await repository.reconcileBookingRefunds()
 	assert.equal((await request(paymentPath)).body.refundedCents, cancelled.body.refundCents)
 	assert.equal((await request(`/customer/bookings/${confirmed.body.bookingId}`)).body.state, 'cancelled')
@@ -347,6 +369,25 @@ try {
 	console.log(
 		'Built local paid Booking HTTP smoke passed: adult cookie scope, exact amount/deadline, attendee, policy, durable receipt, once-only commitment and terminal release denial.',
 	)
+	const waitlistSelection = {
+		optionId: option.id,
+		addonIds: [],
+		mode: 'in_person',
+		locationId: source.id,
+		staffId: null,
+		from: `${tomorrow}T13:00:00Z`,
+		to: `${tomorrow}T13:01:00Z`,
+	}
+	const allocationCount = await repository.db.staffAllocation.count()
+	const waiting = await request('/customer/bookings/waitlists', 'POST', { listingId: listing.id, selection: waitlistSelection })
+	assert.equal(waiting.status, 201, JSON.stringify(waiting.body))
+	assert.equal(waiting.body.reserved, false)
+	assert.equal(await repository.notifyBookingWaitlists(), 1)
+	assert.equal((await request(`/customer/bookings/waitlists/${waiting.body.waitlistId}`)).body.state, 'notified')
+	assert.equal(await repository.db.staffAllocation.count(), allocationCount)
+	assert.equal((await request(`/customer/bookings/waitlists/${waiting.body.waitlistId}/remove`, 'POST', undefined, '')).status, 400)
+	assert.equal((await request(`/customer/bookings/waitlists/${waiting.body.waitlistId}/remove`, 'POST')).body.state, 'removed')
+	console.log('Built local waitlist HTTP smoke passed: scoped notification, no reservation or charge, removal and missing-key denial.')
 	if (process.env.SERVICE_BROWSER_CHECK === '1') {
 		const { checkServiceSelectionBrowser } = await import('./check-service-selection-browser.mjs')
 		await checkServiceSelectionBrowser({ repository, sessionId, vendor, location: source, origin })

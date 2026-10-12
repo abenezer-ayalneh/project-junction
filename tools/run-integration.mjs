@@ -70,7 +70,8 @@ try {
 	}
 	if (
 		!authProbe &&
-		(!focusedTestName || /atomic Booking holds|paid Booking confirmation|Booking cancellation|atomic Booking amendments/i.test(focusedTestName))
+		(!focusedTestName ||
+			/atomic Booking holds|paid Booking confirmation|Booking cancellation|atomic Booking amendments|substitution and waitlists/i.test(focusedTestName))
 	)
 		run(['exec', 'node', 'tools/check-booking-holds.mjs'], { JUNCTION_RUNTIME_MODE: 'local' })
 	if (!authProbe && (!focusedTestName || /authoritative scheduling/i.test(focusedTestName)))

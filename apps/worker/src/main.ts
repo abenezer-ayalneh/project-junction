@@ -33,6 +33,8 @@ async function tick() {
 	try {
 		await repository.reconcileBookingPayments()
 		await repository.expireBookingHolds()
+		await repository.expireBookingSubstitutions()
+		await repository.notifyBookingWaitlists()
 		await repository.expireGoodsHolds()
 		await repository.expireGoodsPickups()
 		await repository.expireGoodsDeliveries()

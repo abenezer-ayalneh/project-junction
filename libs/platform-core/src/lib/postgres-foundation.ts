@@ -73,6 +73,7 @@ import {
 
 import { Prisma, PrismaClient } from '../../generated/prisma/index.js'
 import { AccessDeniedError, assertElevatedSession, assertRequiredMfa, assertScope } from './access.js'
+import { BookingChanges } from './booking-changes.js'
 import { BookingHolds } from './booking-holds.js'
 import { Bookings } from './bookings.js'
 import { CATALOG_CSV_HEADER, decodeCatalogCsvText, encodeCatalogCsvField, parseCatalogCsv } from './catalog-csv.js'
@@ -137,6 +138,7 @@ function hasRequiredIdentity(user: { adultVerificationState: string; verifiedAt:
 /** Prisma owns CRUD; parameterized SQL below is restricted to concurrency locks/claims. */
 export class PostgresFoundation {
 	readonly db: PrismaClient
+	private readonly bookingChanges: BookingChanges
 	private readonly bookings: Bookings
 	private readonly bookingHolds: BookingHolds
 	private readonly scheduling: ServiceScheduling
@@ -176,6 +178,17 @@ export class PostgresFoundation {
 				payments: goodsPayments,
 			},
 			this.scheduling,
+		)
+		this.bookingChanges = new BookingChanges(
+			{
+				db: this.db,
+				derive: (tx, sessionId, options) => this.derive(tx, sessionId, options),
+				lockWorkspace: (tx, id) => this.workspaceLock(tx, id),
+				replay: (tx, context, key, method, request, create) => this.replayOrCreate(tx, context, key, method, request, create),
+				now: goodsClock,
+			},
+			this.scheduling,
+			this.bookings,
 		)
 		this.bookingHolds = new BookingHolds(
 			{
@@ -583,6 +596,30 @@ export class PostgresFoundation {
 		})
 	}
 
+	proposeBookingSubstitution(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.bookingChanges.propose(sessionId, key, id, input)
+	}
+	decideBookingSubstitution(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.bookingChanges.decide(sessionId, key, id, input)
+	}
+	readBookingSubstitution(sessionId: string | undefined, id: string) {
+		return this.bookingChanges.readProposal(sessionId, id)
+	}
+	joinBookingWaitlist(sessionId: string | undefined, key: string | undefined, input: unknown) {
+		return this.bookingChanges.waitlist(sessionId, key, input)
+	}
+	readBookingWaitlist(sessionId: string | undefined, id: string, key?: string) {
+		return this.bookingChanges.readWaitlist(sessionId, id, key)
+	}
+	removeBookingWaitlist(sessionId: string | undefined, id: string, key: string | undefined) {
+		return this.bookingChanges.removeWaitlist(sessionId, id, key)
+	}
+	expireBookingSubstitutions() {
+		return this.bookingChanges.expireSubstitutions()
+	}
+	notifyBookingWaitlists() {
+		return this.bookingChanges.notifyWaitlists()
+	}
 	amendBooking(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
 		return this.bookings.amend(sessionId, key, id, input)
 	}

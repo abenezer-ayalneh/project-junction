@@ -100,3 +100,7 @@ Customer-scoped `POST /v1/customer/bookings/payments`, `POST /v1/customer/bookin
 ## Local Booking amendment — 2026-10-12
 
 `POST /v1/customer/bookings/:bookingId/amend` requires expected Booking version, exact current selection/version and explicit controlled extra-payment outcome; no browser amount is accepted. Unsuccessful extra payment preserves the original. Reads expose immutable original and effective snapshots, amendment allowance used, original payment amount, total collected amount and pending/completed refunds. [C07 evidence](../quality/PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c07--atomic-amendments-and-price-delta--2026-10-12).
+
+## Local substitution and waitlists — 2026-10-12
+
+Vendor `POST /v1/vendor/bookings/:bookingId/substitutions` proposes/executes qualified replacement under Owner/Scheduler Location scope. Customer `GET /v1/customer/bookings/substitutions/:proposalId` and `POST .../:proposalId/decision` read/accept/decline/withdraw named consent. Customer `POST /v1/customer/bookings/waitlists`, `GET .../waitlists/:waitlistId` and `POST .../waitlists/:waitlistId/remove` manage notification-only requests. Mutation keys are required; any-Staff replacements expose no private Staff identity. [C08 evidence](../quality/PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c08--staff-substitution-and-waitlists--2026-10-12).

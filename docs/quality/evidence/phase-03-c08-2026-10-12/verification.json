@@ -1,0 +1,27 @@
+{
+	"chunk": "P03-C08",
+	"date": "2026-10-12",
+	"baseline": "d3dfd67da0df41daa2d6e250bbe4429f08e8cfc5",
+	"environment": "local machine only; disposable loopback PostgreSQL/Redis/built API",
+	"results": {
+		"substitution_waitlist_postgresql": 10,
+		"prior_phase03_postgresql": 73,
+		"workspace_lint_typecheck_test": "passed",
+		"built_substitution_waitlist_and_paid_lifecycle_http": "passed",
+		"scheduling_definition_http": "passed",
+		"actual_worker_expiry": "passed",
+		"migration_compatibility": "40 migrations; no difference",
+		"populated_upgrade": "passed"
+	},
+	"limits": [
+		"unanswered named proposals expire at appointment start as derived safe default",
+		"no browser substitution/waitlist or live money/provider acceptance",
+		"formal phase/provider/accessibility/earning gates remain open"
+	],
+	"next": "P03-C09",
+	"sha256": {
+		"libs/platform-core/src/lib/booking-changes.ts": "b9acf8e50c1e04016e589c61690b2ce97c2b2d9c0e8f541ef472f6b3e90f5684",
+		"libs/platform-core/src/lib/booking-changes.integration.ts": "f04e822437cdbaf4aabc17def50a73169f12ec82768cb692cb251e8143016339",
+		"prisma/migrations/20261012130000_substitutions_waitlists/migration.sql": "00a063a531dd43b1183d044ebfc59a3c1bdbfeff361a13db22274f5e81f7fa1f"
+	}
+}
