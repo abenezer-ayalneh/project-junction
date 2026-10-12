@@ -15652,6 +15652,42 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
       },
     },
+    "/v1/customer/bookings/{bookingId}/calendar.ics": {
+      "get": {
+        "operationId": "AppController_exportBookingCalendar",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "bookingId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Export current Customer-owned Booking terms as a private read-only iCal event.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
     "/v1/customer/bookings/{bookingId}/cancel": {
       "post": {
         "operationId": "AppController_customerCancelBooking",

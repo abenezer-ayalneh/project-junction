@@ -112,3 +112,7 @@ Customer/assigned Staff/scoped Owner reads use `GET /v1/customer/bookings/:booki
 ## Local attendance and contest — 2026-10-12
 
 Customer `GET /v1/customer/bookings/:bookingId/attendance`, `GET .../attendance/proof`, `POST .../join` and `POST .../contest` expose private evidence/participation. Vendor `GET /v1/vendor/bookings/:bookingId/attendance`, `POST .../attendance/confirm` and `POST .../no-show` require current assigned Staff and Location scope. Mutation idempotency keys and expected versions are mandatory. Code/QR and raw evidence never enter events. [C10 evidence](../quality/PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c10--attendance-completion-and-no-show-contest--2026-10-12).
+
+## Phase 03 local acceptance — 2026-10-12
+
+Customer `GET /v1/customer/bookings/:bookingId/calendar.ics` exports current read-only iCal terms, private stable UID/version, UTC dates and cancelled status. Current ownership applies; no attendee, private Staff or provider reference is exported. See [C11 evidence](../quality/evidence/phase-03-c11-2026-10-12/acceptance-audit.md).

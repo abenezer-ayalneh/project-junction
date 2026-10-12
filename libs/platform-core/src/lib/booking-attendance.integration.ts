@@ -335,4 +335,16 @@ suite('Phase 03 attendance and contest PostgreSQL', () => {
 		}
 		expect(await repository.confirmBookingAttendance(f.owner.session.id, key, f.bookingId, command)).toMatchObject({ state: 'completed', replayed: false })
 	})
+	it('read-only iCal uses current terms and denies strangers without leaking attendee or Staff', async () => {
+		const f = await paid(),
+			stranger = await customer()
+		const exported = await repository.exportBookingCalendar(f.buyer.session.id, f.bookingId)
+		expect(exported).toContain(`UID:${f.bookingId}@junction\r\n`)
+		expect(exported).toContain('CLASS:PRIVATE\r\n')
+		expect(exported).not.toContain(f.linked.id)
+		expect(exported).not.toContain('ATTENDEE:')
+		await expect(repository.exportBookingCalendar(stranger.session.id, f.bookingId)).rejects.toBeInstanceOf(AccessDeniedError)
+		await repository.cancelBooking(f.owner.session.id, randomUUID(), f.bookingId, { expectedVersion: 1, reason: 'Cancel' }, true)
+		expect(await repository.exportBookingCalendar(f.buyer.session.id, f.bookingId)).toContain('STATUS:CANCELLED\r\n')
+	})
 })

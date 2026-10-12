@@ -1,0 +1,27 @@
+{
+	"date": "2026-10-12",
+	"environment": "loopback API/PostgreSQL; local served Next build; fresh headless Microsoft Edge context",
+	"viewport": {
+		"desktop": [1440, 1000],
+		"mobile": [390, 844]
+	},
+	"passed": [
+		"exact Option/add-on totals",
+		"timezone before date selection",
+		"named/any qualified Staff",
+		"failed read safe recovery",
+		"actual competing hold slot loss",
+		"network recovery",
+		"offline add prevented and reconnect requires fresh times",
+		"responsive no-overflow",
+		"unreserved intent saved",
+		"Cart edit online timezone and same-intent replacement",
+		"Cart remove",
+		"no browser capacity/payment mutation",
+		"no private Staff identity",
+		"no page errors"
+	],
+	"screenshots": [],
+	"result": "passed",
+	"capture_note": "Fresh C11 run used SERVICE_BROWSER_NO_CAPTURE=1; C04 visual captures remain historical references."
+}

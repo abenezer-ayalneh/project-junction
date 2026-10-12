@@ -498,6 +498,15 @@ try {
 			confirmedAt: new Date(Date.now() - 3600000),
 		},
 	})
+	const calendarResponse = await fetch(`${origin}/customer/bookings/${attendanceBooking.id}/calendar.ics`, { headers: { cookie } })
+	assert.equal(calendarResponse.status, 200)
+	assert.match(calendarResponse.headers.get('content-type'), /^text\/calendar/)
+	const calendarText = await calendarResponse.text()
+	assert.ok(calendarText.includes(`UID:${attendanceBooking.id}@junction\r\n`))
+	assert.ok(calendarText.includes('CLASS:PRIVATE\r\n'))
+	assert.ok(!calendarText.includes('Guest'))
+	assert.equal((await fetch(`${origin}/customer/bookings/${attendanceBooking.id}/calendar.ics`)).status, 403)
+	console.log('Built local read-only iCal HTTP smoke passed: current Customer scope, private event, UTC times and no attendee/provider details.')
 	const attendancePath = `/customer/bookings/${attendanceBooking.id}/attendance`
 	const attendanceProof = await request(`${attendancePath}/proof`)
 	assert.equal(attendanceProof.status, 200, JSON.stringify(attendanceProof.body))

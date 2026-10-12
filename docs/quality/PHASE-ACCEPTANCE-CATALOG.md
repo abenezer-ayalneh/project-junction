@@ -141,3 +141,7 @@ Phase 02 `P02-C09`–`P02-C11` subsequently completed local pickup, Vendor deliv
 ## Phase 03 C04 local selection/recovery evidence — 2026-10-12
 
 `REQ-P03-UX-001` and the selection/recovery portion of `TST-P03-004` have local evidence: exact Option/add-on totals and duration, mode/Location, named/any Staff, timezone and authoritative slots, real slot loss, read/offline recovery and explicitly unconfirmed local Cart intents. Eleven new web tests and served Edge checks pass alongside workspace and Phase 03 database/HTTP regressions. See [C04 evidence](./PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c04--service-selection-and-booking-intent-ui--2026-10-12). Full paid Booking lifecycle and independent accessibility/formal acceptance remain open. Next is C05.
+
+## Phase 03 local acceptance — 2026-10-12
+
+TST-P03-001–004 have complete local allocation, controlled policy/delta/refund, meeting compensation/attendance contest and served Edge selection/recovery evidence. All 108 Phase 03 scenarios and 108 prior regressions pass. Formal financial ledger/live provider/accessibility gates remain separate. See [C11 evidence](../quality/evidence/phase-03-c11-2026-10-12/acceptance-audit.md).

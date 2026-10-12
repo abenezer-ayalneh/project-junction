@@ -57,6 +57,10 @@ export class FoundationService {
 		this.durable = new PostgresFoundation(this.databaseUrl())
 	}
 
+	exportBookingCalendar(sessionId: string | undefined, id: string) {
+		return this.durable.exportBookingCalendar(sessionId, id)
+	}
+
 	readBookingAttendance(sessionId: string | undefined, id: string, staff = false) {
 		return this.durable.readBookingAttendance(sessionId, id, staff)
 	}

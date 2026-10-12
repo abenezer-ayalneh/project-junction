@@ -487,6 +487,16 @@ export class AppController {
 	) {
 		return this.foundation.contestBookingAttendance(sessionId, key, id, body)
 	}
+	@Get('customer/bookings/:bookingId/calendar.ics')
+	@Header('Cache-Control', 'no-store')
+	@Header('Content-Type', 'text/calendar; charset=utf-8')
+	@Header('Content-Disposition', 'attachment; filename="booking.ics"')
+	@ApiOperation({ summary: 'Export current Customer-owned Booking terms as a private read-only iCal event.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: { type: 'string' } })
+	exportBookingCalendar(@AuthenticatedSession() sessionId: string | undefined, @Param('bookingId') id: string) {
+		return this.foundation.exportBookingCalendar(sessionId, id)
+	}
 	@Post('customer/bookings/payments')
 	@Header('Cache-Control', 'no-store')
 	@ApiOperation({ summary: 'Start a controlled local appointment payment without extending the hold.' })

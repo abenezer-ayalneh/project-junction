@@ -1,6 +1,8 @@
 # Booking, Meeting, Amendment, and Attendance State Machines
 
-**Status:** Specified — Not Executed — Not Verified
+**Target status:** Specified — Not Executed — Not Verified.
+
+**Local implementation:** controlled lifecycle verified under P03-C01–C10; formal target/provider/Phase 04 financial gates remain open.
 
 ## `STATE-BKG-001` — Booking
 
@@ -29,3 +31,7 @@ Any-Staff reassignment with notice is permitted by policy; named Staff requires 
 | ReplacementRequired → Ready/BookingCancelled      | authorized operations/Checkout | valid replacement or approved provider-failure compensation                                   | save protected replacement or cancel Booking with full refund/reversal                    | terminal outcome is auditable; no Calendar sync/recording/transcription state exists |
 
 Public demo uses DemoMeet; private staging provider paths remain separated.
+
+## Local implementation evidence — 2026-10-12
+
+The local Booking states are confirmed, attendance_pending, completed, no_show_reported, no_show_final, contested and cancelled. Customer amendment is a single atomic transaction preserving the original on failure; no externally visible pending allocation claims success. Named substitution proposals retain original capacity until consent and expire safely by start. Local meeting states bind Booking version/Staff/connection, persist leases and retries, and cancel/refund by configured safety cutoff. Attendance reports/contests are immutable; contest freezes affected eligibility, with full ledger posting deferred to Phase 04. [Local evidence](../quality/PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md).

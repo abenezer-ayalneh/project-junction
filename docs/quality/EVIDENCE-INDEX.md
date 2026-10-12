@@ -61,3 +61,7 @@ Phase 02 local requirement/scenario coverage and unresolved formal gates are con
 ## Local attendance and contest — 2026-10-12
 
 C10 verifies code/QR, online join, assigned Staff, no-show/contest, earning eligibility, exact boundaries, replay/races and rollback; Phase 04 ledger posting and formal gates remain open. [C10 evidence](../quality/PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c10--attendance-completion-and-no-show-contest--2026-10-12).
+
+## Phase 03 local acceptance — 2026-10-12
+
+All Phase 03 local chunks are complete. All 216 isolated PostgreSQL scenarios, HTTP/worker, fresh Edge, workspace/web and 42-migration compatibility/upgrade/restore pass. Formal gates remain open. See [C11 evidence](../quality/evidence/phase-03-c11-2026-10-12/acceptance-audit.md).

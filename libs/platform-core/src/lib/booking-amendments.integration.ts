@@ -263,4 +263,43 @@ suite('Phase 03 atomic Booking amendments PostgreSQL', () => {
 		}
 		expect(await repository.amendBooking(f.buyer.session.id, key, f.bookingId, command)).toMatchObject({ deltaCents: 0, replayed: false })
 	})
+	it('amendments change online mode, Location and concrete Staff while retaining purchased Option price', async () => {
+		const f = await confirmed('flexible')
+		const nextLocation = await repository.db.location.create({ data: { vendorId: f.vendor.id, label: 'Second office', city: 'Test city' } })
+		await repository.db.vendorMembership.updateMany({
+			where: { vendorId: f.vendor.id, userId: f.owner.user.id },
+			data: { locationIds: [f.location.id, nextLocation.id] },
+		})
+		await repository.configureLocationSchedule(f.owner.session.id, randomUUID(), nextLocation.id, { expectedVersion: 0, calendar: f.calendar })
+		await repository.configureStaffSchedule(f.owner.session.id, randomUUID(), f.hidden.id, {
+			expectedVersion: 1,
+			schedule: { scopes: [...f.schedule.scopes, { mode: 'in_person', locationId: nextLocation.id, calendar: f.calendar }] },
+		})
+		const configuration = {
+			capacity: 'staff_only',
+			options: [
+				{
+					...f.option,
+					priceCents: 9000,
+					locationIds: [f.location.id, nextLocation.id],
+					qualifications: [...f.option.qualifications, { staffId: f.hidden.id, locationIds: [nextLocation.id], online: true }],
+				},
+			],
+		}
+		await repository.configureService(f.owner.session.id, randomUUID(), f.listing.id, { expectedVersion: 1, configuration })
+		const online = await repository.amendBooking(
+			f.buyer.session.id,
+			randomUUID(),
+			f.bookingId,
+			amendment(f, { expectedConfigurationVersion: 2, mode: 'online', locationId: null, staffId: f.linked.id }),
+		)
+		expect(online).toMatchObject({ deltaCents: 0, snapshot: { mode: 'online', locationId: null, selectedStaffId: f.linked.id, priceCents: 1000 } })
+		const moved = await repository.amendBooking(f.buyer.session.id, randomUUID(), f.bookingId, {
+			...amendment(f, { expectedConfigurationVersion: 2, locationId: nextLocation.id, staffId: null, start: '2026-10-12T12:00:00Z' }),
+			expectedVersion: 2,
+		})
+		expect(moved).toMatchObject({ deltaCents: 0, snapshot: { mode: 'in_person', locationId: nextLocation.id, selectedStaffId: null, priceCents: 1000 } })
+		const saved = await repository.db.booking.findUniqueOrThrow({ where: { id: f.bookingId }, include: { allocation: true } })
+		expect(saved.allocation.staffId).toBe(f.hidden.id)
+	})
 })

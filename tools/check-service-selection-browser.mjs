@@ -252,7 +252,7 @@ export async function checkServiceSelectionBrowser({ repository, sessionId, vend
 						'no private Staff identity',
 						'no page errors',
 					],
-					screenshots: ['service-desktop.png', 'service-mobile.png', 'cart-mobile.png'],
+					screenshots: process.env.SERVICE_BROWSER_NO_CAPTURE === '1' ? [] : ['service-desktop.png', 'service-mobile.png', 'cart-mobile.png'],
 					result: 'passed',
 				},
 				null,

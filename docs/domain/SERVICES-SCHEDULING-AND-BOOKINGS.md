@@ -57,3 +57,7 @@ C09 provisions after paid confirmation with stable Booking-version/assigned-Staf
 ## Local attendance and contest — 2026-10-12
 
 C10 binds private Customer code/QR to current Booking version and Staff, requires assigned Staff confirmation or Junction join plus Staff, and records contestable no-show/completion evidence. Eligibility remains frozen during contest; Phase 04 posting is explicitly pending. [C10 evidence](../quality/PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c10--attendance-completion-and-no-show-contest--2026-10-12).
+
+## Phase 03 local acceptance — 2026-10-12
+
+C11 audits every Phase 03 requirement, adds private current-terms iCal and explicit mode/Location/Staff amendment coverage. Local C01–C11 are complete; real providers, public demo, independent accessibility/retention/target recovery and Phase 04 financial posting remain separate gates. See [C11 evidence](../quality/evidence/phase-03-c11-2026-10-12/acceptance-audit.md).

@@ -74,6 +74,7 @@ import {
 import { Prisma, PrismaClient } from '../../generated/prisma/index.js'
 import { AccessDeniedError, assertElevatedSession, assertRequiredMfa, assertScope } from './access.js'
 import { BookingAttendance } from './booking-attendance.js'
+import { bookingCalendar } from './booking-calendar.js'
 import { BookingChanges } from './booking-changes.js'
 import { BookingHolds } from './booking-holds.js'
 import { BookingMeetings } from './booking-meetings.js'
@@ -622,6 +623,10 @@ export class PostgresFoundation {
 			assertScope(context, { workspaceId: location.vendor.workspaceId, vendorId: location.vendorId, locationId: location.id })
 			return LocationReadSchema.parse({ id: location.id, vendorId: location.vendorId, workspaceId: location.vendor.workspaceId })
 		})
+	}
+
+	async exportBookingCalendar(sessionId: string | undefined, id: string) {
+		return bookingCalendar(await this.bookings.read(sessionId, id))
 	}
 
 	readBookingAttendance(sessionId: string | undefined, id: string, staff = false) {

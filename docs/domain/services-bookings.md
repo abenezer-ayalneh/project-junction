@@ -1,6 +1,6 @@
 # Services, Staff Scheduling, and Bookings
 
-> **Status:** Service definitions, slot calculation and atomic Staff holds are locally verified under P03-C01–C03 (2026-10-12). Paid Booking and meeting integration remain planned and unverified.
+> **Status:** Phase 03 C01–C11 are locally verified (2026-10-12). Controlled Booking/payment/meeting/attendance evidence is local only; real providers, Phase 04 ledger and formal phase gates remain open.
 
 ## Service commercial model
 
@@ -84,7 +84,7 @@ No appointment recording or transcription is captured as evidence. `[DEC-147]`
 
 Platform supplies bounded policy templates and Vendor selects one; the purchased version is snapshotted. `[DEC-030]`
 
-The session did not confirm exact hour thresholds, refund percentages, amendment counts, Staff substitution rules, or waitlist behavior. They must stay open/proposed rather than be imported from the previous assistant plan.
+The normative [Policy Catalog](./POLICY-CATALOG-AND-SNAPSHOTS.md) owns the accepted Flexible 24h/2h and Standard 48h/12h refund bands and two/one amendment allowances, named consent or full-refund cancellation, any-Staff notice and notification-only waitlists. Local C05–C10 snapshots and lifecycle evidence implement those rules; full ledger/provider and formal phase gates remain open.
 
 ## Earnings and disputes
 

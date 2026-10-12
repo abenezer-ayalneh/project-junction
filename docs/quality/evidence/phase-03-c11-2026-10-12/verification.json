@@ -1,0 +1,53 @@
+{
+	"chunk": "P03-C11",
+	"date": "2026-10-12",
+	"status": "complete_locally",
+	"baseline": "ea08f9a1848b0eb52fe4c906d3763692f1b0f1ac",
+	"environment": "user local machine only; disposable loopback PostgreSQL/Redis/built API/worker; fresh Microsoft Edge",
+	"verified": {
+		"prior_phase03_scenarios": 106,
+		"calendar_scope_integration": "passed in isolated attendance suite",
+		"mode_location_concrete_staff_amendment": "focused suite passes 10 scenarios",
+		"ical_escaping_utf8_folding_unit": "passed",
+		"edge_selection_offline_slot_loss_intent_cart": "passed",
+		"paid_lifecycle_attendance_calendar_http": "passed",
+		"actual_worker_expiry_and_controlled_meeting": "passed",
+		"web_webpack_build": "passed",
+		"migration_compatibility_upgrade_restore": "42 migrations; passed",
+		"workspace_lint_typecheck_test": "passed after final mode/Location/Staff amendment test",
+		"documentation_and_contract_audits": "passed",
+		"current_source_requirement_audit": "recorded in acceptance-audit.md",
+		"full_isolated_postgresql_scenarios": 216,
+		"isolated_suites": 16,
+		"phase03_scenarios": 108,
+		"prior_regression_scenarios": 108,
+		"full_integration_terminal": "exit 0",
+		"final_booking_goods_http_worker": "passed"
+	},
+	"pending": [],
+	"commands": [
+		"pnpm nx run-many -t lint,typecheck,test --projects=contracts,platform-core,api,worker,web --parallel=3",
+		"pnpm nx run web:build --webpack",
+		"pnpm nx run platform-core:test-service-selection with bundled Playwright and SERVICE_BROWSER_NO_CAPTURE=1",
+		"pnpm nx run platform-core:test-integration with local .env loaded",
+		"FOUNDATION_TEST_NAME=\"Phase 03 atomic Booking amendments\" pnpm nx run platform-core:test-integration",
+		"Full integration runs with local .env loaded and generated process-scoped JUNCTION_GOODS_HANDOFF_SECRET; key never logged or retained."
+	],
+	"limits": [
+		"real Google Meet OAuth/REST and public demo deployment remain unverified",
+		"Phase 04 balanced ledger/promotion/commission/earning posting remains dependent work",
+		"independent accessibility/retention/target storage and formal phase/public-release gates open"
+	],
+	"sha256": {
+		"libs/platform-core/src/lib/booking-calendar.ts": "416bcffcce06eba1a940e4c3f48e692d383073fbe4b5f8bdf6cca3147dd5c11c",
+		"libs/platform-core/src/lib/booking-calendar.spec.ts": "5c2507c52fb5df0242fb62066f0a6da3a7b15ab36e252d93a6ac009fc4675fd4",
+		"libs/platform-core/src/lib/booking-amendments.integration.ts": "d5f65622cbb2d1a35cb293dbdcdfcf0d3ed1593cb514b7c6eafbccae55899c56",
+		"libs/platform-core/src/lib/booking-attendance.integration.ts": "e2b8b89b90fe36604702f09523e3ebef5ea259cfbab3574b43c062b658afd0d9",
+		"tools/check-service-selection-browser.mjs": "db38ce206861dff8df8d906793a621739c200f6e02f88e31e27e4e312137b787",
+		"docs/quality/evidence/phase-03-c11-2026-10-12/browser.json": "e99acd8f8988d82957d8e29655b6f26a854e77b25927d92dcab0a0bcfb2a796b"
+	},
+	"observations": [
+		"Initial full run stopped in goods regression because JUNCTION_GOODS_HANDOFF_SECRET was absent; rerun uses random process-scoped key only for disposable fixtures. No application config changed."
+	],
+	"next": "P04-C01 subject to entry dependencies; not started"
+}
