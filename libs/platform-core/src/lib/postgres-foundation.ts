@@ -88,6 +88,7 @@ import { LocalGoodsPaymentAdapter } from './local-goods-payment.js'
 import { type DeletionJournal, S3DeletionJournal } from './media-retention.js'
 import { type MediaStore, S3MediaStore } from './media-store.js'
 import type { MeetingProviderAdapter } from './meeting-provider.js'
+import { MixedCartCheckout } from './mixed-cart.js'
 import { applicationRuntimeMode } from './runtime.js'
 import { ServiceDefinitions } from './service-definitions.js'
 import { ServiceScheduling } from './service-scheduling.js'
@@ -149,6 +150,7 @@ export class PostgresFoundation {
 	private readonly bookingHolds: BookingHolds
 	private readonly scheduling: ServiceScheduling
 	private readonly services: ServiceDefinitions
+	private readonly mixedCart: MixedCartCheckout
 	private readonly goods: GoodsCheckout
 	private readonly publicWorkspaceKind = 'real'
 	private readonly externalEffects: ExternalEffectAdapter
@@ -244,6 +246,17 @@ export class PostgresFoundation {
 			now: goodsClock,
 			payments: goodsPayments,
 		})
+		this.mixedCart = new MixedCartCheckout(
+			{
+				db: this.db,
+				derive: (tx, sessionId, options) => this.derive(tx, sessionId, options),
+				lockWorkspace: (tx, id) => this.workspaceLock(tx, id),
+				replay: (tx, context, key, method, request, create) => this.replayOrCreate(tx, context, key, method, request, create),
+				now: goodsClock,
+			},
+			this.goods,
+			this.scheduling,
+		)
 		this.externalEffects = externalEffects ?? new UnconfiguredExternalEffectAdapter()
 		this.mediaStore = mediaStore ?? S3MediaStore.fromEnvironment()
 		this.deletionJournal = deletionJournal ?? S3DeletionJournal.fromEnvironment()
@@ -779,6 +792,21 @@ export class PostgresFoundation {
 	}
 	configureGoodsLocation(sessionId: string | undefined, key: string | undefined, locationId: string, input: unknown) {
 		return this.goods.configure(sessionId, key, locationId, input)
+	}
+	readMixedCart(sessionId: string | undefined) {
+		return this.mixedCart.readCart(sessionId)
+	}
+	writeMixedCart(sessionId: string | undefined, key: string | undefined, input: unknown) {
+		return this.mixedCart.writeCart(sessionId, key, input)
+	}
+	previewMixedCartMerge(sessionId: string | undefined, input: unknown) {
+		return this.mixedCart.mergePreview(sessionId, input)
+	}
+	createMixedQuote(sessionId: string | undefined, key: string | undefined, input: unknown) {
+		return this.mixedCart.quote(sessionId, key, input)
+	}
+	readMixedQuote(sessionId: string | undefined, id: string) {
+		return this.mixedCart.readQuote(sessionId, id)
 	}
 	createGoodsQuote(sessionId: string | undefined, key: string | undefined, input: unknown) {
 		return this.goods.quote(sessionId, key, input)

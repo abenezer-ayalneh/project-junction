@@ -103,6 +103,14 @@ import {
 	MediaUploadCompleteCommandSchema,
 	MediaUploadIntentCommandSchema,
 	MediaUploadIntentSchema,
+	MixedCartMergeResultSchema,
+	MixedCartMergeSchema,
+	MixedCartReadSchema,
+	MixedCartWriteResultSchema,
+	MixedCartWriteSchema,
+	MixedQuoteCommandSchema,
+	MixedQuoteReadSchema,
+	MixedQuoteResultSchema,
 	PlatformReviewQueueSchema,
 	PublicListingDetailSchema,
 	PublicListingPageSchema,
@@ -143,6 +151,15 @@ function schemaFor(schema: z.ZodType): SchemaObject {
 }
 
 export const OpenApiSchemaRefs = {
+	mixedCartRead: { $ref: '#/components/schemas/MixedCartRead' },
+	mixedCartWrite: { $ref: '#/components/schemas/MixedCartWrite' },
+	mixedCartWriteResult: { $ref: '#/components/schemas/MixedCartWriteResult' },
+	mixedCartMerge: { $ref: '#/components/schemas/MixedCartMerge' },
+	mixedCartMergeResult: { $ref: '#/components/schemas/MixedCartMergeResult' },
+	mixedQuoteCommand: { $ref: '#/components/schemas/MixedQuoteCommand' },
+	mixedQuoteRead: { $ref: '#/components/schemas/MixedQuoteRead' },
+	mixedQuoteResult: { $ref: '#/components/schemas/MixedQuoteResult' },
+
 	bookingAttendanceProof: { $ref: '#/components/schemas/BookingAttendanceProof' },
 	bookingAttendanceRead: { $ref: '#/components/schemas/BookingAttendanceRead' },
 	bookingAttendanceConfirmCommand: { $ref: '#/components/schemas/BookingAttendanceConfirmCommand' },
@@ -290,6 +307,15 @@ export const OpenApiSchemaRefs = {
 function publicSchemas(): Record<string, SchemaObject> {
 	return {
 		AccessContextResponse: schemaFor(AccessContextResponseSchema),
+		MixedCartRead: schemaFor(MixedCartReadSchema),
+		MixedCartWrite: schemaFor(MixedCartWriteSchema),
+		MixedCartWriteResult: schemaFor(MixedCartWriteResultSchema),
+		MixedCartMerge: schemaFor(MixedCartMergeSchema),
+		MixedCartMergeResult: schemaFor(MixedCartMergeResultSchema),
+		MixedQuoteCommand: schemaFor(MixedQuoteCommandSchema),
+		MixedQuoteRead: schemaFor(MixedQuoteReadSchema),
+		MixedQuoteResult: schemaFor(MixedQuoteResultSchema),
+
 		GoodsLocationConfigurationCommand: schemaFor(GoodsLocationConfigurationCommandSchema),
 		GoodsLocationConfigurationResult: schemaFor(GoodsLocationConfigurationResultSchema),
 		GoodsQuoteCommand: schemaFor(GoodsQuoteCommandSchema),

@@ -1154,3 +1154,29 @@ model LedgerPosting {
   @@unique([transactionId, ordinal])
   @@map("ledger_postings")
 }
+
+model MixedCart {
+  id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  workspaceId String @map("workspace_id") @db.Uuid
+  customerId String @map("customer_id") @db.Uuid
+  version Int @default(1)
+  selection Json
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  quotes MixedCheckoutQuote[]
+  @@unique([workspaceId, customerId])
+  @@map("mixed_carts")
+}
+model MixedCheckoutQuote {
+  id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  cartId String @map("cart_id") @db.Uuid
+  cartVersion Int @map("cart_version")
+  workspaceId String @map("workspace_id") @db.Uuid
+  customerId String @map("customer_id") @db.Uuid
+  selection Json
+  snapshot Json
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  cart MixedCart @relation(fields: [cartId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  @@index([workspaceId, customerId, createdAt])
+  @@map("mixed_checkout_quotes")
+}

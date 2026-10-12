@@ -1,0 +1,57 @@
+{
+	"date": "2026-10-12",
+	"chunk": "P04-C02",
+	"status": "complete_locally",
+	"environment": "user local machine; disposable loopback PostgreSQL schemas and built API on loopback",
+	"requirements": ["REQ-P04-CHK-001 Cart/quote foundation"],
+	"checks": {
+		"focusedPostgresqlAndHttp": {
+			"status": "passed",
+			"postgresqlScenarios": 20,
+			"selection": "FOUNDATION_TEST_NAME=\"Phase 04 mixed Cart and quote\"",
+			"target": "pnpm nx run platform-core:test-integration",
+			"log": "focused-integration-http.log"
+		},
+		"regression": {
+			"status": "passed",
+			"postgresqlScenarios": 81,
+			"selection": "Phase 04 mixed Cart and quote|Phase 02 goods quotes and holds|Phase 04 immutable ledger",
+			"target": "pnpm nx run platform-core:test-integration",
+			"environmentNote": "Load local .env; supply a disposable JUNCTION_GOODS_HANDOFF_SECRET in process memory for existing handoff scenarios.",
+			"log": "regression.log"
+		},
+		"workspace": {
+			"status": "passed",
+			"command": "pnpm nx run-many -t lint,typecheck,test --projects=contracts,platform-core,api,worker,web --parallel=3",
+			"log": "workspace-checks.log"
+		},
+		"migrationCompatibility": {
+			"status": "passed",
+			"migrations": 44,
+			"log": "migration-compatibility.log"
+		},
+		"populatedUpgrade": {
+			"status": "passed",
+			"log": "populated-upgrade.log"
+		},
+		"documentationAndPublicContracts": {
+			"status": "passed",
+			"commands": ["pnpm docs:check", "pnpm contracts:check"]
+		}
+	},
+	"implemented": [
+		"Versioned server Customer/workspace Cart with explicit idempotent replacement",
+		"Non-persistent anonymous merge preview with matching quantities/intent identity and conflicts/current review",
+		"One immutable advisory goods/Booking quote with five quantity-one intent maximum",
+		"Current amount, policies, delivery thresholds, Service terms and private any/named feasibility",
+		"Private no-store scope, immutable quote history, expiry/stale status and current-state retry",
+		"No allocation/cleanup side effects in advisory availability"
+	],
+	"limitations": [
+		"Promotion/commission snapshots remain C03",
+		"Atomic hold, payment and Purchase remain C04-C06",
+		"Visible browser merge/checkout/outcomes remain C07",
+		"Formal provider, accessibility, retention, target recovery and release gates remain open"
+	],
+	"nextChunk": "P04-C03"
+}

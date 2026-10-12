@@ -145,7 +145,8 @@ export class GoodsCheckout {
 		})
 	}
 
-	private async buildSnapshot(tx: Transaction, selection: GoodsQuoteCommand): Promise<GoodsQuoteSnapshot> {
+	/** Advisory evaluator shared by unified quotes; caller owns scope and transaction locks. */
+	async buildSnapshot(tx: Transaction, selection: GoodsQuoteCommand, advisoryAt?: Date): Promise<GoodsQuoteSnapshot> {
 		const groups: GoodsQuoteSnapshot['groups'] = []
 		let totalCents = 0
 		for (const group of selection.groups) {
@@ -177,7 +178,20 @@ export class GoodsCheckout {
 					where: { listingId: listing.id, locationId: location.id, sku: variant?.sku ?? null },
 					_sum: { onHandDelta: true, reservedDelta: true },
 				})
-				if ((balance._sum.onHandDelta ?? 0) - (balance._sum.reservedDelta ?? 0) < line.quantity)
+				// An advisory mixed quote must not retire reservations as a side effect.
+				// Ignore already-expired holds; allocation still revalidates/releases atomically.
+				const expired = advisoryAt
+					? await tx.goodsHoldLine.aggregate({
+							where: {
+								listingId: listing.id,
+								locationId: location.id,
+								sku: variant?.sku ?? null,
+								hold: { state: 'holding', expiresAt: { lte: advisoryAt } },
+							},
+							_sum: { quantity: true },
+						})
+					: null
+				if ((balance._sum.onHandDelta ?? 0) - (balance._sum.reservedDelta ?? 0) + (expired?._sum.quantity ?? 0) < line.quantity)
 					throw new GoodsCheckoutConflictError('Selected quantity is unavailable. Change the quantity or Location and request a new quote.')
 				const subtotalCents = unitPriceCents * line.quantity
 				subtotal += subtotalCents

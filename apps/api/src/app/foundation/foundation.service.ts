@@ -384,6 +384,21 @@ export class FoundationService {
 	configureGoodsLocation(sessionId: string | undefined, key: string | undefined, locationId: string, input: unknown) {
 		return this.durable.configureGoodsLocation(sessionId, key, locationId, input)
 	}
+	readMixedCart(sessionId: string | undefined) {
+		return this.durable.readMixedCart(sessionId)
+	}
+	writeMixedCart(sessionId: string | undefined, key: string | undefined, input: unknown) {
+		return this.durable.writeMixedCart(sessionId, key, input)
+	}
+	previewMixedCartMerge(sessionId: string | undefined, input: unknown) {
+		return this.durable.previewMixedCartMerge(sessionId, input)
+	}
+	createMixedQuote(sessionId: string | undefined, key: string | undefined, input: unknown) {
+		return this.durable.createMixedQuote(sessionId, key, input)
+	}
+	readMixedQuote(sessionId: string | undefined, id: string) {
+		return this.durable.readMixedQuote(sessionId, id)
+	}
 	createGoodsQuote(sessionId: string | undefined, key: string | undefined, input: unknown) {
 		return this.durable.createGoodsQuote(sessionId, key, input)
 	}

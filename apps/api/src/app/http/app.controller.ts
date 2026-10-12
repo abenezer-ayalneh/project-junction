@@ -773,6 +773,56 @@ export class AppController {
 		return this.foundation.configureGoodsLocation(sessionId, key, locationId, body)
 	}
 
+	@Get('customer/cart')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Read the signed-in Customer Cart.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.mixedCartRead })
+	readMixedCart(@AuthenticatedSession() sessionId: string | undefined) {
+		return this.foundation.readMixedCart(sessionId)
+	}
+
+	@Put('customer/cart')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Explicitly replace Cart selections at the expected revision.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.mixedCartWrite })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.mixedCartWriteResult })
+	writeMixedCart(@AuthenticatedSession() sessionId: string | undefined, @Headers('idempotency-key') key: string | undefined, @Body() body: unknown) {
+		return this.foundation.writeMixedCart(sessionId, key, body)
+	}
+
+	@Post('customer/cart/merge-preview')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Preview anonymous Cart merge, matching selections and current conflicts without saving.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiBody({ schema: OpenApiSchemaRefs.mixedCartMerge })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.mixedCartMergeResult })
+	previewMixedCartMerge(@AuthenticatedSession() sessionId: string | undefined, @Body() body: unknown) {
+		return this.foundation.previewMixedCartMerge(sessionId, body)
+	}
+
+	@Post('customer/checkout/quotes')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Quote the complete mixed Cart and report repricing or unavailable components without reserving.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.mixedQuoteCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.mixedQuoteResult })
+	createMixedQuote(@AuthenticatedSession() sessionId: string | undefined, @Headers('idempotency-key') key: string | undefined, @Body() body: unknown) {
+		return this.foundation.createMixedQuote(sessionId, key, body)
+	}
+
+	@Get('customer/checkout/quotes/:quoteId')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Read a private mixed quote and its current expiry or stale revision status.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.mixedQuoteRead })
+	readMixedQuote(@AuthenticatedSession() sessionId: string | undefined, @Param('quoteId') id: string) {
+		return this.foundation.readMixedQuote(sessionId, id)
+	}
+
 	@Post('customer/goods/quotes')
 	@ApiOperation({ summary: 'Quote goods across Vendor groups with current stock, prices, fulfillment and policy snapshots. No stock is reserved.' })
 	@ApiSecurity('junction-auth-cookie')

@@ -76,6 +76,8 @@ try {
 			))
 	)
 		run(['exec', 'node', 'tools/check-booking-holds.mjs'], { JUNCTION_RUNTIME_MODE: 'local' })
+	if (!authProbe && (!focusedTestName || /mixed Cart and quote/i.test(focusedTestName)))
+		run(['exec', 'node', 'tools/check-mixed-cart-quotes.mjs'], { JUNCTION_RUNTIME_MODE: 'local' })
 	if (!authProbe && (!focusedTestName || /authoritative scheduling/i.test(focusedTestName)))
 		run(['exec', 'node', 'tools/check-service-scheduling.mjs'], { JUNCTION_RUNTIME_MODE: 'local' })
 	if (!authProbe && (!focusedTestName || /Service definitions/i.test(focusedTestName)))

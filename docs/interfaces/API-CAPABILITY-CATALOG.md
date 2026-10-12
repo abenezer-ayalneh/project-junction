@@ -116,3 +116,11 @@ Customer `GET /v1/customer/bookings/:bookingId/attendance`, `GET .../attendance/
 ## Phase 03 local acceptance — 2026-10-12
 
 Customer `GET /v1/customer/bookings/:bookingId/calendar.ics` exports current read-only iCal terms, private stable UID/version, UTC dates and cancelled status. Current ownership applies; no attendee, private Staff or provider reference is exported. See [C11 evidence](../quality/evidence/phase-03-c11-2026-10-12/acceptance-audit.md).
+
+## Local mixed Cart and advisory quote — 2026-10-12
+
+`GET /v1/customer/cart` reads the session-derived Customer/workspace Cart, returning revision zero before its first save. `PUT /v1/customer/cart` requires an idempotency key, expected revision and explicit complete selection; it never accepts caller ownership or a payable total. Each appointment intent has a distinct ID and quantity one, with a maximum of five; goods retain one Location/fulfillment choice per Vendor.
+
+`POST /v1/customer/cart/merge-preview` returns matching quantities/intent identities, unresolved selection conflicts and current price/availability reviews without saving. A proposed merge is absent when choices or combined limits conflict. Acceptance is an explicit Cart write against the previewed revision. `POST /v1/customer/checkout/quotes` requires verified Customer identity, idempotency key, Cart ID and expected revision. It persists one immutable advisory snapshot of current goods/Booking terms, policies and combined Money, or identified conflicts. Incomplete components have no payable total. `GET /v1/customer/checkout/quotes/:quoteId` applies current Customer/workspace scope and reports `ready`, `conflicts`, `stale` or `expired`; retrying creation preserves identity/deadline while reporting current revision/expiry state. Quotes expire at five minutes (derived local default).
+
+All five routes use `Cache-Control: no-store`. No quote or merge creates/releases inventory, Staff or promotion reservations; only current non-expired occupancy affects advisory availability. Holds, promotion/commission snapshots, payment/Purchase and the unified browser flow remain separate Phase 04 chunks. See [C02 evidence](../quality/PHASE-04-LOCAL-ACCEPTANCE-EVIDENCE.md#p04-c02--mixed-cart-and-quote-coordination--2026-10-12).
