@@ -316,7 +316,7 @@ suite('Phase 02 goods quotes and holds PostgreSQL', () => {
 		now = new Date(new Date(hold.expiresAt).getTime() - 1)
 		expect(await repository.expireGoodsHolds()).toBe(0)
 		now = new Date(hold.expiresAt)
-		expect(await Promise.all([repository.expireGoodsHolds(), other.expireGoodsHolds()])).toEqual([1, 0])
+		expect((await Promise.all([repository.expireGoodsHolds(), other.expireGoodsHolds()])).sort()).toEqual([0, 1])
 		await expect(repository.readGoodsHold(customer.sessionId, hold.holdId)).resolves.toMatchObject({ state: 'expired', snapshot: quote.snapshot })
 		expect(await repository.db.inventoryMovement.count({ where: { holdId: hold.holdId, reason: 'released' } })).toBe(1)
 		await expect(repository.createGoodsHold(customer.sessionId, key, { quoteId: quote.quoteId })).resolves.toEqual({ ...hold, replayed: true })
@@ -327,6 +327,90 @@ suite('Phase 02 goods quotes and holds PostgreSQL', () => {
 		now = new Date(freshHold.expiresAt)
 		await expect(repository.readGoodsHold(customer.sessionId, freshHold.holdId)).resolves.toMatchObject({ state: 'expired' })
 		expect(await repository.expireGoodsHolds()).toBe(0)
+	})
+
+	it('goods hold and concurrent damage serialize without negative availability', async () => {
+		const fixture = await createVendor(1)
+		const quote = await repository.createGoodsQuote(customer.sessionId, randomUUID(), fixture.selection)
+		const results = await Promise.allSettled([
+			repository.createGoodsHold(customer.sessionId, randomUUID(), { quoteId: quote.quoteId }),
+			other.createInventoryMovement(fixture.owner.sessionId, randomUUID(), {
+				listingId: fixture.listing.id,
+				locationId: fixture.location.id,
+				reason: 'damaged',
+				quantityDelta: -1,
+				note: 'Concurrent damage',
+			}),
+		])
+		expect(results.filter(({ status }) => status === 'fulfilled')).toHaveLength(1)
+		expect(results.filter(({ status }) => status === 'rejected')).toHaveLength(1)
+		const balance = await repository.readInventoryAvailability(fixture.owner.sessionId, fixture.listing.id, { locationId: fixture.location.id })
+		expect(balance.available).toBe(0)
+		expect(balance.onHand).toBe(balance.reserved)
+		expect(balance.reserved).toBe(results[0].status === 'fulfilled' ? 1 : 0)
+	})
+
+	it('goods multi-Vendor release rolls back on later-line failure and races expiry exactly once', async () => {
+		const first = await createVendor(1)
+		const second = await createVendor(1, true)
+		const quote = await repository.createGoodsQuote(customer.sessionId, randomUUID(), { groups: [first.selection.groups[0], second.selection.groups[0]] })
+		const hold = await repository.createGoodsHold(customer.sessionId, randomUUID(), { quoteId: quote.quoteId })
+		const before = await Promise.all([
+			repository.db.inventoryMovement.count(),
+			repository.db.auditLog.count(),
+			repository.db.outboxEvent.count(),
+			repository.db.idempotencyRecord.count(),
+		])
+		await repository.db.$executeRawUnsafe(
+			`CREATE FUNCTION reject_test_release() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.reason = 'released' AND NEW.listing_id = '${second.listing.id}'::uuid THEN RAISE EXCEPTION 'Deliberate second release failure'; END IF; RETURN NEW; END; $$`,
+		)
+		await repository.db.$executeRawUnsafe(
+			'CREATE TRIGGER reject_test_release BEFORE INSERT ON inventory_movements FOR EACH ROW EXECUTE FUNCTION reject_test_release()',
+		)
+		const key = randomUUID()
+		try {
+			await expect(repository.releaseGoodsHold(customer.sessionId, key, hold.holdId)).rejects.toThrow()
+		} finally {
+			await repository.db.$executeRawUnsafe('DROP TRIGGER reject_test_release ON inventory_movements')
+			await repository.db.$executeRawUnsafe('DROP FUNCTION reject_test_release()')
+		}
+		expect(
+			await Promise.all([
+				repository.db.inventoryMovement.count(),
+				repository.db.auditLog.count(),
+				repository.db.outboxEvent.count(),
+				repository.db.idempotencyRecord.count(),
+			]),
+		).toEqual(before)
+		await expect(repository.readGoodsHold(customer.sessionId, hold.holdId)).resolves.toMatchObject({ state: 'holding' })
+		now = new Date(hold.expiresAt)
+		await Promise.all([repository.releaseGoodsHold(customer.sessionId, key, hold.holdId), other.expireGoodsHolds()])
+		await expect(repository.releaseGoodsHold(customer.sessionId, key, hold.holdId)).resolves.toMatchObject({ state: 'expired', replayed: true })
+		expect(await repository.db.inventoryMovement.count({ where: { holdId: hold.holdId, reason: 'released' } })).toBe(2)
+		expect(await repository.db.auditLog.count({ where: { action: 'goods.hold-expired', metadata: { path: ['holdId'], equals: hold.holdId } } })).toBe(1)
+		await expect(repository.readInventoryAvailability(first.owner.sessionId, first.listing.id, { locationId: first.location.id })).resolves.toMatchObject({
+			reserved: 0,
+			available: 1,
+		})
+		await expect(
+			repository.readInventoryAvailability(second.owner.sessionId, second.listing.id, { locationId: second.location.id, sku: 'small' }),
+		).resolves.toMatchObject({ reserved: 0, available: 1 })
+	})
+
+	it('goods worker expiry restores stock after Customer revocation and Vendor unpublication', async () => {
+		const fixture = await createVendor(1)
+		const quote = await repository.createGoodsQuote(customer.sessionId, randomUUID(), fixture.selection)
+		const hold = await repository.createGoodsHold(customer.sessionId, randomUUID(), { quoteId: quote.quoteId })
+		await repository.db.user.update({ where: { id: customer.userId }, data: { adultVerificationState: 'unverified', verifiedAt: null } })
+		await repository.db.listing.update({ where: { id: fixture.listing.id }, data: { state: 'unpublished' } })
+		await expect(repository.releaseGoodsHold(customer.sessionId, randomUUID(), hold.holdId)).rejects.toThrow(AccessDeniedError)
+		now = new Date(hold.expiresAt)
+		expect(await repository.expireGoodsHolds()).toBe(1)
+		expect(await repository.expireGoodsHolds()).toBe(0)
+		await expect(
+			repository.readInventoryAvailability(fixture.owner.sessionId, fixture.listing.id, { locationId: fixture.location.id }),
+		).resolves.toMatchObject({ onHand: 1, reserved: 0, available: 1 })
+		expect(await repository.db.inventoryMovement.count({ where: { holdId: hold.holdId, reason: 'released' } })).toBe(1)
 	})
 
 	it('goods hold rejects expired, stale-price, policy, fulfillment and publication quotes without reservation', async () => {
