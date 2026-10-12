@@ -6,6 +6,7 @@ import { ListingMedia } from '@/components/listing-media'
 import { MarketplaceFooter } from '@/components/marketplace-footer'
 import { MarketplaceHeader } from '@/components/marketplace-header'
 import { ProductSelection } from '@/components/product-selection'
+import { ServiceSelection } from '@/components/service-selection'
 import { Badge } from '@/components/ui/badge'
 import { formatListingPrice, getPublicListing } from '@/lib/marketplace'
 
@@ -99,8 +100,8 @@ export default async function ListingDetail({ params, searchParams }: { params: 
 							)}
 						</div>
 
-						<div>
-							<div className="flex flex-wrap items-center gap-2">
+						<div className={isProduct ? undefined : 'text-center'}>
+							<div className={`flex flex-wrap items-center gap-2 ${isProduct ? '' : 'justify-center'}`}>
 								<Badge variant="secondary">{isProduct ? 'Product' : 'Service'}</Badge>
 								<span className="text-sm capitalize text-muted-foreground">{listing.category}</span>
 							</div>
@@ -110,29 +111,38 @@ export default async function ListingDetail({ params, searchParams }: { params: 
 							<Link className="mt-3 inline-flex text-sm font-medium underline underline-offset-4" href={`/vendors/${listing.vendor.slug}`}>
 								Sold by {listing.vendor.displayName}
 							</Link>
-							<p className="mt-6 text-2xl font-semibold">{formatListingPrice(listing)}</p>
-							{listing.durationMinutes ? (
+							{isProduct ? <p className="mt-6 text-2xl font-semibold">{formatListingPrice(listing)}</p> : null}
+							{isProduct && listing.durationMinutes ? (
 								<p className="mt-2 text-sm text-muted-foreground">Fixed duration: {listing.durationMinutes} minutes</p>
 							) : null}
 
-							{isProduct ? <ProductSelection listing={listing} /> : null}
-							<section className="mt-7 border-t pt-6" aria-labelledby="locations-title">
-								<h2 className="font-medium" id="locations-title">
-									Public locations
-								</h2>
-								{listing.locations.length ? (
-									<ul className="mt-3 flex flex-wrap gap-2">
-										{listing.locations.map((location) => (
-											<li className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm" key={location.id}>
-												<MapPin className="size-3.5 text-muted-foreground" aria-hidden="true" />
-												{location.label} · {location.city}
-											</li>
-										))}
-									</ul>
-								) : (
-									<p className="mt-3 text-sm text-muted-foreground">This Vendor has not published a location for this listing.</p>
-								)}
-							</section>
+							{isProduct ? (
+								<ProductSelection listing={listing} />
+							) : (
+								<ServiceSelection
+									listing={listing}
+									editId={typeof values.appointmentIntent === 'string' ? values.appointmentIntent : undefined}
+								/>
+							)}
+							{isProduct ? (
+								<section className="mt-7 border-t pt-6" aria-labelledby="locations-title">
+									<h2 className="font-medium" id="locations-title">
+										Public locations
+									</h2>
+									{listing.locations.length ? (
+										<ul className="mt-3 flex flex-wrap gap-2">
+											{listing.locations.map((location) => (
+												<li className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm" key={location.id}>
+													<MapPin className="size-3.5 text-muted-foreground" aria-hidden="true" />
+													{location.label} · {location.city}
+												</li>
+											))}
+										</ul>
+									) : (
+										<p className="mt-3 text-sm text-muted-foreground">This Vendor has not published a location for this listing.</p>
+									)}
+								</section>
+							) : null}
 						</div>
 					</section>
 

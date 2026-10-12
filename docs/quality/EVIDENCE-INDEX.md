@@ -33,3 +33,7 @@ Phase 02 local requirement/scenario coverage and unresolved formal gates are con
 ## Phase 03 local atomic Staff reservation — 2026-10-12
 
 [C03 local evidence](./PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c03--atomic-namedany-staff-holds--2026-10-12) and [verification record](./evidence/phase-03-c03-2026-10-12/verification.json) record local no-double-booking allocation/concurrency, private any-Staff, current revalidation, fixed deadline, release/worker expiry, retry and rollback proof. PostgreSQL/HTTP, actual worker, migration and workspace checks pass. UI, paid Booking/policies/providers, mixed checkout and formal phase exit remain open. Next is C04.
+
+## Phase 03 C04 — 2026-10-12
+
+[C04 local evidence](./PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c04--service-selection-and-booking-intent-ui--2026-10-12) and [verification record](./evidence/phase-03-c04-2026-10-12/verification.json) record exact selection, timezone, real slot-loss/read/offline recovery, unreserved Cart intent edit/remove and local browser captures/review. Workspace, PostgreSQL/HTTP, actual worker and web build checks pass. Paid lifecycle and formal acceptance remain open. Next is C05.

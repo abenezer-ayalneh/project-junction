@@ -10265,6 +10265,12 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
                       "label": {
                         "type": "string",
                       },
+                      "timezone": {
+                        "maxLength": 80,
+                        "minLength": 1,
+                        "nullable": true,
+                        "type": "string",
+                      },
                     },
                     "required": [
                       "id",
@@ -10300,6 +10306,46 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
               "type": "object",
             },
             "type": "array",
+          },
+          "scheduling": {
+            "additionalProperties": false,
+            "nullable": true,
+            "properties": {
+              "horizonDays": {
+                "maximum": 365,
+                "minimum": 1,
+                "type": "integer",
+              },
+              "leadTimeMinutes": {
+                "maximum": 43200,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "slotIntervalMinutes": {
+                "maximum": 60,
+                "minimum": 5,
+                "type": "integer",
+              },
+              "timezone": {
+                "maxLength": 80,
+                "minLength": 1,
+                "type": "string",
+              },
+              "version": {
+                "exclusiveMinimum": true,
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+            },
+            "required": [
+              "timezone",
+              "leadTimeMinutes",
+              "horizonDays",
+              "slotIntervalMinutes",
+              "version",
+            ],
+            "type": "object",
           },
           "version": {
             "exclusiveMinimum": true,

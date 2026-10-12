@@ -295,6 +295,10 @@ try {
 			clearTimeout(workerTimer)
 		}
 	}
+	if (process.env.SERVICE_BROWSER_CHECK === '1') {
+		const { checkServiceSelectionBrowser } = await import('./check-service-selection-browser.mjs')
+		await checkServiceSelectionBrowser({ repository, sessionId, vendor, location: source, origin })
+	}
 	console.log(
 		'Built local atomic Booking hold HTTP smoke passed: cookie/adult scope, fixed fifteen-minute terms, private any-Staff/named selection, current slot revalidation, replay/conflict/validation/anonymous denial, cross-mode capacity, release/replay, stale versions, concurrent last-Staff race and expired read recovery. No payment or Booking committed.',
 	)

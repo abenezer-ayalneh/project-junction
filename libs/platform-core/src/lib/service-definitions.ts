@@ -2,10 +2,12 @@ import {
 	type AccessContext,
 	IdempotencyKeySchema,
 	PublicServiceDefinitionSchema,
+	ScheduleCalendarSchema,
 	type ServiceConfiguration,
 	ServiceConfigurationCommandSchema,
 	ServiceConfigurationResultSchema,
 	ServiceConfigurationSchema,
+	ServiceSchedulingRulesSchema,
 	StaffConsentCommandSchema,
 	StaffProfileCreateSchema,
 	StaffProfileResultSchema,
@@ -227,6 +229,9 @@ export class ServiceDefinitions {
 				listingId,
 				version: listing.serviceConfigurationVersion,
 				capacity: configuration.capacity,
+				scheduling: listing.schedulingRules
+					? { ...ServiceSchedulingRulesSchema.parse(listing.schedulingRules), version: listing.schedulingRulesVersion }
+					: null,
 				options: configuration.options.map((option) => {
 					const locations = listing.vendor.locations.filter((location) => option.locationIds.includes(location.id) && location.label && location.city)
 					const modes = [
@@ -235,7 +240,12 @@ export class ServiceDefinitions {
 					]
 					return {
 						...option,
-						locations: locations.map((location) => ({ id: location.id, label: location.label, city: location.city })),
+						locations: locations.map((location) => ({
+							id: location.id,
+							label: location.label,
+							city: location.city,
+							timezone: location.scheduleCalendar ? ScheduleCalendarSchema.parse(location.scheduleCalendar).timezone : null,
+						})),
 						eligibleModes: modes.map((mode) => {
 							const qualifiedIds = option.qualifications
 								.filter((qualification) => (mode.locationId ? qualification.locationIds.includes(mode.locationId) : qualification.online))

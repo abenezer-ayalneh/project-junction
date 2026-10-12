@@ -13,6 +13,14 @@
 				"command": "next dev --hostname localhost",
 				"cwd": "apps/web"
 			}
+		},
+		"preview-services": {
+			"executor": "nx:run-commands",
+			"continuous": true,
+			"options": {
+				"cwd": "apps/web",
+				"command": "next start"
+			}
 		}
 	}
 }

@@ -1,6 +1,6 @@
 # Phase 03 local acceptance evidence
 
-**Recorded:** 2026-10-12. **Scope:** `P03-C01`–`P03-C03`, complete locally. Formal phase exit remains open.
+**Recorded:** 2026-10-12. **Scope:** `P03-C01`–`P03-C04`, complete locally. Formal phase exit remains open.
 
 Phase 00–01 entry dependencies have recorded local evidence; existing independent accessibility, retention, target storage/recovery and provider gates remain separate. All development and verification ran on the user's local machine, with disposable PostgreSQL schemas on loopback and a built API bound to loopback. No staging, remote acceptance testing or deployment was used.
 
@@ -95,4 +95,21 @@ Slot reads use a consistent snapshot and are advisory: a later hold must revalid
 
 C03 holds one appointment intent and freezes uncommitted selection/commercial terms; C05 owns policy/timing snapshots and paid Booking confirmation. Creation replay is historical acceptance, not a renewed holding-state promise; current read supplies release/expiry. Any-Staff assignment is deterministic within the private transaction, with no fairness/throughput claim. The shared goods/appointment capacity lock is a derived local concurrency strategy; it does not implement Phase 04 mixed checkout. Read-only iCal, waitlists, UI/Booking/payment/provider lifecycles and independent/formal phase gates remain open. No browser UI, remote development/testing or deployment was performed.
 
-**Next:** `P03-C04` — Service selection and Booking intent UI. Stop after C03.
+**Next at C03 completion:** `P03-C04`; subsequently completed below.
+
+## P03-C04 — Service selection and Booking intent UI — 2026-10-12
+
+The Service detail form derives exact fixed totals/duration from Options and add-ons, then chooses eligible mode/Location, named/any Staff, timezone, local date and current authoritative times. Optional public definition metadata exposes scheduling/version and Location timezone without private calendars or allocation identity. Add rechecks terms and availability before writing an unreserved local intent; it never creates a hold, payment or Booking. Cart supports same-intent editing and removal separately from goods.
+
+Slot loss clears unsafe time; read/offline failures invalidate times while preserving safe selectors on the page. Reconnect requires refresh. Storage failure/corruption has explicit recovery. Saved intents persist locally; unsaved selection drafts are not promised across reloads.
+
+| Local command                                                                                            | Result                                                                                     |
+| -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `pnpm nx run-many -t lint,typecheck,test --projects=contracts,platform-core,api,worker,web --parallel=3` | All five projects pass; 88 unit tests, one snapshot; one existing worker test skipped      |
+| `pnpm nx run web:build --webpack`                                                                        | Pass                                                                                       |
+| `pnpm nx run platform-core:test-service-selection`                                                       | 42 Phase 03 PostgreSQL cases, three HTTP smokes, actual worker expiry and served Edge pass |
+| `SERVICE_BROWSER_NO_CAPTURE=1 pnpm nx run platform-core:test-service-selection`                          | Final functional rerun includes actual offline add prevention/reconnect; pass              |
+
+The served browser uses loopback API/PostgreSQL and a built local Next server. A real competing C03 hold removes selected capacity; failed transport and actual offline context prevent saving until refreshed. The fixture deliberately contrasts stale Listing base price with exact Option/add-on ETB 12.70 and 45 minutes. Checks cover timezone, named/any Staff, Cart edit/remove, no private Staff identity, no browser capacity/payment mutation, page errors and new-content overflow. [Browser results and captures](./evidence/phase-03-c04-2026-10-12/README.md), [finish review](./evidence/phase-03-c04-2026-10-12/finish-review.md) and [design comparison](./evidence/phase-03-c04-2026-10-12/design-comparison.md) record two visual rounds and `ship`. The comparison corrects the review's unverified Geist assumption and records inherited drift.
+
+No migration changed (existing history remains 36). No remote development/testing or deployment occurred. This is local `REQ-P03-UX-001`/`TST-P03-004` selection/recovery evidence; paid confirmation, policies, full lifecycle, independent screen-reader/accessibility and formal phase exit remain open. **Next:** `P03-C05`; stop after C04.

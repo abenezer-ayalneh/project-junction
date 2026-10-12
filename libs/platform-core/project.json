@@ -71,44 +71,76 @@
 			"executor": "nx:run-commands",
 			"cache": false,
 			"dependsOn": ["build"],
-			"options": { "command": "node tools/media-backup-controller.mjs status" }
+			"options": {
+				"command": "node tools/media-backup-controller.mjs status"
+			}
 		},
 		"media-backup-run": {
 			"executor": "nx:run-commands",
 			"cache": false,
 			"dependsOn": ["build"],
-			"options": { "command": "node tools/media-backup-controller.mjs run" }
+			"options": {
+				"command": "node tools/media-backup-controller.mjs run"
+			}
 		},
 		"media-backup-watch": {
 			"executor": "nx:run-commands",
 			"cache": false,
 			"continuous": true,
 			"dependsOn": ["build"],
-			"options": { "command": "node tools/media-backup-controller.mjs watch" }
+			"options": {
+				"command": "node tools/media-backup-controller.mjs watch"
+			}
 		},
 		"media-backup-import": {
 			"executor": "nx:run-commands",
 			"cache": false,
 			"dependsOn": ["build"],
-			"options": { "command": "node tools/media-backup-controller.mjs import" }
+			"options": {
+				"command": "node tools/media-backup-controller.mjs import"
+			}
 		},
 		"media-backup-hold": {
 			"executor": "nx:run-commands",
 			"cache": false,
 			"dependsOn": ["build"],
-			"options": { "command": "node tools/media-backup-controller.mjs hold" }
+			"options": {
+				"command": "node tools/media-backup-controller.mjs hold"
+			}
 		},
 		"media-backup-release": {
 			"executor": "nx:run-commands",
 			"cache": false,
 			"dependsOn": ["build"],
-			"options": { "command": "node tools/media-backup-controller.mjs release" }
+			"options": {
+				"command": "node tools/media-backup-controller.mjs release"
+			}
 		},
 		"media-backup-restore": {
 			"executor": "nx:run-commands",
 			"cache": false,
 			"dependsOn": ["build"],
-			"options": { "command": "node tools/media-backup-controller.mjs restore" }
+			"options": {
+				"command": "node tools/media-backup-controller.mjs restore"
+			}
+		},
+		"test-service-selection": {
+			"executor": "nx:run-commands",
+			"cache": false,
+			"dependsOn": [
+				"build",
+				{
+					"projects": ["api", "worker"],
+					"target": "build"
+				}
+			],
+			"options": {
+				"command": "node --env-file=.env tools/run-integration.mjs",
+				"env": {
+					"FOUNDATION_TEST_NAME": "Phase 03 (atomic Booking holds|authoritative scheduling|Service definitions)",
+					"SERVICE_BROWSER_CHECK": "1"
+				}
+			}
 		}
 	}
 }

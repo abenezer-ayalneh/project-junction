@@ -367,6 +367,7 @@ export class AppController {
 	}
 
 	@Get('public/listings/:listingId/service-definition')
+	@Header('Cache-Control', 'no-store')
 	@ApiOperation({ summary: 'Read Service Options, add-ons and qualified modes; private Staff identities are omitted. No slots are reserved.' })
 	@ApiOkResponse({ schema: OpenApiSchemaRefs.publicServiceDefinition })
 	publicServiceDefinition(@Param('listingId') listingId: string) {

@@ -42,7 +42,7 @@ export function GoodsCart() {
 			const value = window.sessionStorage.getItem(pendingKey)
 			if (value) setPending(PendingSchema.parse(JSON.parse(value)))
 		} catch {
-			setMessage('Saved Cart could not be read. Clear Cart to start again.')
+			setMessage('Saved Cart could not be read. Clear goods to start again.')
 			setLines([])
 		}
 		const timer = window.setInterval(() => setNow(Date.now()), 1000)
@@ -187,7 +187,7 @@ export function GoodsCart() {
 			</p>
 			{!lines.length ? (
 				<div className="space-y-4">
-					<h2 className="text-xl font-semibold">Your Cart is empty</h2>
+					<p className="text-sm text-muted-foreground">No goods in Cart.</p>
 					<div className="flex justify-center gap-5">
 						<Link href="/search?kind=product" className="underline">
 							Browse Products
@@ -455,7 +455,7 @@ export function GoodsCart() {
 			) : null}
 			{!locked && !lines.length ? (
 				<Button variant="outline" onClick={() => edit([])}>
-					Clear Cart
+					Clear goods
 				</Button>
 			) : null}
 		</div>

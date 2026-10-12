@@ -203,6 +203,10 @@ suite('Phase 03 authoritative scheduling PostgreSQL', () => {
 	it('evaluates Location and Staff timezones separately and reports the Location timezone', async () => {
 		const f = await fixture()
 		await repository.configureLocationSchedule(f.session.id, randomUUID(), f.location.id, { expectedVersion: 1, calendar: calendar('Africa/Addis_Ababa') })
+		const definition = await repository.readPublicServiceDefinition(f.listing.id)
+		expect(definition.scheduling).toEqual({ ...f.rules, version: 1 })
+		expect(definition.options[0].locations[0].timezone).toBe('Africa/Addis_Ababa')
+		expect(JSON.stringify(definition)).not.toContain('scheduleCalendar')
 		const result = await repository.readPublicServiceSlots(f.listing.id, f.selection)
 		expect(result.timezone).toBe('Africa/Addis_Ababa')
 		expect(result.slots[0].start).toBe('2026-10-12T09:15:00.000Z')

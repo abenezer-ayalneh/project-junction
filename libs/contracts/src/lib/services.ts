@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { SchedulingTimezoneSchema, ServiceSchedulingRulesSchema } from './scheduling.js'
+
 const id = z.string().uuid()
 const cents = z.number().int().positive().max(100_000_000)
 const label = z.string().trim().min(2).max(120)
@@ -73,6 +75,7 @@ export const StaffProfileResultSchema = z.object({
 })
 export const StaffProfilesSchema = z.object({ items: z.array(StaffProfileResultSchema) })
 export const PublicServiceDefinitionSchema = z.object({
+	scheduling: ServiceSchedulingRulesSchema.extend({ version: z.number().int().positive() }).nullable().optional(),
 	listingId: id,
 	version: z.number().int().positive(),
 	capacity: z.literal('staff_only'),
@@ -84,7 +87,7 @@ export const PublicServiceDefinitionSchema = z.object({
 			durationMinutes: z.number().int().min(15).max(480),
 			bufferBeforeMinutes: z.number().int().min(0).max(120),
 			bufferAfterMinutes: z.number().int().min(0).max(120),
-			locations: z.array(z.object({ id, label: z.string(), city: z.string() })),
+			locations: z.array(z.object({ id, label: z.string(), city: z.string(), timezone: SchedulingTimezoneSchema.nullable().optional() })),
 			online: z.boolean(),
 			addons: z.array(ServiceAddonSchema),
 			eligibleModes: z.array(
