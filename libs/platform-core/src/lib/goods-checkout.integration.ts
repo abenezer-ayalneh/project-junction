@@ -162,6 +162,59 @@ suite('Phase 02 goods quotes and holds PostgreSQL', () => {
 		).resolves.toMatchObject({ reserved: 2, available: 2 })
 	})
 
+	it('goods quote validates zone boundaries, selections and current prices without changing stock', async () => {
+		const fixture = await createVendor(3)
+		const quote = (selection: GoodsQuoteCommand) => repository.createGoodsQuote(customer.sessionId, randomUUID(), selection)
+		const delivery: GoodsQuoteCommand = structuredClone(fixture.selection)
+		delivery.groups[0].fulfillment = {
+			method: 'delivery',
+			zoneId: fixture.zone.id,
+			address: { contactName: 'Customer', phone: '+251900000000', locality: 'City', address: 'Street', point: [41, 9.5] },
+		}
+		const boundary = await quote(delivery)
+		expect(boundary.snapshot.groups[0]).toMatchObject({ deliveryFeeCents: 200, etaMinutes: 60 })
+		expect(boundary.snapshot.groups[0].lines[0].policy).toEqual({
+			returnTemplate: 'standard',
+			changeOfMindDays: 7,
+			faultProtectionDays: 30,
+			restockingFeeCents: 0,
+			startsAt: 'verified_handoff',
+		})
+		delivery.groups[0].fulfillment.address.point = [40.999999, 9.5]
+		await expect(quote(delivery)).rejects.toThrow(GoodsCheckoutConflictError)
+		delivery.groups[0].fulfillment.address.point = [41, 9]
+		await expect(quote(delivery)).resolves.toMatchObject({ snapshot: { totalCents: 1200 } })
+		delivery.groups[0].fulfillment.zoneId = randomUUID()
+		await expect(quote(delivery)).rejects.toThrow(GoodsCheckoutConflictError)
+		const duplicateVendor = { groups: [fixture.selection.groups[0], { ...fixture.selection.groups[0], locationId: randomUUID() }] }
+		await expect(quote(duplicateVendor)).rejects.toThrow()
+		const duplicateLine = structuredClone(fixture.selection)
+		duplicateLine.groups[0].lines.push({ ...duplicateLine.groups[0].lines[0] })
+		await expect(quote(duplicateLine)).rejects.toThrow()
+		const unavailable = structuredClone(fixture.selection)
+		unavailable.groups[0].lines[0].quantity = 4
+		await expect(quote(unavailable)).rejects.toThrow(GoodsCheckoutConflictError)
+		unavailable.groups[0].lines[0].quantity = 1.5
+		await expect(quote(unavailable)).rejects.toThrow()
+		unavailable.groups[0].lines[0].quantity = 1
+		unavailable.groups[0].locationId = randomUUID()
+		await expect(quote(unavailable)).rejects.toThrow(AccessDeniedError)
+		await repository.db.listing.update({ where: { id: fixture.listing.id }, data: { priceCents: 900, version: { increment: 1 } } })
+		expect(boundary.snapshot.groups[0].lines[0].unitPriceCents).toBe(1000)
+		await expect(quote(fixture.selection)).resolves.toMatchObject({ snapshot: { totalCents: 900, groups: [{ lines: [{ unitPriceCents: 900 }] }] } })
+		delivery.groups[0].fulfillment.zoneId = fixture.zone.id
+		await expect(quote(delivery)).rejects.toThrow(GoodsCheckoutConflictError)
+		await repository.configureGoodsLocation(fixture.owner.sessionId, randomUUID(), fixture.location.id, {
+			expectedVersion: 1,
+			configuration: { ...fixture.configuration, pickupEnabled: false },
+		})
+		await expect(quote(fixture.selection)).rejects.toThrow(GoodsCheckoutConflictError)
+		await expect(
+			repository.readInventoryAvailability(fixture.owner.sessionId, fixture.listing.id, { locationId: fixture.location.id }),
+		).resolves.toMatchObject({ onHand: 3, reserved: 0, available: 3 })
+		expect(await repository.db.inventoryMovement.count({ where: { listingId: fixture.listing.id } })).toBe(1)
+	})
+
 	it('goods competing holds cannot oversell; concurrent duplicate hold and release retries affect the ledger once', async () => {
 		const fixture = await createVendor(1)
 		const rival = await createCustomer()

@@ -117,3 +117,7 @@ This table is the authoritative test association. Each requirement's phase file 
 | `REQ-P06-UX-001`    | `TST-P06-006`, `TST-P06-004` |
 
 No `REQ-P##-*` may be added without a row here and a future evidence class.
+
+## Phase 02 local chunk evidence
+
+On 2026-10-12, `P02-C04` goods quote validation completed locally with PostgreSQL zone boundaries, invalid selections, current-price and immutable policy snapshots, five-minute quote expiry, no-reservation ledger checks, and built API quote/replay/auth regression evidence. See [the dated chunk evidence](../requirements/PHASE-02-GOODS-COMMERCE.md#p02-c04--goods-quote-validation--2026-10-12). This supports the quote portion of `REQ-P02-CHK-001` and the snapshots in `TST-P02-002`; full concurrency, fulfillment/proof, return and browser scenarios remain open. `P02-C05` remains the next chunk.
