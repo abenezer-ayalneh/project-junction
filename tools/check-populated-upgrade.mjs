@@ -59,6 +59,7 @@ const migrations = [
 	'prisma/migrations/20261012120000_booking_amendments/migration.sql',
 	'prisma/migrations/20261012130000_substitutions_waitlists/migration.sql',
 	'prisma/migrations/20261012140000_booking_meetings/migration.sql',
+	'prisma/migrations/20261012150000_booking_attendance/migration.sql',
 ]
 
 try {

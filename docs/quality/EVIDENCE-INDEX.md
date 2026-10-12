@@ -57,3 +57,7 @@ Phase 02 local requirement/scenario coverage and unresolved formal gates are con
 ## Phase 03 C09 — 2026-10-12
 
 [C09 evidence](./PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c09--meeting-provisioning-and-compensation--2026-10-12) and [verification](./evidence/phase-03-c09-2026-10-12/verification.json) record asynchronous controlled provider/worker, private binding, retries/leases/stale results, protected replacement and cutoff compensation. Live Google/public demo, attendance and formal gates remain open.
+
+## Local attendance and contest — 2026-10-12
+
+C10 verifies code/QR, online join, assigned Staff, no-show/contest, earning eligibility, exact boundaries, replay/races and rollback; Phase 04 ledger posting and formal gates remain open. [C10 evidence](../quality/PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c10--attendance-completion-and-no-show-contest--2026-10-12).

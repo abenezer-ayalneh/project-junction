@@ -456,7 +456,7 @@ export class Bookings {
 					provider ? 'POST /v1/vendor/bookings/:bookingId/cancel' : 'POST /v1/customer/bookings/:bookingId/cancel',
 					{ bookingId, command },
 					async () => {
-						if (booking.version !== command.expectedVersion || booking.state !== 'confirmed')
+						if (booking.version !== command.expectedVersion || !['confirmed', 'attendance_pending'].includes(booking.state))
 							throw new BookingHoldConflictError('Booking changed or is no longer cancellable.')
 						return this.cancelInTransaction(tx, bookingId, context.actor.userId, provider, command.reason, key)
 					},
@@ -470,7 +470,7 @@ export class Bookings {
 	/** Internal only: caller must hold checkout/Vendor locks and establish actor authority. */
 	async cancelInTransaction(tx: Tx, bookingId: string, actorId: string | null, provider: boolean, reason: string, key: string | null) {
 		const booking = await tx.booking.findUniqueOrThrow({ where: { id: bookingId }, include: { hold: true, payment: true } })
-		if (booking.state !== 'confirmed') throw new BookingHoldConflictError('Booking is no longer cancellable.')
+		if (!['confirmed', 'attendance_pending'].includes(booking.state)) throw new BookingHoldConflictError('Booking is no longer cancellable.')
 		const vendor = await tx.vendor.findUniqueOrThrow({ where: { id: booking.hold.vendorId } })
 		const snapshot = BookingSnapshotSchema.parse(booking.currentSnapshot ?? booking.snapshot)
 		const now = this.dependencies.now()

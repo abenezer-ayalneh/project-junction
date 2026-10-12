@@ -71,7 +71,7 @@ try {
 	if (
 		!authProbe &&
 		(!focusedTestName ||
-			/atomic Booking holds|paid Booking confirmation|Booking cancellation|atomic Booking amendments|substitution and waitlists|meeting provisioning/i.test(
+			/atomic Booking holds|paid Booking confirmation|Booking cancellation|atomic Booking amendments|substitution and waitlists|meeting provisioning|attendance and contest/i.test(
 				focusedTestName,
 			))
 	)

@@ -73,6 +73,7 @@ import {
 
 import { Prisma, PrismaClient } from '../../generated/prisma/index.js'
 import { AccessDeniedError, assertElevatedSession, assertRequiredMfa, assertScope } from './access.js'
+import { BookingAttendance } from './booking-attendance.js'
 import { BookingChanges } from './booking-changes.js'
 import { BookingHolds } from './booking-holds.js'
 import { BookingMeetings } from './booking-meetings.js'
@@ -140,6 +141,7 @@ function hasRequiredIdentity(user: { adultVerificationState: string; verifiedAt:
 /** Prisma owns CRUD; parameterized SQL below is restricted to concurrency locks/claims. */
 export class PostgresFoundation {
 	readonly db: PrismaClient
+	private readonly bookingAttendance: BookingAttendance
 	private readonly bookingMeetings: BookingMeetings
 	private readonly bookingChanges: BookingChanges
 	private readonly bookings: Bookings
@@ -194,6 +196,17 @@ export class PostgresFoundation {
 			this.bookings,
 			meetingProvider,
 		)
+		this.bookingAttendance = new BookingAttendance(
+			{
+				db: this.db,
+				derive: (tx, sessionId, options) => this.derive(tx, sessionId, options),
+				lockWorkspace: (tx, id) => this.workspaceLock(tx, id),
+				replay: (tx, context, key, method, request, create) => this.replayOrCreate(tx, context, key, method, request, create),
+				now: goodsClock,
+			},
+			this.bookingMeetings,
+		)
+
 		this.bookingChanges = new BookingChanges(
 			{
 				db: this.db,
@@ -609,6 +622,31 @@ export class PostgresFoundation {
 			assertScope(context, { workspaceId: location.vendor.workspaceId, vendorId: location.vendorId, locationId: location.id })
 			return LocationReadSchema.parse({ id: location.id, vendorId: location.vendorId, workspaceId: location.vendor.workspaceId })
 		})
+	}
+
+	readBookingAttendance(sessionId: string | undefined, id: string, staff = false) {
+		return this.bookingAttendance.read(sessionId, id, staff)
+	}
+	readBookingAttendanceProof(sessionId: string | undefined, id: string) {
+		return this.bookingAttendance.proof(sessionId, id)
+	}
+	joinBooking(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.bookingAttendance.join(sessionId, key, id, input)
+	}
+	confirmBookingAttendance(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.bookingAttendance.confirm(sessionId, key, id, input)
+	}
+	reportBookingNoShow(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.bookingAttendance.noShow(sessionId, key, id, input)
+	}
+	contestBookingAttendance(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.bookingAttendance.contest(sessionId, key, id, input)
+	}
+	activateBookingAttendance() {
+		return this.bookingAttendance.activate()
+	}
+	finalizeBookingNoShows() {
+		return this.bookingAttendance.finalizeNoShows()
 	}
 
 	readBookingMeeting(sessionId: string | undefined, id: string, vendor = false) {

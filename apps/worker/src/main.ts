@@ -39,6 +39,8 @@ async function tick() {
 		await repository.expireGoodsPickups()
 		await repository.expireGoodsDeliveries()
 		await repository.reconcileGoodsRefunds()
+		await repository.activateBookingAttendance()
+		await repository.finalizeBookingNoShows()
 		await repository.reconcileBookingMeetings()
 		await repository.reconcileBookingRefunds()
 		await repository.expirePendingVideoUploads()

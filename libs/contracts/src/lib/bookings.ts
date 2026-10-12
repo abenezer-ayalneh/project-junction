@@ -120,3 +120,51 @@ export const BookingMeetingReplacementCommandSchema = z.strictObject({
 	reason: z.string().trim().min(1).max(500),
 })
 export const BookingMeetingResultSchema = BookingMeetingReadSchema.extend({ replayed: z.boolean() })
+export const BookingAttendanceProofSchema = z.object({
+	bookingId: id,
+	bookingVersion: z.number().int().positive(),
+	code: z.string().regex(/^\d{6}$/),
+	qrPayload: z.string(),
+	expiresAt: z.string().datetime(),
+})
+export const BookingAttendanceReadSchema = z.object({
+	bookingId: id,
+	bookingVersion: z.number().int().positive(),
+	state: z.enum(['confirmed', 'attendance_pending', 'completed', 'no_show_reported', 'no_show_final', 'contested', 'cancelled']),
+	mode: z.enum(['in_person', 'online']),
+	joinedAt: z.string().datetime().nullable(),
+	completedAt: z.string().datetime().nullable(),
+	noShowReportedAt: z.string().datetime().nullable(),
+	noShowFinalAt: z.string().datetime().nullable(),
+	contestUntil: z.string().datetime().nullable(),
+	contestedAt: z.string().datetime().nullable(),
+	earningAvailableAt: z.string().datetime().nullable(),
+	earningPosting: z.literal('phase04_pending'),
+})
+export const BookingAttendanceConfirmCommandSchema = z.strictObject({
+	expectedVersion: z.number().int().positive(),
+	method: z.enum(['code', 'qr', 'online']),
+	proof: z.string().min(1).max(2000).optional(),
+	confirmed: z.literal(true),
+})
+export const BookingAttendanceResultSchema = z.object({
+	bookingId: id,
+	state: z.enum(['completed', 'proof_rejected']),
+	proofAttempts: z.number().int().min(0),
+	completedAt: z.string().datetime().nullable(),
+	replayed: z.boolean(),
+})
+export const BookingJoinCommandSchema = z.strictObject({ expectedVersion: z.number().int().positive() })
+export const BookingJoinResultSchema = z.object({ bookingId: id, joinedAt: z.string().datetime(), uri: z.string(), replayed: z.boolean() })
+export const BookingNoShowCommandSchema = z.strictObject({
+	expectedVersion: z.number().int().positive(),
+	reason: z.literal('customer_absent'),
+	waitedUntil: z.string().datetime({ offset: true }),
+	contactAttempts: z
+		.array(z.string().datetime({ offset: true }))
+		.min(1)
+		.max(10),
+	note: z.string().trim().min(1).max(500),
+})
+export const BookingNoShowResultSchema = BookingAttendanceReadSchema.extend({ replayed: z.boolean() })
+export const BookingContestCommandSchema = z.strictObject({ expectedVersion: z.number().int().positive(), reason: z.string().trim().min(1).max(500) })

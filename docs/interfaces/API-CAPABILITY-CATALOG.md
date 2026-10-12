@@ -108,3 +108,7 @@ Vendor `POST /v1/vendor/bookings/:bookingId/substitutions` proposes/executes qua
 ## Local meetings — 2026-10-12
 
 Customer/assigned Staff/scoped Owner reads use `GET /v1/customer/bookings/:bookingId/meeting` or `GET /v1/vendor/bookings/:bookingId/meeting`. `PUT /v1/vendor/staff/:staffId/local-meet-connection` is linked-Staff self authority and accepts only controlled connected state/version, never a token. `POST /v1/vendor/bookings/:bookingId/meeting/replacement` requires scoped Owner, reason, expected version, idempotency key and required MFA; local replacement is generated DemoMeet only. Provider/connection references and raw failures never enter responses/events. [C09 evidence](../quality/PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c09--meeting-provisioning-and-compensation--2026-10-12).
+
+## Local attendance and contest — 2026-10-12
+
+Customer `GET /v1/customer/bookings/:bookingId/attendance`, `GET .../attendance/proof`, `POST .../join` and `POST .../contest` expose private evidence/participation. Vendor `GET /v1/vendor/bookings/:bookingId/attendance`, `POST .../attendance/confirm` and `POST .../no-show` require current assigned Staff and Location scope. Mutation idempotency keys and expected versions are mandatory. Code/QR and raw evidence never enter events. [C10 evidence](../quality/PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c10--attendance-completion-and-no-show-contest--2026-10-12).

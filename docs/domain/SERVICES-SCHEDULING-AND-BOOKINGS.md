@@ -53,3 +53,7 @@ C08 preserves purchased timing/price and Customer allowance during Vendor Staff 
 ## Local meeting provisioning — 2026-10-12
 
 C09 provisions after paid confirmation with stable Booking-version/assigned-Staff/connection identity and bounded leases/retries. Local controlled connections use opaque references; no Google request is made. Invalid/stale results cannot expose a meeting link. Protected local DemoMeet replacement precedes a configured cutoff (derived default 15 minutes), otherwise Platform cancellation returns full value. Withdrawn Staff connection/membership hides readiness immediately. Live Google OAuth/Meet REST and public demo deployment remain open. [C09 evidence](../quality/PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c09--meeting-provisioning-and-compensation--2026-10-12).
+
+## Local attendance and contest — 2026-10-12
+
+C10 binds private Customer code/QR to current Booking version and Staff, requires assigned Staff confirmation or Junction join plus Staff, and records contestable no-show/completion evidence. Eligibility remains frozen during contest; Phase 04 posting is explicitly pending. [C10 evidence](../quality/PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c10--attendance-completion-and-no-show-contest--2026-10-12).

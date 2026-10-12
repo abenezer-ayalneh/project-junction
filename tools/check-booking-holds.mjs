@@ -58,6 +58,7 @@ try {
 			API_BIND_ADDRESS: '127.0.0.1',
 			BETTER_AUTH_URL: 'http://localhost:3000',
 			BETTER_AUTH_SECRET: secret,
+			JUNCTION_BOOKING_ATTENDANCE_SECRET: secret,
 			GOOGLE_CLIENT_ID: 'local-inventory.apps.googleusercontent.com',
 			GOOGLE_CLIENT_SECRET: 'local-test-only',
 			SMTP_HOST: '127.0.0.1',
@@ -447,6 +448,77 @@ try {
 	assert.equal(replacement.body.provider, 'demo_meet')
 	console.log(
 		'Built local meeting HTTP/worker smoke passed: Staff self connection, asynchronous controlled assigned-Staff provisioning, private URI authority and protected replacement. No Google network call or live meeting acceptance.',
+	)
+
+	// Disposable historical paid fixture isolates attendance HTTP timing from future scheduling.
+	const attendanceStart = new Date(Date.now() - 45 * 60000),
+		attendanceEnd = new Date(Date.now() - 15 * 60000)
+	const attendanceSnapshot = {
+		...created.body.snapshot,
+		addons: [],
+		priceCents: 1200,
+		durationMinutes: 30,
+		start: attendanceStart.toISOString(),
+		end: attendanceEnd.toISOString(),
+	}
+	const attendanceHold = await repository.db.bookingHold.create({
+		data: {
+			customerId: userId,
+			workspaceId: workspace.id,
+			vendorId: vendor.id,
+			snapshot: attendanceSnapshot,
+			state: 'committed',
+			expiresAt: new Date(Date.now() - 3600000),
+		},
+	})
+	const attendancePayment = await repository.db.bookingPayment.create({
+		data: {
+			holdId: attendanceHold.id,
+			amountCents: 1200,
+			state: 'succeeded',
+			policySnapshot: { template: 'standard', version: 1, fullRefundHours: 48, partialRefundHours: 12, amendmentLimit: 1, contestHours: 48 },
+		},
+	})
+	const attendanceAllocation = await repository.db.staffAllocation.create({
+		data: { holdId: attendanceHold.id, staffId: linked.body.id, state: 'booked', startAt: attendanceStart, endAt: attendanceEnd },
+	})
+	const attendanceBooking = await repository.db.booking.create({
+		data: {
+			holdId: attendanceHold.id,
+			paymentId: attendancePayment.id,
+			allocationId: attendanceAllocation.id,
+			snapshot: {
+				...attendanceSnapshot,
+				policy: attendancePayment.policySnapshot,
+				attendee: null,
+				optionPriceCents: 1200,
+				promotion: null,
+				commission: null,
+			},
+			confirmedAt: new Date(Date.now() - 3600000),
+		},
+	})
+	const attendancePath = `/customer/bookings/${attendanceBooking.id}/attendance`
+	const attendanceProof = await request(`${attendancePath}/proof`)
+	assert.equal(attendanceProof.status, 200, JSON.stringify(attendanceProof.body))
+	assert.match(attendanceProof.body.code, /^\d{6}$/)
+	assert.equal((await request(`${attendancePath}/proof`, 'GET', undefined, '', false)).status, 403)
+	const confirmPath = `/vendor/bookings/${attendanceBooking.id}/attendance/confirm`,
+		confirmKey = randomUUID()
+	const confirmCommand = { expectedVersion: 1, method: 'qr', proof: attendanceProof.body.qrPayload, confirmed: true }
+	const completed = await request(confirmPath, 'POST', confirmCommand, confirmKey)
+	assert.equal(completed.status, 201, JSON.stringify(completed.body))
+	assert.equal(completed.body.state, 'completed')
+	assert.equal((await request(confirmPath, 'POST', confirmCommand, confirmKey)).body.replayed, true)
+	const completionRead = await request(attendancePath)
+	assert.equal(completionRead.body.earningPosting, 'phase04_pending')
+	assert.equal(new Date(completionRead.body.earningAvailableAt) - new Date(completed.body.completedAt), 48 * 3600000)
+	const contested = await request(`/customer/bookings/${attendanceBooking.id}/contest`, 'POST', { expectedVersion: 2, reason: 'Completion disputed' })
+	assert.equal(contested.status, 201, JSON.stringify(contested.body))
+	assert.equal(contested.body.state, 'contested')
+	assert.equal(contested.body.earningAvailableAt, null)
+	console.log(
+		'Built local attendance HTTP smoke passed: private Customer QR, assigned Staff confirmation/replay, 48-hour earning seam and scoped contest freeze.',
 	)
 	if (process.env.SERVICE_BROWSER_CHECK === '1') {
 		const { checkServiceSelectionBrowser } = await import('./check-service-selection-browser.mjs')

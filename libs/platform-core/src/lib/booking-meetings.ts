@@ -97,6 +97,10 @@ export class BookingMeetings {
 			manualReplacement: meeting?.manualReplacement ?? false,
 		})
 	}
+	readInTransaction(tx: Tx, id: string) {
+		return this.current(tx, id).then((current) => this.view(current))
+	}
+
 	async read(sessionId: string | undefined, idInput: string, vendor = false) {
 		const bookingId = z.string().uuid().parse(idInput)
 		return this.deps.db.$transaction(async (tx) => {
@@ -149,7 +153,7 @@ export class BookingMeetings {
 				const now = this.deps.now()
 				const unseeded = await tx.booking.findMany({
 					where: {
-						state: 'confirmed',
+						state: { in: ['confirmed', 'attendance_pending'] },
 						meeting: { is: null },
 						OR: [
 							{ currentSnapshot: { path: ['mode'], equals: 'online' } },
@@ -182,7 +186,7 @@ export class BookingMeetings {
 					where: {
 						OR: [
 							{ state: { not: 'booking_cancelled' } },
-							{ booking: { state: 'confirmed', currentSnapshot: { path: ['mode'], equals: 'online' } } },
+							{ booking: { state: { in: ['confirmed', 'attendance_pending'] }, currentSnapshot: { path: ['mode'], equals: 'online' } } },
 						],
 					},
 					orderBy: { updatedAt: 'asc' },
@@ -233,6 +237,10 @@ export class BookingMeetings {
 								updatedAt: now,
 							},
 						})
+					}
+					if (!['confirmed', 'attendance_pending'].includes(booking.state)) {
+						await tx.bookingMeeting.update({ where: { id: record.id }, data: { updatedAt: now } })
+						continue
 					}
 					if (record.state === 'ready') {
 						await tx.bookingMeeting.update({ where: { id: record.id }, data: { updatedAt: now } })
@@ -358,7 +366,7 @@ export class BookingMeetings {
 					const vendor = await tx.vendor.findUniqueOrThrow({ where: { id: booking.hold.vendorId } })
 					await this.deps.lockWorkspace(tx, vendor.workspaceId)
 					if (
-						booking.state !== 'confirmed' ||
+						!['confirmed', 'attendance_pending'].includes(booking.state) ||
 						booking.version !== claim.bookingVersion ||
 						booking.allocation.staffId !== claim.request.staffId ||
 						(!meeting.manualReplacement &&
@@ -451,7 +459,7 @@ export class BookingMeetings {
 						const meeting = current.booking.meeting
 						if (
 							!meeting ||
-							current.booking.state !== 'confirmed' ||
+							!['confirmed', 'attendance_pending'].includes(current.booking.state) ||
 							current.booking.version !== command.expectedVersion ||
 							this.deps.now() >= meeting.safetyCutoffAt
 						)

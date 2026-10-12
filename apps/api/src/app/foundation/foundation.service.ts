@@ -57,6 +57,25 @@ export class FoundationService {
 		this.durable = new PostgresFoundation(this.databaseUrl())
 	}
 
+	readBookingAttendance(sessionId: string | undefined, id: string, staff = false) {
+		return this.durable.readBookingAttendance(sessionId, id, staff)
+	}
+	readBookingAttendanceProof(sessionId: string | undefined, id: string) {
+		return this.durable.readBookingAttendanceProof(sessionId, id)
+	}
+	joinBooking(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.durable.joinBooking(sessionId, key, id, input)
+	}
+	confirmBookingAttendance(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.durable.confirmBookingAttendance(sessionId, key, id, input)
+	}
+	reportBookingNoShow(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.durable.reportBookingNoShow(sessionId, key, id, input)
+	}
+	contestBookingAttendance(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.durable.contestBookingAttendance(sessionId, key, id, input)
+	}
+
 	readBookingMeeting(sessionId: string | undefined, id: string, vendor = false) {
 		return this.durable.readBookingMeeting(sessionId, id, vendor)
 	}

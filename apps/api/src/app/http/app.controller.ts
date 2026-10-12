@@ -403,6 +403,90 @@ export class AppController {
 	) {
 		return this.foundation.replaceBookingMeeting(sessionId, key, id, body)
 	}
+	@Get('customer/bookings/:bookingId/attendance')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'customerBookingAttendance with scoped attendance evidence.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.bookingAttendanceRead })
+	customerBookingAttendance(@AuthenticatedSession() sessionId: string | undefined, @Param('bookingId') id: string) {
+		return this.foundation.readBookingAttendance(sessionId, id)
+	}
+	@Get('vendor/bookings/:bookingId/attendance')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'vendorBookingAttendance with scoped attendance evidence.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.bookingAttendanceRead })
+	vendorBookingAttendance(@AuthenticatedSession() sessionId: string | undefined, @Param('bookingId') id: string) {
+		return this.foundation.readBookingAttendance(sessionId, id, true)
+	}
+	@Get('customer/bookings/:bookingId/attendance/proof')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'readBookingAttendanceProof with scoped attendance evidence.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.bookingAttendanceProof })
+	readBookingAttendanceProof(@AuthenticatedSession() sessionId: string | undefined, @Param('bookingId') id: string) {
+		return this.foundation.readBookingAttendanceProof(sessionId, id)
+	}
+	@Post('customer/bookings/:bookingId/join')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'joinBooking with scoped attendance evidence.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.bookingJoinCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.bookingJoinResult })
+	joinBooking(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('bookingId') id: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.joinBooking(sessionId, key, id, body)
+	}
+	@Post('vendor/bookings/:bookingId/attendance/confirm')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'confirmBookingAttendance with scoped attendance evidence.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.bookingAttendanceConfirmCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.bookingAttendanceResult })
+	confirmBookingAttendance(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('bookingId') id: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.confirmBookingAttendance(sessionId, key, id, body)
+	}
+	@Post('vendor/bookings/:bookingId/no-show')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'reportBookingNoShow with scoped attendance evidence.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.bookingNoShowCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.bookingNoShowResult })
+	reportBookingNoShow(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('bookingId') id: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.reportBookingNoShow(sessionId, key, id, body)
+	}
+	@Post('customer/bookings/:bookingId/contest')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'contestBookingAttendance with scoped attendance evidence.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.bookingContestCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.bookingNoShowResult })
+	contestBookingAttendance(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('bookingId') id: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.contestBookingAttendance(sessionId, key, id, body)
+	}
 	@Post('customer/bookings/payments')
 	@Header('Cache-Control', 'no-store')
 	@ApiOperation({ summary: 'Start a controlled local appointment payment without extending the hold.' })

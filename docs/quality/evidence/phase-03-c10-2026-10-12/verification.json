@@ -1,0 +1,30 @@
+{
+	"chunk": "P03-C10",
+	"date": "2026-10-12",
+	"status": "complete_locally",
+	"environment": "local machine only; disposable loopback PostgreSQL/Redis/built API/worker",
+	"verified": {
+		"attendance_postgresql_scenarios": 11,
+		"built_attendance_http": "passed; private QR, Staff completion/replay, 48-hour earning seam and contest freeze",
+		"workspace_lint_typecheck_test": "passed",
+		"migration_compatibility": "42 migrations; no difference",
+		"populated_upgrade": "passed",
+		"phase03_combined_postgresql_scenarios": 106
+	},
+	"pending": ["C11 full acceptance audit", "Phase 04 ledger/earning posting", "independent accessibility/live-provider/formal gates"],
+	"limits": ["Phase 04 financial ledger/earning posting remains pending", "no live provider or independent accessibility acceptance"],
+	"derived_defaults": {
+		"proof_available_minutes_before_start": 30,
+		"proof_expiry_hours_after_end": 2,
+		"confirmation_and_no_show_max_hours_after_end": 24,
+		"proof_attempt_limit": 5,
+		"online_join_minutes_before_start_and_after_end": 15
+	},
+	"sha256": {
+		"libs/platform-core/src/lib/booking-attendance.ts": "cfc752bc169d5db5b880052b07b425e59aabda400a2d80fc70d38fc75be8e999",
+		"libs/platform-core/src/lib/booking-attendance.integration.ts": "3bcff1970e1f1ad1cc9c24416a6b2345342bf86510ae70f5363cfdc2821227bf",
+		"prisma/migrations/20261012150000_booking_attendance/migration.sql": "83ed2a0eb1555286e99e0ab258420220ef8e1ab534fedcfa68d62175a3dff6c3"
+	},
+	"baseline": "afb64900e589df9268e5b512b24894f7603a72aa",
+	"next": "P03-C11"
+}
