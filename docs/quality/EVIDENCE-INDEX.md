@@ -45,3 +45,7 @@ Phase 02 local requirement/scenario coverage and unresolved formal gates are con
 ## Phase 03 C06 — 2026-10-12
 
 [C06 local evidence](./PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c06--cancellation-policy-and-refunds--2026-10-12) records purchased cancellation policy, full Vendor refunds, exact boundaries, replay/races, authority and rollback. [Verification](./evidence/phase-03-c06-2026-10-12/verification.json) records local PostgreSQL/HTTP/worker, workspace and 38-migration checks. C07 and later lifecycle/formal gates remain open.
+
+## Phase 03 C07 — 2026-10-12
+
+[C07 local evidence](./PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c07--atomic-amendments-and-price-delta--2026-10-12) and [verification](./evidence/phase-03-c07-2026-10-12/verification.json) record atomic replacement, changed/purchased component pricing, controlled delta, allowance/cutoff, replay/races and rollback. Later lifecycle and formal provider/phase gates remain open.

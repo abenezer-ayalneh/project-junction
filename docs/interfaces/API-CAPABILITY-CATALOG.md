@@ -96,3 +96,7 @@ Customer-scoped `POST /v1/customer/bookings/payments`, `POST /v1/customer/bookin
 ## Local Booking cancellation — 2026-10-12
 
 `POST /v1/customer/bookings/:bookingId/cancel` and `POST /v1/vendor/bookings/:bookingId/cancel` require reason, expected version and idempotency key. Customer ownership or active scoped Owner/enabled Scheduler authority is checked on every retry. Purchased policy determines Customer refund; Vendor cancellation always returns full value. Payment reads expose pending and completed refund amounts. [C06 evidence](../quality/PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c06--cancellation-policy-and-refunds--2026-10-12).
+
+## Local Booking amendment — 2026-10-12
+
+`POST /v1/customer/bookings/:bookingId/amend` requires expected Booking version, exact current selection/version and explicit controlled extra-payment outcome; no browser amount is accepted. Unsuccessful extra payment preserves the original. Reads expose immutable original and effective snapshots, amendment allowance used, original payment amount, total collected amount and pending/completed refunds. [C07 evidence](../quality/PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c07--atomic-amendments-and-price-delta--2026-10-12).

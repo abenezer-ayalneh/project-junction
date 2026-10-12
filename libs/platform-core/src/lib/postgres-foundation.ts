@@ -166,14 +166,17 @@ export class PostgresFoundation {
 			replay: (tx, context, key, method, request, create) => this.replayOrCreate(tx, context, key, method, request, create),
 			now: goodsClock,
 		})
-		this.bookings = new Bookings({
-			db: this.db,
-			derive: (tx, sessionId, options) => this.derive(tx, sessionId, options),
-			lockWorkspace: (tx, id) => this.workspaceLock(tx, id),
-			replay: (tx, context, key, method, request, create) => this.replayOrCreate(tx, context, key, method, request, create),
-			now: goodsClock,
-			payments: goodsPayments,
-		})
+		this.bookings = new Bookings(
+			{
+				db: this.db,
+				derive: (tx, sessionId, options) => this.derive(tx, sessionId, options),
+				lockWorkspace: (tx, id) => this.workspaceLock(tx, id),
+				replay: (tx, context, key, method, request, create) => this.replayOrCreate(tx, context, key, method, request, create),
+				now: goodsClock,
+				payments: goodsPayments,
+			},
+			this.scheduling,
+		)
 		this.bookingHolds = new BookingHolds(
 			{
 				db: this.db,
@@ -580,6 +583,9 @@ export class PostgresFoundation {
 		})
 	}
 
+	amendBooking(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.bookings.amend(sessionId, key, id, input)
+	}
 	cancelBooking(sessionId: string | undefined, key: string | undefined, id: string, input: unknown, provider = false) {
 		return this.bookings.cancel(sessionId, key, id, input, provider)
 	}

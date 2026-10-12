@@ -57,6 +57,9 @@ export class FoundationService {
 		this.durable = new PostgresFoundation(this.databaseUrl())
 	}
 
+	amendBooking(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.durable.amendBooking(sessionId, key, id, input)
+	}
 	cancelBooking(sessionId: string | undefined, key: string | undefined, id: string, input: unknown, provider = false) {
 		return this.durable.cancelBooking(sessionId, key, id, input, provider)
 	}

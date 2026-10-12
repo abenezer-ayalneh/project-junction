@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { BookingHoldSnapshotSchema } from './booking-holds.js'
+import { BookingHoldCommandSchema, BookingHoldSnapshotSchema } from './booking-holds.js'
 
 const id = z.string().uuid()
 export const BookingPolicySchema = z.strictObject({
@@ -24,6 +24,8 @@ export const BookingSnapshotSchema = BookingHoldSnapshotSchema.extend({
 	commission: z.null(),
 })
 export const BookingReadSchema = z.object({
+	originalSnapshot: BookingSnapshotSchema.optional(),
+	customerAmendments: z.number().int().min(0).optional(),
 	bookingId: id,
 	state: z.string(),
 	version: z.number().int().positive(),
@@ -36,6 +38,7 @@ export const BookingPaymentReadSchema = z.object({
 	provider: z.literal('local-controlled'),
 	currency: z.literal('ETB'),
 	amountCents: z.number().int().positive(),
+	collectedCents: z.number().int().positive(),
 	state: z.enum(['processing', 'unknown', 'failed', 'succeeded', 'refund_pending', 'refunded']),
 	bookingId: id.nullable(),
 	expiresAt: z.string().datetime(),
@@ -50,5 +53,18 @@ export const BookingCancellationResultSchema = z.object({
 	state: z.literal('cancelled'),
 	refundCents: z.number().int().min(0),
 	cancelledAt: z.string().datetime(),
+	replayed: z.boolean(),
+})
+export const BookingAmendmentCommandSchema = z.strictObject({
+	expectedVersion: z.number().int().positive(),
+	selection: BookingHoldCommandSchema,
+	extraPaymentOutcome: z.enum(['succeeded', 'failed', 'unknown']),
+})
+export const BookingAmendmentResultSchema = z.object({
+	bookingId: id,
+	amendmentId: id,
+	version: z.number().int().positive(),
+	deltaCents: z.number().int(),
+	snapshot: BookingSnapshotSchema,
 	replayed: z.boolean(),
 })

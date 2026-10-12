@@ -5,6 +5,8 @@ import {
 	ActiveVendorSelectionResultSchema,
 	ActiveVendorSelectionSchema,
 	ApiErrorSchema,
+	BookingAmendmentCommandSchema,
+	BookingAmendmentResultSchema,
 	BookingCancellationCommandSchema,
 	BookingCancellationResultSchema,
 	BookingHoldCommandSchema,
@@ -120,6 +122,9 @@ function schemaFor(schema: z.ZodType): SchemaObject {
 }
 
 export const OpenApiSchemaRefs = {
+	bookingAmendmentCommand: { $ref: '#/components/schemas/BookingAmendmentCommand' },
+	bookingAmendmentResult: { $ref: '#/components/schemas/BookingAmendmentResult' },
+
 	bookingCancellationCommand: { $ref: '#/components/schemas/BookingCancellationCommand' },
 	bookingCancellationResult: { $ref: '#/components/schemas/BookingCancellationResult' },
 
@@ -264,6 +269,8 @@ function publicSchemas(): Record<string, SchemaObject> {
 		BookingRead: schemaFor(BookingReadSchema),
 		BookingCancellationCommand: schemaFor(BookingCancellationCommandSchema),
 		BookingCancellationResult: schemaFor(BookingCancellationResultSchema),
+		BookingAmendmentCommand: schemaFor(BookingAmendmentCommandSchema),
+		BookingAmendmentResult: schemaFor(BookingAmendmentResultSchema),
 		BookingHoldCommand: schemaFor(BookingHoldCommandSchema),
 		BookingHoldRead: schemaFor(BookingHoldReadSchema),
 		BookingHoldResult: schemaFor(BookingHoldResultSchema),

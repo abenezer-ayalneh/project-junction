@@ -1,4 +1,6 @@
 import {
+	BookingAmendmentCommandSchema,
+	BookingAmendmentResultSchema,
 	BookingCancellationCommandSchema,
 	BookingCancellationResultSchema,
 	BookingHoldSnapshotSchema,
@@ -18,24 +20,32 @@ import { BookingHoldConflictError } from './booking-holds.js'
 import { bookingCancellationRefund } from './booking-policy.js'
 import { goodsAudit, type GoodsDependencies, goodsEmit, goodsJson } from './goods-support.js'
 import { LocalGoodsPaymentAdapter } from './local-goods-payment.js'
+import type { ServiceScheduling } from './service-scheduling.js'
 
 type Tx = Prisma.TransactionClient
 export class Bookings {
 	private readonly payments: LocalGoodsPaymentAdapter
-	constructor(private readonly dependencies: GoodsDependencies) {
+	constructor(
+		private readonly dependencies: GoodsDependencies,
+		private readonly scheduling: ServiceScheduling,
+	) {
 		this.payments = dependencies.payments ?? new LocalGoodsPaymentAdapter()
 	}
 	private async lock(tx: Tx) {
 		await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended('junction:goods-checkout', 0))`
 	}
 	private async view(tx: Tx, paymentId: string) {
-		const payment = await tx.bookingPayment.findUniqueOrThrow({ where: { id: paymentId }, include: { hold: true, booking: true, refunds: true } })
+		const payment = await tx.bookingPayment.findUniqueOrThrow({
+			where: { id: paymentId },
+			include: { hold: true, booking: { include: { amendments: true } }, refunds: true },
+		})
 		return BookingPaymentReadSchema.parse({
 			paymentId,
 			holdId: payment.holdId,
 			provider: 'local-controlled',
 			currency: 'ETB',
 			amountCents: payment.amountCents,
+			collectedCents: payment.amountCents + (payment.booking?.amendments ?? []).reduce((sum, a) => sum + Math.max(0, a.deltaCents), 0),
 			state: payment.state,
 			bookingId: payment.booking?.id ?? null,
 			expiresAt: payment.hold.expiresAt.toISOString(),
@@ -271,10 +281,150 @@ export class Bookings {
 				state: booking.state,
 				version: booking.version,
 				confirmedAt: booking.confirmedAt.toISOString(),
-				snapshot: booking.snapshot,
+				snapshot: booking.currentSnapshot ?? booking.snapshot,
+				originalSnapshot: booking.snapshot,
+				customerAmendments: booking.customerAmendments,
 			})
 		})
 	}
+	async amend(sessionId: string | undefined, keyInput: string | undefined, idInput: string, input: unknown, disruption = false) {
+		this.payments.assertLocal()
+		const key = IdempotencyKeySchema.parse(keyInput),
+			bookingId = z.string().uuid().parse(idInput),
+			command = BookingAmendmentCommandSchema.parse(input)
+		return this.dependencies.db.$transaction(
+			async (tx) => {
+				await this.lock(tx)
+				const context = await this.dependencies.derive(tx, sessionId, { allowRestrictedVendor: true })
+				const booking = await tx.booking.findUnique({ where: { id: bookingId }, include: { hold: true, payment: true } })
+				if (!booking) throw new AccessDeniedError()
+				const vendor = await tx.vendor.findUniqueOrThrow({ where: { id: booking.hold.vendorId } })
+				await this.dependencies.lockWorkspace(tx, vendor.workspaceId)
+				const original = BookingSnapshotSchema.parse(booking.currentSnapshot ?? booking.snapshot)
+				if (disruption) throw new AccessDeniedError('Vendor disruption requires the substitution consent workflow.')
+				if (booking.hold.customerId !== context.actor.userId || booking.hold.workspaceId !== context.workspaceId) throw new AccessDeniedError()
+				const result = await this.dependencies.replay(
+					tx,
+					context,
+					key,
+					'POST /v1/customer/bookings/:bookingId/amend',
+					{ bookingId, command },
+					async () => {
+						const now = this.dependencies.now()
+						if (booking.state !== 'confirmed' || booking.version !== command.expectedVersion) throw new BookingHoldConflictError('Booking changed.')
+						if (
+							booking.customerAmendments >= original.policy.amendmentLimit ||
+							new Date(original.start).getTime() - now.getTime() <= original.policy.partialRefundHours * 3600000
+						)
+							throw new BookingHoldConflictError('The amendment allowance or cutoff has been reached.')
+						if (command.selection.listingId !== original.listingId) throw new BookingHoldConflictError('Amendments must use the purchased Service.')
+						// This release is invisible outside the transaction; every failure restores the original allocation.
+						await tx.staffAllocation.update({ where: { id: booking.allocationId }, data: { state: 'cancelled' } })
+						const start = new Date(command.selection.start).toISOString()
+						const selected = await this.scheduling.evaluate(
+							tx,
+							original.listingId,
+							{ ...command.selection, from: start, to: new Date(new Date(start).getTime() + 60000).toISOString() },
+							now,
+							start,
+						)
+						if (
+							!selected.availableStaffIds.length ||
+							selected.result.configurationVersion !== command.selection.expectedConfigurationVersion ||
+							selected.result.rulesVersion !== command.selection.expectedRulesVersion
+						)
+							throw new BookingHoldConflictError()
+						const sameOption = original.optionId === command.selection.optionId
+						const optionPriceCents = sameOption ? original.optionPriceCents : selected.option.priceCents
+						const addons = selected.addons.map((addon) => {
+							if (!addon) throw new BookingHoldConflictError()
+							const old = sameOption ? original.addons.find((a) => a.id === addon.id) : undefined
+							return { ...addon, priceCents: old?.priceCents ?? addon.priceCents }
+						})
+						const priceCents = optionPriceCents + addons.reduce((sum, addon) => sum + addon.priceCents, 0)
+						const deltaCents = priceCents - original.priceCents
+						if (deltaCents > 0 && command.extraPaymentOutcome !== 'succeeded')
+							throw new BookingHoldConflictError('Extra payment did not succeed. The original Booking is retained.')
+						const end = new Date(new Date(start).getTime() + selected.result.durationMinutes * 60000)
+						const snapshot = BookingSnapshotSchema.parse({
+							...original,
+							optionId: command.selection.optionId,
+							optionLabel: selected.option.label,
+							optionPriceCents,
+							addons,
+							priceCents,
+							mode: command.selection.mode,
+							locationId: command.selection.locationId,
+							locationLabel: selected.location?.label ?? null,
+							locationCity: selected.location?.city ?? null,
+							selectedStaffId: command.selection.staffId,
+							start,
+							end: end.toISOString(),
+							timezone: selected.result.timezone,
+							durationMinutes: selected.result.durationMinutes,
+							bufferBeforeMinutes: selected.result.bufferBeforeMinutes,
+							bufferAfterMinutes: selected.result.bufferAfterMinutes,
+							configurationVersion: selected.result.configurationVersion,
+							rulesVersion: selected.result.rulesVersion,
+						})
+						const allocation = await tx.staffAllocation.create({
+							data: {
+								staffId: selected.availableStaffIds[0],
+								state: 'booked',
+								startAt: new Date(new Date(start).getTime() - snapshot.bufferBeforeMinutes * 60000),
+								endAt: new Date(end.getTime() + snapshot.bufferAfterMinutes * 60000),
+							},
+						})
+						const amendment = await tx.bookingAmendment.create({
+							data: {
+								bookingId,
+								version: booking.version + 1,
+								actorId: context.actor.userId,
+								actorKind: 'customer',
+								previousSnapshot: goodsJson(original),
+								snapshot: goodsJson(snapshot),
+								deltaCents,
+								paymentReference: deltaCents > 0 ? `local-booking-delta:${bookingId}:${booking.version + 1}` : null,
+								amendedAt: now,
+							},
+						})
+						if (deltaCents < 0)
+							await tx.bookingRefund.create({
+								data: { paymentId: booking.paymentId, semanticKey: `amendment:${amendment.id}`, amountCents: -deltaCents, createdAt: now },
+							})
+						await tx.booking.update({
+							where: { id: bookingId },
+							data: {
+								currentSnapshot: goodsJson(snapshot),
+								allocationId: allocation.id,
+								customerAmendments: { increment: 1 },
+								version: { increment: 1 },
+							},
+						})
+						for (const workspaceId of new Set([booking.hold.workspaceId, vendor.workspaceId])) {
+							await goodsAudit(tx, workspaceId, context.actor.userId, 'booking.amended', { bookingId, amendmentId: amendment.id, deltaCents })
+							await goodsEmit(tx, () => this.dependencies.now(), workspaceId, 'BookingAmended', bookingId, booking.version + 1, key, {
+								bookingId,
+								amendmentId: amendment.id,
+								deltaCents,
+							})
+						}
+						return BookingAmendmentResultSchema.parse({
+							bookingId,
+							amendmentId: amendment.id,
+							version: booking.version + 1,
+							deltaCents,
+							snapshot,
+							replayed: false,
+						})
+					},
+				)
+				return BookingAmendmentResultSchema.parse({ ...result.outcome, replayed: result.replayed })
+			},
+			{ timeout: 30000 },
+		)
+	}
+
 	async cancel(sessionId: string | undefined, keyInput: string | undefined, idInput: string, input: unknown, provider = false) {
 		this.payments.assertLocal()
 		const key = IdempotencyKeySchema.parse(keyInput),
@@ -288,7 +438,7 @@ export class Bookings {
 				if (!booking) throw new AccessDeniedError()
 				const vendor = await tx.vendor.findUniqueOrThrow({ where: { id: booking.hold.vendorId } })
 				await this.dependencies.lockWorkspace(tx, vendor.workspaceId)
-				const snapshot = BookingSnapshotSchema.parse(booking.snapshot)
+				const snapshot = BookingSnapshotSchema.parse(booking.currentSnapshot ?? booking.snapshot)
 				if (provider) {
 					assertScope(context, {
 						workspaceId: vendor.workspaceId,
@@ -308,7 +458,7 @@ export class Bookings {
 						if (booking.version !== command.expectedVersion || booking.state !== 'confirmed')
 							throw new BookingHoldConflictError('Booking changed or is no longer cancellable.')
 						const now = this.dependencies.now()
-						const refundCents = bookingCancellationRefund(snapshot.policy, booking.payment.amountCents, new Date(snapshot.start), now, provider)
+						const refundCents = bookingCancellationRefund(snapshot.policy, snapshot.priceCents, new Date(snapshot.start), now, provider)
 						const cancellation = await tx.bookingCancellation.create({
 							data: {
 								bookingId,
@@ -366,10 +516,14 @@ export class Bookings {
 				if (current.state !== 'pending') return
 				await tx.bookingRefund.update({ where: { id: refund.id }, data: { state: 'succeeded', reference: result.reference } })
 				const completed = await tx.bookingRefund.aggregate({ where: { paymentId: refund.paymentId, state: 'succeeded' }, _sum: { amountCents: true } })
-				const original = await tx.bookingPayment.findUniqueOrThrow({ where: { id: refund.paymentId } })
+				const original = await tx.bookingPayment.findUniqueOrThrow({
+					where: { id: refund.paymentId },
+					include: { booking: { include: { amendments: true } } },
+				})
+				const captured = original.amountCents + (original.booking?.amendments ?? []).reduce((sum, a) => sum + Math.max(0, a.deltaCents), 0)
 				await tx.bookingPayment.update({
 					where: { id: refund.paymentId },
-					data: { state: (completed._sum.amountCents ?? 0) >= original.amountCents ? 'refunded' : 'succeeded' },
+					data: { state: (completed._sum.amountCents ?? 0) >= captured ? 'refunded' : 'succeeded' },
 				})
 				const payment = await tx.bookingPayment.findUniqueOrThrow({ where: { id: refund.paymentId }, include: { hold: true } })
 				await goodsAudit(tx, payment.hold.workspaceId, null, 'booking.refund-completed', { refundId: refund.id, amountCents: refund.amountCents })

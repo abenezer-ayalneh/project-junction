@@ -41,3 +41,7 @@ C05 implements controlled local payment start and durable receipt/reconciliation
 ## Local Booking cancellation — 2026-10-12
 
 C06 uses purchased Flexible/Standard cutoffs for Customer refunds and full refunds for scoped Vendor cancellation. Half-value refunds round down to minor units. Cancellation, allocation release, refund request and event/replay outcomes are atomic; purchase history stays immutable. Local refund receipts remain separately auditable. [C06 evidence](../quality/PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c06--cancellation-policy-and-refunds--2026-10-12).
+
+## Local Booking amendment — 2026-10-12
+
+C07 stores immutable original and append-only amendment terms alongside current allocation/effective terms. Unchanged component prices retain purchased amounts; new/changed components use current prices. Replacement capacity, controlled delta settlement, allowance and event/retry records commit atomically; failures retain the original. Effective-value cancellation plus delta refunds accounts for additional controlled collections. Full ledger integration remains Phase 04. [C07 evidence](../quality/PHASE-03-LOCAL-ACCEPTANCE-EVIDENCE.md#p03-c07--atomic-amendments-and-price-delta--2026-10-12).

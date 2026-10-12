@@ -273,6 +273,21 @@ export class AppController {
 	) {
 		return this.foundation.cancelBooking(sessionId, key, id, body, true)
 	}
+	@Post('customer/bookings/:bookingId/amend')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Atomically amend a paid Booking and settle the controlled local price delta.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.bookingAmendmentCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.bookingAmendmentResult })
+	amendBooking(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('bookingId') id: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.amendBooking(sessionId, key, id, body)
+	}
 	@Post('customer/bookings/payments')
 	@Header('Cache-Control', 'no-store')
 	@ApiOperation({ summary: 'Start a controlled local appointment payment without extending the hold.' })

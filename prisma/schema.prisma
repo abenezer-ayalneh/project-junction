@@ -966,6 +966,9 @@ model BookingPaymentReceipt {
 }
 
 model Booking {
+  currentSnapshot Json? @map("current_snapshot")
+  customerAmendments Int @default(0) @map("customer_amendments")
+  amendments BookingAmendment[]
   cancellation BookingCancellation?
   id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
   holdId String @unique @map("hold_id") @db.Uuid
@@ -979,6 +982,22 @@ model Booking {
   version Int @default(1)
   confirmedAt DateTime @map("confirmed_at") @db.Timestamptz(6)
   @@map("bookings")
+}
+
+model BookingAmendment {
+  id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  bookingId String @map("booking_id") @db.Uuid
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  version Int
+  actorId String @map("actor_id") @db.Uuid
+  actorKind String @map("actor_kind")
+  previousSnapshot Json @map("previous_snapshot")
+  snapshot Json
+  deltaCents Int @map("delta_cents")
+  paymentReference String? @unique @map("payment_reference")
+  amendedAt DateTime @map("amended_at") @db.Timestamptz(6)
+  @@unique([bookingId, version])
+  @@map("booking_amendments")
 }
 
 model BookingCancellation {

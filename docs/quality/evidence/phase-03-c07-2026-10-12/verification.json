@@ -1,0 +1,27 @@
+{
+	"chunk": "P03-C07",
+	"date": "2026-10-12",
+	"baseline": "24a1d9b05e3b32f061cc5f8d4fce7e5158887fda",
+	"environment": "local machine only; disposable loopback PostgreSQL/Redis/built API",
+	"results": {
+		"amendment_postgresql_scenarios": 9,
+		"phase03_combined": 73,
+		"workspace_lint_typecheck_test": "passed",
+		"built_amendment_payment_cancellation_hold_http": "passed",
+		"existing_scheduling_definition_http": "passed",
+		"actual_worker_expiry": "passed",
+		"migration_compatibility": "39 migrations; no difference",
+		"populated_upgrade": "passed"
+	},
+	"limits": [
+		"explicit controlled local delta outcome; no live charge",
+		"full ledger posting deferred to Phase 04",
+		"browser amendment and formal provider/accessibility/phase gates open"
+	],
+	"next": "P03-C08",
+	"sha256": {
+		"libs/platform-core/src/lib/bookings.ts": "60e43fca8e67879523d3b59829657550b9546782edf6231d54b8bae756a21fc2",
+		"libs/platform-core/src/lib/booking-amendments.integration.ts": "dafcbf4d8332c2816ba32823660addcd7f10c00e6ca4776dd814bd8f70969b68",
+		"prisma/migrations/20261012120000_booking_amendments/migration.sql": "e3ea3eb62df0204d2c463c752de36a93039901ef9b557d48ccc8738f80bdf084"
+	}
+}

@@ -9,6 +9,7 @@ export const DomainEventSchema = z.object({
 		'BookingPaymentResultRecorded',
 		'BookingConfirmed',
 		'BookingCancelled',
+		'BookingAmended',
 		'BookingRefundCompleted',
 		'BookingHoldCreated',
 		'BookingHoldReleased',

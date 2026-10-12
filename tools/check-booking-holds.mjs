@@ -320,13 +320,25 @@ try {
 	assert.equal(booking.body.snapshot.policy.template, 'standard')
 	assert.equal((await request(`/customer/bookings/${confirmed.body.bookingId}`, 'GET', undefined, '', false)).status, 403)
 	assert.equal((await request(`${path}/${paidHold.body.holdId}/release`, 'POST')).status, 409)
+	const amendmentKey = randomUUID()
+	const amended = await request(
+		`/customer/bookings/${confirmed.body.bookingId}/amend`,
+		'POST',
+		{ expectedVersion: 1, selection: { ...current, start: `${tomorrow}T15:00:00Z` }, extraPaymentOutcome: 'succeeded' },
+		amendmentKey,
+	)
+	assert.equal(amended.status, 201, JSON.stringify(amended.body))
+	assert.equal(amended.body.deltaCents, 0)
+	assert.equal(amended.body.version, 2)
+	assert.equal((await request(`/customer/bookings/${confirmed.body.bookingId}`)).body.originalSnapshot.start, booking.body.snapshot.start)
+	console.log('Built local Booking amendment HTTP smoke passed: atomic replacement, unchanged purchased price and immutable original snapshot.')
 	const cancelKey = randomUUID()
 	const cancellationPath = `/customer/bookings/${confirmed.body.bookingId}/cancel`
-	const cancelled = await request(cancellationPath, 'POST', { reason: 'Plans changed', expectedVersion: 1 }, cancelKey)
+	const cancelled = await request(cancellationPath, 'POST', { reason: 'Plans changed', expectedVersion: 2 }, cancelKey)
 	assert.equal(cancelled.status, 201, JSON.stringify(cancelled.body))
 	const remaining = new Date(booking.body.snapshot.start).getTime() - Date.now()
 	assert.equal(cancelled.body.refundCents, remaining >= 48 * 3600000 ? 1500 : remaining >= 12 * 3600000 ? 750 : 0)
-	assert.equal((await request(cancellationPath, 'POST', { reason: 'Plans changed', expectedVersion: 1 }, cancelKey)).body.replayed, true)
+	assert.equal((await request(cancellationPath, 'POST', { reason: 'Plans changed', expectedVersion: 2 }, cancelKey)).body.replayed, true)
 	await repository.reconcileBookingRefunds()
 	assert.equal((await request(paymentPath)).body.refundedCents, cancelled.body.refundCents)
 	assert.equal((await request(`/customer/bookings/${confirmed.body.bookingId}`)).body.state, 'cancelled')

@@ -68,7 +68,10 @@ try {
 			run(['exec', 'prisma', 'migrate', 'deploy'])
 		}
 	}
-	if (!authProbe && (!focusedTestName || /atomic Booking holds|paid Booking confirmation|Booking cancellation/i.test(focusedTestName)))
+	if (
+		!authProbe &&
+		(!focusedTestName || /atomic Booking holds|paid Booking confirmation|Booking cancellation|atomic Booking amendments/i.test(focusedTestName))
+	)
 		run(['exec', 'node', 'tools/check-booking-holds.mjs'], { JUNCTION_RUNTIME_MODE: 'local' })
 	if (!authProbe && (!focusedTestName || /authoritative scheduling/i.test(focusedTestName)))
 		run(['exec', 'node', 'tools/check-service-scheduling.mjs'], { JUNCTION_RUNTIME_MODE: 'local' })
