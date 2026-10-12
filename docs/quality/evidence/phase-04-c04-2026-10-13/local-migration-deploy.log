@@ -1,0 +1,30 @@
+
+> project-junction@0.0.0 db:migrate:local /Users/abeni/Documents/projects/misc/project-junction
+> node --env-file=.env node_modules/prisma/build/index.js migrate deploy
+
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "public" at "127.0.0.1:55432"
+
+46 migrations found in prisma/migrations
+
+Applying migration `20261013030000_atomic_mixed_holds`
+
+┌─────────────────────────────────────────────────────────┐
+│  Update available 7.10.0 -> 8.0.0-rc.22                 │
+│                                                         │
+│  This is a major update - please follow the guide at    │
+│  https://pris.ly/d/major-version-upgrade                │
+│                                                         │
+│  Run the following to update                            │
+│    npm i --save-dev prisma@latest                       │
+│    npm i @prisma/client@latest                          │
+└─────────────────────────────────────────────────────────┘
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20261013030000_atomic_mixed_holds/
+    └─ migration.sql
+
+All migrations have been successfully applied.

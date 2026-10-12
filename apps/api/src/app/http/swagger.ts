@@ -112,6 +112,11 @@ import {
 	MixedCartReadSchema,
 	MixedCartWriteResultSchema,
 	MixedCartWriteSchema,
+	MixedCurrentHoldSchema,
+	MixedHoldCommandSchema,
+	MixedHoldReadSchema,
+	MixedHoldReleaseResultSchema,
+	MixedHoldResultSchema,
 	MixedQuoteCommandSchema,
 	MixedQuoteReadSchema,
 	MixedQuoteResultSchema,
@@ -159,6 +164,12 @@ function schemaFor(schema: z.ZodType): SchemaObject {
 }
 
 export const OpenApiSchemaRefs = {
+	mixedCurrentHold: { $ref: '#/components/schemas/MixedCurrentHold' },
+	mixedHoldCommand: { $ref: '#/components/schemas/MixedHoldCommand' },
+	mixedHoldRead: { $ref: '#/components/schemas/MixedHoldRead' },
+	mixedHoldResult: { $ref: '#/components/schemas/MixedHoldResult' },
+	mixedHoldReleaseResult: { $ref: '#/components/schemas/MixedHoldReleaseResult' },
+
 	vendorCouponCommand: { $ref: '#/components/schemas/VendorCouponCommand' },
 	platformCampaignCommand: { $ref: '#/components/schemas/PlatformCampaignCommand' },
 	promotionRead: { $ref: '#/components/schemas/PromotionRead' },
@@ -324,6 +335,12 @@ export const OpenApiSchemaRefs = {
 function publicSchemas(): Record<string, SchemaObject> {
 	return {
 		AccessContextResponse: schemaFor(AccessContextResponseSchema),
+		MixedHoldCommand: schemaFor(MixedHoldCommandSchema),
+		MixedCurrentHold: schemaFor(MixedCurrentHoldSchema),
+		MixedHoldRead: schemaFor(MixedHoldReadSchema),
+		MixedHoldResult: schemaFor(MixedHoldResultSchema),
+		MixedHoldReleaseResult: schemaFor(MixedHoldReleaseResultSchema),
+
 		VendorCouponCommand: schemaFor(VendorCouponCommandSchema),
 		PlatformCampaignCommand: schemaFor(PlatformCampaignCommandSchema),
 		PromotionRead: schemaFor(PromotionReadSchema),

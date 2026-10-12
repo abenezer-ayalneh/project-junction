@@ -843,6 +843,45 @@ export class AppController {
 		return this.foundation.resolveVendorCoupon(sessionId, body)
 	}
 
+	@Post('customer/checkout/holds')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Reserve all quoted stock, Staff and promotion budget atomically for fifteen minutes.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.mixedHoldCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.mixedHoldResult })
+	createMixedHold(@AuthenticatedSession() sessionId: string | undefined, @Headers('idempotency-key') key: string | undefined, @Body() body: unknown) {
+		return this.foundation.createMixedHold(sessionId, key, body)
+	}
+
+	@Get('customer/checkout/holds/current')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Recover the latest hold for the current owned Cart revision after an uncertain response.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.mixedCurrentHold })
+	readCurrentMixedHold(@AuthenticatedSession() sessionId: string | undefined) {
+		return this.foundation.readCurrentMixedHold(sessionId)
+	}
+
+	@Get('customer/checkout/holds/:holdId')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Read the owned mixed hold; exact expiry releases every participant atomically.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.mixedHoldRead })
+	readMixedHold(@AuthenticatedSession() sessionId: string | undefined, @Param('holdId') id: string) {
+		return this.foundation.readMixedHold(sessionId, id)
+	}
+
+	@Post('customer/checkout/holds/:holdId/release')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Release all participants of an owned uncommitted mixed hold once.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.mixedHoldReleaseResult })
+	releaseMixedHold(@AuthenticatedSession() sessionId: string | undefined, @Headers('idempotency-key') key: string | undefined, @Param('holdId') id: string) {
+		return this.foundation.releaseMixedHold(sessionId, key, id)
+	}
+
 	@Get('customer/cart')
 	@Header('Cache-Control', 'no-store')
 	@ApiOperation({ summary: 'Read the signed-in Customer Cart.' })

@@ -82,7 +82,7 @@ export class BookingHolds {
 		for (const hold of due) await this.terminal(tx, hold, 'expired', null, null, now)
 		// C02 introduced nullable legacy/test occupancy without a hold. Retire it before the static exclusion guard.
 		await tx.staffAllocation.updateMany({
-			where: { holdId: null, staff: { vendorId }, state: 'held', expiresAt: { lte: now } },
+			where: { holdId: null, mixedIntentId: null, staff: { vendorId }, state: 'held', expiresAt: { lte: now } },
 			data: { state: 'expired' },
 		})
 	}
@@ -93,6 +93,7 @@ export class BookingHolds {
 			return await this.dependencies.db.$transaction(
 				async (tx) => {
 					await this.capacityLock(tx)
+					await this.dependencies.expireMixed?.(tx)
 					const context = await this.customer(tx, sessionId, true)
 					const result = await this.dependencies.replay(tx, context, key, 'POST /v1/customer/bookings/holds', command, async () => {
 						const listing = await tx.listing.findUnique({ where: { id: command.listingId }, select: { vendorId: true } })
@@ -222,25 +223,30 @@ export class BookingHolds {
 			{ timeout: 30_000 },
 		)
 	}
+	async expireDue(tx: Transaction) {
+		await this.dependencies.expireMixed?.(tx)
+		const now = this.dependencies.now()
+		const due = await tx.bookingHold.findMany({
+			where: { state: 'holding', expiresAt: { lte: now } },
+			orderBy: [{ expiresAt: 'asc' }, { id: 'asc' }],
+			take: 100,
+		})
+		const vendors = await tx.vendor.findMany({ where: { id: { in: [...new Set(due.map((h) => h.vendorId))] } }, orderBy: { workspaceId: 'asc' } })
+		for (const workspaceId of [...new Set(vendors.map((v) => v.workspaceId))]) await this.dependencies.lockWorkspace(tx, workspaceId)
+		for (const hold of due) await this.terminal(tx, hold, 'expired', null, null, now)
+		await tx.staffAllocation.updateMany({
+			where: { holdId: null, mixedIntentId: null, state: 'held', expiresAt: { lte: now } },
+			data: { state: 'expired' },
+		})
+		return due.length
+	}
 	async expire() {
 		return this.dependencies.db.$transaction(
 			async (tx) => {
 				await this.capacityLock(tx)
-				const now = this.dependencies.now()
-				const due = await tx.bookingHold.findMany({
-					where: { state: 'holding', expiresAt: { lte: now } },
-					orderBy: [{ expiresAt: 'asc' }, { id: 'asc' }],
-					take: 100,
-				})
-				const vendors = await tx.vendor.findMany({
-					where: { id: { in: [...new Set(due.map((hold) => hold.vendorId))] } },
-					orderBy: { workspaceId: 'asc' },
-				})
-				for (const workspaceId of [...new Set(vendors.map((vendor) => vendor.workspaceId))]) await this.dependencies.lockWorkspace(tx, workspaceId)
-				for (const hold of due) await this.terminal(tx, hold, 'expired', null, null, now)
-				return due.length
+				return this.expireDue(tx)
 			},
-			{ timeout: 30_000 },
+			{ timeout: 30000 },
 		)
 	}
 }

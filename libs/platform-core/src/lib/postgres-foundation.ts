@@ -91,6 +91,8 @@ import { type DeletionJournal, S3DeletionJournal } from './media-retention.js'
 import { type MediaStore, S3MediaStore } from './media-store.js'
 import type { MeetingProviderAdapter } from './meeting-provider.js'
 import { MixedCartCheckout } from './mixed-cart.js'
+import { MixedCheckoutHolds } from './mixed-holds.js'
+import { PromotionBudget } from './promotion-budget.js'
 import { applicationRuntimeMode } from './runtime.js'
 import { ServiceDefinitions } from './service-definitions.js'
 import { ServiceScheduling } from './service-scheduling.js'
@@ -153,6 +155,7 @@ export class PostgresFoundation {
 	private readonly scheduling: ServiceScheduling
 	private readonly services: ServiceDefinitions
 	private readonly checkoutFinance: CheckoutFinanceConfiguration
+	private readonly mixedHolds: MixedCheckoutHolds
 	private readonly mixedCart: MixedCartCheckout
 	private readonly goods: GoodsCheckout
 	private readonly publicWorkspaceKind = 'real'
@@ -227,6 +230,7 @@ export class PostgresFoundation {
 		this.bookingHolds = new BookingHolds(
 			{
 				db: this.db,
+				expireMixed: (tx) => this.mixedHolds.expireInTransaction(tx),
 				derive: (tx, sessionId, options) => this.derive(tx, sessionId, options),
 				lockWorkspace: (tx, id) => this.workspaceLock(tx, id),
 				replay: (tx, context, key, method, request, create) => this.replayOrCreate(tx, context, key, method, request, create),
@@ -243,6 +247,7 @@ export class PostgresFoundation {
 		})
 		this.goods = new GoodsCheckout({
 			db: this.db,
+			expireMixed: (tx) => this.mixedHolds.expireInTransaction(tx),
 			derive: (tx, sessionId, options) => this.derive(tx, sessionId, options),
 			lockWorkspace: (tx, id) => this.workspaceLock(tx, id),
 			replay: (tx, context, key, method, request, create) => this.replayOrCreate(tx, context, key, method, request, create),
@@ -271,6 +276,21 @@ export class PostgresFoundation {
 			this.goods,
 			this.scheduling,
 			pricing,
+			(tx, cartId) => this.mixedHolds.expireInTransaction(tx, cartId),
+		)
+		this.mixedHolds = new MixedCheckoutHolds(
+			{
+				db: this.db,
+				derive: (tx, sessionId, options) => this.derive(tx, sessionId, options),
+				lockWorkspace: (tx, id) => this.workspaceLock(tx, id),
+				replay: (tx, context, key, method, request, create) => this.replayOrCreate(tx, context, key, method, request, create),
+				now: goodsClock,
+			},
+			this.mixedCart,
+			this.scheduling,
+			this.goods,
+			this.bookingHolds,
+			new PromotionBudget(goodsClock, pricing),
 		)
 		this.externalEffects = externalEffects ?? new UnconfiguredExternalEffectAdapter()
 		this.mediaStore = mediaStore ?? S3MediaStore.fromEnvironment()
@@ -825,6 +845,21 @@ export class PostgresFoundation {
 	}
 	resolveVendorCoupon(sessionId: string | undefined, input: unknown) {
 		return this.checkoutFinance.resolveCoupon(sessionId, input)
+	}
+	readCurrentMixedHold(sessionId: string | undefined) {
+		return this.mixedHolds.current(sessionId)
+	}
+	createMixedHold(sessionId: string | undefined, key: string | undefined, input: unknown) {
+		return this.mixedHolds.create(sessionId, key, input)
+	}
+	readMixedHold(sessionId: string | undefined, id: string) {
+		return this.mixedHolds.read(sessionId, id)
+	}
+	releaseMixedHold(sessionId: string | undefined, key: string | undefined, id: string) {
+		return this.mixedHolds.release(sessionId, key, id)
+	}
+	expireMixedHolds() {
+		return this.mixedHolds.expire()
 	}
 	readMixedCart(sessionId: string | undefined) {
 		return this.mixedCart.readCart(sessionId)

@@ -51,8 +51,7 @@ try {
 	// Generic fixtures use local policy; strict-policy cases explicitly select their runtime.
 	if (!authProbe) {
 		const jestArgs = ['exec', 'jest', '--config', 'libs/platform-core/jest.config.cts', '--testMatch', '**/*.integration.ts', '--runInBand']
-		if (focusedTestName) run([...jestArgs, '--testNamePattern', focusedTestName], { JUNCTION_RUNTIME_MODE: 'local' })
-		else {
+		{
 			// Public discovery, media ownership and commerce suites intentionally
 			// retain domain fixtures. Isolate files so test order cannot alter pages
 			// or make a temporary object store appear incomplete.
@@ -61,9 +60,11 @@ try {
 			for (const file of files) {
 				await cleanSchema()
 				run(['exec', 'prisma', 'migrate', 'deploy'])
-				run([...jestArgs, '--runTestsByPath', file], { JUNCTION_RUNTIME_MODE: 'local' })
+				run([...jestArgs, '--runTestsByPath', file, ...(focusedTestName ? ['--testNamePattern', focusedTestName, '--passWithNoTests'] : [])], {
+					JUNCTION_RUNTIME_MODE: 'local',
+				})
 			}
-			console.log(`Full local integration suites passed: ${files.length} isolated files.`)
+			console.log(`${focusedTestName ? 'Focused' : 'Full'} local integration run passed: ${files.length} isolated files.`)
 			await cleanSchema()
 			run(['exec', 'prisma', 'migrate', 'deploy'])
 		}
@@ -76,7 +77,9 @@ try {
 			))
 	)
 		run(['exec', 'node', 'tools/check-booking-holds.mjs'], { JUNCTION_RUNTIME_MODE: 'local' })
-	if (!authProbe && (!focusedTestName || /promotions and commission/i.test(focusedTestName)))
+	if (!authProbe && (!focusedTestName || /atomic mixed hold/i.test(focusedTestName)))
+		run(['exec', 'node', 'tools/check-promotions-commission.mjs'], { JUNCTION_RUNTIME_MODE: 'local', MIXED_HOLD_HTTP_CHECK: '1' })
+	if (!authProbe && focusedTestName && /promotions and commission/i.test(focusedTestName) && !/atomic mixed hold/i.test(focusedTestName))
 		run(['exec', 'node', 'tools/check-promotions-commission.mjs'], { JUNCTION_RUNTIME_MODE: 'local' })
 	if (!authProbe && (!focusedTestName || /mixed Cart and quote/i.test(focusedTestName)))
 		run(['exec', 'node', 'tools/check-mixed-cart-quotes.mjs'], { JUNCTION_RUNTIME_MODE: 'local' })

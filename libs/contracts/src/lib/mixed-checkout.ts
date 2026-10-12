@@ -98,3 +98,19 @@ export const MixedQuoteReadSchema = z.strictObject({
 	snapshot: MixedQuoteSnapshotSchema,
 })
 export const MixedQuoteResultSchema = MixedQuoteReadSchema.extend({ replayed: z.boolean() })
+
+export const MixedHoldCommandSchema = z.strictObject({ quoteId: id })
+export const MixedHoldReadSchema = z.strictObject({
+	holdId: id,
+	quoteId: id,
+	cartId: id,
+	state: z.enum(['holding', 'released', 'expired']),
+	createdAt: z.string().datetime(),
+	expiresAt: z.string().datetime(),
+	reserved: z.boolean(),
+	snapshot: MixedQuoteSnapshotSchema,
+})
+export const MixedHoldResultSchema = MixedHoldReadSchema.extend({ replayed: z.boolean() })
+export const MixedHoldReleaseResultSchema = z.strictObject({ holdId: id, state: z.enum(['released', 'expired']), replayed: z.boolean() })
+
+export const MixedCurrentHoldSchema = z.strictObject({ hold: MixedHoldReadSchema.nullable() })

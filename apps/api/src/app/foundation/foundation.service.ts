@@ -402,6 +402,18 @@ export class FoundationService {
 	resolveVendorCoupon(sessionId: string | undefined, input: unknown) {
 		return this.durable.resolveVendorCoupon(sessionId, input)
 	}
+	readCurrentMixedHold(sessionId: string | undefined) {
+		return this.durable.readCurrentMixedHold(sessionId)
+	}
+	createMixedHold(sessionId: string | undefined, key: string | undefined, input: unknown) {
+		return this.durable.createMixedHold(sessionId, key, input)
+	}
+	readMixedHold(sessionId: string | undefined, id: string) {
+		return this.durable.readMixedHold(sessionId, id)
+	}
+	releaseMixedHold(sessionId: string | undefined, key: string | undefined, id: string) {
+		return this.durable.releaseMixedHold(sessionId, key, id)
+	}
 	readMixedCart(sessionId: string | undefined) {
 		return this.durable.readMixedCart(sessionId)
 	}

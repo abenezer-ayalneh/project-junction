@@ -312,6 +312,129 @@ try {
 	assert.equal(changed.status, 201, JSON.stringify(changed.body))
 	assert.equal((await request(buyer, `/customer/checkout/quotes/${quote.body.quoteId}`)).body.snapshot.commission.totalMinorUnits, 160)
 	assert.equal((await request(buyer, '/customer/checkout/quotes', 'POST', command)).body.snapshot.commission.totalMinorUnits, 192)
+	if (process.env.MIXED_HOLD_HTTP_CHECK === '1') {
+		const latest = await request(buyer, '/customer/checkout/quotes', 'POST', command)
+		assert.equal(latest.body.state, 'ready')
+		const holdCommand = { quoteId: latest.body.quoteId },
+			holdKey = randomUUID()
+		assert.equal((await request(null, '/customer/checkout/holds', 'POST', holdCommand)).status, 403)
+		const held = await request(buyer, '/customer/checkout/holds', 'POST', holdCommand, holdKey)
+		assert.equal(held.status, 201, JSON.stringify(held.body))
+		assert.equal(held.body.state, 'holding')
+		assert.equal(held.body.reserved, true)
+		assert.equal(Date.parse(held.body.expiresAt) - Date.parse(held.body.createdAt), 15 * 60000)
+		assert.equal((await request(buyer, '/customer/checkout/holds', 'POST', holdCommand, holdKey)).body.replayed, true)
+		assert.equal((await request(buyer, '/customer/checkout/holds', 'POST', holdCommand)).status, 409)
+		const recovered = await request(buyer, '/customer/checkout/holds/current')
+		assert.equal(recovered.status, 200)
+		assert.equal(recovered.body.hold.holdId, held.body.holdId)
+		assert.match(recovered.cacheControl ?? '', /no-store/)
+		assert.equal((await request(owner, `/customer/checkout/holds/${held.body.holdId}`)).status, 403)
+		assert.equal((await request(owner, `/customer/checkout/holds/${held.body.holdId}/release`, 'POST')).status, 403)
+		assert.equal((await request(buyer, '/customer/cart', 'PUT', { expectedVersion: 1, selection })).status, 409)
+		assert.equal(await repository.db.staffAllocation.count({ where: { mixedIntent: { holdId: held.body.holdId }, state: 'held' } }), 1)
+		assert.equal((await repository.db.campaignBudgetBalance.findUniqueOrThrow({ where: { promotionId: campaign.body.promotionId } })).reserved, 320n)
+		assert.ok(!JSON.stringify(held.body).includes(staff.id))
+		const releaseKey = randomUUID(),
+			path = `/customer/checkout/holds/${held.body.holdId}/release`
+		assert.equal((await request(buyer, path, 'POST', undefined, releaseKey)).body.state, 'released')
+		assert.equal((await request(buyer, path, 'POST', undefined, releaseKey)).body.replayed, true)
+		assert.equal((await request(buyer, `/customer/checkout/holds/${held.body.holdId}`)).body.reserved, false)
+		assert.equal((await repository.db.campaignBudgetBalance.findUniqueOrThrow({ where: { promotionId: campaign.body.promotionId } })).reserved, 0n)
+		const original = await repository.db.inventoryMovement.aggregate({
+			where: { listingId: product.id, locationId: location.id },
+			_sum: { onHandDelta: true, reservedDelta: true },
+		})
+		assert.equal(original._sum.onHandDelta, 10)
+		assert.equal(original._sum.reservedDelta, 0)
+
+		// A genuine due mixed hold created with a controlled earlier business
+		// clock proves the actual built worker, without waiting fifteen minutes.
+		const past = new Date(Date.now() - 16 * 60000)
+		await repository.db.commissionRate.create({
+			data: {
+				workspaceId: finance.workspace.id,
+				actorId: finance.user.id,
+				scopeKey: vendor.id,
+				vendorId: vendor.id,
+				basisPoints: 500,
+				effectiveFrom: new Date(past.getTime() - 60000),
+				effectiveUntil: null,
+				reason: 'Controlled worker timing rate',
+			},
+		})
+		const workerCampaign = await request(finance, '/platform/finance/campaigns', 'POST', {
+			...campaignCommand,
+			definition: {
+				...campaignCommand.definition,
+				code: 'WORKER_CAMPAIGN',
+				validFrom: new Date(past.getTime() - 60000).toISOString(),
+				rule: { kind: 'fixed', minorUnits: 100 },
+			},
+		})
+		assert.equal(workerCampaign.status, 201, JSON.stringify(workerCampaign.body))
+		const controlled = new PostgresFoundation(url.toString(), undefined, undefined, undefined, undefined, () => new Date(past))
+		let due
+		try {
+			const currentCart = await controlled.readMixedCart(buyer.session.id)
+			const workerSelection = { ...selection, promotions: { vendorCouponId: null, platformCampaignId: workerCampaign.body.promotionId } }
+			const saved = await controlled.writeMixedCart(buyer.session.id, randomUUID(), { expectedVersion: currentCart.version, selection: workerSelection })
+			const priced = await controlled.createMixedQuote(buyer.session.id, randomUUID(), { cartId: saved.cartId, expectedVersion: saved.version })
+			assert.equal(priced.state, 'ready')
+			due = await controlled.createMixedHold(buyer.session.id, randomUUID(), { quoteId: priced.quoteId })
+		} finally {
+			await controlled.close()
+		}
+		const redisUrl = new URL(process.env.REDIS_URL ?? '')
+		assert.ok(['localhost', '127.0.0.1'].includes(redisUrl.hostname))
+		const worker = spawn(process.execPath, ['apps/worker/dist/main.js'], {
+			env: { ...process.env, JUNCTION_RUNTIME_MODE: 'local', FOUNDATION_STORAGE: 'postgresql' },
+			stdio: ['ignore', 'pipe', 'pipe'],
+		})
+		const workerClosed = once(worker, 'close')
+		let workerLogs = ''
+		worker.stdout.on('data', (chunk) => {
+			workerLogs = (workerLogs + chunk).slice(-8000)
+		})
+		worker.stderr.on('data', (chunk) => {
+			workerLogs = (workerLogs + chunk).slice(-8000)
+		})
+		try {
+			let expired = false
+			for (let attempt = 0; attempt < 60; attempt++) {
+				const row = await repository.db.mixedCheckoutHold.findUniqueOrThrow({ where: { id: due.holdId } })
+				if (row.state === 'expired') {
+					expired = true
+					break
+				}
+				if (worker.exitCode !== null) break
+				await new Promise((resolve) => setTimeout(resolve, 250))
+			}
+			assert.ok(expired, `Built worker did not expire mixed participants: ${workerLogs}`)
+			assert.ok(workerLogs.includes('worker.started'))
+			assert.equal(await repository.db.staffAllocation.count({ where: { mixedIntent: { holdId: due.holdId }, state: 'held' } }), 0)
+			assert.equal(
+				(await repository.db.campaignBudgetBalance.findUniqueOrThrow({ where: { promotionId: workerCampaign.body.promotionId } })).reserved,
+				0n,
+			)
+			assert.equal(
+				(await repository.db.inventoryMovement.aggregate({ where: { listingId: product.id, locationId: location.id }, _sum: { reservedDelta: true } }))
+					._sum.reservedDelta,
+				0,
+			)
+		} finally {
+			if (worker.exitCode === null) worker.kill('SIGTERM')
+			const timer = setTimeout(() => worker.kill('SIGKILL'), 5000)
+			try {
+				await workerClosed
+			} finally {
+				clearTimeout(timer)
+			}
+		}
+		console.log(
+			'Built local atomic mixed hold HTTP/worker smoke passed: private recovery, 15-minute common deadline, stock/Staff/budget allocation, replay, foreign-scope denial, Cart lock, complete release and actual loopback worker expiry of all participants.',
+		)
+	}
 	cli('revoke')
 	assert.equal(
 		(

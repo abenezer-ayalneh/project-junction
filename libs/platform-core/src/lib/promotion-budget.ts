@@ -35,7 +35,12 @@ export class PromotionBudget {
 				throw new GoodsCheckoutConflictError('This quote already has a different promotion reservation.')
 			for (const row of existing) {
 				await tx.$queryRaw`SELECT id FROM promotion_definitions WHERE id=${row.promotionId}::uuid FOR UPDATE`
-				if (row.state === 'reserved' && row.expiresAt <= this.now()) await this.terminal(tx, row, 'released', this.now())
+				if (
+					row.state === 'reserved' &&
+					row.expiresAt <= this.now() &&
+					!(await tx.mixedCheckoutHold.findFirst({ where: { id: row.holdRef, state: 'holding' } }))
+				)
+					await this.terminal(tx, row, 'released', this.now())
 			}
 			return { reservations: await tx.promotionReservation.findMany({ where: { quoteId }, orderBy: { promotionId: 'asc' } }), replayed: true }
 		}
@@ -131,7 +136,8 @@ export class PromotionBudget {
 	}
 	private async expirePromotion(tx: Tx, promotionId: string, now: Date) {
 		const due = await tx.promotionReservation.findMany({ where: { promotionId, state: 'reserved', expiresAt: { lte: now } }, orderBy: { id: 'asc' } })
-		for (const row of due) await this.terminal(tx, row, 'released', now)
+		for (const row of due)
+			if (!(await tx.mixedCheckoutHold.findFirst({ where: { id: row.holdRef, state: 'holding' } }))) await this.terminal(tx, row, 'released', now)
 	}
 	async expire(tx: Tx) {
 		await this.lock(tx)

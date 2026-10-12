@@ -340,6 +340,8 @@ model Location {
 }
 
 model InventoryMovement {
+ mixedHoldId String? @map("mixed_hold_id") @db.Uuid
+ mixedHold MixedCheckoutHold? @relation(fields:[mixedHoldId],references:[id],onDelete:NoAction,onUpdate:NoAction)
   cancellationLineId String?                @map("cancellation_line_id") @db.Uuid
   cancellationLine   GoodsCancellationLine? @relation(fields: [cancellationLineId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   orderLineId        String?                @map("order_line_id") @db.Uuid
@@ -908,6 +910,8 @@ model GoodsReturnEvent {
 
 // Authoritative occupancy read seam. Hold/Booking lifecycle writes belong to later chunks.
 model StaffAllocation {
+ mixedIntentId String? @unique @map("mixed_intent_id") @db.Uuid
+ mixedIntent MixedHoldBookingIntent? @relation(fields:[mixedIntentId],references:[id],onDelete:NoAction,onUpdate:NoAction)
   booking Booking?
   holdId String? @unique @map("hold_id") @db.Uuid
   hold BookingHold? @relation(fields: [holdId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -1156,6 +1160,7 @@ model LedgerPosting {
 }
 
 model MixedCart {
+ holds MixedCheckoutHold[]
   id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
   workspaceId String @map("workspace_id") @db.Uuid
   customerId String @map("customer_id") @db.Uuid
@@ -1167,6 +1172,7 @@ model MixedCart {
   @@map("mixed_carts")
 }
 model MixedCheckoutQuote {
+ hold MixedCheckoutHold?
   id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
   cartId String @map("cart_id") @db.Uuid
   cartVersion Int @map("cart_version")
@@ -1265,4 +1271,51 @@ model CampaignBudgetBalance {
  consumed BigInt @default(0)
  promotion PromotionDefinition @relation(fields: [promotionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
  @@map("campaign_budget_balances")
+}
+
+model MixedCheckoutHold {
+ id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+ quoteId String @unique @map("quote_id") @db.Uuid
+ cartId String @map("cart_id") @db.Uuid
+ customerId String @map("customer_id") @db.Uuid
+ workspaceId String @map("workspace_id") @db.Uuid
+ state String @default("holding")
+ snapshot Json
+ createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+ expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+ releasedAt DateTime? @map("released_at") @db.Timestamptz(6)
+ quote MixedCheckoutQuote @relation(fields:[quoteId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+ cart MixedCart @relation(fields:[cartId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+ stockLines MixedHoldStockLine[]
+ bookingIntents MixedHoldBookingIntent[]
+ movements InventoryMovement[]
+ @@index([state,expiresAt])
+ @@map("mixed_checkout_holds")
+}
+model MixedHoldStockLine {
+ id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+ holdId String @map("hold_id") @db.Uuid
+ componentId String @map("component_id") @db.Uuid
+ vendorId String @map("vendor_id") @db.Uuid
+ vendorWorkspaceId String @map("vendor_workspace_id") @db.Uuid
+ listingId String @map("listing_id") @db.Uuid
+ locationId String @map("location_id") @db.Uuid
+ sku String?
+ quantity Int
+ hold MixedCheckoutHold @relation(fields:[holdId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+ @@unique([holdId,listingId,locationId,sku],map:"mixed_hold_stock_item_key")
+ @@map("mixed_hold_stock_lines")
+}
+model MixedHoldBookingIntent {
+ id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+ holdId String @map("hold_id") @db.Uuid
+ componentId String @map("component_id") @db.Uuid
+ vendorId String @map("vendor_id") @db.Uuid
+ vendorWorkspaceId String @map("vendor_workspace_id") @db.Uuid
+ listingId String @map("listing_id") @db.Uuid
+ snapshot Json
+ hold MixedCheckoutHold @relation(fields:[holdId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+ allocation StaffAllocation?
+ @@unique([holdId,componentId])
+ @@map("mixed_hold_booking_intents")
 }

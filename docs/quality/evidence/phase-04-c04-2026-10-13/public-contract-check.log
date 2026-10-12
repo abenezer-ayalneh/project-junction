@@ -1,0 +1,5 @@
+
+> project-junction@0.0.0 contracts:check /Users/abeni/Documents/projects/misc/project-junction
+> node tools/contracts-check.mjs
+
+Public contract isolation check passed.

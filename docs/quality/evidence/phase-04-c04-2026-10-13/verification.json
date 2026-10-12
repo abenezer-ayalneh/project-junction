@@ -1,0 +1,83 @@
+{
+	"date": "2026-10-13",
+	"chunk": "P04-C04",
+	"status": "complete_locally",
+	"environment": "user local machine; disposable loopback PostgreSQL schemas, built API and actual worker; actual local development schema",
+	"requirements": ["REQ-P04-CHK-002 reservation foundation"],
+	"checks": {
+		"focused": {
+			"status": "passed",
+			"postgresqlScenarios": 18,
+			"target": "pnpm nx run platform-core:test-integration",
+			"selection": "Phase 04 atomic mixed hold",
+			"log": "focused-postgresql-http.log"
+		},
+		"regression": {
+			"status": "passed",
+			"postgresqlScenarios": 77,
+			"selection": "Phase 04 atomic mixed hold|Phase 04 promotions and commission|Phase 04 mixed Cart and quote|Phase 03 atomic Booking holds",
+			"httpChecks": [
+				"Booking hold and legacy lifecycle API/actual worker",
+				"mixed hold API/actual worker expiry",
+				"promotion/commission/temporary Finance CLI",
+				"mixed Cart/quote"
+			],
+			"log": "regression-postgresql-http-worker.log"
+		},
+		"goodsRegression": {
+			"status": "passed",
+			"postgresqlScenarios": 51,
+			"selection": "Phase 02 goods quotes and holds",
+			"log": "goods-regression.log",
+			"handoffSecret": "disposable process-memory only"
+		},
+		"workspace": {
+			"status": "passed",
+			"unitTestsPassed": 108,
+			"workerTestsSkipped": 1,
+			"command": "pnpm nx run-many -t lint,typecheck,test --projects=contracts,platform-core,api,worker,web --parallel=3",
+			"log": "workspace-checks.log"
+		},
+		"migrationCompatibility": {
+			"status": "passed",
+			"migrations": 46,
+			"log": "migration-compatibility.log"
+		},
+		"populatedUpgrade": {
+			"status": "passed",
+			"log": "populated-upgrade.log"
+		},
+		"actualLocalSchema": {
+			"status": "passed",
+			"pendingMigrationsApplied": 1,
+			"currentMigrations": 46,
+			"actualFinanceGrantsRatesPromotionsReservationsMixedHolds": 0,
+			"logs": ["local-migration-before.log", "local-migration-deploy.log", "local-migration-after.log", "local-schema-health.log"]
+		},
+		"documentationAndPublicContracts": {
+			"status": "passed",
+			"commands": ["pnpm docs:check", "pnpm contracts:check"],
+			"logs": ["documentation-check.log", "public-contract-check.log"]
+		}
+	},
+	"implemented": [
+		"Fixed 15-minute all-or-nothing stock, joint concrete Staff and promotion hold",
+		"Owned current quote revalidation with shared checkout/workspace locks",
+		"Scoped signed-cookie no-store create/read/current/release and authoritative replay",
+		"Immutable aggregate/deferred completeness, Staff exclusion, Cart lock",
+		"Whole-parent release/expiry/worker and legacy allocator recovery without participant leaks"
+	],
+	"verificationCorrections": [
+		"Draft inventory reason check restored existing quarantine/lost return reasons after goods regression",
+		"Focused multi-file tests isolate schemas to avoid global-rate fixture interference",
+		"Cart quote truncate probe uses CASCADE to reach immutable-history trigger behind new FK",
+		"Combined/full runner executes promotion HTTP fixture once via mixed-hold harness"
+	],
+	"limitations": [
+		"Actual Finance policy values remain unconfigured; complete quote requires an explicit applicable effective rate",
+		"No provider payment/inbox/compensation or economic ledger/Purchase/receipt commit; C05-C06",
+		"Browser checkout remains C07; earning/payout/reconciliation C08-C09",
+		"Formal provider, independent accessibility/retention/target recovery and phase/public-release gates remain open"
+	],
+	"nextChunk": "P04-C05"
+}

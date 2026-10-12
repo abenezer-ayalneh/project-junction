@@ -191,7 +191,21 @@ export class GoodsCheckout {
 							_sum: { quantity: true },
 						})
 					: null
-				if ((balance._sum.onHandDelta ?? 0) - (balance._sum.reservedDelta ?? 0) + (expired?._sum.quantity ?? 0) < line.quantity)
+				const expiredMixed = advisoryAt
+					? await tx.mixedHoldStockLine.aggregate({
+							where: {
+								listingId: listing.id,
+								locationId: location.id,
+								sku: variant?.sku ?? null,
+								hold: { state: 'holding', expiresAt: { lte: advisoryAt } },
+							},
+							_sum: { quantity: true },
+						})
+					: null
+				if (
+					(balance._sum.onHandDelta ?? 0) - (balance._sum.reservedDelta ?? 0) + (expired?._sum.quantity ?? 0) + (expiredMixed?._sum.quantity ?? 0) <
+					line.quantity
+				)
 					throw new GoodsCheckoutConflictError('Selected quantity is unavailable. Change the quantity or Location and request a new quote.')
 				const subtotalCents = unitPriceCents * line.quantity
 				subtotal += subtotalCents
@@ -455,7 +469,8 @@ export class GoodsCheckout {
 		return true
 	}
 
-	private async expireDue(tx: Transaction) {
+	async expireDue(tx: Transaction) {
+		await this.dependencies.expireMixed?.(tx)
 		await this.reconcilePaymentResults(tx)
 		const due = await tx.goodsHold.findMany({
 			where: {

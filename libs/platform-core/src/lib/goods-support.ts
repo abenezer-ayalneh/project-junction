@@ -8,6 +8,7 @@ type Transaction = Prisma.TransactionClient
 export const goodsJson = (value: unknown) => JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue
 export interface GoodsDependencies {
 	payments?: LocalGoodsPaymentAdapter
+	expireMixed?(tx: Transaction): Promise<number>
 	db: PrismaClient
 	derive(tx: Transaction, sessionId: string | undefined, options?: { allowRestrictedVendor?: boolean }): Promise<AccessContext>
 	lockWorkspace(tx: Transaction, id: string): Promise<void>

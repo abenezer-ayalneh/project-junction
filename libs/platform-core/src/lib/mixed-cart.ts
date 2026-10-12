@@ -46,6 +46,7 @@ export class MixedCartCheckout {
 		private readonly goods: GoodsCheckout,
 		private readonly scheduling: ServiceScheduling,
 		private readonly pricing: CheckoutPricing,
+		private readonly expireMixed: (tx: Tx, cartId?: string) => Promise<number>,
 	) {}
 	private async lock(tx: Tx) {
 		await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended('junction:goods-checkout', 0))`
@@ -80,6 +81,11 @@ export class MixedCartCheckout {
 				const { context, cart, read } = await this.cart(tx, sessionId)
 				const result = await this.deps.replay(tx, context, key, 'PUT /v1/customer/cart', command, async () => {
 					this.version(read.version, command.expectedVersion)
+					if (cart) {
+						await this.expireMixed(tx, cart.id)
+						if (await tx.mixedCheckoutHold.findFirst({ where: { cartId: cart.id, state: 'holding' } }))
+							throw new GoodsCheckoutConflictError('Release the active checkout hold before editing Cart.')
+					}
 					const saved = cart
 						? await tx.mixedCart.update({ where: { id: cart.id }, data: { selection: goodsJson(command.selection), version: { increment: 1 } } })
 						: await tx.mixedCart.create({
@@ -213,7 +219,7 @@ export class MixedCartCheckout {
 		)
 	}
 	/** Caller locks the participating Vendor workspaces. Does not expire or reserve resources. */
-	async evaluate(tx: Tx, selection: MixedCartSelection, now: Date, customerId: string): Promise<MixedQuoteSnapshot> {
+	async evaluate(tx: Tx, selection: MixedCartSelection, now: Date, customerId: string, identities?: MixedQuoteSnapshot): Promise<MixedQuoteSnapshot> {
 		const goods: MixedQuoteSnapshot['goods'] = []
 		const bookings: MixedQuoteSnapshot['bookings'] = []
 		const conflicts: MixedQuoteConflict[] = []
@@ -225,7 +231,10 @@ export class MixedCartCheckout {
 					groups: [{ ...group, lines: group.lines.map(({ listingId, sku, quantity }) => ({ listingId, sku, quantity })) }],
 				})
 				const snapshot = await this.goods.buildSnapshot(tx, command, now)
-				goods.push({ componentId: randomUUID(), group: snapshot.groups[0] })
+				goods.push({
+					componentId: identities?.goods.find((g) => g.group.vendorId === group.vendorId)?.componentId ?? randomUUID(),
+					group: snapshot.groups[0],
+				})
 				total += BigInt(snapshot.totalCents)
 				for (const [index, line] of snapshot.groups[0].lines.entries())
 					if (line.unitPriceCents !== group.lines[index].expectedUnitPriceCents) {

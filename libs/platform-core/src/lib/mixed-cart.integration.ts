@@ -509,7 +509,7 @@ suite('Phase 04 mixed Cart and quote PostgreSQL', () => {
 				data: { version: 2, selection: { goodsGroups: [], bookings: [{ ...a.selection.bookings[0], quantity: '1' }] } },
 			}),
 		).rejects.toThrow('quantity one')
-		await expect(repository.db.$executeRaw`TRUNCATE mixed_checkout_quotes`).rejects.toThrow('cannot be truncated')
+		await expect(repository.db.$executeRaw`TRUNCATE mixed_checkout_quotes CASCADE`).rejects.toThrow('cannot be truncated')
 
 		await expect(repository.db.mixedCart.update({ where: { id: cart.cartId! }, data: { customerId: foreign.user.id, version: 2 } })).rejects.toThrow(
 			'stable owner',
