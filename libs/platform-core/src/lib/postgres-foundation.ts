@@ -84,6 +84,7 @@ import { CATALOG_CSV_HEADER, decodeCatalogCsvText, encodeCatalogCsvField, parseC
 import { CheckoutFinanceConfiguration } from './checkout-finance-config.js'
 import { CheckoutPricing } from './checkout-pricing.js'
 import { DiditSandboxAdapter } from './didit.js'
+import { ComponentEarnings } from './earnings.js'
 import { type ExternalEffectAdapter, UnconfiguredExternalEffectAdapter } from './external-effects.js'
 import { GoodsCheckout } from './goods-checkout.js'
 import { IdempotencyConflictError, stableHash } from './idempotency.js'
@@ -160,6 +161,7 @@ export class PostgresFoundation {
 	private readonly scheduling: ServiceScheduling
 	private readonly services: ServiceDefinitions
 	private readonly checkoutFinance: CheckoutFinanceConfiguration
+	private readonly earnings: ComponentEarnings
 	private readonly mixedPurchases: MixedPurchases
 	private readonly mixedRefunds: MixedComponentRefunds
 	private readonly mixedPayments: MixedCheckoutPayments
@@ -315,6 +317,13 @@ export class PostgresFoundation {
 			(tx, id) => this.mixedPayments.abandoned(tx, id),
 			(tx, id) => this.mixedPayments.beforeExpiry(tx, id),
 		)
+		this.earnings = new ComponentEarnings({
+			db: this.db,
+			derive: (tx, s, o) => this.derive(tx, s, o),
+			lockWorkspace: (tx, id) => this.workspaceLock(tx, id),
+			replay: (tx, c, k, m, r, f) => this.replayOrCreate(tx, c, k, m, r, f),
+			now: goodsClock,
+		})
 		this.mixedPurchases = new MixedPurchases(
 			{
 				db: this.db,
@@ -497,6 +506,13 @@ export class PostgresFoundation {
 		const session = await this.db.session.findUnique({ where: { id: sessionId }, include: { user: true, workspace: true } })
 		if (!session?.user || session.revokedAt || session.expiresAt <= new Date() || session.workspace.kind !== 'real') throw new AccessDeniedError()
 		return { userId: session.user.id, email: session.user.email }
+	}
+
+	readVendorEarnings(sessionId: string | undefined) {
+		return this.earnings.read(sessionId)
+	}
+	releaseEarnings() {
+		return this.earnings.refresh()
 	}
 
 	async readCheckoutEligibility(sessionId: string | undefined) {

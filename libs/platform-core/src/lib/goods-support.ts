@@ -6,6 +6,7 @@ import { Prisma, type PrismaClient } from '../../generated/prisma/index.js'
 import type { LocalGoodsPaymentAdapter } from './local-goods-payment.js'
 type Transaction = Prisma.TransactionClient
 export const goodsJson = (value: unknown) => JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue
+import { refreshEarnings } from './earnings.js'
 import type { MixedComponentRefunds } from './mixed-refunds.js'
 export interface GoodsDependencies {
 	mixedRefunds?: MixedComponentRefunds
@@ -28,7 +29,7 @@ export interface GoodsDependencies {
 export function goodsAudit(tx: Transaction, workspaceId: string, actorId: string | null, action: string, metadata: Record<string, unknown>) {
 	return tx.auditLog.create({ data: { workspaceId, actorId, action, correlationId: randomUUID(), metadata: goodsJson(metadata) } })
 }
-export function goodsEmit(
+export async function goodsEmit(
 	tx: Transaction,
 	now: () => Date,
 	workspaceId: string,
@@ -38,6 +39,31 @@ export function goodsEmit(
 	key: string | null,
 	payload: Record<string, unknown>,
 ) {
+	// Return refunds stage cancellation funding before the case transitions to
+	// refund_pending. Refresh only at the final GoodsReturnRecorded boundary,
+	// so that intermediate state cannot freeze the same units twice.
+	const cancellation =
+		['GoodsOrderPartiallyCancelled', 'GoodsOrderCancelled'].includes(type) && typeof payload['cancellationId'] === 'string'
+			? await tx.goodsOrderCancellation.findUnique({ where: { id: payload['cancellationId'] }, select: { origin: true } })
+			: null
+	if (
+		cancellation?.origin !== 'return_inspection' &&
+		[
+			'MixedPurchaseCommitted',
+			'MixedComponentRefundCompleted',
+			'BookingAmended',
+			'BookingCancelled',
+			'BookingCompleted',
+			'BookingContested',
+			'BookingNoShowFinal',
+			'GoodsReturnRecorded',
+			'GoodsOrderPartiallyCancelled',
+			'GoodsOrderCancelled',
+			'GoodsPickupCollected',
+			'GoodsDeliveryMilestoneRecorded',
+		].includes(type)
+	)
+		await refreshEarnings(tx, now(), workspaceId)
 	const eventId = randomUUID()
 	const event = DomainEventSchema.parse({
 		eventId,

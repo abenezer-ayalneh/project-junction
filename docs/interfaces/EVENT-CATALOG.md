@@ -46,3 +46,7 @@ Local Phase 04 C05 emits `MixedPaymentRequested`, `MixedPaymentResultRecorded`, 
 `MixedPurchaseCommitted` carries root Purchase/payment IDs and sandbox marker in the Customer workspace, atomically with capture allocation, all independent Orders/Bookings, exact ledger postings, consumed funding and audit. Existing `GoodsVendorOrderConfirmed`/`BookingConfirmed` are emitted in their existing scoped workspaces. `MixedComponentRefundCompleted` carries opaque refund/payment IDs and goods/Booking kind only when every part has authoritative acknowledgment and exact compensating postings. Ledger events accompany each monetary source. These are invalidation facts; consumers read authoritative scoped state. No provider payload, invoice document contents or private Staff assignment is published.
 
 All development and verification are local. [C06 evidence](../quality/PHASE-04-LOCAL-ACCEPTANCE-EVIDENCE.md#p04-c06--purchase-split-and-receipt--2026-10-13).
+
+## Local C08 availability event — 2026-10-13
+
+`EarningAvailabilityChanged` is the implemented `Earning*` member under `EVT-070`. It carries allocation ID and sequential version in the authoritative seller workspace, atomically with its immutable revision/audit and source commerce transition. It signals availability/freeze/refund classification only, not a cash transfer or new economic sale. Worker/current-read replay emits nothing when authority is unchanged. No private concrete any-Staff identity or provider payload is published. C09 owns transfer/payout events.

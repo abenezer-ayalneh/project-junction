@@ -87,7 +87,7 @@ export class BookingAttendance {
 			contestUntil: a?.contestUntil?.toISOString() ?? null,
 			contestedAt: a?.contestedAt?.toISOString() ?? null,
 			earningAvailableAt: a?.earningAvailableAt?.toISOString() ?? null,
-			earningPosting: 'phase04_pending',
+			earningPosting: booking.mixedPurchaseId ? 'mixed_component_availability' : 'phase04_pending',
 		})
 	}
 	private async ensure(tx: Tx, current: Awaited<ReturnType<BookingAttendance['current']>>) {

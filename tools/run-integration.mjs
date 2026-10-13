@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process'
-import { randomUUID } from 'node:crypto'
+import { randomBytes, randomUUID } from 'node:crypto'
 import { globSync } from 'node:fs'
 import { createRequire } from 'node:module'
 const require = createRequire(new URL('../libs/platform-core/package.json', import.meta.url))
@@ -14,6 +14,10 @@ const env = {
 	...process.env,
 	DATABASE_URL: base.toString(),
 	FOUNDATION_INTEGRATION: '1',
+	// This runner always owns a disposable loopback schema. Its fixture keys must
+	// be stable for this run and must never depend on or reuse operator secrets.
+	JUNCTION_GOODS_HANDOFF_SECRET: randomBytes(32).toString('hex'),
+	JUNCTION_BOOKING_ATTENDANCE_SECRET: randomBytes(32).toString('hex'),
 	TS_NODE_COMPILER_OPTIONS: '{"moduleResolution":"node10","module":"commonjs","customConditions":null}',
 }
 const focusedTestName = process.env.FOUNDATION_TEST_NAME
@@ -77,10 +81,11 @@ try {
 			))
 	)
 		run(['exec', 'node', 'tools/check-booking-holds.mjs'], { JUNCTION_RUNTIME_MODE: 'local' })
-	if (!authProbe && (!focusedTestName || /atomic mixed hold|mixed payment inbox|mixed Purchase split/i.test(focusedTestName)))
+	if (!authProbe && (!focusedTestName || /atomic mixed hold|mixed payment inbox|mixed Purchase split|component earnings/i.test(focusedTestName)))
 		run(['exec', 'node', 'tools/check-promotions-commission.mjs'], {
 			JUNCTION_RUNTIME_MODE: 'local',
 			MIXED_HOLD_HTTP_CHECK: '1',
+			EARNING_HTTP_CHECK: !focusedTestName || /component earnings/i.test(focusedTestName) ? '1' : '0',
 			MIXED_PAYMENT_HTTP_CHECK: !focusedTestName || /mixed payment inbox/i.test(focusedTestName) ? '1' : '0',
 			MIXED_PURCHASE_HTTP_CHECK: !focusedTestName || /mixed Purchase split/i.test(focusedTestName) ? '1' : '0',
 		})
@@ -88,7 +93,7 @@ try {
 		!authProbe &&
 		focusedTestName &&
 		/promotions and commission/i.test(focusedTestName) &&
-		!/atomic mixed hold|mixed payment inbox|mixed Purchase split/i.test(focusedTestName)
+		!/atomic mixed hold|mixed payment inbox|mixed Purchase split|component earnings/i.test(focusedTestName)
 	)
 		run(['exec', 'node', 'tools/check-promotions-commission.mjs'], { JUNCTION_RUNTIME_MODE: 'local' })
 	if (!authProbe && (!focusedTestName || /mixed Cart and quote/i.test(focusedTestName)))

@@ -163,6 +163,7 @@ import {
 	VendorApplicationReviewSchema,
 	VendorCatalogSchema,
 	VendorCouponCommandSchema,
+	VendorEarningsSchema,
 	VendorMembershipsSchema,
 } from 'contracts'
 import { z } from 'zod'
@@ -174,6 +175,7 @@ function schemaFor(schema: z.ZodType): SchemaObject {
 }
 
 export const OpenApiSchemaRefs = {
+	vendorEarnings: { $ref: '#/components/schemas/VendorEarnings' },
 	mixedCurrentHold: { $ref: '#/components/schemas/MixedCurrentHold' },
 	mixedPurchaseRead: { $ref: '#/components/schemas/MixedPurchaseRead' },
 	mixedInvoiceCommand: { $ref: '#/components/schemas/MixedInvoiceCommand' },
@@ -359,6 +361,7 @@ function publicSchemas(): Record<string, SchemaObject> {
 		MixedInvoiceCommand: schemaFor(MixedInvoiceCommandSchema),
 		MixedInvoiceResult: schemaFor(MixedInvoiceResultSchema),
 		CheckoutEligibility: schemaFor(CheckoutEligibilitySchema),
+		VendorEarnings: schemaFor(VendorEarningsSchema),
 		MixedCurrentPayment: schemaFor(MixedCurrentPaymentSchema),
 		MixedPaymentStart: schemaFor(MixedPaymentStartSchema),
 		MixedPaymentRead: schemaFor(MixedPaymentReadSchema),

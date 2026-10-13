@@ -21,6 +21,7 @@ export const DomainEventSchema = z.object({
 		'PromotionBudgetConsumed',
 		'MixedCartUpdated',
 		'MixedCheckoutQuoteCreated',
+		'EarningAvailabilityChanged',
 		'LedgerTransactionPosted',
 		'LedgerTransactionReversed',
 		'ServiceConfigured',

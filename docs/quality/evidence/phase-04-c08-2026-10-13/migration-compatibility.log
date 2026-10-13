@@ -1,0 +1,163 @@
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "phase00_compat_2f6a42607bf843c4b895571b2d1af666" at "127.0.0.1:55432"
+
+49 migrations found in prisma/migrations
+
+Applying migration `20260831120000_platform_foundation`
+Applying migration `20260921000000_durable_foundation`
+Applying migration `20260922000000_demo_persona_access`
+Applying migration `20260922010000_provider_timeout_reconciliation`
+Applying migration `20260922020000_adult_verification_lifecycle`
+Applying migration `20260922030000_demo_provider_quota`
+Applying migration `20260922040000_staff_user_linkage`
+Applying migration `20260922050000_public_vendor_browse`
+Applying migration `20260922060000_adult_verification_mixed_version_compatibility`
+Applying migration `20260922070000_demo_persona_command_quota`
+Applying migration `20260923000000_phase_01_vendor_catalog`
+Applying migration `20260923010000_snake_case_identifiers`
+Applying migration `20260923020000_legacy_identifier_compatibility`
+Applying migration `20260923030000_synthetic_external_effect_idempotency`
+Applying migration `20260923040000_inventory_movements`
+Applying migration `20260924000000_media_upload_intents`
+Applying migration `20260924010000_video_processing_and_moderation`
+Applying migration `20260925000000_real_platform_reviewer_grants`
+Applying migration `20260928000000_retire_legacy_adult_default`
+Applying migration `20260929000000_retire_synthetic_schema`
+Applying migration `20261001000000_durable_didit_sessions`
+Applying migration `20261002000000_durable_realtime_cursor`
+Applying migration `20261006000000_phase_01_marketplace_discovery`
+Applying migration `20261006010000_phase_01_listing_images`
+Applying migration `20261006020000_phase_01_storefront_branding`
+Applying migration `20261009000000_rejected_media_retention`
+Applying migration `20261012000000_inventory_transfers`
+Applying migration `20261012010000_goods_quotes_and_holds`
+Applying migration `20261012020000_goods_paid_orders`
+Applying migration `20261012030000_goods_order_cancellations`
+Applying migration `20261012040000_goods_pickup_fulfillment`
+Applying migration `20261012050000_goods_delivery_milestones`
+Applying migration `20261012060000_goods_returns`
+Applying migration `20261012070000_service_definitions`
+Applying migration `20261012080000_authoritative_schedules`
+Applying migration `20261012090000_atomic_booking_holds`
+Applying migration `20261012100000_paid_bookings`
+Applying migration `20261012110000_booking_cancellations`
+Applying migration `20261012120000_booking_amendments`
+Applying migration `20261012130000_substitutions_waitlists`
+Applying migration `20261012140000_booking_meetings`
+Applying migration `20261012150000_booking_attendance`
+Applying migration `20261012160000_immutable_ledger`
+Applying migration `20261012170000_mixed_cart_quotes`
+Applying migration `20261012180000_promotions_commission`
+Applying migration `20261013030000_atomic_mixed_holds`
+Applying migration `20261013040000_mixed_payment_inbox`
+Applying migration `20261013050000_mixed_purchase_commit`
+Applying migration `20261013060000_component_earnings`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831120000_platform_foundation/
+    └─ migration.sql
+  └─ 20260921000000_durable_foundation/
+    └─ migration.sql
+  └─ 20260922000000_demo_persona_access/
+    └─ migration.sql
+  └─ 20260922010000_provider_timeout_reconciliation/
+    └─ migration.sql
+  └─ 20260922020000_adult_verification_lifecycle/
+    └─ migration.sql
+  └─ 20260922030000_demo_provider_quota/
+    └─ migration.sql
+  └─ 20260922040000_staff_user_linkage/
+    └─ migration.sql
+  └─ 20260922050000_public_vendor_browse/
+    └─ migration.sql
+  └─ 20260922060000_adult_verification_mixed_version_compatibility/
+    └─ migration.sql
+  └─ 20260922070000_demo_persona_command_quota/
+    └─ migration.sql
+  └─ 20260923000000_phase_01_vendor_catalog/
+    └─ migration.sql
+  └─ 20260923010000_snake_case_identifiers/
+    └─ migration.sql
+  └─ 20260923020000_legacy_identifier_compatibility/
+    └─ migration.sql
+  └─ 20260923030000_synthetic_external_effect_idempotency/
+    └─ migration.sql
+  └─ 20260923040000_inventory_movements/
+    └─ migration.sql
+  └─ 20260924000000_media_upload_intents/
+    └─ migration.sql
+  └─ 20260924010000_video_processing_and_moderation/
+    └─ migration.sql
+  └─ 20260925000000_real_platform_reviewer_grants/
+    └─ migration.sql
+  └─ 20260928000000_retire_legacy_adult_default/
+    └─ migration.sql
+  └─ 20260929000000_retire_synthetic_schema/
+    └─ migration.sql
+  └─ 20261001000000_durable_didit_sessions/
+    └─ migration.sql
+  └─ 20261002000000_durable_realtime_cursor/
+    └─ migration.sql
+  └─ 20261006000000_phase_01_marketplace_discovery/
+    └─ migration.sql
+  └─ 20261006010000_phase_01_listing_images/
+    └─ migration.sql
+  └─ 20261006020000_phase_01_storefront_branding/
+    └─ migration.sql
+  └─ 20261009000000_rejected_media_retention/
+    └─ migration.sql
+  └─ 20261012000000_inventory_transfers/
+    └─ migration.sql
+  └─ 20261012010000_goods_quotes_and_holds/
+    └─ migration.sql
+  └─ 20261012020000_goods_paid_orders/
+    └─ migration.sql
+  └─ 20261012030000_goods_order_cancellations/
+    └─ migration.sql
+  └─ 20261012040000_goods_pickup_fulfillment/
+    └─ migration.sql
+  └─ 20261012050000_goods_delivery_milestones/
+    └─ migration.sql
+  └─ 20261012060000_goods_returns/
+    └─ migration.sql
+  └─ 20261012070000_service_definitions/
+    └─ migration.sql
+  └─ 20261012080000_authoritative_schedules/
+    └─ migration.sql
+  └─ 20261012090000_atomic_booking_holds/
+    └─ migration.sql
+  └─ 20261012100000_paid_bookings/
+    └─ migration.sql
+  └─ 20261012110000_booking_cancellations/
+    └─ migration.sql
+  └─ 20261012120000_booking_amendments/
+    └─ migration.sql
+  └─ 20261012130000_substitutions_waitlists/
+    └─ migration.sql
+  └─ 20261012140000_booking_meetings/
+    └─ migration.sql
+  └─ 20261012150000_booking_attendance/
+    └─ migration.sql
+  └─ 20261012160000_immutable_ledger/
+    └─ migration.sql
+  └─ 20261012170000_mixed_cart_quotes/
+    └─ migration.sql
+  └─ 20261012180000_promotions_commission/
+    └─ migration.sql
+  └─ 20261013030000_atomic_mixed_holds/
+    └─ migration.sql
+  └─ 20261013040000_mixed_payment_inbox/
+    └─ migration.sql
+  └─ 20261013050000_mixed_purchase_commit/
+    └─ migration.sql
+  └─ 20261013060000_component_earnings/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+Loaded Prisma config from prisma.config.ts.
+
+No difference detected.

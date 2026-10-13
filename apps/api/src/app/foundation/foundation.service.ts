@@ -435,6 +435,9 @@ export class FoundationService {
 	releaseMixedHold(sessionId: string | undefined, key: string | undefined, id: string) {
 		return this.durable.releaseMixedHold(sessionId, key, id)
 	}
+	readVendorEarnings(sessionId: string | undefined) {
+		return this.durable.readVendorEarnings(sessionId)
+	}
 	readCheckoutEligibility(sessionId: string | undefined) {
 		return this.durable.readCheckoutEligibility(sessionId)
 	}

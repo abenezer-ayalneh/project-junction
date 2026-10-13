@@ -657,6 +657,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           "earningPosting": {
             "enum": [
               "phase04_pending",
+              "mixed_component_availability",
             ],
             "type": "string",
           },
@@ -1673,6 +1674,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           "earningPosting": {
             "enum": [
               "phase04_pending",
+              "mixed_component_availability",
             ],
             "type": "string",
           },
@@ -30480,6 +30482,173 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
         "type": "object",
       },
+      "VendorEarnings": {
+        "additionalProperties": false,
+        "properties": {
+          "currency": {
+            "enum": [
+              "ETB",
+            ],
+            "type": "string",
+          },
+          "lots": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "allocationId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "amounts": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "available": {
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "eligibleAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                      "type": "string",
+                    },
+                    "freezes": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "kind": {
+                            "enum": [
+                              "goods_return",
+                              "booking_contest",
+                            ],
+                            "type": "string",
+                          },
+                          "minorUnits": {
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                          "sourceId": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string",
+                          },
+                        },
+                        "required": [
+                          "kind",
+                          "sourceId",
+                          "minorUnits",
+                        ],
+                        "type": "object",
+                      },
+                      "type": "array",
+                    },
+                    "frozen": {
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "gross": {
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "pending": {
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "refundPending": {
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "refunded": {
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                  },
+                  "required": [
+                    "gross",
+                    "pending",
+                    "available",
+                    "frozen",
+                    "refundPending",
+                    "refunded",
+                    "eligibleAt",
+                    "freezes",
+                  ],
+                  "type": "object",
+                },
+                "bookingId": {
+                  "format": "uuid",
+                  "nullable": true,
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "goodsOrderLineId": {
+                  "format": "uuid",
+                  "nullable": true,
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "kind": {
+                  "enum": [
+                    "goods",
+                    "booking",
+                    "delivery",
+                  ],
+                  "type": "string",
+                },
+                "locationId": {
+                  "format": "uuid",
+                  "nullable": true,
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "purchaseId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "version": {
+                  "exclusiveMinimum": true,
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+              },
+              "required": [
+                "allocationId",
+                "purchaseId",
+                "kind",
+                "locationId",
+                "goodsOrderLineId",
+                "bookingId",
+                "version",
+                "amounts",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "settlement": {
+            "enum": [
+              "not_transferred",
+            ],
+            "type": "string",
+          },
+        },
+        "required": [
+          "currency",
+          "settlement",
+          "lots",
+        ],
+        "type": "object",
+      },
       "VendorMemberships": {
         "additionalProperties": false,
         "properties": {
@@ -35691,6 +35860,33 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
         ],
         "summary": "Read an owned Vendor coupon definition.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/vendor/earnings": {
+      "get": {
+        "operationId": "AppController_readVendorEarnings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorEarnings",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Read scoped component earning availability; no transfer or payout is implied.",
         "tags": [
           "foundation",
         ],

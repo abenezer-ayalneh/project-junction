@@ -1403,6 +1403,7 @@ model MixedPurchase {
  @@map("mixed_purchases")
 }
 model MixedCommerceAllocation {
+ earningRevisions EarningRevision[]
  additionalCaptures MixedAdditionalCapture[]
  refunds MixedRefundFunding[]
  goodsOrderLine GoodsOrderLine? @relation(fields:[goodsOrderLineId],references:[id],onDelete:NoAction,onUpdate:NoAction)
@@ -1474,4 +1475,15 @@ model MixedAdditionalCapture {
  createdAt DateTime @map("created_at") @db.Timestamptz(6)
  refunds MixedRefundFunding[]
  @@map("mixed_additional_captures")
+}
+
+model EarningRevision {
+ id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+ allocationId String @map("allocation_id") @db.Uuid
+ allocation MixedCommerceAllocation @relation(fields:[allocationId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+ version Int
+ snapshot Json
+ observedAt DateTime @map("observed_at") @db.Timestamptz(6)
+ @@unique([allocationId,version])
+ @@map("earning_revisions")
 }

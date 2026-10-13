@@ -612,6 +612,10 @@ try {
 		const { checkUnifiedCheckoutBrowser } = await import('./check-unified-checkout-browser.mjs')
 		await checkUnifiedCheckoutBrowser({ repository, identity, origin, vendor, location, product, service, selection })
 	}
+	if (process.env.EARNING_HTTP_CHECK === '1') {
+		const { checkComponentEarnings } = await import('./check-component-earnings.mjs')
+		await checkComponentEarnings({ repository, identity, request, owner, finance, vendor, location, product, secret })
+	}
 	cli('revoke')
 	assert.equal(
 		(

@@ -139,7 +139,7 @@ export const BookingAttendanceReadSchema = z.object({
 	contestUntil: z.string().datetime().nullable(),
 	contestedAt: z.string().datetime().nullable(),
 	earningAvailableAt: z.string().datetime().nullable(),
-	earningPosting: z.literal('phase04_pending'),
+	earningPosting: z.enum(['phase04_pending', 'mixed_component_availability']),
 })
 export const BookingAttendanceConfirmCommandSchema = z.strictObject({
 	expectedVersion: z.number().int().positive(),

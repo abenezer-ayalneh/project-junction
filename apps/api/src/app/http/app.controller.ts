@@ -957,6 +957,15 @@ export class AppController {
 		return this.foundation.releaseMixedHold(sessionId, key, id)
 	}
 
+	@Get('vendor/earnings')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Read scoped component earning availability; no transfer or payout is implied.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.vendorEarnings })
+	readVendorEarnings(@AuthenticatedSession() sessionId: string | undefined) {
+		return this.foundation.readVendorEarnings(sessionId)
+	}
+
 	@Get('customer/checkout/eligibility')
 	@Header('Cache-Control', 'no-store')
 	@ApiOperation({ summary: 'Read account checkout eligibility without initiating or enabling identity verification.' })
