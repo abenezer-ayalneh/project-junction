@@ -20,7 +20,7 @@ export const EarningAmountsSchema = z
 	})
 export const VendorEarningsSchema = z.strictObject({
 	currency: z.literal('ETB'),
-	settlement: z.literal('not_transferred'),
+	settlement: z.enum(['not_transferred', 'simulated_transfers']),
 	lots: z.array(
 		z.strictObject({
 			allocationId: z.string().uuid(),

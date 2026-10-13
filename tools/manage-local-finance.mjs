@@ -7,6 +7,8 @@ const action = process.argv[2],
 	operator = process.env.LOCAL_OPERATOR_LABEL?.trim(),
 	reason = process.env.LOCAL_FINANCE_REASON?.trim(),
 	workspaceId = process.env.LOCAL_FINANCE_WORKSPACE_ID
+const settlementScopes = (process.env.LOCAL_FINANCE_SETTLEMENT_WORKSPACE_IDS ?? '').split(',').filter(Boolean)
+if (settlementScopes.some((id) => !/^[0-9a-f-]{36}$/i.test(id))) throw new Error('Invalid explicit settlement workspace scope.')
 const expiresAt = process.env.LOCAL_FINANCE_EXPIRES_AT ? new Date(process.env.LOCAL_FINANCE_EXPIRES_AT) : null
 if (
 	!['grant', 'revoke'].includes(action) ||
@@ -49,8 +51,8 @@ try {
 	const result =
 		action === 'grant'
 			? await client.query(
-					`INSERT INTO platform_finance_grants(user_id,workspace_id,expires_at,granted_by,reason) VALUES($1,$2,$3,$4,$5) ON CONFLICT(user_id,workspace_id) DO UPDATE SET expires_at=EXCLUDED.expires_at,granted_by=EXCLUDED.granted_by,reason=EXCLUDED.reason,revoked_at=NULL RETURNING id`,
-					[userId, workspaceId, expiresAt, operator, reason],
+					`INSERT INTO platform_finance_grants(user_id,workspace_id,expires_at,granted_by,reason,settlement_workspace_ids) VALUES($1,$2,$3,$4,$5,$6::uuid[]) ON CONFLICT(user_id,workspace_id) DO UPDATE SET expires_at=EXCLUDED.expires_at,granted_by=EXCLUDED.granted_by,reason=EXCLUDED.reason,settlement_workspace_ids=EXCLUDED.settlement_workspace_ids,revoked_at=NULL RETURNING id`,
+					[userId, workspaceId, expiresAt, operator, reason, settlementScopes],
 				)
 			: await client.query(
 					`UPDATE platform_finance_grants SET revoked_at=now() WHERE user_id=$1 AND workspace_id=$2 AND revoked_at IS NULL RETURNING id`,
@@ -66,6 +68,7 @@ try {
 				reason,
 				subjectUserId: userId,
 				source: 'local-operator-cli',
+				settlementWorkspaceIds: settlementScopes,
 				expiresAt: action === 'grant' ? expiresAt.toISOString() : null,
 			}),
 		])

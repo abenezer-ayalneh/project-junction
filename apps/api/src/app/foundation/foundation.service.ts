@@ -435,6 +435,16 @@ export class FoundationService {
 	releaseMixedHold(sessionId: string | undefined, key: string | undefined, id: string) {
 		return this.durable.releaseMixedHold(sessionId, key, id)
 	}
+	readVendorPayouts(sessionId: string | undefined) {
+		return this.durable.readVendorPayouts(sessionId)
+	}
+	financeCommand(sessionId: string | undefined, key: string | undefined, input: unknown) {
+		return this.durable.financeCommand(sessionId, key, input)
+	}
+	readFinance(sessionId: string | undefined, workspaceId: string) {
+		return this.durable.readFinance(sessionId, workspaceId)
+	}
+
 	readVendorEarnings(sessionId: string | undefined) {
 		return this.durable.readVendorEarnings(sessionId)
 	}

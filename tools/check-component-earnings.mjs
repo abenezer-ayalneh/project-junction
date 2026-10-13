@@ -121,8 +121,77 @@ export async function checkComponentEarnings({ repository, identity, request, ow
 		const count = await repository.db.earningRevision.count({ where: { allocationId } })
 		await repository.releaseEarnings()
 		assert.equal(await repository.db.earningRevision.count({ where: { allocationId } }), count)
+
+		if (process.env.FINANCE_HTTP_CHECK === '1') {
+			const workspaceId = owner.workspace.id,
+				approver = await identity()
+			await repository.db.platformFinanceGrant.update({
+				where: { userId_workspaceId: { userId: finance.user.id, workspaceId: finance.workspace.id } },
+				data: { settlementWorkspaceIds: [workspaceId] },
+			})
+			await repository.db.platformFinanceGrant.create({
+				data: {
+					userId: approver.user.id,
+					workspaceId: approver.workspace.id,
+					expiresAt: new Date(Date.now() + 3600000),
+					grantedBy: 'C09 disposable HTTP fixture',
+					reason: 'Explicit local settlement scope',
+					settlementWorkspaceIds: [workspaceId],
+				},
+			})
+			const operation = (who, input, key = randomUUID()) =>
+				request(who, '/platform/finance/operations', 'POST', { workspaceId, reason: 'Disposable C09 HTTP verification.', ...input }, key)
+			assert.equal((await operation(finance, { action: 'propose_policy', minimumMinorUnits: 1 })).status, 403)
+			for (const f of [finance, approver])
+				await repository.db.session.update({ where: { id: f.session.id }, data: { mfaVerifiedAt: new Date(), recentAuthAt: new Date() } })
+			assert.equal((await operation(owner, { action: 'run_weekly' })).status, 403)
+			const proposal = await operation(finance, { action: 'propose_policy', minimumMinorUnits: 1 })
+			assert.equal(proposal.status, 201)
+			const proposalId = proposal.body.records[0].id
+			assert.equal((await operation(finance, { action: 'approve', proposalId })).status, 403)
+			assert.equal((await operation(approver, { action: 'approve', proposalId })).status, 201)
+			let transfer
+			for (let i = 0; i < 100; i++) {
+				transfer = await repository.db.financeRecord.findFirst({ where: { workspaceId, kind: 'transfer' } })
+				if (transfer) break
+				await new Promise((resolve) => setTimeout(resolve, 100))
+			}
+			assert.ok(transfer, 'Actual worker must allocate an approved weekly batch.')
+			const transferId = transfer.id
+			assert.equal(transfer.payload.amount, 1000)
+			assert.equal((await operation(finance, { action: 'simulate_result', transferId, outcome: 'unknown' })).status, 201)
+			const key = randomUUID(),
+				completed = await operation(finance, { action: 'simulate_result', transferId, outcome: 'succeeded' }, key)
+			assert.equal(completed.status, 201)
+			assert.equal(
+				(await operation(finance, { action: 'simulate_result', transferId, outcome: 'succeeded' }, key)).body.records[0].id,
+				completed.body.records[0].id,
+			)
+			assert.equal((await operation(finance, { action: 'simulate_result', transferId, outcome: 'failed' })).status, 409)
+			const reconciled = await operation(finance, { action: 'reconcile' })
+			assert.equal(reconciled.status, 201)
+			assert.equal(reconciled.body.records[0].payload.matched, true)
+			assert.equal((await request(null, `/platform/finance/workspaces/${workspaceId}`)).status, 403)
+			const statement = await request(finance, `/platform/finance/workspaces/${workspaceId}`)
+			assert.equal(statement.status, 200)
+			assert.equal(statement.cacheControl, 'no-store')
+			assert.equal(statement.body.sandbox, true)
+			const vendorStatement = await request(owner, '/vendor/payouts')
+			assert.equal(vendorStatement.status, 200)
+			assert.equal(vendorStatement.cacheControl, 'no-store')
+			assert.equal(vendorStatement.body.transfers[0].status, 'succeeded')
+			assert.equal((await request(buyer, '/vendor/payouts')).status, 403)
+			await repository.db.platformFinanceGrant.update({
+				where: { userId_workspaceId: { userId: approver.user.id, workspaceId: approver.workspace.id } },
+				data: { revokedAt: new Date() },
+			})
+			assert.equal((await operation(approver, { action: 'reconcile' })).status, 403)
+			console.log(
+				'Built local Finance HTTP/actual worker passed: explicit scope/recent MFA/dual control, automatic weekly allocation, unknown/success replay, conflicting terminal rejection, ledger reconciliation, private no-store history and revocation.',
+			)
+		}
 		console.log(
-			'Built local earning HTTP/actual worker passed: historical verified handoff releases once, scoped no-store Owner read, Customer/anonymous denial and no transfer or new sale posting.',
+			'Built local earning HTTP/actual worker passed: historical verified handoff releases once, scoped no-store Owner read, Customer/anonymous denial and unchanged original sale posting.',
 		)
 	} finally {
 		if (worker.exitCode === null) worker.kill('SIGTERM')

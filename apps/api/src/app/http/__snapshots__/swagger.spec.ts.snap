@@ -3361,6 +3361,389 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
         "type": "object",
       },
+      "FinanceCommand": {
+        "oneOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "action": {
+                "enum": [
+                  "open_exception",
+                ],
+                "type": "string",
+              },
+              "code": {
+                "maxLength": 100,
+                "minLength": 1,
+                "type": "string",
+              },
+              "evidence": {
+                "maxLength": 2000,
+                "minLength": 1,
+                "type": "string",
+              },
+              "reason": {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string",
+              },
+              "sourceId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "workspaceId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+            },
+            "required": [
+              "action",
+              "workspaceId",
+              "sourceId",
+              "code",
+              "reason",
+              "evidence",
+            ],
+            "type": "object",
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "action": {
+                "enum": [
+                  "propose_fee",
+                ],
+                "type": "string",
+              },
+              "amountMinorUnits": {
+                "exclusiveMinimum": true,
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "evidence": {
+                "maxLength": 2000,
+                "minLength": 1,
+                "type": "string",
+              },
+              "feeKind": {
+                "enum": [
+                  "processor",
+                  "dispute",
+                ],
+                "type": "string",
+              },
+              "reason": {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string",
+              },
+              "reference": {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string",
+              },
+              "workspaceId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+            },
+            "required": [
+              "action",
+              "workspaceId",
+              "feeKind",
+              "amountMinorUnits",
+              "reference",
+              "reason",
+              "evidence",
+            ],
+            "type": "object",
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "action": {
+                "enum": [
+                  "reconcile",
+                ],
+                "type": "string",
+              },
+              "reason": {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string",
+              },
+              "workspaceId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+            },
+            "required": [
+              "action",
+              "workspaceId",
+              "reason",
+            ],
+            "type": "object",
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "action": {
+                "enum": [
+                  "propose_policy",
+                ],
+                "type": "string",
+              },
+              "minimumMinorUnits": {
+                "exclusiveMinimum": true,
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer",
+              },
+              "reason": {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string",
+              },
+              "workspaceId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+            },
+            "required": [
+              "action",
+              "workspaceId",
+              "minimumMinorUnits",
+              "reason",
+            ],
+            "type": "object",
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "action": {
+                "enum": [
+                  "propose_correction",
+                ],
+                "type": "string",
+              },
+              "evidence": {
+                "maxLength": 2000,
+                "minLength": 1,
+                "type": "string",
+              },
+              "exceptionId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "reason": {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string",
+              },
+              "transactionId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "workspaceId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+            },
+            "required": [
+              "action",
+              "workspaceId",
+              "exceptionId",
+              "transactionId",
+              "reason",
+              "evidence",
+            ],
+            "type": "object",
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "action": {
+                "enum": [
+                  "approve",
+                ],
+                "type": "string",
+              },
+              "proposalId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "reason": {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string",
+              },
+              "workspaceId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+            },
+            "required": [
+              "action",
+              "workspaceId",
+              "proposalId",
+              "reason",
+            ],
+            "type": "object",
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "action": {
+                "enum": [
+                  "run_weekly",
+                ],
+                "type": "string",
+              },
+              "reason": {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string",
+              },
+              "workspaceId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+            },
+            "required": [
+              "action",
+              "workspaceId",
+              "reason",
+            ],
+            "type": "object",
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "action": {
+                "enum": [
+                  "simulate_result",
+                ],
+                "type": "string",
+              },
+              "outcome": {
+                "enum": [
+                  "unknown",
+                  "succeeded",
+                  "failed",
+                ],
+                "type": "string",
+              },
+              "reason": {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string",
+              },
+              "transferId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "workspaceId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+            },
+            "required": [
+              "action",
+              "workspaceId",
+              "transferId",
+              "outcome",
+              "reason",
+            ],
+            "type": "object",
+          },
+        ],
+      },
+      "FinanceResult": {
+        "additionalProperties": false,
+        "properties": {
+          "records": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "actorId": {
+                  "format": "uuid",
+                  "nullable": true,
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "createdAt": {
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                  "type": "string",
+                },
+                "id": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "kind": {
+                  "type": "string",
+                },
+                "operationKey": {
+                  "type": "string",
+                },
+                "payload": {
+                  "additionalProperties": {},
+                  "type": "object",
+                },
+                "sourceId": {
+                  "format": "uuid",
+                  "nullable": true,
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "workspaceId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "id",
+                "workspaceId",
+                "kind",
+                "operationKey",
+                "sourceId",
+                "actorId",
+                "payload",
+                "createdAt",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "sandbox": {
+            "enum": [
+              true,
+            ],
+            "type": "boolean",
+          },
+        },
+        "required": [
+          "sandbox",
+          "records",
+        ],
+        "type": "object",
+      },
       "GoodsCustomerDeliveryRead": {
         "additionalProperties": false,
         "properties": {
@@ -30638,6 +31021,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           "settlement": {
             "enum": [
               "not_transferred",
+              "simulated_transfers",
             ],
             "type": "string",
           },
@@ -30688,6 +31072,78 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         "required": [
           "activeVendorId",
           "items",
+        ],
+        "type": "object",
+      },
+      "VendorPayouts": {
+        "additionalProperties": false,
+        "properties": {
+          "currency": {
+            "enum": [
+              "ETB",
+            ],
+            "type": "string",
+          },
+          "sandbox": {
+            "enum": [
+              true,
+            ],
+            "type": "boolean",
+          },
+          "transfers": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "allocationIds": {
+                  "items": {
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string",
+                  },
+                  "type": "array",
+                },
+                "amountMinorUnits": {
+                  "exclusiveMinimum": true,
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+                "status": {
+                  "enum": [
+                    "pending",
+                    "unknown",
+                    "succeeded",
+                    "failed",
+                  ],
+                  "type": "string",
+                },
+                "transferId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "week": {
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "transferId",
+                "week",
+                "status",
+                "amountMinorUnits",
+                "allocationIds",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+        },
+        "required": [
+          "sandbox",
+          "currency",
+          "transfers",
         ],
         "type": "object",
       },
@@ -34553,6 +35009,88 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
       },
     },
+    "/v1/platform/finance/operations": {
+      "post": {
+        "operationId": "AppController_financeCommand",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinanceCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinanceResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Run a scoped local Finance simulation with recent MFA and dual approval.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/platform/finance/workspaces/{workspaceId}": {
+      "get": {
+        "operationId": "AppController_readFinance",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinanceResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Read scoped simulated Finance history and reconciliation exceptions.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
     "/v1/platform/goods/orders/{orderId}": {
       "get": {
         "operationId": "AppController_readPlatformGoodsOrder",
@@ -36530,6 +37068,33 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
         ],
         "summary": "Record scoped vendor return lifecycle evidence or inspection outcome.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/vendor/payouts": {
+      "get": {
+        "operationId": "AppController_readVendorPayouts",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorPayouts",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Read scoped simulated Vendor payout statements.",
         "tags": [
           "foundation",
         ],

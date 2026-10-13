@@ -60,7 +60,9 @@ export class ComponentEarnings {
 				})
 				return VendorEarningsSchema.parse({
 					currency: 'ETB',
-					settlement: 'not_transferred',
+					settlement: (await tx.financeRecord.findFirst({ where: { workspaceId: context.workspaceId, kind: 'transfer' } }))
+						? 'simulated_transfers'
+						: 'not_transferred',
 					lots: allocations.map((a) => {
 						const revision = a.earningRevisions[0]
 						const value = revision.snapshot as Record<string, unknown>

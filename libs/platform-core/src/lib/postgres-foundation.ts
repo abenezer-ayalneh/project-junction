@@ -102,6 +102,7 @@ import { PromotionBudget } from './promotion-budget.js'
 import { applicationRuntimeMode } from './runtime.js'
 import { ServiceDefinitions } from './service-definitions.js'
 import { ServiceScheduling } from './service-scheduling.js'
+import { FinanceSettlement } from './settlement.js'
 import { MediaRejectedError, VideoProcessor } from './video-processor.js'
 
 type Transaction = Prisma.TransactionClient
@@ -161,6 +162,7 @@ export class PostgresFoundation {
 	private readonly scheduling: ServiceScheduling
 	private readonly services: ServiceDefinitions
 	private readonly checkoutFinance: CheckoutFinanceConfiguration
+	private readonly settlement: FinanceSettlement
 	private readonly earnings: ComponentEarnings
 	private readonly mixedPurchases: MixedPurchases
 	private readonly mixedRefunds: MixedComponentRefunds
@@ -318,6 +320,13 @@ export class PostgresFoundation {
 			(tx, id) => this.mixedPayments.beforeExpiry(tx, id),
 		)
 		this.earnings = new ComponentEarnings({
+			db: this.db,
+			derive: (tx, s, o) => this.derive(tx, s, o),
+			lockWorkspace: (tx, id) => this.workspaceLock(tx, id),
+			replay: (tx, c, k, m, r, f) => this.replayOrCreate(tx, c, k, m, r, f),
+			now: goodsClock,
+		})
+		this.settlement = new FinanceSettlement({
 			db: this.db,
 			derive: (tx, s, o) => this.derive(tx, s, o),
 			lockWorkspace: (tx, id) => this.workspaceLock(tx, id),
@@ -506,6 +515,19 @@ export class PostgresFoundation {
 		const session = await this.db.session.findUnique({ where: { id: sessionId }, include: { user: true, workspace: true } })
 		if (!session?.user || session.revokedAt || session.expiresAt <= new Date() || session.workspace.kind !== 'real') throw new AccessDeniedError()
 		return { userId: session.user.id, email: session.user.email }
+	}
+
+	readVendorPayouts(sessionId: string | undefined) {
+		return this.settlement.vendorRead(sessionId)
+	}
+	financeCommand(sessionId: string | undefined, key: string | undefined, input: unknown) {
+		return this.settlement.command(sessionId, key, input)
+	}
+	readFinance(sessionId: string | undefined, workspaceId: string) {
+		return this.settlement.read(sessionId, workspaceId)
+	}
+	runWeeklyPayouts() {
+		return this.settlement.tick()
 	}
 
 	readVendorEarnings(sessionId: string | undefined) {

@@ -8,6 +8,7 @@ datasource db {
 }
 
 model User {
+ financeRecords FinanceRecord[]
   bookingWaitlists BookingWaitlist[]
   bookingHolds BookingHold[]
   goodsCancellationGrants      GoodsCancellationGrant[]
@@ -32,6 +33,7 @@ model User {
 }
 
 model Workspace {
+ financeRecords FinanceRecord[]
   bookingWaitlists BookingWaitlist[]
   bookingHolds BookingHold[]
   goodsCancellationGrants      GoodsCancellationGrant[]
@@ -1210,6 +1212,7 @@ model MixedCheckoutQuote {
 }
 
 model PlatformFinanceGrant {
+ settlementWorkspaceIds String[] @default([]) @map("settlement_workspace_ids") @db.Uuid
  id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
  userId String @map("user_id") @db.Uuid
  workspaceId String @map("workspace_id") @db.Uuid
@@ -1486,4 +1489,20 @@ model EarningRevision {
  observedAt DateTime @map("observed_at") @db.Timestamptz(6)
  @@unique([allocationId,version])
  @@map("earning_revisions")
+}
+
+model FinanceRecord {
+ workspace Workspace @relation(fields:[workspaceId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+ actor User? @relation(fields:[actorId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+ id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+ workspaceId String @map("workspace_id") @db.Uuid
+ kind String
+ operationKey String @map("operation_key")
+ sourceId String? @map("source_id") @db.Uuid
+ actorId String? @map("actor_id") @db.Uuid
+ payload Json
+ createdAt DateTime @map("created_at") @db.Timestamptz(6)
+ @@unique([workspaceId, operationKey])
+ @@index([workspaceId,kind],map:"finance_records_scope_kind")
+ @@map("finance_records")
 }

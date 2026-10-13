@@ -152,3 +152,11 @@ All development and verification are local. [C05 evidence](../quality/PHASE-04-L
 `POST /v1/vendor/purchases/:purchaseId/invoices` requires an idempotency key, actual selling Vendor Owner membership, active Vendor scope and MFA under the documented local exception. Body contains only `invoiceNumber` and `documentUrl` (HTTPS without credentials). Replay returns the same immutable reference; changed keyed bodies conflict. Existing goods fulfillment/returns/cancellation and Booking amendment/meeting/attendance/cancellation routes retain their independent authority and state machines. No browser commitment endpoint or extra component payment is introduced.
 
 All development and verification are local. [C06 evidence](../quality/PHASE-04-LOCAL-ACCEPTANCE-EVIDENCE.md#p04-c06--purchase-split-and-receipt--2026-10-13).
+
+## Phase 04 C09 local Finance simulation
+
+- `POST /v1/platform/finance/operations`: strict discriminated local commands for reconciliation, linked exception, fee/policy/correction proposal, distinct approval, weekly batch and controlled transfer observation. Requires explicit target-workspace settlement scope, recent MFA/authentication and `Idempotency-Key`; configuration/Reviewer/Owner authority alone is insufficient. Corrections cannot submit arbitrary posting vectors or reverse authoritative commerce outside its source workflow.
+- `GET /v1/platform/finance/workspaces/:workspaceId`: scoped recent immutable Finance records (up to 200), private/no-store, explicit `sandbox: true`.
+- `GET /v1/vendor/payouts`: private/no-store Owner statement of recent simulated transfers, restricted to assigned Locations and the active Vendor. No withdrawal command exists.
+
+The local worker automatically allocates approved weekly batches; controlled outcome commands simulate reconciliation only. Finance configuration grants have no settlement scope by default. Target provider-backed transfer/payout acceptance remains open. See [financial implementation boundary](../domain/PAYMENTS-LEDGER-PROMOTIONS-AND-PAYOUTS.md#local-phase-04-c09-reconciliation-and-payout-simulation--2026-10-13).

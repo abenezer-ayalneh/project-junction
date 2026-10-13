@@ -50,3 +50,7 @@ All development and verification are local. [C06 evidence](../quality/PHASE-04-L
 ## Local C08 availability event — 2026-10-13
 
 `EarningAvailabilityChanged` is the implemented `Earning*` member under `EVT-070`. It carries allocation ID and sequential version in the authoritative seller workspace, atomically with its immutable revision/audit and source commerce transition. It signals availability/freeze/refund classification only, not a cash transfer or new economic sale. Worker/current-read replay emits nothing when authority is unchanged. No private concrete any-Staff identity or provider payload is published. C09 owns transfer/payout events.
+
+### Phase 04 C09 local Finance records
+
+`FinanceRecordCreated` commits with each immutable scoped proposal, approval, reconciliation/exception/resolution, weekly batch, component transfer reservation or controlled observation. Its payload contains record/kind/source references and `sandbox: true`; economic ledger entries continue to emit `LedgerTransactionPosted`/`LedgerTransactionReversed`. Unknown observations retain the stable transfer identity and reservations. Events do not represent external provider or bank settlement.

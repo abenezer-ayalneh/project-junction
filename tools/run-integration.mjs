@@ -59,7 +59,9 @@ try {
 			// Public discovery, media ownership and commerce suites intentionally
 			// retain domain fixtures. Isolate files so test order cannot alter pages
 			// or make a temporary object store appear incomplete.
-			const files = globSync('libs/platform-core/src/**/*.integration.ts').sort()
+			const files = globSync('libs/platform-core/src/**/*.integration.ts')
+				.sort()
+				.filter((file) => !process.env.FOUNDATION_TEST_FILE || file === process.env.FOUNDATION_TEST_FILE)
 			if (!files.length) throw new Error('No integration suites found.')
 			for (const file of files) {
 				await cleanSchema()
@@ -81,11 +83,15 @@ try {
 			))
 	)
 		run(['exec', 'node', 'tools/check-booking-holds.mjs'], { JUNCTION_RUNTIME_MODE: 'local' })
-	if (!authProbe && (!focusedTestName || /atomic mixed hold|mixed payment inbox|mixed Purchase split|component earnings/i.test(focusedTestName)))
+	if (
+		!authProbe &&
+		(!focusedTestName || /atomic mixed hold|mixed payment inbox|mixed Purchase split|component earnings|reconciliation and payouts/i.test(focusedTestName))
+	)
 		run(['exec', 'node', 'tools/check-promotions-commission.mjs'], {
 			JUNCTION_RUNTIME_MODE: 'local',
 			MIXED_HOLD_HTTP_CHECK: '1',
-			EARNING_HTTP_CHECK: !focusedTestName || /component earnings/i.test(focusedTestName) ? '1' : '0',
+			EARNING_HTTP_CHECK: !focusedTestName || /component earnings|reconciliation and payouts/i.test(focusedTestName) ? '1' : '0',
+			FINANCE_HTTP_CHECK: !focusedTestName || /reconciliation and payouts/i.test(focusedTestName) ? '1' : '0',
 			MIXED_PAYMENT_HTTP_CHECK: !focusedTestName || /mixed payment inbox/i.test(focusedTestName) ? '1' : '0',
 			MIXED_PURCHASE_HTTP_CHECK: !focusedTestName || /mixed Purchase split/i.test(focusedTestName) ? '1' : '0',
 		})
@@ -93,7 +99,7 @@ try {
 		!authProbe &&
 		focusedTestName &&
 		/promotions and commission/i.test(focusedTestName) &&
-		!/atomic mixed hold|mixed payment inbox|mixed Purchase split|component earnings/i.test(focusedTestName)
+		!/atomic mixed hold|mixed payment inbox|mixed Purchase split|component earnings|reconciliation and payouts/i.test(focusedTestName)
 	)
 		run(['exec', 'node', 'tools/check-promotions-commission.mjs'], { JUNCTION_RUNTIME_MODE: 'local' })
 	if (!authProbe && (!focusedTestName || /mixed Cart and quote/i.test(focusedTestName)))

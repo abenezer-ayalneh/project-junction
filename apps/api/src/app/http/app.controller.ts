@@ -957,6 +957,33 @@ export class AppController {
 		return this.foundation.releaseMixedHold(sessionId, key, id)
 	}
 
+	@Post('platform/finance/operations')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Run a scoped local Finance simulation with recent MFA and dual approval.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.financeCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.financeResult })
+	financeCommand(@AuthenticatedSession() sessionId: string | undefined, @Headers('idempotency-key') key: string | undefined, @Body() body: unknown) {
+		return this.foundation.financeCommand(sessionId, key, body)
+	}
+	@Get('platform/finance/workspaces/:workspaceId')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Read scoped simulated Finance history and reconciliation exceptions.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.financeResult })
+	readFinance(@AuthenticatedSession() sessionId: string | undefined, @Param('workspaceId') workspaceId: string) {
+		return this.foundation.readFinance(sessionId, workspaceId)
+	}
+
+	@Get('vendor/payouts')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Read scoped simulated Vendor payout statements.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.vendorPayouts })
+	readVendorPayouts(@AuthenticatedSession() sessionId: string | undefined) {
+		return this.foundation.readVendorPayouts(sessionId)
+	}
 	@Get('vendor/earnings')
 	@Header('Cache-Control', 'no-store')
 	@ApiOperation({ summary: 'Read scoped component earning availability; no transfer or payout is implied.' })

@@ -48,6 +48,7 @@ async function tick() {
 		await repository.reconcileBookingMeetings()
 		await repository.reconcileBookingRefunds()
 		await repository.releaseEarnings()
+		await repository.runWeeklyPayouts()
 		await repository.expirePendingVideoUploads()
 		if (Date.now() - lastMediaSweep >= 10 * 60 * 1000) {
 			const retention = await repository.cleanupRejectedMedia()

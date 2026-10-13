@@ -46,6 +46,8 @@ import {
 	CommissionRateResultSchema,
 	CouponResolveCommandSchema,
 	CustomerDiscoveryStateSchema,
+	FinanceCommandSchema,
+	FinanceResultSchema,
 	GoodsCustomerDeliveryReadSchema,
 	GoodsCustomerPickupReadSchema,
 	GoodsDeliveryAcknowledgementCommandSchema,
@@ -165,6 +167,7 @@ import {
 	VendorCouponCommandSchema,
 	VendorEarningsSchema,
 	VendorMembershipsSchema,
+	VendorPayoutsSchema,
 } from 'contracts'
 import { z } from 'zod'
 
@@ -175,6 +178,9 @@ function schemaFor(schema: z.ZodType): SchemaObject {
 }
 
 export const OpenApiSchemaRefs = {
+	financeCommand: { $ref: '#/components/schemas/FinanceCommand' },
+	financeResult: { $ref: '#/components/schemas/FinanceResult' },
+	vendorPayouts: { $ref: '#/components/schemas/VendorPayouts' },
 	vendorEarnings: { $ref: '#/components/schemas/VendorEarnings' },
 	mixedCurrentHold: { $ref: '#/components/schemas/MixedCurrentHold' },
 	mixedPurchaseRead: { $ref: '#/components/schemas/MixedPurchaseRead' },
@@ -362,6 +368,9 @@ function publicSchemas(): Record<string, SchemaObject> {
 		MixedInvoiceResult: schemaFor(MixedInvoiceResultSchema),
 		CheckoutEligibility: schemaFor(CheckoutEligibilitySchema),
 		VendorEarnings: schemaFor(VendorEarningsSchema),
+		VendorPayouts: schemaFor(VendorPayoutsSchema),
+		FinanceCommand: schemaFor(FinanceCommandSchema),
+		FinanceResult: schemaFor(FinanceResultSchema),
 		MixedCurrentPayment: schemaFor(MixedCurrentPaymentSchema),
 		MixedPaymentStart: schemaFor(MixedPaymentStartSchema),
 		MixedPaymentRead: schemaFor(MixedPaymentReadSchema),
