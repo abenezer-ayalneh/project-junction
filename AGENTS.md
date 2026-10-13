@@ -7,7 +7,7 @@
 
 # Project memory: phase execution
 
-- Git workflow preference (2026-10-12): use `main` as the integrated local baseline and one temporary `codex/` branch per implementation chunk. Start each chunk from clean, updated `main`; merge locally verified work and evidence before starting another chunk. Keep at most two active work branches. Use separate worktrees for simultaneous work. Exclude package stores from commits.
+- Git workflow preference (2026-10-12): use `main` as the integrated local baseline and one temporary `codex/` branch per implementation chunk. Start each chunk from clean, updated `main`. After local verification passes, always merge the implementation branch and its evidence into local `main` before reporting the chunk complete; do not wait for a separate merge request. This standing preference was confirmed on 2026-10-13. Keep at most two active work branches. Use separate worktrees for simultaneous work. Exclude package stores from commits.
 
 - User preference (2026-10-12): start chunked delivery at Phase 02. Phases 02–06 have ordered implementation chunks in their requirement documents.
 - When asked to do the next thing on a phase, select and complete exactly one next unfinished chunk, then stop. Resume an in-progress chunk first; do not execute the entire phase or automatically continue to another chunk/phase.
