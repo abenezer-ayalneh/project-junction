@@ -1,0 +1,9 @@
+
+> project-junction@0.0.0 db:upgrade:check /Users/abeni/Documents/projects/misc/project-junction
+> node tools/check-populated-upgrade.mjs
+
+Loaded Prisma config from prisma.config.ts.
+
+No difference detected.
+
+Populated supported-foundation upgrade check passed.

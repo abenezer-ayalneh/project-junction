@@ -61,3 +61,7 @@ Seed scripts must be deterministic and idempotent. Public seed content includes 
 - [Environment matrix](ENVIRONMENT-MATRIX.md)
 - [Provider integration contracts](../architecture/PROVIDER-INTEGRATION-CONTRACTS.md)
 - [Secrets, TLS, and origin security](../deployment/SECRETS-TLS-AND-ORIGIN-SECURITY.md)
+
+## Local mixed payment signing — P04-C05, 2026-10-13
+
+`JUNCTION_MIXED_PAYMENT_WEBHOOK_SECRET` is an explicit random local-only key of at least 32 characters for synthetic mixed payment receipts. The example is commented out; no actual key, Finance policy or grant is seeded by C05. API simulation and raw webhook verification deny missing/short keys and non-local runtime. Worker refund simulation is deterministic and local-only, preserving stable operation IDs after timeout. HTTP evidence uses a disposable process-memory key and loopback services. This does not configure Stripe, Chapa, live funds or a staging deployment.

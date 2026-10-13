@@ -31,7 +31,9 @@ function shutdown(): Promise<void> {
 async function tick() {
 	tickRunning = true
 	try {
+		await repository.reconcileMixedPayments()
 		await repository.expireMixedHolds()
+		await repository.reconcileMixedRefunds()
 		await repository.reconcileBookingPayments()
 		await repository.expireBookingHolds()
 		await repository.expireBookingSubstitutions()

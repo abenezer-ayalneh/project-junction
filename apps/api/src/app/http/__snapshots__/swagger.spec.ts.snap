@@ -17113,6 +17113,118 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
         "type": "object",
       },
+      "MixedCurrentPayment": {
+        "additionalProperties": false,
+        "properties": {
+          "payment": {
+            "additionalProperties": false,
+            "nullable": true,
+            "properties": {
+              "amount": {
+                "additionalProperties": false,
+                "properties": {
+                  "currency": {
+                    "pattern": "^[A-Z]{3}$",
+                    "type": "string",
+                  },
+                  "minorUnits": {
+                    "maximum": 9007199254740991,
+                    "minimum": -9007199254740991,
+                    "type": "integer",
+                  },
+                },
+                "required": [
+                  "minorUnits",
+                  "currency",
+                ],
+                "type": "object",
+              },
+              "commitmentReady": {
+                "type": "boolean",
+              },
+              "createdAt": {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                "type": "string",
+              },
+              "expiresAt": {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                "type": "string",
+              },
+              "holdId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "holdState": {
+                "enum": [
+                  "holding",
+                  "released",
+                  "expired",
+                ],
+                "type": "string",
+              },
+              "paymentId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "provider": {
+                "enum": [
+                  "local-controlled",
+                ],
+                "type": "string",
+              },
+              "refundState": {
+                "enum": [
+                  "pending",
+                  "unknown",
+                  "completed",
+                ],
+                "nullable": true,
+                "type": "string",
+              },
+              "sandbox": {
+                "enum": [
+                  true,
+                ],
+                "type": "boolean",
+              },
+              "state": {
+                "enum": [
+                  "pending_provider",
+                  "unknown",
+                  "succeeded",
+                  "failed",
+                  "refund_pending",
+                  "refunded",
+                  "no_payment_required",
+                ],
+                "type": "string",
+              },
+            },
+            "required": [
+              "paymentId",
+              "holdId",
+              "holdState",
+              "state",
+              "provider",
+              "sandbox",
+              "amount",
+              "createdAt",
+              "expiresAt",
+              "commitmentReady",
+              "refundState",
+            ],
+            "type": "object",
+          },
+        },
+        "required": [
+          "payment",
+        ],
+        "type": "object",
+      },
       "MixedHoldCommand": {
         "additionalProperties": false,
         "properties": {
@@ -20282,6 +20394,264 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           "reserved",
           "snapshot",
           "replayed",
+        ],
+        "type": "object",
+      },
+      "MixedPaymentRead": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "additionalProperties": false,
+            "properties": {
+              "currency": {
+                "pattern": "^[A-Z]{3}$",
+                "type": "string",
+              },
+              "minorUnits": {
+                "maximum": 9007199254740991,
+                "minimum": -9007199254740991,
+                "type": "integer",
+              },
+            },
+            "required": [
+              "minorUnits",
+              "currency",
+            ],
+            "type": "object",
+          },
+          "commitmentReady": {
+            "type": "boolean",
+          },
+          "createdAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "holdId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "holdState": {
+            "enum": [
+              "holding",
+              "released",
+              "expired",
+            ],
+            "type": "string",
+          },
+          "paymentId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "provider": {
+            "enum": [
+              "local-controlled",
+            ],
+            "type": "string",
+          },
+          "refundState": {
+            "enum": [
+              "pending",
+              "unknown",
+              "completed",
+            ],
+            "nullable": true,
+            "type": "string",
+          },
+          "sandbox": {
+            "enum": [
+              true,
+            ],
+            "type": "boolean",
+          },
+          "state": {
+            "enum": [
+              "pending_provider",
+              "unknown",
+              "succeeded",
+              "failed",
+              "refund_pending",
+              "refunded",
+              "no_payment_required",
+            ],
+            "type": "string",
+          },
+        },
+        "required": [
+          "paymentId",
+          "holdId",
+          "holdState",
+          "state",
+          "provider",
+          "sandbox",
+          "amount",
+          "createdAt",
+          "expiresAt",
+          "commitmentReady",
+          "refundState",
+        ],
+        "type": "object",
+      },
+      "MixedPaymentResult": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "additionalProperties": false,
+            "properties": {
+              "currency": {
+                "pattern": "^[A-Z]{3}$",
+                "type": "string",
+              },
+              "minorUnits": {
+                "maximum": 9007199254740991,
+                "minimum": -9007199254740991,
+                "type": "integer",
+              },
+            },
+            "required": [
+              "minorUnits",
+              "currency",
+            ],
+            "type": "object",
+          },
+          "commitmentReady": {
+            "type": "boolean",
+          },
+          "createdAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "holdId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "holdState": {
+            "enum": [
+              "holding",
+              "released",
+              "expired",
+            ],
+            "type": "string",
+          },
+          "paymentId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "provider": {
+            "enum": [
+              "local-controlled",
+            ],
+            "type": "string",
+          },
+          "refundState": {
+            "enum": [
+              "pending",
+              "unknown",
+              "completed",
+            ],
+            "nullable": true,
+            "type": "string",
+          },
+          "replayed": {
+            "type": "boolean",
+          },
+          "sandbox": {
+            "enum": [
+              true,
+            ],
+            "type": "boolean",
+          },
+          "state": {
+            "enum": [
+              "pending_provider",
+              "unknown",
+              "succeeded",
+              "failed",
+              "refund_pending",
+              "refunded",
+              "no_payment_required",
+            ],
+            "type": "string",
+          },
+        },
+        "required": [
+          "paymentId",
+          "holdId",
+          "holdState",
+          "state",
+          "provider",
+          "sandbox",
+          "amount",
+          "createdAt",
+          "expiresAt",
+          "commitmentReady",
+          "refundState",
+          "replayed",
+        ],
+        "type": "object",
+      },
+      "MixedPaymentSimulation": {
+        "additionalProperties": false,
+        "properties": {
+          "outcome": {
+            "enum": [
+              "unknown",
+              "succeeded",
+              "failed",
+            ],
+            "type": "string",
+          },
+        },
+        "required": [
+          "outcome",
+        ],
+        "type": "object",
+      },
+      "MixedPaymentStart": {
+        "additionalProperties": false,
+        "properties": {
+          "holdId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+        },
+        "required": [
+          "holdId",
+        ],
+        "type": "object",
+      },
+      "MixedPaymentWebhookAck": {
+        "additionalProperties": false,
+        "properties": {
+          "accepted": {
+            "enum": [
+              true,
+            ],
+            "type": "boolean",
+          },
+          "duplicate": {
+            "type": "boolean",
+          },
+        },
+        "required": [
+          "accepted",
+          "duplicate",
         ],
         "type": "object",
       },
@@ -28791,6 +29161,169 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
       },
     },
+    "/v1/customer/checkout/payments": {
+      "post": {
+        "operationId": "AppController_startMixedPayment",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MixedPaymentStart",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MixedPaymentResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Start a local sandbox mixed payment with the original hold deadline.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/customer/checkout/payments/current": {
+      "get": {
+        "operationId": "AppController_readCurrentMixedPayment",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MixedCurrentPayment",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Recover the current Cart payment after a lost response or reload.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/customer/checkout/payments/{paymentId}": {
+      "get": {
+        "operationId": "AppController_readMixedPayment",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "paymentId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MixedPaymentRead",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Recover authoritative sandbox payment and refund state.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/customer/checkout/payments/{paymentId}/local-result": {
+      "post": {
+        "operationId": "AppController_simulateMixedPayment",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "paymentId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MixedPaymentSimulation",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MixedPaymentResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Generate an authenticated synthetic provider receipt in local development.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
     "/v1/customer/checkout/quotes": {
       "post": {
         "operationId": "AppController_createMixedQuote",
@@ -30860,6 +31393,37 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
         ],
         "summary": "Verify and seal an uploaded MP4 in private quarantine; safe processing is still required.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/payments/local-mixed-webhook": {
+      "post": {
+        "operationId": "AppController_receiveMixedPaymentWebhook",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-junction-payment-signature",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MixedPaymentWebhookAck",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "summary": "Authenticate a local sandbox provider receipt before durable inbox processing.",
         "tags": [
           "foundation",
         ],

@@ -77,9 +77,13 @@ try {
 			))
 	)
 		run(['exec', 'node', 'tools/check-booking-holds.mjs'], { JUNCTION_RUNTIME_MODE: 'local' })
-	if (!authProbe && (!focusedTestName || /atomic mixed hold/i.test(focusedTestName)))
-		run(['exec', 'node', 'tools/check-promotions-commission.mjs'], { JUNCTION_RUNTIME_MODE: 'local', MIXED_HOLD_HTTP_CHECK: '1' })
-	if (!authProbe && focusedTestName && /promotions and commission/i.test(focusedTestName) && !/atomic mixed hold/i.test(focusedTestName))
+	if (!authProbe && (!focusedTestName || /atomic mixed hold|mixed payment inbox/i.test(focusedTestName)))
+		run(['exec', 'node', 'tools/check-promotions-commission.mjs'], {
+			JUNCTION_RUNTIME_MODE: 'local',
+			MIXED_HOLD_HTTP_CHECK: '1',
+			MIXED_PAYMENT_HTTP_CHECK: !focusedTestName || /mixed payment inbox/i.test(focusedTestName) ? '1' : '0',
+		})
+	if (!authProbe && focusedTestName && /promotions and commission/i.test(focusedTestName) && !/atomic mixed hold|mixed payment inbox/i.test(focusedTestName))
 		run(['exec', 'node', 'tools/check-promotions-commission.mjs'], { JUNCTION_RUNTIME_MODE: 'local' })
 	if (!authProbe && (!focusedTestName || /mixed Cart and quote/i.test(focusedTestName)))
 		run(['exec', 'node', 'tools/check-mixed-cart-quotes.mjs'], { JUNCTION_RUNTIME_MODE: 'local' })

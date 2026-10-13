@@ -1,0 +1,53 @@
+
+ NX   Running target build for project api and 3 tasks it depends on:
+
+
+
+> nx run contracts:build  [local cache]
+
+
+> nx run platform-core:generate-client  [existing outputs match the cache, left as is]
+
+
+> nx run platform-core:build  [local cache]
+
+
+> nx run api:build
+
+> webpack-cli build
+
+(node:38495) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+WARNING in ../../node_modules/.pnpm/pg@8.23.0/node_modules/pg/lib/native/client.js 7:11-31
+Module not found: Error: Can't resolve 'pg-native' in '/Users/abeni/Documents/projects/misc/project-junction/node_modules/.pnpm/pg@8.23.0/node_modules/pg/lib/native'
+
+WARNING in ../../node_modules/.pnpm/standardwebhooks@1.1.1/node_modules/standardwebhooks/dist/index.js
+Module Warning (from ../../node_modules/.pnpm/source-map-loader@5.0.0_webpack@5.110.2/node_modules/source-map-loader/dist/cjs.js):
+Failed to parse source map from '/Users/abeni/Documents/projects/misc/project-junction/node_modules/.pnpm/standardwebhooks@1.1.1/node_modules/standardwebhooks/src/index.ts' file: Error: ENOENT: no such file or directory, open '/Users/abeni/Documents/projects/misc/project-junction/node_modules/.pnpm/standardwebhooks@1.1.1/node_modules/standardwebhooks/src/index.ts'
+
+WARNING in ../../node_modules/.pnpm/standardwebhooks@1.1.1/node_modules/standardwebhooks/dist/timing_safe_equal.js
+Module Warning (from ../../node_modules/.pnpm/source-map-loader@5.0.0_webpack@5.110.2/node_modules/source-map-loader/dist/cjs.js):
+Failed to parse source map from '/Users/abeni/Documents/projects/misc/project-junction/node_modules/.pnpm/standardwebhooks@1.1.1/node_modules/standardwebhooks/src/timing_safe_equal.ts' file: Error: ENOENT: no such file or directory, open '/Users/abeni/Documents/projects/misc/project-junction/node_modules/.pnpm/standardwebhooks@1.1.1/node_modules/standardwebhooks/src/timing_safe_equal.ts'
+
+WARNING in ../../libs/platform-core/generated/prisma/runtime/client.js
+Module Warning (from ../../node_modules/.pnpm/source-map-loader@5.0.0_webpack@5.110.2/node_modules/source-map-loader/dist/cjs.js):
+Failed to parse source map from '/Users/abeni/Documents/projects/misc/project-junction/libs/platform-core/generated/prisma/runtime/client.js.map' file: Error: ENOENT: no such file or directory, open '/Users/abeni/Documents/projects/misc/project-junction/libs/platform-core/generated/prisma/runtime/client.js.map'
+
+WARNING in ../../node_modules/.pnpm/resend@6.29.0/node_modules/resend/dist/index.cjs 246:20-49
+Module not found: Error: Can't resolve '@react-email/render' in '/Users/abeni/Documents/projects/misc/project-junction/node_modules/.pnpm/resend@6.29.0/node_modules/resend/dist'
+
+WARNING in ../../node_modules/.pnpm/@better-auth+core@1.7.6_@better-auth+utils@0.4.2_@better-fetch+fetch@1.3.2_better-call@_0d2bc7a1df00020935f55bce76238bfa/node_modules/@better-auth/core/dist/instrumentation/api.mjs 7:27-55
+Module not found: Error: Can't resolve '@opentelemetry/api' in '/Users/abeni/Documents/projects/misc/project-junction/node_modules/.pnpm/@better-auth+core@1.7.6_@better-auth+utils@0.4.2_@better-fetch+fetch@1.3.2_better-call@_0d2bc7a1df00020935f55bce76238bfa/node_modules/@better-auth/core/dist/instrumentation'
+
+webpack compiled with 6 warnings (0115ddd4b737aa92)
+
+
+
+ NX   Successfully ran target build for project api and 3 tasks it depends on
+
+Nx read the output from the cache instead of running the command for 3 out of 4 tasks.
+
+  Run duration:      4.7s
+  Cache:             3/4 hit (75%)
+  Critical path:     4.5s (3 tasks)
+  Recoverable time:  <1ms

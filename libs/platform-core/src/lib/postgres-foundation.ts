@@ -87,11 +87,13 @@ import { type ExternalEffectAdapter, UnconfiguredExternalEffectAdapter } from '.
 import { GoodsCheckout } from './goods-checkout.js'
 import { IdempotencyConflictError, stableHash } from './idempotency.js'
 import { LocalGoodsPaymentAdapter } from './local-goods-payment.js'
+import { LocalMixedPaymentAdapter } from './local-mixed-payment.js'
 import { type DeletionJournal, S3DeletionJournal } from './media-retention.js'
 import { type MediaStore, S3MediaStore } from './media-store.js'
 import type { MeetingProviderAdapter } from './meeting-provider.js'
 import { MixedCartCheckout } from './mixed-cart.js'
 import { MixedCheckoutHolds } from './mixed-holds.js'
+import { MixedCheckoutPayments } from './mixed-payments.js'
 import { PromotionBudget } from './promotion-budget.js'
 import { applicationRuntimeMode } from './runtime.js'
 import { ServiceDefinitions } from './service-definitions.js'
@@ -155,6 +157,7 @@ export class PostgresFoundation {
 	private readonly scheduling: ServiceScheduling
 	private readonly services: ServiceDefinitions
 	private readonly checkoutFinance: CheckoutFinanceConfiguration
+	private readonly mixedPayments: MixedCheckoutPayments
 	private readonly mixedHolds: MixedCheckoutHolds
 	private readonly mixedCart: MixedCartCheckout
 	private readonly goods: GoodsCheckout
@@ -172,6 +175,7 @@ export class PostgresFoundation {
 		goodsClock: () => Date = () => new Date(),
 		goodsPayments?: LocalGoodsPaymentAdapter,
 		meetingProvider?: MeetingProviderAdapter,
+		mixedPayments?: LocalMixedPaymentAdapter,
 	) {
 		const schema = new URL(url).searchParams.get('schema') ?? 'public'
 		if (!/^[a-z_][a-z0-9_]*$/.test(schema)) throw new Error('Unsupported database schema name.')
@@ -291,6 +295,18 @@ export class PostgresFoundation {
 			this.goods,
 			this.bookingHolds,
 			new PromotionBudget(goodsClock, pricing),
+			(tx, id) => this.mixedPayments.abandoned(tx, id),
+		)
+		this.mixedPayments = new MixedCheckoutPayments(
+			{
+				db: this.db,
+				derive: (tx, sessionId, options) => this.derive(tx, sessionId, options),
+				lockWorkspace: (tx, id) => this.workspaceLock(tx, id),
+				replay: (tx, context, key, method, request, create) => this.replayOrCreate(tx, context, key, method, request, create),
+				now: goodsClock,
+			},
+			this.mixedHolds,
+			mixedPayments ?? new LocalMixedPaymentAdapter(),
 		)
 		this.externalEffects = externalEffects ?? new UnconfiguredExternalEffectAdapter()
 		this.mediaStore = mediaStore ?? S3MediaStore.fromEnvironment()
@@ -845,6 +861,27 @@ export class PostgresFoundation {
 	}
 	resolveVendorCoupon(sessionId: string | undefined, input: unknown) {
 		return this.checkoutFinance.resolveCoupon(sessionId, input)
+	}
+	readCurrentMixedPayment(sessionId: string | undefined) {
+		return this.mixedPayments.current(sessionId)
+	}
+	startMixedPayment(sessionId: string | undefined, key: string | undefined, input: unknown) {
+		return this.mixedPayments.start(sessionId, key, input)
+	}
+	readMixedPayment(sessionId: string | undefined, id: string) {
+		return this.mixedPayments.read(sessionId, id)
+	}
+	simulateMixedPayment(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.mixedPayments.simulate(sessionId, key, id, input)
+	}
+	receiveMixedPaymentWebhook(raw: Buffer | undefined, signature: string | undefined) {
+		return this.mixedPayments.receive(raw, signature)
+	}
+	reconcileMixedPayments() {
+		return this.mixedPayments.reconcile()
+	}
+	reconcileMixedRefunds() {
+		return this.mixedPayments.refunds()
 	}
 	readCurrentMixedHold(sessionId: string | undefined) {
 		return this.mixedHolds.current(sessionId)

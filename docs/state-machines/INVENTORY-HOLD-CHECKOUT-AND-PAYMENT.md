@@ -50,3 +50,11 @@ One owned current complete quote creates one all-or-nothing 15-minute hold. Chec
 Exact retries recover the current hold without extending its deadline. Customer reads/current-hold recovery and release are scoped and no-store. Release, exact expiry and the actual worker retire every participant once; legacy goods/Booking acceptance also retires due mixed parents before reallocation. Standalone promotion cleanup cannot partially expire a holding mixed parent. The original quote snapshot retains advisory `reserved: false`; the root hold `reserved` reports current reservation state.
 
 Local states are `holding`, `released`, `expired`; payment/provider compensation and Purchase commitment remain C05–C06, and browser checkout remains C07. All development and verification are local. [C04 evidence](../quality/PHASE-04-LOCAL-ACCEPTANCE-EVIDENCE.md#p04-c04--atomic-mixed-15-minute-hold--2026-10-13).
+
+## Local Phase 04 C05 payment inbox and compensation — 2026-10-13
+
+Mixed attempts move `pending_provider → unknown|failed|succeeded|refund_pending`, `unknown → failed|succeeded|refund_pending`, `succeeded|failed → refund_pending`, and `refund_pending → refunded`. They keep the original mixed Hold expiry; payment initiation never resets it. A derived 30-second local response timeout is unknown/reconcile. Final cash capture can arrive after failure/release and is compensated; older failure/unknown cannot undo capture.
+
+A timely positive capture while resources remain held is commitment-ready, with cash in refund liability. C05 has no Purchase commit hook: release/expiry of that uncommitted capture creates full refund intent and releases stock/Staff/promotions atomically. Zero payable uses `no_payment_required`, has no provider/cash effect and expires with the Hold. Worker orders inbox reconciliation before expiry and full refund reconciliation. C06 will own atomic commercial commitment and sale posting; these local states are not live-provider or phase acceptance.
+
+All development and verification are local. [C05 evidence](../quality/PHASE-04-LOCAL-ACCEPTANCE-EVIDENCE.md#p04-c05--payment-inbox-and-compensation--2026-10-13).

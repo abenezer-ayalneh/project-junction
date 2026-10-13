@@ -134,3 +134,9 @@ One owned current complete quote creates one all-or-nothing 15-minute hold. Chec
 Exact retries recover the current hold without extending its deadline. Customer reads/current-hold recovery and release are scoped and no-store. Release, exact expiry and the actual worker retire every participant once; legacy goods/Booking acceptance also retires due mixed parents before reallocation. Standalone promotion cleanup cannot partially expire a holding mixed parent. The original quote snapshot retains advisory `reserved: false`; the root hold `reserved` reports current reservation state.
 
 Local states are `holding`, `released`, `expired`; payment/provider compensation and Purchase commitment remain C05–C06, and browser checkout remains C07. All development and verification are local. [C04 evidence](../quality/PHASE-04-LOCAL-ACCEPTANCE-EVIDENCE.md#p04-c04--atomic-mixed-15-minute-hold--2026-10-13).
+
+## Local Phase 04 C05 payment inbox and compensation — 2026-10-13
+
+One local-controlled attempt binds the owned mixed Hold and exact Money, keeps its original deadline, and cannot be replaced on timeout. Receipt truth is independent of browser success. Scoped current/read recovery reconciles durable receipts before returning state. Captured uncommitted value stays in Customer refund liability until C06 can atomically create Purchase/Orders/Bookings; no Purchase is created in C05. Release/expiry/known failure retires all resources. A captured abandoned/expired hold creates one full-amount compensation intent in the same transaction; late success never resurrects stock or Staff. Zero-payable attempts need no provider charge or cash ledger entry and remain subject to the original hold deadline.
+
+All development and verification are local. [C05 evidence](../quality/PHASE-04-LOCAL-ACCEPTANCE-EVIDENCE.md#p04-c05--payment-inbox-and-compensation--2026-10-13).

@@ -1,0 +1,3904 @@
+
+ NX   Running target test-integration for project platform-core and 5 tasks it depends on:
+
+
+
+> nx run contracts:build  [existing outputs match the cache, left as is]
+
+
+> nx run platform-core:generate-client  [existing outputs match the cache, left as is]
+
+> node tools/generate-prisma.mjs
+
+(node:32089) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+
+✔ Generated Prisma Client (v7.10.0) to ./libs/platform-core/generated/prisma in 382ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+
+
+> nx run platform-core:build  [existing outputs match the cache, left as is]
+
+> tsc --build tsconfig.lib.json
+
+
+> nx run api:build
+
+> webpack-cli build
+
+(node:36491) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+WARNING in ../../node_modules/.pnpm/pg@8.23.0/node_modules/pg/lib/native/client.js 7:11-31
+Module not found: Error: Can't resolve 'pg-native' in '/Users/abeni/Documents/projects/misc/project-junction/node_modules/.pnpm/pg@8.23.0/node_modules/pg/lib/native'
+
+WARNING in ../../node_modules/.pnpm/standardwebhooks@1.1.1/node_modules/standardwebhooks/dist/index.js
+Module Warning (from ../../node_modules/.pnpm/source-map-loader@5.0.0_webpack@5.110.2/node_modules/source-map-loader/dist/cjs.js):
+Failed to parse source map from '/Users/abeni/Documents/projects/misc/project-junction/node_modules/.pnpm/standardwebhooks@1.1.1/node_modules/standardwebhooks/src/index.ts' file: Error: ENOENT: no such file or directory, open '/Users/abeni/Documents/projects/misc/project-junction/node_modules/.pnpm/standardwebhooks@1.1.1/node_modules/standardwebhooks/src/index.ts'
+
+WARNING in ../../node_modules/.pnpm/standardwebhooks@1.1.1/node_modules/standardwebhooks/dist/timing_safe_equal.js
+Module Warning (from ../../node_modules/.pnpm/source-map-loader@5.0.0_webpack@5.110.2/node_modules/source-map-loader/dist/cjs.js):
+Failed to parse source map from '/Users/abeni/Documents/projects/misc/project-junction/node_modules/.pnpm/standardwebhooks@1.1.1/node_modules/standardwebhooks/src/timing_safe_equal.ts' file: Error: ENOENT: no such file or directory, open '/Users/abeni/Documents/projects/misc/project-junction/node_modules/.pnpm/standardwebhooks@1.1.1/node_modules/standardwebhooks/src/timing_safe_equal.ts'
+
+WARNING in ../../libs/platform-core/generated/prisma/runtime/client.js
+Module Warning (from ../../node_modules/.pnpm/source-map-loader@5.0.0_webpack@5.110.2/node_modules/source-map-loader/dist/cjs.js):
+Failed to parse source map from '/Users/abeni/Documents/projects/misc/project-junction/libs/platform-core/generated/prisma/runtime/client.js.map' file: Error: ENOENT: no such file or directory, open '/Users/abeni/Documents/projects/misc/project-junction/libs/platform-core/generated/prisma/runtime/client.js.map'
+
+WARNING in ../../node_modules/.pnpm/resend@6.29.0/node_modules/resend/dist/index.cjs 246:20-49
+Module not found: Error: Can't resolve '@react-email/render' in '/Users/abeni/Documents/projects/misc/project-junction/node_modules/.pnpm/resend@6.29.0/node_modules/resend/dist'
+
+WARNING in ../../node_modules/.pnpm/@better-auth+core@1.7.6_@better-auth+utils@0.4.2_@better-fetch+fetch@1.3.2_better-call@_0d2bc7a1df00020935f55bce76238bfa/node_modules/@better-auth/core/dist/instrumentation/api.mjs 7:27-55
+Module not found: Error: Can't resolve '@opentelemetry/api' in '/Users/abeni/Documents/projects/misc/project-junction/node_modules/.pnpm/@better-auth+core@1.7.6_@better-auth+utils@0.4.2_@better-fetch+fetch@1.3.2_better-call@_0d2bc7a1df00020935f55bce76238bfa/node_modules/@better-auth/core/dist/instrumentation'
+
+webpack compiled with 6 warnings (9f648574b9eee340)
+
+> nx run worker:build:production
+
+(node:36492) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+> nx run platform-core:test-integration
+
+> node tools/run-integration.mjs
+
+(node:36701) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "phase00_962844b5f88347aaa5597340d05b6e21" at "127.0.0.1:55432"
+
+47 migrations found in prisma/migrations
+
+Applying migration `20260831120000_platform_foundation`
+Applying migration `20260921000000_durable_foundation`
+Applying migration `20260922000000_demo_persona_access`
+Applying migration `20260922010000_provider_timeout_reconciliation`
+Applying migration `20260922020000_adult_verification_lifecycle`
+Applying migration `20260922030000_demo_provider_quota`
+Applying migration `20260922040000_staff_user_linkage`
+Applying migration `20260922050000_public_vendor_browse`
+Applying migration `20260922060000_adult_verification_mixed_version_compatibility`
+Applying migration `20260922070000_demo_persona_command_quota`
+Applying migration `20260923000000_phase_01_vendor_catalog`
+Applying migration `20260923010000_snake_case_identifiers`
+Applying migration `20260923020000_legacy_identifier_compatibility`
+Applying migration `20260923030000_synthetic_external_effect_idempotency`
+Applying migration `20260923040000_inventory_movements`
+Applying migration `20260924000000_media_upload_intents`
+Applying migration `20260924010000_video_processing_and_moderation`
+Applying migration `20260925000000_real_platform_reviewer_grants`
+Applying migration `20260928000000_retire_legacy_adult_default`
+Applying migration `20260929000000_retire_synthetic_schema`
+Applying migration `20261001000000_durable_didit_sessions`
+Applying migration `20261002000000_durable_realtime_cursor`
+Applying migration `20261006000000_phase_01_marketplace_discovery`
+Applying migration `20261006010000_phase_01_listing_images`
+Applying migration `20261006020000_phase_01_storefront_branding`
+Applying migration `20261009000000_rejected_media_retention`
+Applying migration `20261012000000_inventory_transfers`
+Applying migration `20261012010000_goods_quotes_and_holds`
+Applying migration `20261012020000_goods_paid_orders`
+Applying migration `20261012030000_goods_order_cancellations`
+Applying migration `20261012040000_goods_pickup_fulfillment`
+Applying migration `20261012050000_goods_delivery_milestones`
+Applying migration `20261012060000_goods_returns`
+Applying migration `20261012070000_service_definitions`
+Applying migration `20261012080000_authoritative_schedules`
+Applying migration `20261012090000_atomic_booking_holds`
+Applying migration `20261012100000_paid_bookings`
+Applying migration `20261012110000_booking_cancellations`
+Applying migration `20261012120000_booking_amendments`
+Applying migration `20261012130000_substitutions_waitlists`
+Applying migration `20261012140000_booking_meetings`
+Applying migration `20261012150000_booking_attendance`
+Applying migration `20261012160000_immutable_ledger`
+Applying migration `20261012170000_mixed_cart_quotes`
+Applying migration `20261012180000_promotions_commission`
+Applying migration `20261013030000_atomic_mixed_holds`
+Applying migration `20261013040000_mixed_payment_inbox`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831120000_platform_foundation/
+    └─ migration.sql
+  └─ 20260921000000_durable_foundation/
+    └─ migration.sql
+  └─ 20260922000000_demo_persona_access/
+    └─ migration.sql
+  └─ 20260922010000_provider_timeout_reconciliation/
+    └─ migration.sql
+  └─ 20260922020000_adult_verification_lifecycle/
+    └─ migration.sql
+  └─ 20260922030000_demo_provider_quota/
+    └─ migration.sql
+  └─ 20260922040000_staff_user_linkage/
+    └─ migration.sql
+  └─ 20260922050000_public_vendor_browse/
+    └─ migration.sql
+  └─ 20260922060000_adult_verification_mixed_version_compatibility/
+    └─ migration.sql
+  └─ 20260922070000_demo_persona_command_quota/
+    └─ migration.sql
+  └─ 20260923000000_phase_01_vendor_catalog/
+    └─ migration.sql
+  └─ 20260923010000_snake_case_identifiers/
+    └─ migration.sql
+  └─ 20260923020000_legacy_identifier_compatibility/
+    └─ migration.sql
+  └─ 20260923030000_synthetic_external_effect_idempotency/
+    └─ migration.sql
+  └─ 20260923040000_inventory_movements/
+    └─ migration.sql
+  └─ 20260924000000_media_upload_intents/
+    └─ migration.sql
+  └─ 20260924010000_video_processing_and_moderation/
+    └─ migration.sql
+  └─ 20260925000000_real_platform_reviewer_grants/
+    └─ migration.sql
+  └─ 20260928000000_retire_legacy_adult_default/
+    └─ migration.sql
+  └─ 20260929000000_retire_synthetic_schema/
+    └─ migration.sql
+  └─ 20261001000000_durable_didit_sessions/
+    └─ migration.sql
+  └─ 20261002000000_durable_realtime_cursor/
+    └─ migration.sql
+  └─ 20261006000000_phase_01_marketplace_discovery/
+    └─ migration.sql
+  └─ 20261006010000_phase_01_listing_images/
+    └─ migration.sql
+  └─ 20261006020000_phase_01_storefront_branding/
+    └─ migration.sql
+  └─ 20261009000000_rejected_media_retention/
+    └─ migration.sql
+  └─ 20261012000000_inventory_transfers/
+    └─ migration.sql
+  └─ 20261012010000_goods_quotes_and_holds/
+    └─ migration.sql
+  └─ 20261012020000_goods_paid_orders/
+    └─ migration.sql
+  └─ 20261012030000_goods_order_cancellations/
+    └─ migration.sql
+  └─ 20261012040000_goods_pickup_fulfillment/
+    └─ migration.sql
+  └─ 20261012050000_goods_delivery_milestones/
+    └─ migration.sql
+  └─ 20261012060000_goods_returns/
+    └─ migration.sql
+  └─ 20261012070000_service_definitions/
+    └─ migration.sql
+  └─ 20261012080000_authoritative_schedules/
+    └─ migration.sql
+  └─ 20261012090000_atomic_booking_holds/
+    └─ migration.sql
+  └─ 20261012100000_paid_bookings/
+    └─ migration.sql
+  └─ 20261012110000_booking_cancellations/
+    └─ migration.sql
+  └─ 20261012120000_booking_amendments/
+    └─ migration.sql
+  └─ 20261012130000_substitutions_waitlists/
+    └─ migration.sql
+  └─ 20261012140000_booking_meetings/
+    └─ migration.sql
+  └─ 20261012150000_booking_attendance/
+    └─ migration.sql
+  └─ 20261012160000_immutable_ledger/
+    └─ migration.sql
+  └─ 20261012170000_mixed_cart_quotes/
+    └─ migration.sql
+  └─ 20261012180000_promotions_commission/
+    └─ migration.sql
+  └─ 20261013030000_atomic_mixed_holds/
+    └─ migration.sql
+  └─ 20261013040000_mixed_payment_inbox/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+(node:36791) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "phase00_962844b5f88347aaa5597340d05b6e21" at "127.0.0.1:55432"
+
+47 migrations found in prisma/migrations
+
+
+No pending migrations to apply.
+(node:36865) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+
+> project-junction@0.0.0 db:auth:migrate /Users/abeni/Documents/projects/misc/project-junction
+> node tools/apply-auth-migrations.mjs
+
+(node:36950) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "phase00_962844b5f88347aaa5597340d05b6e21" at "127.0.0.1:55432"
+
+47 migrations found in prisma/migrations
+
+Applying migration `20260831120000_platform_foundation`
+Applying migration `20260921000000_durable_foundation`
+Applying migration `20260922000000_demo_persona_access`
+Applying migration `20260922010000_provider_timeout_reconciliation`
+Applying migration `20260922020000_adult_verification_lifecycle`
+Applying migration `20260922030000_demo_provider_quota`
+Applying migration `20260922040000_staff_user_linkage`
+Applying migration `20260922050000_public_vendor_browse`
+Applying migration `20260922060000_adult_verification_mixed_version_compatibility`
+Applying migration `20260922070000_demo_persona_command_quota`
+Applying migration `20260923000000_phase_01_vendor_catalog`
+Applying migration `20260923010000_snake_case_identifiers`
+Applying migration `20260923020000_legacy_identifier_compatibility`
+Applying migration `20260923030000_synthetic_external_effect_idempotency`
+Applying migration `20260923040000_inventory_movements`
+Applying migration `20260924000000_media_upload_intents`
+Applying migration `20260924010000_video_processing_and_moderation`
+Applying migration `20260925000000_real_platform_reviewer_grants`
+Applying migration `20260928000000_retire_legacy_adult_default`
+Applying migration `20260929000000_retire_synthetic_schema`
+Applying migration `20261001000000_durable_didit_sessions`
+Applying migration `20261002000000_durable_realtime_cursor`
+Applying migration `20261006000000_phase_01_marketplace_discovery`
+Applying migration `20261006010000_phase_01_listing_images`
+Applying migration `20261006020000_phase_01_storefront_branding`
+Applying migration `20261009000000_rejected_media_retention`
+Applying migration `20261012000000_inventory_transfers`
+Applying migration `20261012010000_goods_quotes_and_holds`
+Applying migration `20261012020000_goods_paid_orders`
+Applying migration `20261012030000_goods_order_cancellations`
+Applying migration `20261012040000_goods_pickup_fulfillment`
+Applying migration `20261012050000_goods_delivery_milestones`
+Applying migration `20261012060000_goods_returns`
+Applying migration `20261012070000_service_definitions`
+Applying migration `20261012080000_authoritative_schedules`
+Applying migration `20261012090000_atomic_booking_holds`
+Applying migration `20261012100000_paid_bookings`
+Applying migration `20261012110000_booking_cancellations`
+Applying migration `20261012120000_booking_amendments`
+Applying migration `20261012130000_substitutions_waitlists`
+Applying migration `20261012140000_booking_meetings`
+Applying migration `20261012150000_booking_attendance`
+Applying migration `20261012160000_immutable_ledger`
+Applying migration `20261012170000_mixed_cart_quotes`
+Applying migration `20261012180000_promotions_commission`
+Applying migration `20261013030000_atomic_mixed_holds`
+Applying migration `20261013040000_mixed_payment_inbox`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831120000_platform_foundation/
+    └─ migration.sql
+  └─ 20260921000000_durable_foundation/
+    └─ migration.sql
+  └─ 20260922000000_demo_persona_access/
+    └─ migration.sql
+  └─ 20260922010000_provider_timeout_reconciliation/
+    └─ migration.sql
+  └─ 20260922020000_adult_verification_lifecycle/
+    └─ migration.sql
+  └─ 20260922030000_demo_provider_quota/
+    └─ migration.sql
+  └─ 20260922040000_staff_user_linkage/
+    └─ migration.sql
+  └─ 20260922050000_public_vendor_browse/
+    └─ migration.sql
+  └─ 20260922060000_adult_verification_mixed_version_compatibility/
+    └─ migration.sql
+  └─ 20260922070000_demo_persona_command_quota/
+    └─ migration.sql
+  └─ 20260923000000_phase_01_vendor_catalog/
+    └─ migration.sql
+  └─ 20260923010000_snake_case_identifiers/
+    └─ migration.sql
+  └─ 20260923020000_legacy_identifier_compatibility/
+    └─ migration.sql
+  └─ 20260923030000_synthetic_external_effect_idempotency/
+    └─ migration.sql
+  └─ 20260923040000_inventory_movements/
+    └─ migration.sql
+  └─ 20260924000000_media_upload_intents/
+    └─ migration.sql
+  └─ 20260924010000_video_processing_and_moderation/
+    └─ migration.sql
+  └─ 20260925000000_real_platform_reviewer_grants/
+    └─ migration.sql
+  └─ 20260928000000_retire_legacy_adult_default/
+    └─ migration.sql
+  └─ 20260929000000_retire_synthetic_schema/
+    └─ migration.sql
+  └─ 20261001000000_durable_didit_sessions/
+    └─ migration.sql
+  └─ 20261002000000_durable_realtime_cursor/
+    └─ migration.sql
+  └─ 20261006000000_phase_01_marketplace_discovery/
+    └─ migration.sql
+  └─ 20261006010000_phase_01_listing_images/
+    └─ migration.sql
+  └─ 20261006020000_phase_01_storefront_branding/
+    └─ migration.sql
+  └─ 20261009000000_rejected_media_retention/
+    └─ migration.sql
+  └─ 20261012000000_inventory_transfers/
+    └─ migration.sql
+  └─ 20261012010000_goods_quotes_and_holds/
+    └─ migration.sql
+  └─ 20261012020000_goods_paid_orders/
+    └─ migration.sql
+  └─ 20261012030000_goods_order_cancellations/
+    └─ migration.sql
+  └─ 20261012040000_goods_pickup_fulfillment/
+    └─ migration.sql
+  └─ 20261012050000_goods_delivery_milestones/
+    └─ migration.sql
+  └─ 20261012060000_goods_returns/
+    └─ migration.sql
+  └─ 20261012070000_service_definitions/
+    └─ migration.sql
+  └─ 20261012080000_authoritative_schedules/
+    └─ migration.sql
+  └─ 20261012090000_atomic_booking_holds/
+    └─ migration.sql
+  └─ 20261012100000_paid_bookings/
+    └─ migration.sql
+  └─ 20261012110000_booking_cancellations/
+    └─ migration.sql
+  └─ 20261012120000_booking_amendments/
+    └─ migration.sql
+  └─ 20261012130000_substitutions_waitlists/
+    └─ migration.sql
+  └─ 20261012140000_booking_meetings/
+    └─ migration.sql
+  └─ 20261012150000_booking_attendance/
+    └─ migration.sql
+  └─ 20261012160000_immutable_ledger/
+    └─ migration.sql
+  └─ 20261012170000_mixed_cart_quotes/
+    └─ migration.sql
+  └─ 20261012180000_promotions_commission/
+    └─ migration.sql
+  └─ 20261013030000_atomic_mixed_holds/
+    └─ migration.sql
+  └─ 20261013040000_mixed_payment_inbox/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+(node:37046) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+(node:37079) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Test Suites: 1 skipped, 0 of 1 total
+Tests:       10 skipped, 10 total
+Snapshots:   0 total
+Time:        1.213 s, estimated 9 s
+Ran all test suites within paths "libs/platform-core/src/lib/booking-amendments.integration.ts".
+(node:37223) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "phase00_962844b5f88347aaa5597340d05b6e21" at "127.0.0.1:55432"
+
+47 migrations found in prisma/migrations
+
+Applying migration `20260831120000_platform_foundation`
+Applying migration `20260921000000_durable_foundation`
+Applying migration `20260922000000_demo_persona_access`
+Applying migration `20260922010000_provider_timeout_reconciliation`
+Applying migration `20260922020000_adult_verification_lifecycle`
+Applying migration `20260922030000_demo_provider_quota`
+Applying migration `20260922040000_staff_user_linkage`
+Applying migration `20260922050000_public_vendor_browse`
+Applying migration `20260922060000_adult_verification_mixed_version_compatibility`
+Applying migration `20260922070000_demo_persona_command_quota`
+Applying migration `20260923000000_phase_01_vendor_catalog`
+Applying migration `20260923010000_snake_case_identifiers`
+Applying migration `20260923020000_legacy_identifier_compatibility`
+Applying migration `20260923030000_synthetic_external_effect_idempotency`
+Applying migration `20260923040000_inventory_movements`
+Applying migration `20260924000000_media_upload_intents`
+Applying migration `20260924010000_video_processing_and_moderation`
+Applying migration `20260925000000_real_platform_reviewer_grants`
+Applying migration `20260928000000_retire_legacy_adult_default`
+Applying migration `20260929000000_retire_synthetic_schema`
+Applying migration `20261001000000_durable_didit_sessions`
+Applying migration `20261002000000_durable_realtime_cursor`
+Applying migration `20261006000000_phase_01_marketplace_discovery`
+Applying migration `20261006010000_phase_01_listing_images`
+Applying migration `20261006020000_phase_01_storefront_branding`
+Applying migration `20261009000000_rejected_media_retention`
+Applying migration `20261012000000_inventory_transfers`
+Applying migration `20261012010000_goods_quotes_and_holds`
+Applying migration `20261012020000_goods_paid_orders`
+Applying migration `20261012030000_goods_order_cancellations`
+Applying migration `20261012040000_goods_pickup_fulfillment`
+Applying migration `20261012050000_goods_delivery_milestones`
+Applying migration `20261012060000_goods_returns`
+Applying migration `20261012070000_service_definitions`
+Applying migration `20261012080000_authoritative_schedules`
+Applying migration `20261012090000_atomic_booking_holds`
+Applying migration `20261012100000_paid_bookings`
+Applying migration `20261012110000_booking_cancellations`
+Applying migration `20261012120000_booking_amendments`
+Applying migration `20261012130000_substitutions_waitlists`
+Applying migration `20261012140000_booking_meetings`
+Applying migration `20261012150000_booking_attendance`
+Applying migration `20261012160000_immutable_ledger`
+Applying migration `20261012170000_mixed_cart_quotes`
+Applying migration `20261012180000_promotions_commission`
+Applying migration `20261013030000_atomic_mixed_holds`
+Applying migration `20261013040000_mixed_payment_inbox`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831120000_platform_foundation/
+    └─ migration.sql
+  └─ 20260921000000_durable_foundation/
+    └─ migration.sql
+  └─ 20260922000000_demo_persona_access/
+    └─ migration.sql
+  └─ 20260922010000_provider_timeout_reconciliation/
+    └─ migration.sql
+  └─ 20260922020000_adult_verification_lifecycle/
+    └─ migration.sql
+  └─ 20260922030000_demo_provider_quota/
+    └─ migration.sql
+  └─ 20260922040000_staff_user_linkage/
+    └─ migration.sql
+  └─ 20260922050000_public_vendor_browse/
+    └─ migration.sql
+  └─ 20260922060000_adult_verification_mixed_version_compatibility/
+    └─ migration.sql
+  └─ 20260922070000_demo_persona_command_quota/
+    └─ migration.sql
+  └─ 20260923000000_phase_01_vendor_catalog/
+    └─ migration.sql
+  └─ 20260923010000_snake_case_identifiers/
+    └─ migration.sql
+  └─ 20260923020000_legacy_identifier_compatibility/
+    └─ migration.sql
+  └─ 20260923030000_synthetic_external_effect_idempotency/
+    └─ migration.sql
+  └─ 20260923040000_inventory_movements/
+    └─ migration.sql
+  └─ 20260924000000_media_upload_intents/
+    └─ migration.sql
+  └─ 20260924010000_video_processing_and_moderation/
+    └─ migration.sql
+  └─ 20260925000000_real_platform_reviewer_grants/
+    └─ migration.sql
+  └─ 20260928000000_retire_legacy_adult_default/
+    └─ migration.sql
+  └─ 20260929000000_retire_synthetic_schema/
+    └─ migration.sql
+  └─ 20261001000000_durable_didit_sessions/
+    └─ migration.sql
+  └─ 20261002000000_durable_realtime_cursor/
+    └─ migration.sql
+  └─ 20261006000000_phase_01_marketplace_discovery/
+    └─ migration.sql
+  └─ 20261006010000_phase_01_listing_images/
+    └─ migration.sql
+  └─ 20261006020000_phase_01_storefront_branding/
+    └─ migration.sql
+  └─ 20261009000000_rejected_media_retention/
+    └─ migration.sql
+  └─ 20261012000000_inventory_transfers/
+    └─ migration.sql
+  └─ 20261012010000_goods_quotes_and_holds/
+    └─ migration.sql
+  └─ 20261012020000_goods_paid_orders/
+    └─ migration.sql
+  └─ 20261012030000_goods_order_cancellations/
+    └─ migration.sql
+  └─ 20261012040000_goods_pickup_fulfillment/
+    └─ migration.sql
+  └─ 20261012050000_goods_delivery_milestones/
+    └─ migration.sql
+  └─ 20261012060000_goods_returns/
+    └─ migration.sql
+  └─ 20261012070000_service_definitions/
+    └─ migration.sql
+  └─ 20261012080000_authoritative_schedules/
+    └─ migration.sql
+  └─ 20261012090000_atomic_booking_holds/
+    └─ migration.sql
+  └─ 20261012100000_paid_bookings/
+    └─ migration.sql
+  └─ 20261012110000_booking_cancellations/
+    └─ migration.sql
+  └─ 20261012120000_booking_amendments/
+    └─ migration.sql
+  └─ 20261012130000_substitutions_waitlists/
+    └─ migration.sql
+  └─ 20261012140000_booking_meetings/
+    └─ migration.sql
+  └─ 20261012150000_booking_attendance/
+    └─ migration.sql
+  └─ 20261012160000_immutable_ledger/
+    └─ migration.sql
+  └─ 20261012170000_mixed_cart_quotes/
+    └─ migration.sql
+  └─ 20261012180000_promotions_commission/
+    └─ migration.sql
+  └─ 20261013030000_atomic_mixed_holds/
+    └─ migration.sql
+  └─ 20261013040000_mixed_payment_inbox/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+(node:37416) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+(node:37489) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Test Suites: 1 skipped, 0 of 1 total
+Tests:       12 skipped, 12 total
+Snapshots:   0 total
+Time:        0.526 s, estimated 12 s
+Ran all test suites within paths "libs/platform-core/src/lib/booking-attendance.integration.ts".
+(node:37571) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "phase00_962844b5f88347aaa5597340d05b6e21" at "127.0.0.1:55432"
+
+47 migrations found in prisma/migrations
+
+Applying migration `20260831120000_platform_foundation`
+Applying migration `20260921000000_durable_foundation`
+Applying migration `20260922000000_demo_persona_access`
+Applying migration `20260922010000_provider_timeout_reconciliation`
+Applying migration `20260922020000_adult_verification_lifecycle`
+Applying migration `20260922030000_demo_provider_quota`
+Applying migration `20260922040000_staff_user_linkage`
+Applying migration `20260922050000_public_vendor_browse`
+Applying migration `20260922060000_adult_verification_mixed_version_compatibility`
+Applying migration `20260922070000_demo_persona_command_quota`
+Applying migration `20260923000000_phase_01_vendor_catalog`
+Applying migration `20260923010000_snake_case_identifiers`
+Applying migration `20260923020000_legacy_identifier_compatibility`
+Applying migration `20260923030000_synthetic_external_effect_idempotency`
+Applying migration `20260923040000_inventory_movements`
+Applying migration `20260924000000_media_upload_intents`
+Applying migration `20260924010000_video_processing_and_moderation`
+Applying migration `20260925000000_real_platform_reviewer_grants`
+Applying migration `20260928000000_retire_legacy_adult_default`
+Applying migration `20260929000000_retire_synthetic_schema`
+Applying migration `20261001000000_durable_didit_sessions`
+Applying migration `20261002000000_durable_realtime_cursor`
+Applying migration `20261006000000_phase_01_marketplace_discovery`
+Applying migration `20261006010000_phase_01_listing_images`
+Applying migration `20261006020000_phase_01_storefront_branding`
+Applying migration `20261009000000_rejected_media_retention`
+Applying migration `20261012000000_inventory_transfers`
+Applying migration `20261012010000_goods_quotes_and_holds`
+Applying migration `20261012020000_goods_paid_orders`
+Applying migration `20261012030000_goods_order_cancellations`
+Applying migration `20261012040000_goods_pickup_fulfillment`
+Applying migration `20261012050000_goods_delivery_milestones`
+Applying migration `20261012060000_goods_returns`
+Applying migration `20261012070000_service_definitions`
+Applying migration `20261012080000_authoritative_schedules`
+Applying migration `20261012090000_atomic_booking_holds`
+Applying migration `20261012100000_paid_bookings`
+Applying migration `20261012110000_booking_cancellations`
+Applying migration `20261012120000_booking_amendments`
+Applying migration `20261012130000_substitutions_waitlists`
+Applying migration `20261012140000_booking_meetings`
+Applying migration `20261012150000_booking_attendance`
+Applying migration `20261012160000_immutable_ledger`
+Applying migration `20261012170000_mixed_cart_quotes`
+Applying migration `20261012180000_promotions_commission`
+Applying migration `20261013030000_atomic_mixed_holds`
+Applying migration `20261013040000_mixed_payment_inbox`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831120000_platform_foundation/
+    └─ migration.sql
+  └─ 20260921000000_durable_foundation/
+    └─ migration.sql
+  └─ 20260922000000_demo_persona_access/
+    └─ migration.sql
+  └─ 20260922010000_provider_timeout_reconciliation/
+    └─ migration.sql
+  └─ 20260922020000_adult_verification_lifecycle/
+    └─ migration.sql
+  └─ 20260922030000_demo_provider_quota/
+    └─ migration.sql
+  └─ 20260922040000_staff_user_linkage/
+    └─ migration.sql
+  └─ 20260922050000_public_vendor_browse/
+    └─ migration.sql
+  └─ 20260922060000_adult_verification_mixed_version_compatibility/
+    └─ migration.sql
+  └─ 20260922070000_demo_persona_command_quota/
+    └─ migration.sql
+  └─ 20260923000000_phase_01_vendor_catalog/
+    └─ migration.sql
+  └─ 20260923010000_snake_case_identifiers/
+    └─ migration.sql
+  └─ 20260923020000_legacy_identifier_compatibility/
+    └─ migration.sql
+  └─ 20260923030000_synthetic_external_effect_idempotency/
+    └─ migration.sql
+  └─ 20260923040000_inventory_movements/
+    └─ migration.sql
+  └─ 20260924000000_media_upload_intents/
+    └─ migration.sql
+  └─ 20260924010000_video_processing_and_moderation/
+    └─ migration.sql
+  └─ 20260925000000_real_platform_reviewer_grants/
+    └─ migration.sql
+  └─ 20260928000000_retire_legacy_adult_default/
+    └─ migration.sql
+  └─ 20260929000000_retire_synthetic_schema/
+    └─ migration.sql
+  └─ 20261001000000_durable_didit_sessions/
+    └─ migration.sql
+  └─ 20261002000000_durable_realtime_cursor/
+    └─ migration.sql
+  └─ 20261006000000_phase_01_marketplace_discovery/
+    └─ migration.sql
+  └─ 20261006010000_phase_01_listing_images/
+    └─ migration.sql
+  └─ 20261006020000_phase_01_storefront_branding/
+    └─ migration.sql
+  └─ 20261009000000_rejected_media_retention/
+    └─ migration.sql
+  └─ 20261012000000_inventory_transfers/
+    └─ migration.sql
+  └─ 20261012010000_goods_quotes_and_holds/
+    └─ migration.sql
+  └─ 20261012020000_goods_paid_orders/
+    └─ migration.sql
+  └─ 20261012030000_goods_order_cancellations/
+    └─ migration.sql
+  └─ 20261012040000_goods_pickup_fulfillment/
+    └─ migration.sql
+  └─ 20261012050000_goods_delivery_milestones/
+    └─ migration.sql
+  └─ 20261012060000_goods_returns/
+    └─ migration.sql
+  └─ 20261012070000_service_definitions/
+    └─ migration.sql
+  └─ 20261012080000_authoritative_schedules/
+    └─ migration.sql
+  └─ 20261012090000_atomic_booking_holds/
+    └─ migration.sql
+  └─ 20261012100000_paid_bookings/
+    └─ migration.sql
+  └─ 20261012110000_booking_cancellations/
+    └─ migration.sql
+  └─ 20261012120000_booking_amendments/
+    └─ migration.sql
+  └─ 20261012130000_substitutions_waitlists/
+    └─ migration.sql
+  └─ 20261012140000_booking_meetings/
+    └─ migration.sql
+  └─ 20261012150000_booking_attendance/
+    └─ migration.sql
+  └─ 20261012160000_immutable_ledger/
+    └─ migration.sql
+  └─ 20261012170000_mixed_cart_quotes/
+    └─ migration.sql
+  └─ 20261012180000_promotions_commission/
+    └─ migration.sql
+  └─ 20261013030000_atomic_mixed_holds/
+    └─ migration.sql
+  └─ 20261013040000_mixed_payment_inbox/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+(node:37646) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+(node:37679) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Test Suites: 1 skipped, 0 of 1 total
+Tests:       13 skipped, 13 total
+Snapshots:   0 total
+Time:        0.554 s, estimated 12 s
+Ran all test suites within paths "libs/platform-core/src/lib/booking-cancellations.integration.ts".
+(node:37755) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "phase00_962844b5f88347aaa5597340d05b6e21" at "127.0.0.1:55432"
+
+47 migrations found in prisma/migrations
+
+Applying migration `20260831120000_platform_foundation`
+Applying migration `20260921000000_durable_foundation`
+Applying migration `20260922000000_demo_persona_access`
+Applying migration `20260922010000_provider_timeout_reconciliation`
+Applying migration `20260922020000_adult_verification_lifecycle`
+Applying migration `20260922030000_demo_provider_quota`
+Applying migration `20260922040000_staff_user_linkage`
+Applying migration `20260922050000_public_vendor_browse`
+Applying migration `20260922060000_adult_verification_mixed_version_compatibility`
+Applying migration `20260922070000_demo_persona_command_quota`
+Applying migration `20260923000000_phase_01_vendor_catalog`
+Applying migration `20260923010000_snake_case_identifiers`
+Applying migration `20260923020000_legacy_identifier_compatibility`
+Applying migration `20260923030000_synthetic_external_effect_idempotency`
+Applying migration `20260923040000_inventory_movements`
+Applying migration `20260924000000_media_upload_intents`
+Applying migration `20260924010000_video_processing_and_moderation`
+Applying migration `20260925000000_real_platform_reviewer_grants`
+Applying migration `20260928000000_retire_legacy_adult_default`
+Applying migration `20260929000000_retire_synthetic_schema`
+Applying migration `20261001000000_durable_didit_sessions`
+Applying migration `20261002000000_durable_realtime_cursor`
+Applying migration `20261006000000_phase_01_marketplace_discovery`
+Applying migration `20261006010000_phase_01_listing_images`
+Applying migration `20261006020000_phase_01_storefront_branding`
+Applying migration `20261009000000_rejected_media_retention`
+Applying migration `20261012000000_inventory_transfers`
+Applying migration `20261012010000_goods_quotes_and_holds`
+Applying migration `20261012020000_goods_paid_orders`
+Applying migration `20261012030000_goods_order_cancellations`
+Applying migration `20261012040000_goods_pickup_fulfillment`
+Applying migration `20261012050000_goods_delivery_milestones`
+Applying migration `20261012060000_goods_returns`
+Applying migration `20261012070000_service_definitions`
+Applying migration `20261012080000_authoritative_schedules`
+Applying migration `20261012090000_atomic_booking_holds`
+Applying migration `20261012100000_paid_bookings`
+Applying migration `20261012110000_booking_cancellations`
+Applying migration `20261012120000_booking_amendments`
+Applying migration `20261012130000_substitutions_waitlists`
+Applying migration `20261012140000_booking_meetings`
+Applying migration `20261012150000_booking_attendance`
+Applying migration `20261012160000_immutable_ledger`
+Applying migration `20261012170000_mixed_cart_quotes`
+Applying migration `20261012180000_promotions_commission`
+Applying migration `20261013030000_atomic_mixed_holds`
+Applying migration `20261013040000_mixed_payment_inbox`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831120000_platform_foundation/
+    └─ migration.sql
+  └─ 20260921000000_durable_foundation/
+    └─ migration.sql
+  └─ 20260922000000_demo_persona_access/
+    └─ migration.sql
+  └─ 20260922010000_provider_timeout_reconciliation/
+    └─ migration.sql
+  └─ 20260922020000_adult_verification_lifecycle/
+    └─ migration.sql
+  └─ 20260922030000_demo_provider_quota/
+    └─ migration.sql
+  └─ 20260922040000_staff_user_linkage/
+    └─ migration.sql
+  └─ 20260922050000_public_vendor_browse/
+    └─ migration.sql
+  └─ 20260922060000_adult_verification_mixed_version_compatibility/
+    └─ migration.sql
+  └─ 20260922070000_demo_persona_command_quota/
+    └─ migration.sql
+  └─ 20260923000000_phase_01_vendor_catalog/
+    └─ migration.sql
+  └─ 20260923010000_snake_case_identifiers/
+    └─ migration.sql
+  └─ 20260923020000_legacy_identifier_compatibility/
+    └─ migration.sql
+  └─ 20260923030000_synthetic_external_effect_idempotency/
+    └─ migration.sql
+  └─ 20260923040000_inventory_movements/
+    └─ migration.sql
+  └─ 20260924000000_media_upload_intents/
+    └─ migration.sql
+  └─ 20260924010000_video_processing_and_moderation/
+    └─ migration.sql
+  └─ 20260925000000_real_platform_reviewer_grants/
+    └─ migration.sql
+  └─ 20260928000000_retire_legacy_adult_default/
+    └─ migration.sql
+  └─ 20260929000000_retire_synthetic_schema/
+    └─ migration.sql
+  └─ 20261001000000_durable_didit_sessions/
+    └─ migration.sql
+  └─ 20261002000000_durable_realtime_cursor/
+    └─ migration.sql
+  └─ 20261006000000_phase_01_marketplace_discovery/
+    └─ migration.sql
+  └─ 20261006010000_phase_01_listing_images/
+    └─ migration.sql
+  └─ 20261006020000_phase_01_storefront_branding/
+    └─ migration.sql
+  └─ 20261009000000_rejected_media_retention/
+    └─ migration.sql
+  └─ 20261012000000_inventory_transfers/
+    └─ migration.sql
+  └─ 20261012010000_goods_quotes_and_holds/
+    └─ migration.sql
+  └─ 20261012020000_goods_paid_orders/
+    └─ migration.sql
+  └─ 20261012030000_goods_order_cancellations/
+    └─ migration.sql
+  └─ 20261012040000_goods_pickup_fulfillment/
+    └─ migration.sql
+  └─ 20261012050000_goods_delivery_milestones/
+    └─ migration.sql
+  └─ 20261012060000_goods_returns/
+    └─ migration.sql
+  └─ 20261012070000_service_definitions/
+    └─ migration.sql
+  └─ 20261012080000_authoritative_schedules/
+    └─ migration.sql
+  └─ 20261012090000_atomic_booking_holds/
+    └─ migration.sql
+  └─ 20261012100000_paid_bookings/
+    └─ migration.sql
+  └─ 20261012110000_booking_cancellations/
+    └─ migration.sql
+  └─ 20261012120000_booking_amendments/
+    └─ migration.sql
+  └─ 20261012130000_substitutions_waitlists/
+    └─ migration.sql
+  └─ 20261012140000_booking_meetings/
+    └─ migration.sql
+  └─ 20261012150000_booking_attendance/
+    └─ migration.sql
+  └─ 20261012160000_immutable_ledger/
+    └─ migration.sql
+  └─ 20261012170000_mixed_cart_quotes/
+    └─ migration.sql
+  └─ 20261012180000_promotions_commission/
+    └─ migration.sql
+  └─ 20261013030000_atomic_mixed_holds/
+    └─ migration.sql
+  └─ 20261013040000_mixed_payment_inbox/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+(node:37830) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+(node:37863) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Test Suites: 1 skipped, 0 of 1 total
+Tests:       10 skipped, 10 total
+Snapshots:   0 total
+Time:        0.584 s, estimated 10 s
+Ran all test suites within paths "libs/platform-core/src/lib/booking-changes.integration.ts".
+(node:37939) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "phase00_962844b5f88347aaa5597340d05b6e21" at "127.0.0.1:55432"
+
+47 migrations found in prisma/migrations
+
+Applying migration `20260831120000_platform_foundation`
+Applying migration `20260921000000_durable_foundation`
+Applying migration `20260922000000_demo_persona_access`
+Applying migration `20260922010000_provider_timeout_reconciliation`
+Applying migration `20260922020000_adult_verification_lifecycle`
+Applying migration `20260922030000_demo_provider_quota`
+Applying migration `20260922040000_staff_user_linkage`
+Applying migration `20260922050000_public_vendor_browse`
+Applying migration `20260922060000_adult_verification_mixed_version_compatibility`
+Applying migration `20260922070000_demo_persona_command_quota`
+Applying migration `20260923000000_phase_01_vendor_catalog`
+Applying migration `20260923010000_snake_case_identifiers`
+Applying migration `20260923020000_legacy_identifier_compatibility`
+Applying migration `20260923030000_synthetic_external_effect_idempotency`
+Applying migration `20260923040000_inventory_movements`
+Applying migration `20260924000000_media_upload_intents`
+Applying migration `20260924010000_video_processing_and_moderation`
+Applying migration `20260925000000_real_platform_reviewer_grants`
+Applying migration `20260928000000_retire_legacy_adult_default`
+Applying migration `20260929000000_retire_synthetic_schema`
+Applying migration `20261001000000_durable_didit_sessions`
+Applying migration `20261002000000_durable_realtime_cursor`
+Applying migration `20261006000000_phase_01_marketplace_discovery`
+Applying migration `20261006010000_phase_01_listing_images`
+Applying migration `20261006020000_phase_01_storefront_branding`
+Applying migration `20261009000000_rejected_media_retention`
+Applying migration `20261012000000_inventory_transfers`
+Applying migration `20261012010000_goods_quotes_and_holds`
+Applying migration `20261012020000_goods_paid_orders`
+Applying migration `20261012030000_goods_order_cancellations`
+Applying migration `20261012040000_goods_pickup_fulfillment`
+Applying migration `20261012050000_goods_delivery_milestones`
+Applying migration `20261012060000_goods_returns`
+Applying migration `20261012070000_service_definitions`
+Applying migration `20261012080000_authoritative_schedules`
+Applying migration `20261012090000_atomic_booking_holds`
+Applying migration `20261012100000_paid_bookings`
+Applying migration `20261012110000_booking_cancellations`
+Applying migration `20261012120000_booking_amendments`
+Applying migration `20261012130000_substitutions_waitlists`
+Applying migration `20261012140000_booking_meetings`
+Applying migration `20261012150000_booking_attendance`
+Applying migration `20261012160000_immutable_ledger`
+Applying migration `20261012170000_mixed_cart_quotes`
+Applying migration `20261012180000_promotions_commission`
+Applying migration `20261013030000_atomic_mixed_holds`
+Applying migration `20261013040000_mixed_payment_inbox`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831120000_platform_foundation/
+    └─ migration.sql
+  └─ 20260921000000_durable_foundation/
+    └─ migration.sql
+  └─ 20260922000000_demo_persona_access/
+    └─ migration.sql
+  └─ 20260922010000_provider_timeout_reconciliation/
+    └─ migration.sql
+  └─ 20260922020000_adult_verification_lifecycle/
+    └─ migration.sql
+  └─ 20260922030000_demo_provider_quota/
+    └─ migration.sql
+  └─ 20260922040000_staff_user_linkage/
+    └─ migration.sql
+  └─ 20260922050000_public_vendor_browse/
+    └─ migration.sql
+  └─ 20260922060000_adult_verification_mixed_version_compatibility/
+    └─ migration.sql
+  └─ 20260922070000_demo_persona_command_quota/
+    └─ migration.sql
+  └─ 20260923000000_phase_01_vendor_catalog/
+    └─ migration.sql
+  └─ 20260923010000_snake_case_identifiers/
+    └─ migration.sql
+  └─ 20260923020000_legacy_identifier_compatibility/
+    └─ migration.sql
+  └─ 20260923030000_synthetic_external_effect_idempotency/
+    └─ migration.sql
+  └─ 20260923040000_inventory_movements/
+    └─ migration.sql
+  └─ 20260924000000_media_upload_intents/
+    └─ migration.sql
+  └─ 20260924010000_video_processing_and_moderation/
+    └─ migration.sql
+  └─ 20260925000000_real_platform_reviewer_grants/
+    └─ migration.sql
+  └─ 20260928000000_retire_legacy_adult_default/
+    └─ migration.sql
+  └─ 20260929000000_retire_synthetic_schema/
+    └─ migration.sql
+  └─ 20261001000000_durable_didit_sessions/
+    └─ migration.sql
+  └─ 20261002000000_durable_realtime_cursor/
+    └─ migration.sql
+  └─ 20261006000000_phase_01_marketplace_discovery/
+    └─ migration.sql
+  └─ 20261006010000_phase_01_listing_images/
+    └─ migration.sql
+  └─ 20261006020000_phase_01_storefront_branding/
+    └─ migration.sql
+  └─ 20261009000000_rejected_media_retention/
+    └─ migration.sql
+  └─ 20261012000000_inventory_transfers/
+    └─ migration.sql
+  └─ 20261012010000_goods_quotes_and_holds/
+    └─ migration.sql
+  └─ 20261012020000_goods_paid_orders/
+    └─ migration.sql
+  └─ 20261012030000_goods_order_cancellations/
+    └─ migration.sql
+  └─ 20261012040000_goods_pickup_fulfillment/
+    └─ migration.sql
+  └─ 20261012050000_goods_delivery_milestones/
+    └─ migration.sql
+  └─ 20261012060000_goods_returns/
+    └─ migration.sql
+  └─ 20261012070000_service_definitions/
+    └─ migration.sql
+  └─ 20261012080000_authoritative_schedules/
+    └─ migration.sql
+  └─ 20261012090000_atomic_booking_holds/
+    └─ migration.sql
+  └─ 20261012100000_paid_bookings/
+    └─ migration.sql
+  └─ 20261012110000_booking_cancellations/
+    └─ migration.sql
+  └─ 20261012120000_booking_amendments/
+    └─ migration.sql
+  └─ 20261012130000_substitutions_waitlists/
+    └─ migration.sql
+  └─ 20261012140000_booking_meetings/
+    └─ migration.sql
+  └─ 20261012150000_booking_attendance/
+    └─ migration.sql
+  └─ 20261012160000_immutable_ledger/
+    └─ migration.sql
+  └─ 20261012170000_mixed_cart_quotes/
+    └─ migration.sql
+  └─ 20261012180000_promotions_commission/
+    └─ migration.sql
+  └─ 20261013030000_atomic_mixed_holds/
+    └─ migration.sql
+  └─ 20261013040000_mixed_payment_inbox/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+(node:38019) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+(node:38052) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Test Suites: 1 passed, 1 total
+Tests:       18 passed, 18 total
+Snapshots:   0 total
+Time:        17.169 s
+Ran all test suites within paths "libs/platform-core/src/lib/booking-holds.integration.ts".
+(node:38190) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "phase00_962844b5f88347aaa5597340d05b6e21" at "127.0.0.1:55432"
+
+47 migrations found in prisma/migrations
+
+Applying migration `20260831120000_platform_foundation`
+Applying migration `20260921000000_durable_foundation`
+Applying migration `20260922000000_demo_persona_access`
+Applying migration `20260922010000_provider_timeout_reconciliation`
+Applying migration `20260922020000_adult_verification_lifecycle`
+Applying migration `20260922030000_demo_provider_quota`
+Applying migration `20260922040000_staff_user_linkage`
+Applying migration `20260922050000_public_vendor_browse`
+Applying migration `20260922060000_adult_verification_mixed_version_compatibility`
+Applying migration `20260922070000_demo_persona_command_quota`
+Applying migration `20260923000000_phase_01_vendor_catalog`
+Applying migration `20260923010000_snake_case_identifiers`
+Applying migration `20260923020000_legacy_identifier_compatibility`
+Applying migration `20260923030000_synthetic_external_effect_idempotency`
+Applying migration `20260923040000_inventory_movements`
+Applying migration `20260924000000_media_upload_intents`
+Applying migration `20260924010000_video_processing_and_moderation`
+Applying migration `20260925000000_real_platform_reviewer_grants`
+Applying migration `20260928000000_retire_legacy_adult_default`
+Applying migration `20260929000000_retire_synthetic_schema`
+Applying migration `20261001000000_durable_didit_sessions`
+Applying migration `20261002000000_durable_realtime_cursor`
+Applying migration `20261006000000_phase_01_marketplace_discovery`
+Applying migration `20261006010000_phase_01_listing_images`
+Applying migration `20261006020000_phase_01_storefront_branding`
+Applying migration `20261009000000_rejected_media_retention`
+Applying migration `20261012000000_inventory_transfers`
+Applying migration `20261012010000_goods_quotes_and_holds`
+Applying migration `20261012020000_goods_paid_orders`
+Applying migration `20261012030000_goods_order_cancellations`
+Applying migration `20261012040000_goods_pickup_fulfillment`
+Applying migration `20261012050000_goods_delivery_milestones`
+Applying migration `20261012060000_goods_returns`
+Applying migration `20261012070000_service_definitions`
+Applying migration `20261012080000_authoritative_schedules`
+Applying migration `20261012090000_atomic_booking_holds`
+Applying migration `20261012100000_paid_bookings`
+Applying migration `20261012110000_booking_cancellations`
+Applying migration `20261012120000_booking_amendments`
+Applying migration `20261012130000_substitutions_waitlists`
+Applying migration `20261012140000_booking_meetings`
+Applying migration `20261012150000_booking_attendance`
+Applying migration `20261012160000_immutable_ledger`
+Applying migration `20261012170000_mixed_cart_quotes`
+Applying migration `20261012180000_promotions_commission`
+Applying migration `20261013030000_atomic_mixed_holds`
+Applying migration `20261013040000_mixed_payment_inbox`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831120000_platform_foundation/
+    └─ migration.sql
+  └─ 20260921000000_durable_foundation/
+    └─ migration.sql
+  └─ 20260922000000_demo_persona_access/
+    └─ migration.sql
+  └─ 20260922010000_provider_timeout_reconciliation/
+    └─ migration.sql
+  └─ 20260922020000_adult_verification_lifecycle/
+    └─ migration.sql
+  └─ 20260922030000_demo_provider_quota/
+    └─ migration.sql
+  └─ 20260922040000_staff_user_linkage/
+    └─ migration.sql
+  └─ 20260922050000_public_vendor_browse/
+    └─ migration.sql
+  └─ 20260922060000_adult_verification_mixed_version_compatibility/
+    └─ migration.sql
+  └─ 20260922070000_demo_persona_command_quota/
+    └─ migration.sql
+  └─ 20260923000000_phase_01_vendor_catalog/
+    └─ migration.sql
+  └─ 20260923010000_snake_case_identifiers/
+    └─ migration.sql
+  └─ 20260923020000_legacy_identifier_compatibility/
+    └─ migration.sql
+  └─ 20260923030000_synthetic_external_effect_idempotency/
+    └─ migration.sql
+  └─ 20260923040000_inventory_movements/
+    └─ migration.sql
+  └─ 20260924000000_media_upload_intents/
+    └─ migration.sql
+  └─ 20260924010000_video_processing_and_moderation/
+    └─ migration.sql
+  └─ 20260925000000_real_platform_reviewer_grants/
+    └─ migration.sql
+  └─ 20260928000000_retire_legacy_adult_default/
+    └─ migration.sql
+  └─ 20260929000000_retire_synthetic_schema/
+    └─ migration.sql
+  └─ 20261001000000_durable_didit_sessions/
+    └─ migration.sql
+  └─ 20261002000000_durable_realtime_cursor/
+    └─ migration.sql
+  └─ 20261006000000_phase_01_marketplace_discovery/
+    └─ migration.sql
+  └─ 20261006010000_phase_01_listing_images/
+    └─ migration.sql
+  └─ 20261006020000_phase_01_storefront_branding/
+    └─ migration.sql
+  └─ 20261009000000_rejected_media_retention/
+    └─ migration.sql
+  └─ 20261012000000_inventory_transfers/
+    └─ migration.sql
+  └─ 20261012010000_goods_quotes_and_holds/
+    └─ migration.sql
+  └─ 20261012020000_goods_paid_orders/
+    └─ migration.sql
+  └─ 20261012030000_goods_order_cancellations/
+    └─ migration.sql
+  └─ 20261012040000_goods_pickup_fulfillment/
+    └─ migration.sql
+  └─ 20261012050000_goods_delivery_milestones/
+    └─ migration.sql
+  └─ 20261012060000_goods_returns/
+    └─ migration.sql
+  └─ 20261012070000_service_definitions/
+    └─ migration.sql
+  └─ 20261012080000_authoritative_schedules/
+    └─ migration.sql
+  └─ 20261012090000_atomic_booking_holds/
+    └─ migration.sql
+  └─ 20261012100000_paid_bookings/
+    └─ migration.sql
+  └─ 20261012110000_booking_cancellations/
+    └─ migration.sql
+  └─ 20261012120000_booking_amendments/
+    └─ migration.sql
+  └─ 20261012130000_substitutions_waitlists/
+    └─ migration.sql
+  └─ 20261012140000_booking_meetings/
+    └─ migration.sql
+  └─ 20261012150000_booking_attendance/
+    └─ migration.sql
+  └─ 20261012160000_immutable_ledger/
+    └─ migration.sql
+  └─ 20261012170000_mixed_cart_quotes/
+    └─ migration.sql
+  └─ 20261012180000_promotions_commission/
+    └─ migration.sql
+  └─ 20261013030000_atomic_mixed_holds/
+    └─ migration.sql
+  └─ 20261013040000_mixed_payment_inbox/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+(node:38266) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+(node:38299) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Test Suites: 1 skipped, 0 of 1 total
+Tests:       12 skipped, 12 total
+Snapshots:   0 total
+Time:        0.639 s, estimated 13 s
+Ran all test suites within paths "libs/platform-core/src/lib/booking-meetings.integration.ts".
+(node:38405) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "phase00_962844b5f88347aaa5597340d05b6e21" at "127.0.0.1:55432"
+
+47 migrations found in prisma/migrations
+
+Applying migration `20260831120000_platform_foundation`
+Applying migration `20260921000000_durable_foundation`
+Applying migration `20260922000000_demo_persona_access`
+Applying migration `20260922010000_provider_timeout_reconciliation`
+Applying migration `20260922020000_adult_verification_lifecycle`
+Applying migration `20260922030000_demo_provider_quota`
+Applying migration `20260922040000_staff_user_linkage`
+Applying migration `20260922050000_public_vendor_browse`
+Applying migration `20260922060000_adult_verification_mixed_version_compatibility`
+Applying migration `20260922070000_demo_persona_command_quota`
+Applying migration `20260923000000_phase_01_vendor_catalog`
+Applying migration `20260923010000_snake_case_identifiers`
+Applying migration `20260923020000_legacy_identifier_compatibility`
+Applying migration `20260923030000_synthetic_external_effect_idempotency`
+Applying migration `20260923040000_inventory_movements`
+Applying migration `20260924000000_media_upload_intents`
+Applying migration `20260924010000_video_processing_and_moderation`
+Applying migration `20260925000000_real_platform_reviewer_grants`
+Applying migration `20260928000000_retire_legacy_adult_default`
+Applying migration `20260929000000_retire_synthetic_schema`
+Applying migration `20261001000000_durable_didit_sessions`
+Applying migration `20261002000000_durable_realtime_cursor`
+Applying migration `20261006000000_phase_01_marketplace_discovery`
+Applying migration `20261006010000_phase_01_listing_images`
+Applying migration `20261006020000_phase_01_storefront_branding`
+Applying migration `20261009000000_rejected_media_retention`
+Applying migration `20261012000000_inventory_transfers`
+Applying migration `20261012010000_goods_quotes_and_holds`
+Applying migration `20261012020000_goods_paid_orders`
+Applying migration `20261012030000_goods_order_cancellations`
+Applying migration `20261012040000_goods_pickup_fulfillment`
+Applying migration `20261012050000_goods_delivery_milestones`
+Applying migration `20261012060000_goods_returns`
+Applying migration `20261012070000_service_definitions`
+Applying migration `20261012080000_authoritative_schedules`
+Applying migration `20261012090000_atomic_booking_holds`
+Applying migration `20261012100000_paid_bookings`
+Applying migration `20261012110000_booking_cancellations`
+Applying migration `20261012120000_booking_amendments`
+Applying migration `20261012130000_substitutions_waitlists`
+Applying migration `20261012140000_booking_meetings`
+Applying migration `20261012150000_booking_attendance`
+Applying migration `20261012160000_immutable_ledger`
+Applying migration `20261012170000_mixed_cart_quotes`
+Applying migration `20261012180000_promotions_commission`
+Applying migration `20261013030000_atomic_mixed_holds`
+Applying migration `20261013040000_mixed_payment_inbox`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831120000_platform_foundation/
+    └─ migration.sql
+  └─ 20260921000000_durable_foundation/
+    └─ migration.sql
+  └─ 20260922000000_demo_persona_access/
+    └─ migration.sql
+  └─ 20260922010000_provider_timeout_reconciliation/
+    └─ migration.sql
+  └─ 20260922020000_adult_verification_lifecycle/
+    └─ migration.sql
+  └─ 20260922030000_demo_provider_quota/
+    └─ migration.sql
+  └─ 20260922040000_staff_user_linkage/
+    └─ migration.sql
+  └─ 20260922050000_public_vendor_browse/
+    └─ migration.sql
+  └─ 20260922060000_adult_verification_mixed_version_compatibility/
+    └─ migration.sql
+  └─ 20260922070000_demo_persona_command_quota/
+    └─ migration.sql
+  └─ 20260923000000_phase_01_vendor_catalog/
+    └─ migration.sql
+  └─ 20260923010000_snake_case_identifiers/
+    └─ migration.sql
+  └─ 20260923020000_legacy_identifier_compatibility/
+    └─ migration.sql
+  └─ 20260923030000_synthetic_external_effect_idempotency/
+    └─ migration.sql
+  └─ 20260923040000_inventory_movements/
+    └─ migration.sql
+  └─ 20260924000000_media_upload_intents/
+    └─ migration.sql
+  └─ 20260924010000_video_processing_and_moderation/
+    └─ migration.sql
+  └─ 20260925000000_real_platform_reviewer_grants/
+    └─ migration.sql
+  └─ 20260928000000_retire_legacy_adult_default/
+    └─ migration.sql
+  └─ 20260929000000_retire_synthetic_schema/
+    └─ migration.sql
+  └─ 20261001000000_durable_didit_sessions/
+    └─ migration.sql
+  └─ 20261002000000_durable_realtime_cursor/
+    └─ migration.sql
+  └─ 20261006000000_phase_01_marketplace_discovery/
+    └─ migration.sql
+  └─ 20261006010000_phase_01_listing_images/
+    └─ migration.sql
+  └─ 20261006020000_phase_01_storefront_branding/
+    └─ migration.sql
+  └─ 20261009000000_rejected_media_retention/
+    └─ migration.sql
+  └─ 20261012000000_inventory_transfers/
+    └─ migration.sql
+  └─ 20261012010000_goods_quotes_and_holds/
+    └─ migration.sql
+  └─ 20261012020000_goods_paid_orders/
+    └─ migration.sql
+  └─ 20261012030000_goods_order_cancellations/
+    └─ migration.sql
+  └─ 20261012040000_goods_pickup_fulfillment/
+    └─ migration.sql
+  └─ 20261012050000_goods_delivery_milestones/
+    └─ migration.sql
+  └─ 20261012060000_goods_returns/
+    └─ migration.sql
+  └─ 20261012070000_service_definitions/
+    └─ migration.sql
+  └─ 20261012080000_authoritative_schedules/
+    └─ migration.sql
+  └─ 20261012090000_atomic_booking_holds/
+    └─ migration.sql
+  └─ 20261012100000_paid_bookings/
+    └─ migration.sql
+  └─ 20261012110000_booking_cancellations/
+    └─ migration.sql
+  └─ 20261012120000_booking_amendments/
+    └─ migration.sql
+  └─ 20261012130000_substitutions_waitlists/
+    └─ migration.sql
+  └─ 20261012140000_booking_meetings/
+    └─ migration.sql
+  └─ 20261012150000_booking_attendance/
+    └─ migration.sql
+  └─ 20261012160000_immutable_ledger/
+    └─ migration.sql
+  └─ 20261012170000_mixed_cart_quotes/
+    └─ migration.sql
+  └─ 20261012180000_promotions_commission/
+    └─ migration.sql
+  └─ 20261013030000_atomic_mixed_holds/
+    └─ migration.sql
+  └─ 20261013040000_mixed_payment_inbox/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+(node:38530) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+(node:38555) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Test Suites: 1 skipped, 0 of 1 total
+Tests:       9 skipped, 9 total
+Snapshots:   0 total
+Time:        0.788 s, estimated 8 s
+Ran all test suites within paths "libs/platform-core/src/lib/bookings.integration.ts".
+(node:38642) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "phase00_962844b5f88347aaa5597340d05b6e21" at "127.0.0.1:55432"
+
+47 migrations found in prisma/migrations
+
+Applying migration `20260831120000_platform_foundation`
+Applying migration `20260921000000_durable_foundation`
+Applying migration `20260922000000_demo_persona_access`
+Applying migration `20260922010000_provider_timeout_reconciliation`
+Applying migration `20260922020000_adult_verification_lifecycle`
+Applying migration `20260922030000_demo_provider_quota`
+Applying migration `20260922040000_staff_user_linkage`
+Applying migration `20260922050000_public_vendor_browse`
+Applying migration `20260922060000_adult_verification_mixed_version_compatibility`
+Applying migration `20260922070000_demo_persona_command_quota`
+Applying migration `20260923000000_phase_01_vendor_catalog`
+Applying migration `20260923010000_snake_case_identifiers`
+Applying migration `20260923020000_legacy_identifier_compatibility`
+Applying migration `20260923030000_synthetic_external_effect_idempotency`
+Applying migration `20260923040000_inventory_movements`
+Applying migration `20260924000000_media_upload_intents`
+Applying migration `20260924010000_video_processing_and_moderation`
+Applying migration `20260925000000_real_platform_reviewer_grants`
+Applying migration `20260928000000_retire_legacy_adult_default`
+Applying migration `20260929000000_retire_synthetic_schema`
+Applying migration `20261001000000_durable_didit_sessions`
+Applying migration `20261002000000_durable_realtime_cursor`
+Applying migration `20261006000000_phase_01_marketplace_discovery`
+Applying migration `20261006010000_phase_01_listing_images`
+Applying migration `20261006020000_phase_01_storefront_branding`
+Applying migration `20261009000000_rejected_media_retention`
+Applying migration `20261012000000_inventory_transfers`
+Applying migration `20261012010000_goods_quotes_and_holds`
+Applying migration `20261012020000_goods_paid_orders`
+Applying migration `20261012030000_goods_order_cancellations`
+Applying migration `20261012040000_goods_pickup_fulfillment`
+Applying migration `20261012050000_goods_delivery_milestones`
+Applying migration `20261012060000_goods_returns`
+Applying migration `20261012070000_service_definitions`
+Applying migration `20261012080000_authoritative_schedules`
+Applying migration `20261012090000_atomic_booking_holds`
+Applying migration `20261012100000_paid_bookings`
+Applying migration `20261012110000_booking_cancellations`
+Applying migration `20261012120000_booking_amendments`
+Applying migration `20261012130000_substitutions_waitlists`
+Applying migration `20261012140000_booking_meetings`
+Applying migration `20261012150000_booking_attendance`
+Applying migration `20261012160000_immutable_ledger`
+Applying migration `20261012170000_mixed_cart_quotes`
+Applying migration `20261012180000_promotions_commission`
+Applying migration `20261013030000_atomic_mixed_holds`
+Applying migration `20261013040000_mixed_payment_inbox`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831120000_platform_foundation/
+    └─ migration.sql
+  └─ 20260921000000_durable_foundation/
+    └─ migration.sql
+  └─ 20260922000000_demo_persona_access/
+    └─ migration.sql
+  └─ 20260922010000_provider_timeout_reconciliation/
+    └─ migration.sql
+  └─ 20260922020000_adult_verification_lifecycle/
+    └─ migration.sql
+  └─ 20260922030000_demo_provider_quota/
+    └─ migration.sql
+  └─ 20260922040000_staff_user_linkage/
+    └─ migration.sql
+  └─ 20260922050000_public_vendor_browse/
+    └─ migration.sql
+  └─ 20260922060000_adult_verification_mixed_version_compatibility/
+    └─ migration.sql
+  └─ 20260922070000_demo_persona_command_quota/
+    └─ migration.sql
+  └─ 20260923000000_phase_01_vendor_catalog/
+    └─ migration.sql
+  └─ 20260923010000_snake_case_identifiers/
+    └─ migration.sql
+  └─ 20260923020000_legacy_identifier_compatibility/
+    └─ migration.sql
+  └─ 20260923030000_synthetic_external_effect_idempotency/
+    └─ migration.sql
+  └─ 20260923040000_inventory_movements/
+    └─ migration.sql
+  └─ 20260924000000_media_upload_intents/
+    └─ migration.sql
+  └─ 20260924010000_video_processing_and_moderation/
+    └─ migration.sql
+  └─ 20260925000000_real_platform_reviewer_grants/
+    └─ migration.sql
+  └─ 20260928000000_retire_legacy_adult_default/
+    └─ migration.sql
+  └─ 20260929000000_retire_synthetic_schema/
+    └─ migration.sql
+  └─ 20261001000000_durable_didit_sessions/
+    └─ migration.sql
+  └─ 20261002000000_durable_realtime_cursor/
+    └─ migration.sql
+  └─ 20261006000000_phase_01_marketplace_discovery/
+    └─ migration.sql
+  └─ 20261006010000_phase_01_listing_images/
+    └─ migration.sql
+  └─ 20261006020000_phase_01_storefront_branding/
+    └─ migration.sql
+  └─ 20261009000000_rejected_media_retention/
+    └─ migration.sql
+  └─ 20261012000000_inventory_transfers/
+    └─ migration.sql
+  └─ 20261012010000_goods_quotes_and_holds/
+    └─ migration.sql
+  └─ 20261012020000_goods_paid_orders/
+    └─ migration.sql
+  └─ 20261012030000_goods_order_cancellations/
+    └─ migration.sql
+  └─ 20261012040000_goods_pickup_fulfillment/
+    └─ migration.sql
+  └─ 20261012050000_goods_delivery_milestones/
+    └─ migration.sql
+  └─ 20261012060000_goods_returns/
+    └─ migration.sql
+  └─ 20261012070000_service_definitions/
+    └─ migration.sql
+  └─ 20261012080000_authoritative_schedules/
+    └─ migration.sql
+  └─ 20261012090000_atomic_booking_holds/
+    └─ migration.sql
+  └─ 20261012100000_paid_bookings/
+    └─ migration.sql
+  └─ 20261012110000_booking_cancellations/
+    └─ migration.sql
+  └─ 20261012120000_booking_amendments/
+    └─ migration.sql
+  └─ 20261012130000_substitutions_waitlists/
+    └─ migration.sql
+  └─ 20261012140000_booking_meetings/
+    └─ migration.sql
+  └─ 20261012150000_booking_attendance/
+    └─ migration.sql
+  └─ 20261012160000_immutable_ledger/
+    └─ migration.sql
+  └─ 20261012170000_mixed_cart_quotes/
+    └─ migration.sql
+  └─ 20261012180000_promotions_commission/
+    └─ migration.sql
+  └─ 20261013030000_atomic_mixed_holds/
+    └─ migration.sql
+  └─ 20261013040000_mixed_payment_inbox/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+(node:38732) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+(node:38765) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:38765) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+Test Suites: 1 passed, 1 total
+Tests:       51 passed, 51 total
+Snapshots:   0 total
+Time:        80.036 s, estimated 123 s
+Ran all test suites within paths "libs/platform-core/src/lib/goods-checkout.integration.ts".
+(node:38914) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "phase00_962844b5f88347aaa5597340d05b6e21" at "127.0.0.1:55432"
+
+47 migrations found in prisma/migrations
+
+Applying migration `20260831120000_platform_foundation`
+Applying migration `20260921000000_durable_foundation`
+Applying migration `20260922000000_demo_persona_access`
+Applying migration `20260922010000_provider_timeout_reconciliation`
+Applying migration `20260922020000_adult_verification_lifecycle`
+Applying migration `20260922030000_demo_provider_quota`
+Applying migration `20260922040000_staff_user_linkage`
+Applying migration `20260922050000_public_vendor_browse`
+Applying migration `20260922060000_adult_verification_mixed_version_compatibility`
+Applying migration `20260922070000_demo_persona_command_quota`
+Applying migration `20260923000000_phase_01_vendor_catalog`
+Applying migration `20260923010000_snake_case_identifiers`
+Applying migration `20260923020000_legacy_identifier_compatibility`
+Applying migration `20260923030000_synthetic_external_effect_idempotency`
+Applying migration `20260923040000_inventory_movements`
+Applying migration `20260924000000_media_upload_intents`
+Applying migration `20260924010000_video_processing_and_moderation`
+Applying migration `20260925000000_real_platform_reviewer_grants`
+Applying migration `20260928000000_retire_legacy_adult_default`
+Applying migration `20260929000000_retire_synthetic_schema`
+Applying migration `20261001000000_durable_didit_sessions`
+Applying migration `20261002000000_durable_realtime_cursor`
+Applying migration `20261006000000_phase_01_marketplace_discovery`
+Applying migration `20261006010000_phase_01_listing_images`
+Applying migration `20261006020000_phase_01_storefront_branding`
+Applying migration `20261009000000_rejected_media_retention`
+Applying migration `20261012000000_inventory_transfers`
+Applying migration `20261012010000_goods_quotes_and_holds`
+Applying migration `20261012020000_goods_paid_orders`
+Applying migration `20261012030000_goods_order_cancellations`
+Applying migration `20261012040000_goods_pickup_fulfillment`
+Applying migration `20261012050000_goods_delivery_milestones`
+Applying migration `20261012060000_goods_returns`
+Applying migration `20261012070000_service_definitions`
+Applying migration `20261012080000_authoritative_schedules`
+Applying migration `20261012090000_atomic_booking_holds`
+Applying migration `20261012100000_paid_bookings`
+Applying migration `20261012110000_booking_cancellations`
+Applying migration `20261012120000_booking_amendments`
+Applying migration `20261012130000_substitutions_waitlists`
+Applying migration `20261012140000_booking_meetings`
+Applying migration `20261012150000_booking_attendance`
+Applying migration `20261012160000_immutable_ledger`
+Applying migration `20261012170000_mixed_cart_quotes`
+Applying migration `20261012180000_promotions_commission`
+Applying migration `20261013030000_atomic_mixed_holds`
+Applying migration `20261013040000_mixed_payment_inbox`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831120000_platform_foundation/
+    └─ migration.sql
+  └─ 20260921000000_durable_foundation/
+    └─ migration.sql
+  └─ 20260922000000_demo_persona_access/
+    └─ migration.sql
+  └─ 20260922010000_provider_timeout_reconciliation/
+    └─ migration.sql
+  └─ 20260922020000_adult_verification_lifecycle/
+    └─ migration.sql
+  └─ 20260922030000_demo_provider_quota/
+    └─ migration.sql
+  └─ 20260922040000_staff_user_linkage/
+    └─ migration.sql
+  └─ 20260922050000_public_vendor_browse/
+    └─ migration.sql
+  └─ 20260922060000_adult_verification_mixed_version_compatibility/
+    └─ migration.sql
+  └─ 20260922070000_demo_persona_command_quota/
+    └─ migration.sql
+  └─ 20260923000000_phase_01_vendor_catalog/
+    └─ migration.sql
+  └─ 20260923010000_snake_case_identifiers/
+    └─ migration.sql
+  └─ 20260923020000_legacy_identifier_compatibility/
+    └─ migration.sql
+  └─ 20260923030000_synthetic_external_effect_idempotency/
+    └─ migration.sql
+  └─ 20260923040000_inventory_movements/
+    └─ migration.sql
+  └─ 20260924000000_media_upload_intents/
+    └─ migration.sql
+  └─ 20260924010000_video_processing_and_moderation/
+    └─ migration.sql
+  └─ 20260925000000_real_platform_reviewer_grants/
+    └─ migration.sql
+  └─ 20260928000000_retire_legacy_adult_default/
+    └─ migration.sql
+  └─ 20260929000000_retire_synthetic_schema/
+    └─ migration.sql
+  └─ 20261001000000_durable_didit_sessions/
+    └─ migration.sql
+  └─ 20261002000000_durable_realtime_cursor/
+    └─ migration.sql
+  └─ 20261006000000_phase_01_marketplace_discovery/
+    └─ migration.sql
+  └─ 20261006010000_phase_01_listing_images/
+    └─ migration.sql
+  └─ 20261006020000_phase_01_storefront_branding/
+    └─ migration.sql
+  └─ 20261009000000_rejected_media_retention/
+    └─ migration.sql
+  └─ 20261012000000_inventory_transfers/
+    └─ migration.sql
+  └─ 20261012010000_goods_quotes_and_holds/
+    └─ migration.sql
+  └─ 20261012020000_goods_paid_orders/
+    └─ migration.sql
+  └─ 20261012030000_goods_order_cancellations/
+    └─ migration.sql
+  └─ 20261012040000_goods_pickup_fulfillment/
+    └─ migration.sql
+  └─ 20261012050000_goods_delivery_milestones/
+    └─ migration.sql
+  └─ 20261012060000_goods_returns/
+    └─ migration.sql
+  └─ 20261012070000_service_definitions/
+    └─ migration.sql
+  └─ 20261012080000_authoritative_schedules/
+    └─ migration.sql
+  └─ 20261012090000_atomic_booking_holds/
+    └─ migration.sql
+  └─ 20261012100000_paid_bookings/
+    └─ migration.sql
+  └─ 20261012110000_booking_cancellations/
+    └─ migration.sql
+  └─ 20261012120000_booking_amendments/
+    └─ migration.sql
+  └─ 20261012130000_substitutions_waitlists/
+    └─ migration.sql
+  └─ 20261012140000_booking_meetings/
+    └─ migration.sql
+  └─ 20261012150000_booking_attendance/
+    └─ migration.sql
+  └─ 20261012160000_immutable_ledger/
+    └─ migration.sql
+  └─ 20261012170000_mixed_cart_quotes/
+    └─ migration.sql
+  └─ 20261012180000_promotions_commission/
+    └─ migration.sql
+  └─ 20261013030000_atomic_mixed_holds/
+    └─ migration.sql
+  └─ 20261013040000_mixed_payment_inbox/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+(node:38987) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+(node:39020) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Test Suites: 1 passed, 1 total
+Tests:       10 passed, 10 total
+Snapshots:   0 total
+Time:        2.104 s
+Ran all test suites within paths "libs/platform-core/src/lib/ledger.integration.ts".
+(node:39097) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "phase00_962844b5f88347aaa5597340d05b6e21" at "127.0.0.1:55432"
+
+47 migrations found in prisma/migrations
+
+Applying migration `20260831120000_platform_foundation`
+Applying migration `20260921000000_durable_foundation`
+Applying migration `20260922000000_demo_persona_access`
+Applying migration `20260922010000_provider_timeout_reconciliation`
+Applying migration `20260922020000_adult_verification_lifecycle`
+Applying migration `20260922030000_demo_provider_quota`
+Applying migration `20260922040000_staff_user_linkage`
+Applying migration `20260922050000_public_vendor_browse`
+Applying migration `20260922060000_adult_verification_mixed_version_compatibility`
+Applying migration `20260922070000_demo_persona_command_quota`
+Applying migration `20260923000000_phase_01_vendor_catalog`
+Applying migration `20260923010000_snake_case_identifiers`
+Applying migration `20260923020000_legacy_identifier_compatibility`
+Applying migration `20260923030000_synthetic_external_effect_idempotency`
+Applying migration `20260923040000_inventory_movements`
+Applying migration `20260924000000_media_upload_intents`
+Applying migration `20260924010000_video_processing_and_moderation`
+Applying migration `20260925000000_real_platform_reviewer_grants`
+Applying migration `20260928000000_retire_legacy_adult_default`
+Applying migration `20260929000000_retire_synthetic_schema`
+Applying migration `20261001000000_durable_didit_sessions`
+Applying migration `20261002000000_durable_realtime_cursor`
+Applying migration `20261006000000_phase_01_marketplace_discovery`
+Applying migration `20261006010000_phase_01_listing_images`
+Applying migration `20261006020000_phase_01_storefront_branding`
+Applying migration `20261009000000_rejected_media_retention`
+Applying migration `20261012000000_inventory_transfers`
+Applying migration `20261012010000_goods_quotes_and_holds`
+Applying migration `20261012020000_goods_paid_orders`
+Applying migration `20261012030000_goods_order_cancellations`
+Applying migration `20261012040000_goods_pickup_fulfillment`
+Applying migration `20261012050000_goods_delivery_milestones`
+Applying migration `20261012060000_goods_returns`
+Applying migration `20261012070000_service_definitions`
+Applying migration `20261012080000_authoritative_schedules`
+Applying migration `20261012090000_atomic_booking_holds`
+Applying migration `20261012100000_paid_bookings`
+Applying migration `20261012110000_booking_cancellations`
+Applying migration `20261012120000_booking_amendments`
+Applying migration `20261012130000_substitutions_waitlists`
+Applying migration `20261012140000_booking_meetings`
+Applying migration `20261012150000_booking_attendance`
+Applying migration `20261012160000_immutable_ledger`
+Applying migration `20261012170000_mixed_cart_quotes`
+Applying migration `20261012180000_promotions_commission`
+Applying migration `20261013030000_atomic_mixed_holds`
+Applying migration `20261013040000_mixed_payment_inbox`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831120000_platform_foundation/
+    └─ migration.sql
+  └─ 20260921000000_durable_foundation/
+    └─ migration.sql
+  └─ 20260922000000_demo_persona_access/
+    └─ migration.sql
+  └─ 20260922010000_provider_timeout_reconciliation/
+    └─ migration.sql
+  └─ 20260922020000_adult_verification_lifecycle/
+    └─ migration.sql
+  └─ 20260922030000_demo_provider_quota/
+    └─ migration.sql
+  └─ 20260922040000_staff_user_linkage/
+    └─ migration.sql
+  └─ 20260922050000_public_vendor_browse/
+    └─ migration.sql
+  └─ 20260922060000_adult_verification_mixed_version_compatibility/
+    └─ migration.sql
+  └─ 20260922070000_demo_persona_command_quota/
+    └─ migration.sql
+  └─ 20260923000000_phase_01_vendor_catalog/
+    └─ migration.sql
+  └─ 20260923010000_snake_case_identifiers/
+    └─ migration.sql
+  └─ 20260923020000_legacy_identifier_compatibility/
+    └─ migration.sql
+  └─ 20260923030000_synthetic_external_effect_idempotency/
+    └─ migration.sql
+  └─ 20260923040000_inventory_movements/
+    └─ migration.sql
+  └─ 20260924000000_media_upload_intents/
+    └─ migration.sql
+  └─ 20260924010000_video_processing_and_moderation/
+    └─ migration.sql
+  └─ 20260925000000_real_platform_reviewer_grants/
+    └─ migration.sql
+  └─ 20260928000000_retire_legacy_adult_default/
+    └─ migration.sql
+  └─ 20260929000000_retire_synthetic_schema/
+    └─ migration.sql
+  └─ 20261001000000_durable_didit_sessions/
+    └─ migration.sql
+  └─ 20261002000000_durable_realtime_cursor/
+    └─ migration.sql
+  └─ 20261006000000_phase_01_marketplace_discovery/
+    └─ migration.sql
+  └─ 20261006010000_phase_01_listing_images/
+    └─ migration.sql
+  └─ 20261006020000_phase_01_storefront_branding/
+    └─ migration.sql
+  └─ 20261009000000_rejected_media_retention/
+    └─ migration.sql
+  └─ 20261012000000_inventory_transfers/
+    └─ migration.sql
+  └─ 20261012010000_goods_quotes_and_holds/
+    └─ migration.sql
+  └─ 20261012020000_goods_paid_orders/
+    └─ migration.sql
+  └─ 20261012030000_goods_order_cancellations/
+    └─ migration.sql
+  └─ 20261012040000_goods_pickup_fulfillment/
+    └─ migration.sql
+  └─ 20261012050000_goods_delivery_milestones/
+    └─ migration.sql
+  └─ 20261012060000_goods_returns/
+    └─ migration.sql
+  └─ 20261012070000_service_definitions/
+    └─ migration.sql
+  └─ 20261012080000_authoritative_schedules/
+    └─ migration.sql
+  └─ 20261012090000_atomic_booking_holds/
+    └─ migration.sql
+  └─ 20261012100000_paid_bookings/
+    └─ migration.sql
+  └─ 20261012110000_booking_cancellations/
+    └─ migration.sql
+  └─ 20261012120000_booking_amendments/
+    └─ migration.sql
+  └─ 20261012130000_substitutions_waitlists/
+    └─ migration.sql
+  └─ 20261012140000_booking_meetings/
+    └─ migration.sql
+  └─ 20261012150000_booking_attendance/
+    └─ migration.sql
+  └─ 20261012160000_immutable_ledger/
+    └─ migration.sql
+  └─ 20261012170000_mixed_cart_quotes/
+    └─ migration.sql
+  └─ 20261012180000_promotions_commission/
+    └─ migration.sql
+  └─ 20261013030000_atomic_mixed_holds/
+    └─ migration.sql
+  └─ 20261013040000_mixed_payment_inbox/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+(node:39171) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+(node:39204) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Test Suites: 1 skipped, 0 of 1 total
+Tests:       8 skipped, 8 total
+Snapshots:   0 total
+Time:        0.508 s, estimated 10 s
+Ran all test suites within paths "libs/platform-core/src/lib/media-backup-lifecycle.integration.ts".
+(node:39280) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "phase00_962844b5f88347aaa5597340d05b6e21" at "127.0.0.1:55432"
+
+47 migrations found in prisma/migrations
+
+Applying migration `20260831120000_platform_foundation`
+Applying migration `20260921000000_durable_foundation`
+Applying migration `20260922000000_demo_persona_access`
+Applying migration `20260922010000_provider_timeout_reconciliation`
+Applying migration `20260922020000_adult_verification_lifecycle`
+Applying migration `20260922030000_demo_provider_quota`
+Applying migration `20260922040000_staff_user_linkage`
+Applying migration `20260922050000_public_vendor_browse`
+Applying migration `20260922060000_adult_verification_mixed_version_compatibility`
+Applying migration `20260922070000_demo_persona_command_quota`
+Applying migration `20260923000000_phase_01_vendor_catalog`
+Applying migration `20260923010000_snake_case_identifiers`
+Applying migration `20260923020000_legacy_identifier_compatibility`
+Applying migration `20260923030000_synthetic_external_effect_idempotency`
+Applying migration `20260923040000_inventory_movements`
+Applying migration `20260924000000_media_upload_intents`
+Applying migration `20260924010000_video_processing_and_moderation`
+Applying migration `20260925000000_real_platform_reviewer_grants`
+Applying migration `20260928000000_retire_legacy_adult_default`
+Applying migration `20260929000000_retire_synthetic_schema`
+Applying migration `20261001000000_durable_didit_sessions`
+Applying migration `20261002000000_durable_realtime_cursor`
+Applying migration `20261006000000_phase_01_marketplace_discovery`
+Applying migration `20261006010000_phase_01_listing_images`
+Applying migration `20261006020000_phase_01_storefront_branding`
+Applying migration `20261009000000_rejected_media_retention`
+Applying migration `20261012000000_inventory_transfers`
+Applying migration `20261012010000_goods_quotes_and_holds`
+Applying migration `20261012020000_goods_paid_orders`
+Applying migration `20261012030000_goods_order_cancellations`
+Applying migration `20261012040000_goods_pickup_fulfillment`
+Applying migration `20261012050000_goods_delivery_milestones`
+Applying migration `20261012060000_goods_returns`
+Applying migration `20261012070000_service_definitions`
+Applying migration `20261012080000_authoritative_schedules`
+Applying migration `20261012090000_atomic_booking_holds`
+Applying migration `20261012100000_paid_bookings`
+Applying migration `20261012110000_booking_cancellations`
+Applying migration `20261012120000_booking_amendments`
+Applying migration `20261012130000_substitutions_waitlists`
+Applying migration `20261012140000_booking_meetings`
+Applying migration `20261012150000_booking_attendance`
+Applying migration `20261012160000_immutable_ledger`
+Applying migration `20261012170000_mixed_cart_quotes`
+Applying migration `20261012180000_promotions_commission`
+Applying migration `20261013030000_atomic_mixed_holds`
+Applying migration `20261013040000_mixed_payment_inbox`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831120000_platform_foundation/
+    └─ migration.sql
+  └─ 20260921000000_durable_foundation/
+    └─ migration.sql
+  └─ 20260922000000_demo_persona_access/
+    └─ migration.sql
+  └─ 20260922010000_provider_timeout_reconciliation/
+    └─ migration.sql
+  └─ 20260922020000_adult_verification_lifecycle/
+    └─ migration.sql
+  └─ 20260922030000_demo_provider_quota/
+    └─ migration.sql
+  └─ 20260922040000_staff_user_linkage/
+    └─ migration.sql
+  └─ 20260922050000_public_vendor_browse/
+    └─ migration.sql
+  └─ 20260922060000_adult_verification_mixed_version_compatibility/
+    └─ migration.sql
+  └─ 20260922070000_demo_persona_command_quota/
+    └─ migration.sql
+  └─ 20260923000000_phase_01_vendor_catalog/
+    └─ migration.sql
+  └─ 20260923010000_snake_case_identifiers/
+    └─ migration.sql
+  └─ 20260923020000_legacy_identifier_compatibility/
+    └─ migration.sql
+  └─ 20260923030000_synthetic_external_effect_idempotency/
+    └─ migration.sql
+  └─ 20260923040000_inventory_movements/
+    └─ migration.sql
+  └─ 20260924000000_media_upload_intents/
+    └─ migration.sql
+  └─ 20260924010000_video_processing_and_moderation/
+    └─ migration.sql
+  └─ 20260925000000_real_platform_reviewer_grants/
+    └─ migration.sql
+  └─ 20260928000000_retire_legacy_adult_default/
+    └─ migration.sql
+  └─ 20260929000000_retire_synthetic_schema/
+    └─ migration.sql
+  └─ 20261001000000_durable_didit_sessions/
+    └─ migration.sql
+  └─ 20261002000000_durable_realtime_cursor/
+    └─ migration.sql
+  └─ 20261006000000_phase_01_marketplace_discovery/
+    └─ migration.sql
+  └─ 20261006010000_phase_01_listing_images/
+    └─ migration.sql
+  └─ 20261006020000_phase_01_storefront_branding/
+    └─ migration.sql
+  └─ 20261009000000_rejected_media_retention/
+    └─ migration.sql
+  └─ 20261012000000_inventory_transfers/
+    └─ migration.sql
+  └─ 20261012010000_goods_quotes_and_holds/
+    └─ migration.sql
+  └─ 20261012020000_goods_paid_orders/
+    └─ migration.sql
+  └─ 20261012030000_goods_order_cancellations/
+    └─ migration.sql
+  └─ 20261012040000_goods_pickup_fulfillment/
+    └─ migration.sql
+  └─ 20261012050000_goods_delivery_milestones/
+    └─ migration.sql
+  └─ 20261012060000_goods_returns/
+    └─ migration.sql
+  └─ 20261012070000_service_definitions/
+    └─ migration.sql
+  └─ 20261012080000_authoritative_schedules/
+    └─ migration.sql
+  └─ 20261012090000_atomic_booking_holds/
+    └─ migration.sql
+  └─ 20261012100000_paid_bookings/
+    └─ migration.sql
+  └─ 20261012110000_booking_cancellations/
+    └─ migration.sql
+  └─ 20261012120000_booking_amendments/
+    └─ migration.sql
+  └─ 20261012130000_substitutions_waitlists/
+    └─ migration.sql
+  └─ 20261012140000_booking_meetings/
+    └─ migration.sql
+  └─ 20261012150000_booking_attendance/
+    └─ migration.sql
+  └─ 20261012160000_immutable_ledger/
+    └─ migration.sql
+  └─ 20261012170000_mixed_cart_quotes/
+    └─ migration.sql
+  └─ 20261012180000_promotions_commission/
+    └─ migration.sql
+  └─ 20261013030000_atomic_mixed_holds/
+    └─ migration.sql
+  └─ 20261013040000_mixed_payment_inbox/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+(node:39360) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+(node:39393) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Test Suites: 1 skipped, 0 of 1 total
+Tests:       2 skipped, 2 total
+Snapshots:   0 total
+Time:        0.457 s, estimated 1 s
+Ran all test suites within paths "libs/platform-core/src/lib/media-retention.integration.ts".
+(node:39466) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "phase00_962844b5f88347aaa5597340d05b6e21" at "127.0.0.1:55432"
+
+47 migrations found in prisma/migrations
+
+Applying migration `20260831120000_platform_foundation`
+Applying migration `20260921000000_durable_foundation`
+Applying migration `20260922000000_demo_persona_access`
+Applying migration `20260922010000_provider_timeout_reconciliation`
+Applying migration `20260922020000_adult_verification_lifecycle`
+Applying migration `20260922030000_demo_provider_quota`
+Applying migration `20260922040000_staff_user_linkage`
+Applying migration `20260922050000_public_vendor_browse`
+Applying migration `20260922060000_adult_verification_mixed_version_compatibility`
+Applying migration `20260922070000_demo_persona_command_quota`
+Applying migration `20260923000000_phase_01_vendor_catalog`
+Applying migration `20260923010000_snake_case_identifiers`
+Applying migration `20260923020000_legacy_identifier_compatibility`
+Applying migration `20260923030000_synthetic_external_effect_idempotency`
+Applying migration `20260923040000_inventory_movements`
+Applying migration `20260924000000_media_upload_intents`
+Applying migration `20260924010000_video_processing_and_moderation`
+Applying migration `20260925000000_real_platform_reviewer_grants`
+Applying migration `20260928000000_retire_legacy_adult_default`
+Applying migration `20260929000000_retire_synthetic_schema`
+Applying migration `20261001000000_durable_didit_sessions`
+Applying migration `20261002000000_durable_realtime_cursor`
+Applying migration `20261006000000_phase_01_marketplace_discovery`
+Applying migration `20261006010000_phase_01_listing_images`
+Applying migration `20261006020000_phase_01_storefront_branding`
+Applying migration `20261009000000_rejected_media_retention`
+Applying migration `20261012000000_inventory_transfers`
+Applying migration `20261012010000_goods_quotes_and_holds`
+Applying migration `20261012020000_goods_paid_orders`
+Applying migration `20261012030000_goods_order_cancellations`
+Applying migration `20261012040000_goods_pickup_fulfillment`
+Applying migration `20261012050000_goods_delivery_milestones`
+Applying migration `20261012060000_goods_returns`
+Applying migration `20261012070000_service_definitions`
+Applying migration `20261012080000_authoritative_schedules`
+Applying migration `20261012090000_atomic_booking_holds`
+Applying migration `20261012100000_paid_bookings`
+Applying migration `20261012110000_booking_cancellations`
+Applying migration `20261012120000_booking_amendments`
+Applying migration `20261012130000_substitutions_waitlists`
+Applying migration `20261012140000_booking_meetings`
+Applying migration `20261012150000_booking_attendance`
+Applying migration `20261012160000_immutable_ledger`
+Applying migration `20261012170000_mixed_cart_quotes`
+Applying migration `20261012180000_promotions_commission`
+Applying migration `20261013030000_atomic_mixed_holds`
+Applying migration `20261013040000_mixed_payment_inbox`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831120000_platform_foundation/
+    └─ migration.sql
+  └─ 20260921000000_durable_foundation/
+    └─ migration.sql
+  └─ 20260922000000_demo_persona_access/
+    └─ migration.sql
+  └─ 20260922010000_provider_timeout_reconciliation/
+    └─ migration.sql
+  └─ 20260922020000_adult_verification_lifecycle/
+    └─ migration.sql
+  └─ 20260922030000_demo_provider_quota/
+    └─ migration.sql
+  └─ 20260922040000_staff_user_linkage/
+    └─ migration.sql
+  └─ 20260922050000_public_vendor_browse/
+    └─ migration.sql
+  └─ 20260922060000_adult_verification_mixed_version_compatibility/
+    └─ migration.sql
+  └─ 20260922070000_demo_persona_command_quota/
+    └─ migration.sql
+  └─ 20260923000000_phase_01_vendor_catalog/
+    └─ migration.sql
+  └─ 20260923010000_snake_case_identifiers/
+    └─ migration.sql
+  └─ 20260923020000_legacy_identifier_compatibility/
+    └─ migration.sql
+  └─ 20260923030000_synthetic_external_effect_idempotency/
+    └─ migration.sql
+  └─ 20260923040000_inventory_movements/
+    └─ migration.sql
+  └─ 20260924000000_media_upload_intents/
+    └─ migration.sql
+  └─ 20260924010000_video_processing_and_moderation/
+    └─ migration.sql
+  └─ 20260925000000_real_platform_reviewer_grants/
+    └─ migration.sql
+  └─ 20260928000000_retire_legacy_adult_default/
+    └─ migration.sql
+  └─ 20260929000000_retire_synthetic_schema/
+    └─ migration.sql
+  └─ 20261001000000_durable_didit_sessions/
+    └─ migration.sql
+  └─ 20261002000000_durable_realtime_cursor/
+    └─ migration.sql
+  └─ 20261006000000_phase_01_marketplace_discovery/
+    └─ migration.sql
+  └─ 20261006010000_phase_01_listing_images/
+    └─ migration.sql
+  └─ 20261006020000_phase_01_storefront_branding/
+    └─ migration.sql
+  └─ 20261009000000_rejected_media_retention/
+    └─ migration.sql
+  └─ 20261012000000_inventory_transfers/
+    └─ migration.sql
+  └─ 20261012010000_goods_quotes_and_holds/
+    └─ migration.sql
+  └─ 20261012020000_goods_paid_orders/
+    └─ migration.sql
+  └─ 20261012030000_goods_order_cancellations/
+    └─ migration.sql
+  └─ 20261012040000_goods_pickup_fulfillment/
+    └─ migration.sql
+  └─ 20261012050000_goods_delivery_milestones/
+    └─ migration.sql
+  └─ 20261012060000_goods_returns/
+    └─ migration.sql
+  └─ 20261012070000_service_definitions/
+    └─ migration.sql
+  └─ 20261012080000_authoritative_schedules/
+    └─ migration.sql
+  └─ 20261012090000_atomic_booking_holds/
+    └─ migration.sql
+  └─ 20261012100000_paid_bookings/
+    └─ migration.sql
+  └─ 20261012110000_booking_cancellations/
+    └─ migration.sql
+  └─ 20261012120000_booking_amendments/
+    └─ migration.sql
+  └─ 20261012130000_substitutions_waitlists/
+    └─ migration.sql
+  └─ 20261012140000_booking_meetings/
+    └─ migration.sql
+  └─ 20261012150000_booking_attendance/
+    └─ migration.sql
+  └─ 20261012160000_immutable_ledger/
+    └─ migration.sql
+  └─ 20261012170000_mixed_cart_quotes/
+    └─ migration.sql
+  └─ 20261012180000_promotions_commission/
+    └─ migration.sql
+  └─ 20261013030000_atomic_mixed_holds/
+    └─ migration.sql
+  └─ 20261013040000_mixed_payment_inbox/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+(node:39558) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+(node:39591) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Test Suites: 1 skipped, 0 of 1 total
+Tests:       1 skipped, 1 total
+Snapshots:   0 total
+Time:        0.471 s, estimated 1 s
+Ran all test suites within paths "libs/platform-core/src/lib/media-store.integration.ts".
+(node:39664) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "phase00_962844b5f88347aaa5597340d05b6e21" at "127.0.0.1:55432"
+
+47 migrations found in prisma/migrations
+
+Applying migration `20260831120000_platform_foundation`
+Applying migration `20260921000000_durable_foundation`
+Applying migration `20260922000000_demo_persona_access`
+Applying migration `20260922010000_provider_timeout_reconciliation`
+Applying migration `20260922020000_adult_verification_lifecycle`
+Applying migration `20260922030000_demo_provider_quota`
+Applying migration `20260922040000_staff_user_linkage`
+Applying migration `20260922050000_public_vendor_browse`
+Applying migration `20260922060000_adult_verification_mixed_version_compatibility`
+Applying migration `20260922070000_demo_persona_command_quota`
+Applying migration `20260923000000_phase_01_vendor_catalog`
+Applying migration `20260923010000_snake_case_identifiers`
+Applying migration `20260923020000_legacy_identifier_compatibility`
+Applying migration `20260923030000_synthetic_external_effect_idempotency`
+Applying migration `20260923040000_inventory_movements`
+Applying migration `20260924000000_media_upload_intents`
+Applying migration `20260924010000_video_processing_and_moderation`
+Applying migration `20260925000000_real_platform_reviewer_grants`
+Applying migration `20260928000000_retire_legacy_adult_default`
+Applying migration `20260929000000_retire_synthetic_schema`
+Applying migration `20261001000000_durable_didit_sessions`
+Applying migration `20261002000000_durable_realtime_cursor`
+Applying migration `20261006000000_phase_01_marketplace_discovery`
+Applying migration `20261006010000_phase_01_listing_images`
+Applying migration `20261006020000_phase_01_storefront_branding`
+Applying migration `20261009000000_rejected_media_retention`
+Applying migration `20261012000000_inventory_transfers`
+Applying migration `20261012010000_goods_quotes_and_holds`
+Applying migration `20261012020000_goods_paid_orders`
+Applying migration `20261012030000_goods_order_cancellations`
+Applying migration `20261012040000_goods_pickup_fulfillment`
+Applying migration `20261012050000_goods_delivery_milestones`
+Applying migration `20261012060000_goods_returns`
+Applying migration `20261012070000_service_definitions`
+Applying migration `20261012080000_authoritative_schedules`
+Applying migration `20261012090000_atomic_booking_holds`
+Applying migration `20261012100000_paid_bookings`
+Applying migration `20261012110000_booking_cancellations`
+Applying migration `20261012120000_booking_amendments`
+Applying migration `20261012130000_substitutions_waitlists`
+Applying migration `20261012140000_booking_meetings`
+Applying migration `20261012150000_booking_attendance`
+Applying migration `20261012160000_immutable_ledger`
+Applying migration `20261012170000_mixed_cart_quotes`
+Applying migration `20261012180000_promotions_commission`
+Applying migration `20261013030000_atomic_mixed_holds`
+Applying migration `20261013040000_mixed_payment_inbox`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831120000_platform_foundation/
+    └─ migration.sql
+  └─ 20260921000000_durable_foundation/
+    └─ migration.sql
+  └─ 20260922000000_demo_persona_access/
+    └─ migration.sql
+  └─ 20260922010000_provider_timeout_reconciliation/
+    └─ migration.sql
+  └─ 20260922020000_adult_verification_lifecycle/
+    └─ migration.sql
+  └─ 20260922030000_demo_provider_quota/
+    └─ migration.sql
+  └─ 20260922040000_staff_user_linkage/
+    └─ migration.sql
+  └─ 20260922050000_public_vendor_browse/
+    └─ migration.sql
+  └─ 20260922060000_adult_verification_mixed_version_compatibility/
+    └─ migration.sql
+  └─ 20260922070000_demo_persona_command_quota/
+    └─ migration.sql
+  └─ 20260923000000_phase_01_vendor_catalog/
+    └─ migration.sql
+  └─ 20260923010000_snake_case_identifiers/
+    └─ migration.sql
+  └─ 20260923020000_legacy_identifier_compatibility/
+    └─ migration.sql
+  └─ 20260923030000_synthetic_external_effect_idempotency/
+    └─ migration.sql
+  └─ 20260923040000_inventory_movements/
+    └─ migration.sql
+  └─ 20260924000000_media_upload_intents/
+    └─ migration.sql
+  └─ 20260924010000_video_processing_and_moderation/
+    └─ migration.sql
+  └─ 20260925000000_real_platform_reviewer_grants/
+    └─ migration.sql
+  └─ 20260928000000_retire_legacy_adult_default/
+    └─ migration.sql
+  └─ 20260929000000_retire_synthetic_schema/
+    └─ migration.sql
+  └─ 20261001000000_durable_didit_sessions/
+    └─ migration.sql
+  └─ 20261002000000_durable_realtime_cursor/
+    └─ migration.sql
+  └─ 20261006000000_phase_01_marketplace_discovery/
+    └─ migration.sql
+  └─ 20261006010000_phase_01_listing_images/
+    └─ migration.sql
+  └─ 20261006020000_phase_01_storefront_branding/
+    └─ migration.sql
+  └─ 20261009000000_rejected_media_retention/
+    └─ migration.sql
+  └─ 20261012000000_inventory_transfers/
+    └─ migration.sql
+  └─ 20261012010000_goods_quotes_and_holds/
+    └─ migration.sql
+  └─ 20261012020000_goods_paid_orders/
+    └─ migration.sql
+  └─ 20261012030000_goods_order_cancellations/
+    └─ migration.sql
+  └─ 20261012040000_goods_pickup_fulfillment/
+    └─ migration.sql
+  └─ 20261012050000_goods_delivery_milestones/
+    └─ migration.sql
+  └─ 20261012060000_goods_returns/
+    └─ migration.sql
+  └─ 20261012070000_service_definitions/
+    └─ migration.sql
+  └─ 20261012080000_authoritative_schedules/
+    └─ migration.sql
+  └─ 20261012090000_atomic_booking_holds/
+    └─ migration.sql
+  └─ 20261012100000_paid_bookings/
+    └─ migration.sql
+  └─ 20261012110000_booking_cancellations/
+    └─ migration.sql
+  └─ 20261012120000_booking_amendments/
+    └─ migration.sql
+  └─ 20261012130000_substitutions_waitlists/
+    └─ migration.sql
+  └─ 20261012140000_booking_meetings/
+    └─ migration.sql
+  └─ 20261012150000_booking_attendance/
+    └─ migration.sql
+  └─ 20261012160000_immutable_ledger/
+    └─ migration.sql
+  └─ 20261012170000_mixed_cart_quotes/
+    └─ migration.sql
+  └─ 20261012180000_promotions_commission/
+    └─ migration.sql
+  └─ 20261013030000_atomic_mixed_holds/
+    └─ migration.sql
+  └─ 20261013040000_mixed_payment_inbox/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+(node:39739) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+(node:39772) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Test Suites: 1 skipped, 0 of 1 total
+Tests:       1 skipped, 1 total
+Snapshots:   0 total
+Time:        0.78 s, estimated 3 s
+Ran all test suites within paths "libs/platform-core/src/lib/media-workflow.integration.ts".
+(node:39891) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "phase00_962844b5f88347aaa5597340d05b6e21" at "127.0.0.1:55432"
+
+47 migrations found in prisma/migrations
+
+Applying migration `20260831120000_platform_foundation`
+Applying migration `20260921000000_durable_foundation`
+Applying migration `20260922000000_demo_persona_access`
+Applying migration `20260922010000_provider_timeout_reconciliation`
+Applying migration `20260922020000_adult_verification_lifecycle`
+Applying migration `20260922030000_demo_provider_quota`
+Applying migration `20260922040000_staff_user_linkage`
+Applying migration `20260922050000_public_vendor_browse`
+Applying migration `20260922060000_adult_verification_mixed_version_compatibility`
+Applying migration `20260922070000_demo_persona_command_quota`
+Applying migration `20260923000000_phase_01_vendor_catalog`
+Applying migration `20260923010000_snake_case_identifiers`
+Applying migration `20260923020000_legacy_identifier_compatibility`
+Applying migration `20260923030000_synthetic_external_effect_idempotency`
+Applying migration `20260923040000_inventory_movements`
+Applying migration `20260924000000_media_upload_intents`
+Applying migration `20260924010000_video_processing_and_moderation`
+Applying migration `20260925000000_real_platform_reviewer_grants`
+Applying migration `20260928000000_retire_legacy_adult_default`
+Applying migration `20260929000000_retire_synthetic_schema`
+Applying migration `20261001000000_durable_didit_sessions`
+Applying migration `20261002000000_durable_realtime_cursor`
+Applying migration `20261006000000_phase_01_marketplace_discovery`
+Applying migration `20261006010000_phase_01_listing_images`
+Applying migration `20261006020000_phase_01_storefront_branding`
+Applying migration `20261009000000_rejected_media_retention`
+Applying migration `20261012000000_inventory_transfers`
+Applying migration `20261012010000_goods_quotes_and_holds`
+Applying migration `20261012020000_goods_paid_orders`
+Applying migration `20261012030000_goods_order_cancellations`
+Applying migration `20261012040000_goods_pickup_fulfillment`
+Applying migration `20261012050000_goods_delivery_milestones`
+Applying migration `20261012060000_goods_returns`
+Applying migration `20261012070000_service_definitions`
+Applying migration `20261012080000_authoritative_schedules`
+Applying migration `20261012090000_atomic_booking_holds`
+Applying migration `20261012100000_paid_bookings`
+Applying migration `20261012110000_booking_cancellations`
+Applying migration `20261012120000_booking_amendments`
+Applying migration `20261012130000_substitutions_waitlists`
+Applying migration `20261012140000_booking_meetings`
+Applying migration `20261012150000_booking_attendance`
+Applying migration `20261012160000_immutable_ledger`
+Applying migration `20261012170000_mixed_cart_quotes`
+Applying migration `20261012180000_promotions_commission`
+Applying migration `20261013030000_atomic_mixed_holds`
+Applying migration `20261013040000_mixed_payment_inbox`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831120000_platform_foundation/
+    └─ migration.sql
+  └─ 20260921000000_durable_foundation/
+    └─ migration.sql
+  └─ 20260922000000_demo_persona_access/
+    └─ migration.sql
+  └─ 20260922010000_provider_timeout_reconciliation/
+    └─ migration.sql
+  └─ 20260922020000_adult_verification_lifecycle/
+    └─ migration.sql
+  └─ 20260922030000_demo_provider_quota/
+    └─ migration.sql
+  └─ 20260922040000_staff_user_linkage/
+    └─ migration.sql
+  └─ 20260922050000_public_vendor_browse/
+    └─ migration.sql
+  └─ 20260922060000_adult_verification_mixed_version_compatibility/
+    └─ migration.sql
+  └─ 20260922070000_demo_persona_command_quota/
+    └─ migration.sql
+  └─ 20260923000000_phase_01_vendor_catalog/
+    └─ migration.sql
+  └─ 20260923010000_snake_case_identifiers/
+    └─ migration.sql
+  └─ 20260923020000_legacy_identifier_compatibility/
+    └─ migration.sql
+  └─ 20260923030000_synthetic_external_effect_idempotency/
+    └─ migration.sql
+  └─ 20260923040000_inventory_movements/
+    └─ migration.sql
+  └─ 20260924000000_media_upload_intents/
+    └─ migration.sql
+  └─ 20260924010000_video_processing_and_moderation/
+    └─ migration.sql
+  └─ 20260925000000_real_platform_reviewer_grants/
+    └─ migration.sql
+  └─ 20260928000000_retire_legacy_adult_default/
+    └─ migration.sql
+  └─ 20260929000000_retire_synthetic_schema/
+    └─ migration.sql
+  └─ 20261001000000_durable_didit_sessions/
+    └─ migration.sql
+  └─ 20261002000000_durable_realtime_cursor/
+    └─ migration.sql
+  └─ 20261006000000_phase_01_marketplace_discovery/
+    └─ migration.sql
+  └─ 20261006010000_phase_01_listing_images/
+    └─ migration.sql
+  └─ 20261006020000_phase_01_storefront_branding/
+    └─ migration.sql
+  └─ 20261009000000_rejected_media_retention/
+    └─ migration.sql
+  └─ 20261012000000_inventory_transfers/
+    └─ migration.sql
+  └─ 20261012010000_goods_quotes_and_holds/
+    └─ migration.sql
+  └─ 20261012020000_goods_paid_orders/
+    └─ migration.sql
+  └─ 20261012030000_goods_order_cancellations/
+    └─ migration.sql
+  └─ 20261012040000_goods_pickup_fulfillment/
+    └─ migration.sql
+  └─ 20261012050000_goods_delivery_milestones/
+    └─ migration.sql
+  └─ 20261012060000_goods_returns/
+    └─ migration.sql
+  └─ 20261012070000_service_definitions/
+    └─ migration.sql
+  └─ 20261012080000_authoritative_schedules/
+    └─ migration.sql
+  └─ 20261012090000_atomic_booking_holds/
+    └─ migration.sql
+  └─ 20261012100000_paid_bookings/
+    └─ migration.sql
+  └─ 20261012110000_booking_cancellations/
+    └─ migration.sql
+  └─ 20261012120000_booking_amendments/
+    └─ migration.sql
+  └─ 20261012130000_substitutions_waitlists/
+    └─ migration.sql
+  └─ 20261012140000_booking_meetings/
+    └─ migration.sql
+  └─ 20261012150000_booking_attendance/
+    └─ migration.sql
+  └─ 20261012160000_immutable_ledger/
+    └─ migration.sql
+  └─ 20261012170000_mixed_cart_quotes/
+    └─ migration.sql
+  └─ 20261012180000_promotions_commission/
+    └─ migration.sql
+  └─ 20261013030000_atomic_mixed_holds/
+    └─ migration.sql
+  └─ 20261013040000_mixed_payment_inbox/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+(node:39963) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+(node:39996) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Test Suites: 1 passed, 1 total
+Tests:       20 passed, 20 total
+Snapshots:   0 total
+Time:        18.554 s, estimated 20 s
+Ran all test suites within paths "libs/platform-core/src/lib/mixed-cart.integration.ts".
+(node:40090) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "phase00_962844b5f88347aaa5597340d05b6e21" at "127.0.0.1:55432"
+
+47 migrations found in prisma/migrations
+
+Applying migration `20260831120000_platform_foundation`
+Applying migration `20260921000000_durable_foundation`
+Applying migration `20260922000000_demo_persona_access`
+Applying migration `20260922010000_provider_timeout_reconciliation`
+Applying migration `20260922020000_adult_verification_lifecycle`
+Applying migration `20260922030000_demo_provider_quota`
+Applying migration `20260922040000_staff_user_linkage`
+Applying migration `20260922050000_public_vendor_browse`
+Applying migration `20260922060000_adult_verification_mixed_version_compatibility`
+Applying migration `20260922070000_demo_persona_command_quota`
+Applying migration `20260923000000_phase_01_vendor_catalog`
+Applying migration `20260923010000_snake_case_identifiers`
+Applying migration `20260923020000_legacy_identifier_compatibility`
+Applying migration `20260923030000_synthetic_external_effect_idempotency`
+Applying migration `20260923040000_inventory_movements`
+Applying migration `20260924000000_media_upload_intents`
+Applying migration `20260924010000_video_processing_and_moderation`
+Applying migration `20260925000000_real_platform_reviewer_grants`
+Applying migration `20260928000000_retire_legacy_adult_default`
+Applying migration `20260929000000_retire_synthetic_schema`
+Applying migration `20261001000000_durable_didit_sessions`
+Applying migration `20261002000000_durable_realtime_cursor`
+Applying migration `20261006000000_phase_01_marketplace_discovery`
+Applying migration `20261006010000_phase_01_listing_images`
+Applying migration `20261006020000_phase_01_storefront_branding`
+Applying migration `20261009000000_rejected_media_retention`
+Applying migration `20261012000000_inventory_transfers`
+Applying migration `20261012010000_goods_quotes_and_holds`
+Applying migration `20261012020000_goods_paid_orders`
+Applying migration `20261012030000_goods_order_cancellations`
+Applying migration `20261012040000_goods_pickup_fulfillment`
+Applying migration `20261012050000_goods_delivery_milestones`
+Applying migration `20261012060000_goods_returns`
+Applying migration `20261012070000_service_definitions`
+Applying migration `20261012080000_authoritative_schedules`
+Applying migration `20261012090000_atomic_booking_holds`
+Applying migration `20261012100000_paid_bookings`
+Applying migration `20261012110000_booking_cancellations`
+Applying migration `20261012120000_booking_amendments`
+Applying migration `20261012130000_substitutions_waitlists`
+Applying migration `20261012140000_booking_meetings`
+Applying migration `20261012150000_booking_attendance`
+Applying migration `20261012160000_immutable_ledger`
+Applying migration `20261012170000_mixed_cart_quotes`
+Applying migration `20261012180000_promotions_commission`
+Applying migration `20261013030000_atomic_mixed_holds`
+Applying migration `20261013040000_mixed_payment_inbox`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831120000_platform_foundation/
+    └─ migration.sql
+  └─ 20260921000000_durable_foundation/
+    └─ migration.sql
+  └─ 20260922000000_demo_persona_access/
+    └─ migration.sql
+  └─ 20260922010000_provider_timeout_reconciliation/
+    └─ migration.sql
+  └─ 20260922020000_adult_verification_lifecycle/
+    └─ migration.sql
+  └─ 20260922030000_demo_provider_quota/
+    └─ migration.sql
+  └─ 20260922040000_staff_user_linkage/
+    └─ migration.sql
+  └─ 20260922050000_public_vendor_browse/
+    └─ migration.sql
+  └─ 20260922060000_adult_verification_mixed_version_compatibility/
+    └─ migration.sql
+  └─ 20260922070000_demo_persona_command_quota/
+    └─ migration.sql
+  └─ 20260923000000_phase_01_vendor_catalog/
+    └─ migration.sql
+  └─ 20260923010000_snake_case_identifiers/
+    └─ migration.sql
+  └─ 20260923020000_legacy_identifier_compatibility/
+    └─ migration.sql
+  └─ 20260923030000_synthetic_external_effect_idempotency/
+    └─ migration.sql
+  └─ 20260923040000_inventory_movements/
+    └─ migration.sql
+  └─ 20260924000000_media_upload_intents/
+    └─ migration.sql
+  └─ 20260924010000_video_processing_and_moderation/
+    └─ migration.sql
+  └─ 20260925000000_real_platform_reviewer_grants/
+    └─ migration.sql
+  └─ 20260928000000_retire_legacy_adult_default/
+    └─ migration.sql
+  └─ 20260929000000_retire_synthetic_schema/
+    └─ migration.sql
+  └─ 20261001000000_durable_didit_sessions/
+    └─ migration.sql
+  └─ 20261002000000_durable_realtime_cursor/
+    └─ migration.sql
+  └─ 20261006000000_phase_01_marketplace_discovery/
+    └─ migration.sql
+  └─ 20261006010000_phase_01_listing_images/
+    └─ migration.sql
+  └─ 20261006020000_phase_01_storefront_branding/
+    └─ migration.sql
+  └─ 20261009000000_rejected_media_retention/
+    └─ migration.sql
+  └─ 20261012000000_inventory_transfers/
+    └─ migration.sql
+  └─ 20261012010000_goods_quotes_and_holds/
+    └─ migration.sql
+  └─ 20261012020000_goods_paid_orders/
+    └─ migration.sql
+  └─ 20261012030000_goods_order_cancellations/
+    └─ migration.sql
+  └─ 20261012040000_goods_pickup_fulfillment/
+    └─ migration.sql
+  └─ 20261012050000_goods_delivery_milestones/
+    └─ migration.sql
+  └─ 20261012060000_goods_returns/
+    └─ migration.sql
+  └─ 20261012070000_service_definitions/
+    └─ migration.sql
+  └─ 20261012080000_authoritative_schedules/
+    └─ migration.sql
+  └─ 20261012090000_atomic_booking_holds/
+    └─ migration.sql
+  └─ 20261012100000_paid_bookings/
+    └─ migration.sql
+  └─ 20261012110000_booking_cancellations/
+    └─ migration.sql
+  └─ 20261012120000_booking_amendments/
+    └─ migration.sql
+  └─ 20261012130000_substitutions_waitlists/
+    └─ migration.sql
+  └─ 20261012140000_booking_meetings/
+    └─ migration.sql
+  └─ 20261012150000_booking_attendance/
+    └─ migration.sql
+  └─ 20261012160000_immutable_ledger/
+    └─ migration.sql
+  └─ 20261012170000_mixed_cart_quotes/
+    └─ migration.sql
+  └─ 20261012180000_promotions_commission/
+    └─ migration.sql
+  └─ 20261013030000_atomic_mixed_holds/
+    └─ migration.sql
+  └─ 20261013040000_mixed_payment_inbox/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+(node:40166) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+(node:40199) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Test Suites: 1 passed, 1 total
+Tests:       18 passed, 18 total
+Snapshots:   0 total
+Time:        21.722 s, estimated 23 s
+Ran all test suites within paths "libs/platform-core/src/lib/mixed-holds.integration.ts".
+(node:40290) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "phase00_962844b5f88347aaa5597340d05b6e21" at "127.0.0.1:55432"
+
+47 migrations found in prisma/migrations
+
+Applying migration `20260831120000_platform_foundation`
+Applying migration `20260921000000_durable_foundation`
+Applying migration `20260922000000_demo_persona_access`
+Applying migration `20260922010000_provider_timeout_reconciliation`
+Applying migration `20260922020000_adult_verification_lifecycle`
+Applying migration `20260922030000_demo_provider_quota`
+Applying migration `20260922040000_staff_user_linkage`
+Applying migration `20260922050000_public_vendor_browse`
+Applying migration `20260922060000_adult_verification_mixed_version_compatibility`
+Applying migration `20260922070000_demo_persona_command_quota`
+Applying migration `20260923000000_phase_01_vendor_catalog`
+Applying migration `20260923010000_snake_case_identifiers`
+Applying migration `20260923020000_legacy_identifier_compatibility`
+Applying migration `20260923030000_synthetic_external_effect_idempotency`
+Applying migration `20260923040000_inventory_movements`
+Applying migration `20260924000000_media_upload_intents`
+Applying migration `20260924010000_video_processing_and_moderation`
+Applying migration `20260925000000_real_platform_reviewer_grants`
+Applying migration `20260928000000_retire_legacy_adult_default`
+Applying migration `20260929000000_retire_synthetic_schema`
+Applying migration `20261001000000_durable_didit_sessions`
+Applying migration `20261002000000_durable_realtime_cursor`
+Applying migration `20261006000000_phase_01_marketplace_discovery`
+Applying migration `20261006010000_phase_01_listing_images`
+Applying migration `20261006020000_phase_01_storefront_branding`
+Applying migration `20261009000000_rejected_media_retention`
+Applying migration `20261012000000_inventory_transfers`
+Applying migration `20261012010000_goods_quotes_and_holds`
+Applying migration `20261012020000_goods_paid_orders`
+Applying migration `20261012030000_goods_order_cancellations`
+Applying migration `20261012040000_goods_pickup_fulfillment`
+Applying migration `20261012050000_goods_delivery_milestones`
+Applying migration `20261012060000_goods_returns`
+Applying migration `20261012070000_service_definitions`
+Applying migration `20261012080000_authoritative_schedules`
+Applying migration `20261012090000_atomic_booking_holds`
+Applying migration `20261012100000_paid_bookings`
+Applying migration `20261012110000_booking_cancellations`
+Applying migration `20261012120000_booking_amendments`
+Applying migration `20261012130000_substitutions_waitlists`
+Applying migration `20261012140000_booking_meetings`
+Applying migration `20261012150000_booking_attendance`
+Applying migration `20261012160000_immutable_ledger`
+Applying migration `20261012170000_mixed_cart_quotes`
+Applying migration `20261012180000_promotions_commission`
+Applying migration `20261013030000_atomic_mixed_holds`
+Applying migration `20261013040000_mixed_payment_inbox`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831120000_platform_foundation/
+    └─ migration.sql
+  └─ 20260921000000_durable_foundation/
+    └─ migration.sql
+  └─ 20260922000000_demo_persona_access/
+    └─ migration.sql
+  └─ 20260922010000_provider_timeout_reconciliation/
+    └─ migration.sql
+  └─ 20260922020000_adult_verification_lifecycle/
+    └─ migration.sql
+  └─ 20260922030000_demo_provider_quota/
+    └─ migration.sql
+  └─ 20260922040000_staff_user_linkage/
+    └─ migration.sql
+  └─ 20260922050000_public_vendor_browse/
+    └─ migration.sql
+  └─ 20260922060000_adult_verification_mixed_version_compatibility/
+    └─ migration.sql
+  └─ 20260922070000_demo_persona_command_quota/
+    └─ migration.sql
+  └─ 20260923000000_phase_01_vendor_catalog/
+    └─ migration.sql
+  └─ 20260923010000_snake_case_identifiers/
+    └─ migration.sql
+  └─ 20260923020000_legacy_identifier_compatibility/
+    └─ migration.sql
+  └─ 20260923030000_synthetic_external_effect_idempotency/
+    └─ migration.sql
+  └─ 20260923040000_inventory_movements/
+    └─ migration.sql
+  └─ 20260924000000_media_upload_intents/
+    └─ migration.sql
+  └─ 20260924010000_video_processing_and_moderation/
+    └─ migration.sql
+  └─ 20260925000000_real_platform_reviewer_grants/
+    └─ migration.sql
+  └─ 20260928000000_retire_legacy_adult_default/
+    └─ migration.sql
+  └─ 20260929000000_retire_synthetic_schema/
+    └─ migration.sql
+  └─ 20261001000000_durable_didit_sessions/
+    └─ migration.sql
+  └─ 20261002000000_durable_realtime_cursor/
+    └─ migration.sql
+  └─ 20261006000000_phase_01_marketplace_discovery/
+    └─ migration.sql
+  └─ 20261006010000_phase_01_listing_images/
+    └─ migration.sql
+  └─ 20261006020000_phase_01_storefront_branding/
+    └─ migration.sql
+  └─ 20261009000000_rejected_media_retention/
+    └─ migration.sql
+  └─ 20261012000000_inventory_transfers/
+    └─ migration.sql
+  └─ 20261012010000_goods_quotes_and_holds/
+    └─ migration.sql
+  └─ 20261012020000_goods_paid_orders/
+    └─ migration.sql
+  └─ 20261012030000_goods_order_cancellations/
+    └─ migration.sql
+  └─ 20261012040000_goods_pickup_fulfillment/
+    └─ migration.sql
+  └─ 20261012050000_goods_delivery_milestones/
+    └─ migration.sql
+  └─ 20261012060000_goods_returns/
+    └─ migration.sql
+  └─ 20261012070000_service_definitions/
+    └─ migration.sql
+  └─ 20261012080000_authoritative_schedules/
+    └─ migration.sql
+  └─ 20261012090000_atomic_booking_holds/
+    └─ migration.sql
+  └─ 20261012100000_paid_bookings/
+    └─ migration.sql
+  └─ 20261012110000_booking_cancellations/
+    └─ migration.sql
+  └─ 20261012120000_booking_amendments/
+    └─ migration.sql
+  └─ 20261012130000_substitutions_waitlists/
+    └─ migration.sql
+  └─ 20261012140000_booking_meetings/
+    └─ migration.sql
+  └─ 20261012150000_booking_attendance/
+    └─ migration.sql
+  └─ 20261012160000_immutable_ledger/
+    └─ migration.sql
+  └─ 20261012170000_mixed_cart_quotes/
+    └─ migration.sql
+  └─ 20261012180000_promotions_commission/
+    └─ migration.sql
+  └─ 20261013030000_atomic_mixed_holds/
+    └─ migration.sql
+  └─ 20261013040000_mixed_payment_inbox/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+(node:40363) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+(node:40398) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Test Suites: 1 passed, 1 total
+Tests:       24 passed, 24 total
+Snapshots:   0 total
+Time:        30.741 s
+Ran all test suites within paths "libs/platform-core/src/lib/mixed-payments.integration.ts".
+(node:40569) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "phase00_962844b5f88347aaa5597340d05b6e21" at "127.0.0.1:55432"
+
+47 migrations found in prisma/migrations
+
+Applying migration `20260831120000_platform_foundation`
+Applying migration `20260921000000_durable_foundation`
+Applying migration `20260922000000_demo_persona_access`
+Applying migration `20260922010000_provider_timeout_reconciliation`
+Applying migration `20260922020000_adult_verification_lifecycle`
+Applying migration `20260922030000_demo_provider_quota`
+Applying migration `20260922040000_staff_user_linkage`
+Applying migration `20260922050000_public_vendor_browse`
+Applying migration `20260922060000_adult_verification_mixed_version_compatibility`
+Applying migration `20260922070000_demo_persona_command_quota`
+Applying migration `20260923000000_phase_01_vendor_catalog`
+Applying migration `20260923010000_snake_case_identifiers`
+Applying migration `20260923020000_legacy_identifier_compatibility`
+Applying migration `20260923030000_synthetic_external_effect_idempotency`
+Applying migration `20260923040000_inventory_movements`
+Applying migration `20260924000000_media_upload_intents`
+Applying migration `20260924010000_video_processing_and_moderation`
+Applying migration `20260925000000_real_platform_reviewer_grants`
+Applying migration `20260928000000_retire_legacy_adult_default`
+Applying migration `20260929000000_retire_synthetic_schema`
+Applying migration `20261001000000_durable_didit_sessions`
+Applying migration `20261002000000_durable_realtime_cursor`
+Applying migration `20261006000000_phase_01_marketplace_discovery`
+Applying migration `20261006010000_phase_01_listing_images`
+Applying migration `20261006020000_phase_01_storefront_branding`
+Applying migration `20261009000000_rejected_media_retention`
+Applying migration `20261012000000_inventory_transfers`
+Applying migration `20261012010000_goods_quotes_and_holds`
+Applying migration `20261012020000_goods_paid_orders`
+Applying migration `20261012030000_goods_order_cancellations`
+Applying migration `20261012040000_goods_pickup_fulfillment`
+Applying migration `20261012050000_goods_delivery_milestones`
+Applying migration `20261012060000_goods_returns`
+Applying migration `20261012070000_service_definitions`
+Applying migration `20261012080000_authoritative_schedules`
+Applying migration `20261012090000_atomic_booking_holds`
+Applying migration `20261012100000_paid_bookings`
+Applying migration `20261012110000_booking_cancellations`
+Applying migration `20261012120000_booking_amendments`
+Applying migration `20261012130000_substitutions_waitlists`
+Applying migration `20261012140000_booking_meetings`
+Applying migration `20261012150000_booking_attendance`
+Applying migration `20261012160000_immutable_ledger`
+Applying migration `20261012170000_mixed_cart_quotes`
+Applying migration `20261012180000_promotions_commission`
+Applying migration `20261013030000_atomic_mixed_holds`
+Applying migration `20261013040000_mixed_payment_inbox`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831120000_platform_foundation/
+    └─ migration.sql
+  └─ 20260921000000_durable_foundation/
+    └─ migration.sql
+  └─ 20260922000000_demo_persona_access/
+    └─ migration.sql
+  └─ 20260922010000_provider_timeout_reconciliation/
+    └─ migration.sql
+  └─ 20260922020000_adult_verification_lifecycle/
+    └─ migration.sql
+  └─ 20260922030000_demo_provider_quota/
+    └─ migration.sql
+  └─ 20260922040000_staff_user_linkage/
+    └─ migration.sql
+  └─ 20260922050000_public_vendor_browse/
+    └─ migration.sql
+  └─ 20260922060000_adult_verification_mixed_version_compatibility/
+    └─ migration.sql
+  └─ 20260922070000_demo_persona_command_quota/
+    └─ migration.sql
+  └─ 20260923000000_phase_01_vendor_catalog/
+    └─ migration.sql
+  └─ 20260923010000_snake_case_identifiers/
+    └─ migration.sql
+  └─ 20260923020000_legacy_identifier_compatibility/
+    └─ migration.sql
+  └─ 20260923030000_synthetic_external_effect_idempotency/
+    └─ migration.sql
+  └─ 20260923040000_inventory_movements/
+    └─ migration.sql
+  └─ 20260924000000_media_upload_intents/
+    └─ migration.sql
+  └─ 20260924010000_video_processing_and_moderation/
+    └─ migration.sql
+  └─ 20260925000000_real_platform_reviewer_grants/
+    └─ migration.sql
+  └─ 20260928000000_retire_legacy_adult_default/
+    └─ migration.sql
+  └─ 20260929000000_retire_synthetic_schema/
+    └─ migration.sql
+  └─ 20261001000000_durable_didit_sessions/
+    └─ migration.sql
+  └─ 20261002000000_durable_realtime_cursor/
+    └─ migration.sql
+  └─ 20261006000000_phase_01_marketplace_discovery/
+    └─ migration.sql
+  └─ 20261006010000_phase_01_listing_images/
+    └─ migration.sql
+  └─ 20261006020000_phase_01_storefront_branding/
+    └─ migration.sql
+  └─ 20261009000000_rejected_media_retention/
+    └─ migration.sql
+  └─ 20261012000000_inventory_transfers/
+    └─ migration.sql
+  └─ 20261012010000_goods_quotes_and_holds/
+    └─ migration.sql
+  └─ 20261012020000_goods_paid_orders/
+    └─ migration.sql
+  └─ 20261012030000_goods_order_cancellations/
+    └─ migration.sql
+  └─ 20261012040000_goods_pickup_fulfillment/
+    └─ migration.sql
+  └─ 20261012050000_goods_delivery_milestones/
+    └─ migration.sql
+  └─ 20261012060000_goods_returns/
+    └─ migration.sql
+  └─ 20261012070000_service_definitions/
+    └─ migration.sql
+  └─ 20261012080000_authoritative_schedules/
+    └─ migration.sql
+  └─ 20261012090000_atomic_booking_holds/
+    └─ migration.sql
+  └─ 20261012100000_paid_bookings/
+    └─ migration.sql
+  └─ 20261012110000_booking_cancellations/
+    └─ migration.sql
+  └─ 20261012120000_booking_amendments/
+    └─ migration.sql
+  └─ 20261012130000_substitutions_waitlists/
+    └─ migration.sql
+  └─ 20261012140000_booking_meetings/
+    └─ migration.sql
+  └─ 20261012150000_booking_attendance/
+    └─ migration.sql
+  └─ 20261012160000_immutable_ledger/
+    └─ migration.sql
+  └─ 20261012170000_mixed_cart_quotes/
+    └─ migration.sql
+  └─ 20261012180000_promotions_commission/
+    └─ migration.sql
+  └─ 20261013030000_atomic_mixed_holds/
+    └─ migration.sql
+  └─ 20261013040000_mixed_payment_inbox/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+(node:40646) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+(node:40671) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Test Suites: 1 skipped, 0 of 1 total
+Tests:       43 skipped, 43 total
+Snapshots:   0 total
+Time:        0.744 s, estimated 7 s
+Ran all test suites within paths "libs/platform-core/src/lib/postgres-foundation.integration.ts".
+(node:40756) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "phase00_962844b5f88347aaa5597340d05b6e21" at "127.0.0.1:55432"
+
+47 migrations found in prisma/migrations
+
+Applying migration `20260831120000_platform_foundation`
+Applying migration `20260921000000_durable_foundation`
+Applying migration `20260922000000_demo_persona_access`
+Applying migration `20260922010000_provider_timeout_reconciliation`
+Applying migration `20260922020000_adult_verification_lifecycle`
+Applying migration `20260922030000_demo_provider_quota`
+Applying migration `20260922040000_staff_user_linkage`
+Applying migration `20260922050000_public_vendor_browse`
+Applying migration `20260922060000_adult_verification_mixed_version_compatibility`
+Applying migration `20260922070000_demo_persona_command_quota`
+Applying migration `20260923000000_phase_01_vendor_catalog`
+Applying migration `20260923010000_snake_case_identifiers`
+Applying migration `20260923020000_legacy_identifier_compatibility`
+Applying migration `20260923030000_synthetic_external_effect_idempotency`
+Applying migration `20260923040000_inventory_movements`
+Applying migration `20260924000000_media_upload_intents`
+Applying migration `20260924010000_video_processing_and_moderation`
+Applying migration `20260925000000_real_platform_reviewer_grants`
+Applying migration `20260928000000_retire_legacy_adult_default`
+Applying migration `20260929000000_retire_synthetic_schema`
+Applying migration `20261001000000_durable_didit_sessions`
+Applying migration `20261002000000_durable_realtime_cursor`
+Applying migration `20261006000000_phase_01_marketplace_discovery`
+Applying migration `20261006010000_phase_01_listing_images`
+Applying migration `20261006020000_phase_01_storefront_branding`
+Applying migration `20261009000000_rejected_media_retention`
+Applying migration `20261012000000_inventory_transfers`
+Applying migration `20261012010000_goods_quotes_and_holds`
+Applying migration `20261012020000_goods_paid_orders`
+Applying migration `20261012030000_goods_order_cancellations`
+Applying migration `20261012040000_goods_pickup_fulfillment`
+Applying migration `20261012050000_goods_delivery_milestones`
+Applying migration `20261012060000_goods_returns`
+Applying migration `20261012070000_service_definitions`
+Applying migration `20261012080000_authoritative_schedules`
+Applying migration `20261012090000_atomic_booking_holds`
+Applying migration `20261012100000_paid_bookings`
+Applying migration `20261012110000_booking_cancellations`
+Applying migration `20261012120000_booking_amendments`
+Applying migration `20261012130000_substitutions_waitlists`
+Applying migration `20261012140000_booking_meetings`
+Applying migration `20261012150000_booking_attendance`
+Applying migration `20261012160000_immutable_ledger`
+Applying migration `20261012170000_mixed_cart_quotes`
+Applying migration `20261012180000_promotions_commission`
+Applying migration `20261013030000_atomic_mixed_holds`
+Applying migration `20261013040000_mixed_payment_inbox`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831120000_platform_foundation/
+    └─ migration.sql
+  └─ 20260921000000_durable_foundation/
+    └─ migration.sql
+  └─ 20260922000000_demo_persona_access/
+    └─ migration.sql
+  └─ 20260922010000_provider_timeout_reconciliation/
+    └─ migration.sql
+  └─ 20260922020000_adult_verification_lifecycle/
+    └─ migration.sql
+  └─ 20260922030000_demo_provider_quota/
+    └─ migration.sql
+  └─ 20260922040000_staff_user_linkage/
+    └─ migration.sql
+  └─ 20260922050000_public_vendor_browse/
+    └─ migration.sql
+  └─ 20260922060000_adult_verification_mixed_version_compatibility/
+    └─ migration.sql
+  └─ 20260922070000_demo_persona_command_quota/
+    └─ migration.sql
+  └─ 20260923000000_phase_01_vendor_catalog/
+    └─ migration.sql
+  └─ 20260923010000_snake_case_identifiers/
+    └─ migration.sql
+  └─ 20260923020000_legacy_identifier_compatibility/
+    └─ migration.sql
+  └─ 20260923030000_synthetic_external_effect_idempotency/
+    └─ migration.sql
+  └─ 20260923040000_inventory_movements/
+    └─ migration.sql
+  └─ 20260924000000_media_upload_intents/
+    └─ migration.sql
+  └─ 20260924010000_video_processing_and_moderation/
+    └─ migration.sql
+  └─ 20260925000000_real_platform_reviewer_grants/
+    └─ migration.sql
+  └─ 20260928000000_retire_legacy_adult_default/
+    └─ migration.sql
+  └─ 20260929000000_retire_synthetic_schema/
+    └─ migration.sql
+  └─ 20261001000000_durable_didit_sessions/
+    └─ migration.sql
+  └─ 20261002000000_durable_realtime_cursor/
+    └─ migration.sql
+  └─ 20261006000000_phase_01_marketplace_discovery/
+    └─ migration.sql
+  └─ 20261006010000_phase_01_listing_images/
+    └─ migration.sql
+  └─ 20261006020000_phase_01_storefront_branding/
+    └─ migration.sql
+  └─ 20261009000000_rejected_media_retention/
+    └─ migration.sql
+  └─ 20261012000000_inventory_transfers/
+    └─ migration.sql
+  └─ 20261012010000_goods_quotes_and_holds/
+    └─ migration.sql
+  └─ 20261012020000_goods_paid_orders/
+    └─ migration.sql
+  └─ 20261012030000_goods_order_cancellations/
+    └─ migration.sql
+  └─ 20261012040000_goods_pickup_fulfillment/
+    └─ migration.sql
+  └─ 20261012050000_goods_delivery_milestones/
+    └─ migration.sql
+  └─ 20261012060000_goods_returns/
+    └─ migration.sql
+  └─ 20261012070000_service_definitions/
+    └─ migration.sql
+  └─ 20261012080000_authoritative_schedules/
+    └─ migration.sql
+  └─ 20261012090000_atomic_booking_holds/
+    └─ migration.sql
+  └─ 20261012100000_paid_bookings/
+    └─ migration.sql
+  └─ 20261012110000_booking_cancellations/
+    └─ migration.sql
+  └─ 20261012120000_booking_amendments/
+    └─ migration.sql
+  └─ 20261012130000_substitutions_waitlists/
+    └─ migration.sql
+  └─ 20261012140000_booking_meetings/
+    └─ migration.sql
+  └─ 20261012150000_booking_attendance/
+    └─ migration.sql
+  └─ 20261012160000_immutable_ledger/
+    └─ migration.sql
+  └─ 20261012170000_mixed_cart_quotes/
+    └─ migration.sql
+  └─ 20261012180000_promotions_commission/
+    └─ migration.sql
+  └─ 20261013030000_atomic_mixed_holds/
+    └─ migration.sql
+  └─ 20261013040000_mixed_payment_inbox/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+(node:40830) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+(node:40863) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Test Suites: 1 passed, 1 total
+Tests:       21 passed, 21 total
+Snapshots:   0 total
+Time:        17.127 s, estimated 20 s
+Ran all test suites within paths "libs/platform-core/src/lib/promotions.integration.ts".
+(node:40955) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "phase00_962844b5f88347aaa5597340d05b6e21" at "127.0.0.1:55432"
+
+47 migrations found in prisma/migrations
+
+Applying migration `20260831120000_platform_foundation`
+Applying migration `20260921000000_durable_foundation`
+Applying migration `20260922000000_demo_persona_access`
+Applying migration `20260922010000_provider_timeout_reconciliation`
+Applying migration `20260922020000_adult_verification_lifecycle`
+Applying migration `20260922030000_demo_provider_quota`
+Applying migration `20260922040000_staff_user_linkage`
+Applying migration `20260922050000_public_vendor_browse`
+Applying migration `20260922060000_adult_verification_mixed_version_compatibility`
+Applying migration `20260922070000_demo_persona_command_quota`
+Applying migration `20260923000000_phase_01_vendor_catalog`
+Applying migration `20260923010000_snake_case_identifiers`
+Applying migration `20260923020000_legacy_identifier_compatibility`
+Applying migration `20260923030000_synthetic_external_effect_idempotency`
+Applying migration `20260923040000_inventory_movements`
+Applying migration `20260924000000_media_upload_intents`
+Applying migration `20260924010000_video_processing_and_moderation`
+Applying migration `20260925000000_real_platform_reviewer_grants`
+Applying migration `20260928000000_retire_legacy_adult_default`
+Applying migration `20260929000000_retire_synthetic_schema`
+Applying migration `20261001000000_durable_didit_sessions`
+Applying migration `20261002000000_durable_realtime_cursor`
+Applying migration `20261006000000_phase_01_marketplace_discovery`
+Applying migration `20261006010000_phase_01_listing_images`
+Applying migration `20261006020000_phase_01_storefront_branding`
+Applying migration `20261009000000_rejected_media_retention`
+Applying migration `20261012000000_inventory_transfers`
+Applying migration `20261012010000_goods_quotes_and_holds`
+Applying migration `20261012020000_goods_paid_orders`
+Applying migration `20261012030000_goods_order_cancellations`
+Applying migration `20261012040000_goods_pickup_fulfillment`
+Applying migration `20261012050000_goods_delivery_milestones`
+Applying migration `20261012060000_goods_returns`
+Applying migration `20261012070000_service_definitions`
+Applying migration `20261012080000_authoritative_schedules`
+Applying migration `20261012090000_atomic_booking_holds`
+Applying migration `20261012100000_paid_bookings`
+Applying migration `20261012110000_booking_cancellations`
+Applying migration `20261012120000_booking_amendments`
+Applying migration `20261012130000_substitutions_waitlists`
+Applying migration `20261012140000_booking_meetings`
+Applying migration `20261012150000_booking_attendance`
+Applying migration `20261012160000_immutable_ledger`
+Applying migration `20261012170000_mixed_cart_quotes`
+Applying migration `20261012180000_promotions_commission`
+Applying migration `20261013030000_atomic_mixed_holds`
+Applying migration `20261013040000_mixed_payment_inbox`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831120000_platform_foundation/
+    └─ migration.sql
+  └─ 20260921000000_durable_foundation/
+    └─ migration.sql
+  └─ 20260922000000_demo_persona_access/
+    └─ migration.sql
+  └─ 20260922010000_provider_timeout_reconciliation/
+    └─ migration.sql
+  └─ 20260922020000_adult_verification_lifecycle/
+    └─ migration.sql
+  └─ 20260922030000_demo_provider_quota/
+    └─ migration.sql
+  └─ 20260922040000_staff_user_linkage/
+    └─ migration.sql
+  └─ 20260922050000_public_vendor_browse/
+    └─ migration.sql
+  └─ 20260922060000_adult_verification_mixed_version_compatibility/
+    └─ migration.sql
+  └─ 20260922070000_demo_persona_command_quota/
+    └─ migration.sql
+  └─ 20260923000000_phase_01_vendor_catalog/
+    └─ migration.sql
+  └─ 20260923010000_snake_case_identifiers/
+    └─ migration.sql
+  └─ 20260923020000_legacy_identifier_compatibility/
+    └─ migration.sql
+  └─ 20260923030000_synthetic_external_effect_idempotency/
+    └─ migration.sql
+  └─ 20260923040000_inventory_movements/
+    └─ migration.sql
+  └─ 20260924000000_media_upload_intents/
+    └─ migration.sql
+  └─ 20260924010000_video_processing_and_moderation/
+    └─ migration.sql
+  └─ 20260925000000_real_platform_reviewer_grants/
+    └─ migration.sql
+  └─ 20260928000000_retire_legacy_adult_default/
+    └─ migration.sql
+  └─ 20260929000000_retire_synthetic_schema/
+    └─ migration.sql
+  └─ 20261001000000_durable_didit_sessions/
+    └─ migration.sql
+  └─ 20261002000000_durable_realtime_cursor/
+    └─ migration.sql
+  └─ 20261006000000_phase_01_marketplace_discovery/
+    └─ migration.sql
+  └─ 20261006010000_phase_01_listing_images/
+    └─ migration.sql
+  └─ 20261006020000_phase_01_storefront_branding/
+    └─ migration.sql
+  └─ 20261009000000_rejected_media_retention/
+    └─ migration.sql
+  └─ 20261012000000_inventory_transfers/
+    └─ migration.sql
+  └─ 20261012010000_goods_quotes_and_holds/
+    └─ migration.sql
+  └─ 20261012020000_goods_paid_orders/
+    └─ migration.sql
+  └─ 20261012030000_goods_order_cancellations/
+    └─ migration.sql
+  └─ 20261012040000_goods_pickup_fulfillment/
+    └─ migration.sql
+  └─ 20261012050000_goods_delivery_milestones/
+    └─ migration.sql
+  └─ 20261012060000_goods_returns/
+    └─ migration.sql
+  └─ 20261012070000_service_definitions/
+    └─ migration.sql
+  └─ 20261012080000_authoritative_schedules/
+    └─ migration.sql
+  └─ 20261012090000_atomic_booking_holds/
+    └─ migration.sql
+  └─ 20261012100000_paid_bookings/
+    └─ migration.sql
+  └─ 20261012110000_booking_cancellations/
+    └─ migration.sql
+  └─ 20261012120000_booking_amendments/
+    └─ migration.sql
+  └─ 20261012130000_substitutions_waitlists/
+    └─ migration.sql
+  └─ 20261012140000_booking_meetings/
+    └─ migration.sql
+  └─ 20261012150000_booking_attendance/
+    └─ migration.sql
+  └─ 20261012160000_immutable_ledger/
+    └─ migration.sql
+  └─ 20261012170000_mixed_cart_quotes/
+    └─ migration.sql
+  └─ 20261012180000_promotions_commission/
+    └─ migration.sql
+  └─ 20261013030000_atomic_mixed_holds/
+    └─ migration.sql
+  └─ 20261013040000_mixed_payment_inbox/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+(node:41029) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+(node:41062) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Test Suites: 1 skipped, 0 of 1 total
+Tests:       11 skipped, 11 total
+Snapshots:   0 total
+Time:        0.586 s, estimated 7 s
+Ran all test suites within paths "libs/platform-core/src/lib/service-definitions.integration.ts".
+(node:41138) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "phase00_962844b5f88347aaa5597340d05b6e21" at "127.0.0.1:55432"
+
+47 migrations found in prisma/migrations
+
+Applying migration `20260831120000_platform_foundation`
+Applying migration `20260921000000_durable_foundation`
+Applying migration `20260922000000_demo_persona_access`
+Applying migration `20260922010000_provider_timeout_reconciliation`
+Applying migration `20260922020000_adult_verification_lifecycle`
+Applying migration `20260922030000_demo_provider_quota`
+Applying migration `20260922040000_staff_user_linkage`
+Applying migration `20260922050000_public_vendor_browse`
+Applying migration `20260922060000_adult_verification_mixed_version_compatibility`
+Applying migration `20260922070000_demo_persona_command_quota`
+Applying migration `20260923000000_phase_01_vendor_catalog`
+Applying migration `20260923010000_snake_case_identifiers`
+Applying migration `20260923020000_legacy_identifier_compatibility`
+Applying migration `20260923030000_synthetic_external_effect_idempotency`
+Applying migration `20260923040000_inventory_movements`
+Applying migration `20260924000000_media_upload_intents`
+Applying migration `20260924010000_video_processing_and_moderation`
+Applying migration `20260925000000_real_platform_reviewer_grants`
+Applying migration `20260928000000_retire_legacy_adult_default`
+Applying migration `20260929000000_retire_synthetic_schema`
+Applying migration `20261001000000_durable_didit_sessions`
+Applying migration `20261002000000_durable_realtime_cursor`
+Applying migration `20261006000000_phase_01_marketplace_discovery`
+Applying migration `20261006010000_phase_01_listing_images`
+Applying migration `20261006020000_phase_01_storefront_branding`
+Applying migration `20261009000000_rejected_media_retention`
+Applying migration `20261012000000_inventory_transfers`
+Applying migration `20261012010000_goods_quotes_and_holds`
+Applying migration `20261012020000_goods_paid_orders`
+Applying migration `20261012030000_goods_order_cancellations`
+Applying migration `20261012040000_goods_pickup_fulfillment`
+Applying migration `20261012050000_goods_delivery_milestones`
+Applying migration `20261012060000_goods_returns`
+Applying migration `20261012070000_service_definitions`
+Applying migration `20261012080000_authoritative_schedules`
+Applying migration `20261012090000_atomic_booking_holds`
+Applying migration `20261012100000_paid_bookings`
+Applying migration `20261012110000_booking_cancellations`
+Applying migration `20261012120000_booking_amendments`
+Applying migration `20261012130000_substitutions_waitlists`
+Applying migration `20261012140000_booking_meetings`
+Applying migration `20261012150000_booking_attendance`
+Applying migration `20261012160000_immutable_ledger`
+Applying migration `20261012170000_mixed_cart_quotes`
+Applying migration `20261012180000_promotions_commission`
+Applying migration `20261013030000_atomic_mixed_holds`
+Applying migration `20261013040000_mixed_payment_inbox`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831120000_platform_foundation/
+    └─ migration.sql
+  └─ 20260921000000_durable_foundation/
+    └─ migration.sql
+  └─ 20260922000000_demo_persona_access/
+    └─ migration.sql
+  └─ 20260922010000_provider_timeout_reconciliation/
+    └─ migration.sql
+  └─ 20260922020000_adult_verification_lifecycle/
+    └─ migration.sql
+  └─ 20260922030000_demo_provider_quota/
+    └─ migration.sql
+  └─ 20260922040000_staff_user_linkage/
+    └─ migration.sql
+  └─ 20260922050000_public_vendor_browse/
+    └─ migration.sql
+  └─ 20260922060000_adult_verification_mixed_version_compatibility/
+    └─ migration.sql
+  └─ 20260922070000_demo_persona_command_quota/
+    └─ migration.sql
+  └─ 20260923000000_phase_01_vendor_catalog/
+    └─ migration.sql
+  └─ 20260923010000_snake_case_identifiers/
+    └─ migration.sql
+  └─ 20260923020000_legacy_identifier_compatibility/
+    └─ migration.sql
+  └─ 20260923030000_synthetic_external_effect_idempotency/
+    └─ migration.sql
+  └─ 20260923040000_inventory_movements/
+    └─ migration.sql
+  └─ 20260924000000_media_upload_intents/
+    └─ migration.sql
+  └─ 20260924010000_video_processing_and_moderation/
+    └─ migration.sql
+  └─ 20260925000000_real_platform_reviewer_grants/
+    └─ migration.sql
+  └─ 20260928000000_retire_legacy_adult_default/
+    └─ migration.sql
+  └─ 20260929000000_retire_synthetic_schema/
+    └─ migration.sql
+  └─ 20261001000000_durable_didit_sessions/
+    └─ migration.sql
+  └─ 20261002000000_durable_realtime_cursor/
+    └─ migration.sql
+  └─ 20261006000000_phase_01_marketplace_discovery/
+    └─ migration.sql
+  └─ 20261006010000_phase_01_listing_images/
+    └─ migration.sql
+  └─ 20261006020000_phase_01_storefront_branding/
+    └─ migration.sql
+  └─ 20261009000000_rejected_media_retention/
+    └─ migration.sql
+  └─ 20261012000000_inventory_transfers/
+    └─ migration.sql
+  └─ 20261012010000_goods_quotes_and_holds/
+    └─ migration.sql
+  └─ 20261012020000_goods_paid_orders/
+    └─ migration.sql
+  └─ 20261012030000_goods_order_cancellations/
+    └─ migration.sql
+  └─ 20261012040000_goods_pickup_fulfillment/
+    └─ migration.sql
+  └─ 20261012050000_goods_delivery_milestones/
+    └─ migration.sql
+  └─ 20261012060000_goods_returns/
+    └─ migration.sql
+  └─ 20261012070000_service_definitions/
+    └─ migration.sql
+  └─ 20261012080000_authoritative_schedules/
+    └─ migration.sql
+  └─ 20261012090000_atomic_booking_holds/
+    └─ migration.sql
+  └─ 20261012100000_paid_bookings/
+    └─ migration.sql
+  └─ 20261012110000_booking_cancellations/
+    └─ migration.sql
+  └─ 20261012120000_booking_amendments/
+    └─ migration.sql
+  └─ 20261012130000_substitutions_waitlists/
+    └─ migration.sql
+  └─ 20261012140000_booking_meetings/
+    └─ migration.sql
+  └─ 20261012150000_booking_attendance/
+    └─ migration.sql
+  └─ 20261012160000_immutable_ledger/
+    └─ migration.sql
+  └─ 20261012170000_mixed_cart_quotes/
+    └─ migration.sql
+  └─ 20261012180000_promotions_commission/
+    └─ migration.sql
+  └─ 20261013030000_atomic_mixed_holds/
+    └─ migration.sql
+  └─ 20261013040000_mixed_payment_inbox/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+(node:41212) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+(node:41245) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Test Suites: 1 skipped, 0 of 1 total
+Tests:       13 skipped, 13 total
+Snapshots:   0 total
+Time:        0.516 s, estimated 11 s
+Ran all test suites within paths "libs/platform-core/src/lib/service-scheduling.integration.ts".
+(node:41321) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "phase00_962844b5f88347aaa5597340d05b6e21" at "127.0.0.1:55432"
+
+47 migrations found in prisma/migrations
+
+Applying migration `20260831120000_platform_foundation`
+Applying migration `20260921000000_durable_foundation`
+Applying migration `20260922000000_demo_persona_access`
+Applying migration `20260922010000_provider_timeout_reconciliation`
+Applying migration `20260922020000_adult_verification_lifecycle`
+Applying migration `20260922030000_demo_provider_quota`
+Applying migration `20260922040000_staff_user_linkage`
+Applying migration `20260922050000_public_vendor_browse`
+Applying migration `20260922060000_adult_verification_mixed_version_compatibility`
+Applying migration `20260922070000_demo_persona_command_quota`
+Applying migration `20260923000000_phase_01_vendor_catalog`
+Applying migration `20260923010000_snake_case_identifiers`
+Applying migration `20260923020000_legacy_identifier_compatibility`
+Applying migration `20260923030000_synthetic_external_effect_idempotency`
+Applying migration `20260923040000_inventory_movements`
+Applying migration `20260924000000_media_upload_intents`
+Applying migration `20260924010000_video_processing_and_moderation`
+Applying migration `20260925000000_real_platform_reviewer_grants`
+Applying migration `20260928000000_retire_legacy_adult_default`
+Applying migration `20260929000000_retire_synthetic_schema`
+Applying migration `20261001000000_durable_didit_sessions`
+Applying migration `20261002000000_durable_realtime_cursor`
+Applying migration `20261006000000_phase_01_marketplace_discovery`
+Applying migration `20261006010000_phase_01_listing_images`
+Applying migration `20261006020000_phase_01_storefront_branding`
+Applying migration `20261009000000_rejected_media_retention`
+Applying migration `20261012000000_inventory_transfers`
+Applying migration `20261012010000_goods_quotes_and_holds`
+Applying migration `20261012020000_goods_paid_orders`
+Applying migration `20261012030000_goods_order_cancellations`
+Applying migration `20261012040000_goods_pickup_fulfillment`
+Applying migration `20261012050000_goods_delivery_milestones`
+Applying migration `20261012060000_goods_returns`
+Applying migration `20261012070000_service_definitions`
+Applying migration `20261012080000_authoritative_schedules`
+Applying migration `20261012090000_atomic_booking_holds`
+Applying migration `20261012100000_paid_bookings`
+Applying migration `20261012110000_booking_cancellations`
+Applying migration `20261012120000_booking_amendments`
+Applying migration `20261012130000_substitutions_waitlists`
+Applying migration `20261012140000_booking_meetings`
+Applying migration `20261012150000_booking_attendance`
+Applying migration `20261012160000_immutable_ledger`
+Applying migration `20261012170000_mixed_cart_quotes`
+Applying migration `20261012180000_promotions_commission`
+Applying migration `20261013030000_atomic_mixed_holds`
+Applying migration `20261013040000_mixed_payment_inbox`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831120000_platform_foundation/
+    └─ migration.sql
+  └─ 20260921000000_durable_foundation/
+    └─ migration.sql
+  └─ 20260922000000_demo_persona_access/
+    └─ migration.sql
+  └─ 20260922010000_provider_timeout_reconciliation/
+    └─ migration.sql
+  └─ 20260922020000_adult_verification_lifecycle/
+    └─ migration.sql
+  └─ 20260922030000_demo_provider_quota/
+    └─ migration.sql
+  └─ 20260922040000_staff_user_linkage/
+    └─ migration.sql
+  └─ 20260922050000_public_vendor_browse/
+    └─ migration.sql
+  └─ 20260922060000_adult_verification_mixed_version_compatibility/
+    └─ migration.sql
+  └─ 20260922070000_demo_persona_command_quota/
+    └─ migration.sql
+  └─ 20260923000000_phase_01_vendor_catalog/
+    └─ migration.sql
+  └─ 20260923010000_snake_case_identifiers/
+    └─ migration.sql
+  └─ 20260923020000_legacy_identifier_compatibility/
+    └─ migration.sql
+  └─ 20260923030000_synthetic_external_effect_idempotency/
+    └─ migration.sql
+  └─ 20260923040000_inventory_movements/
+    └─ migration.sql
+  └─ 20260924000000_media_upload_intents/
+    └─ migration.sql
+  └─ 20260924010000_video_processing_and_moderation/
+    └─ migration.sql
+  └─ 20260925000000_real_platform_reviewer_grants/
+    └─ migration.sql
+  └─ 20260928000000_retire_legacy_adult_default/
+    └─ migration.sql
+  └─ 20260929000000_retire_synthetic_schema/
+    └─ migration.sql
+  └─ 20261001000000_durable_didit_sessions/
+    └─ migration.sql
+  └─ 20261002000000_durable_realtime_cursor/
+    └─ migration.sql
+  └─ 20261006000000_phase_01_marketplace_discovery/
+    └─ migration.sql
+  └─ 20261006010000_phase_01_listing_images/
+    └─ migration.sql
+  └─ 20261006020000_phase_01_storefront_branding/
+    └─ migration.sql
+  └─ 20261009000000_rejected_media_retention/
+    └─ migration.sql
+  └─ 20261012000000_inventory_transfers/
+    └─ migration.sql
+  └─ 20261012010000_goods_quotes_and_holds/
+    └─ migration.sql
+  └─ 20261012020000_goods_paid_orders/
+    └─ migration.sql
+  └─ 20261012030000_goods_order_cancellations/
+    └─ migration.sql
+  └─ 20261012040000_goods_pickup_fulfillment/
+    └─ migration.sql
+  └─ 20261012050000_goods_delivery_milestones/
+    └─ migration.sql
+  └─ 20261012060000_goods_returns/
+    └─ migration.sql
+  └─ 20261012070000_service_definitions/
+    └─ migration.sql
+  └─ 20261012080000_authoritative_schedules/
+    └─ migration.sql
+  └─ 20261012090000_atomic_booking_holds/
+    └─ migration.sql
+  └─ 20261012100000_paid_bookings/
+    └─ migration.sql
+  └─ 20261012110000_booking_cancellations/
+    └─ migration.sql
+  └─ 20261012120000_booking_amendments/
+    └─ migration.sql
+  └─ 20261012130000_substitutions_waitlists/
+    └─ migration.sql
+  └─ 20261012140000_booking_meetings/
+    └─ migration.sql
+  └─ 20261012150000_booking_attendance/
+    └─ migration.sql
+  └─ 20261012160000_immutable_ledger/
+    └─ migration.sql
+  └─ 20261012170000_mixed_cart_quotes/
+    └─ migration.sql
+  └─ 20261012180000_promotions_commission/
+    └─ migration.sql
+  └─ 20261013030000_atomic_mixed_holds/
+    └─ migration.sql
+  └─ 20261013040000_mixed_payment_inbox/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+(node:41415) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+(node:41448) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Test Suites: 1 skipped, 0 of 1 total
+Tests:       2 skipped, 2 total
+Snapshots:   0 total
+Time:        0.455 s, estimated 2 s
+Ran all test suites within paths "libs/platform-core/src/lib/video-processor.integration.ts".
+Focused local integration run passed: 21 isolated files.
+(node:41523) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "phase00_962844b5f88347aaa5597340d05b6e21" at "127.0.0.1:55432"
+
+47 migrations found in prisma/migrations
+
+Applying migration `20260831120000_platform_foundation`
+Applying migration `20260921000000_durable_foundation`
+Applying migration `20260922000000_demo_persona_access`
+Applying migration `20260922010000_provider_timeout_reconciliation`
+Applying migration `20260922020000_adult_verification_lifecycle`
+Applying migration `20260922030000_demo_provider_quota`
+Applying migration `20260922040000_staff_user_linkage`
+Applying migration `20260922050000_public_vendor_browse`
+Applying migration `20260922060000_adult_verification_mixed_version_compatibility`
+Applying migration `20260922070000_demo_persona_command_quota`
+Applying migration `20260923000000_phase_01_vendor_catalog`
+Applying migration `20260923010000_snake_case_identifiers`
+Applying migration `20260923020000_legacy_identifier_compatibility`
+Applying migration `20260923030000_synthetic_external_effect_idempotency`
+Applying migration `20260923040000_inventory_movements`
+Applying migration `20260924000000_media_upload_intents`
+Applying migration `20260924010000_video_processing_and_moderation`
+Applying migration `20260925000000_real_platform_reviewer_grants`
+Applying migration `20260928000000_retire_legacy_adult_default`
+Applying migration `20260929000000_retire_synthetic_schema`
+Applying migration `20261001000000_durable_didit_sessions`
+Applying migration `20261002000000_durable_realtime_cursor`
+Applying migration `20261006000000_phase_01_marketplace_discovery`
+Applying migration `20261006010000_phase_01_listing_images`
+Applying migration `20261006020000_phase_01_storefront_branding`
+Applying migration `20261009000000_rejected_media_retention`
+Applying migration `20261012000000_inventory_transfers`
+Applying migration `20261012010000_goods_quotes_and_holds`
+Applying migration `20261012020000_goods_paid_orders`
+Applying migration `20261012030000_goods_order_cancellations`
+Applying migration `20261012040000_goods_pickup_fulfillment`
+Applying migration `20261012050000_goods_delivery_milestones`
+Applying migration `20261012060000_goods_returns`
+Applying migration `20261012070000_service_definitions`
+Applying migration `20261012080000_authoritative_schedules`
+Applying migration `20261012090000_atomic_booking_holds`
+Applying migration `20261012100000_paid_bookings`
+Applying migration `20261012110000_booking_cancellations`
+Applying migration `20261012120000_booking_amendments`
+Applying migration `20261012130000_substitutions_waitlists`
+Applying migration `20261012140000_booking_meetings`
+Applying migration `20261012150000_booking_attendance`
+Applying migration `20261012160000_immutable_ledger`
+Applying migration `20261012170000_mixed_cart_quotes`
+Applying migration `20261012180000_promotions_commission`
+Applying migration `20261013030000_atomic_mixed_holds`
+Applying migration `20261013040000_mixed_payment_inbox`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260831120000_platform_foundation/
+    └─ migration.sql
+  └─ 20260921000000_durable_foundation/
+    └─ migration.sql
+  └─ 20260922000000_demo_persona_access/
+    └─ migration.sql
+  └─ 20260922010000_provider_timeout_reconciliation/
+    └─ migration.sql
+  └─ 20260922020000_adult_verification_lifecycle/
+    └─ migration.sql
+  └─ 20260922030000_demo_provider_quota/
+    └─ migration.sql
+  └─ 20260922040000_staff_user_linkage/
+    └─ migration.sql
+  └─ 20260922050000_public_vendor_browse/
+    └─ migration.sql
+  └─ 20260922060000_adult_verification_mixed_version_compatibility/
+    └─ migration.sql
+  └─ 20260922070000_demo_persona_command_quota/
+    └─ migration.sql
+  └─ 20260923000000_phase_01_vendor_catalog/
+    └─ migration.sql
+  └─ 20260923010000_snake_case_identifiers/
+    └─ migration.sql
+  └─ 20260923020000_legacy_identifier_compatibility/
+    └─ migration.sql
+  └─ 20260923030000_synthetic_external_effect_idempotency/
+    └─ migration.sql
+  └─ 20260923040000_inventory_movements/
+    └─ migration.sql
+  └─ 20260924000000_media_upload_intents/
+    └─ migration.sql
+  └─ 20260924010000_video_processing_and_moderation/
+    └─ migration.sql
+  └─ 20260925000000_real_platform_reviewer_grants/
+    └─ migration.sql
+  └─ 20260928000000_retire_legacy_adult_default/
+    └─ migration.sql
+  └─ 20260929000000_retire_synthetic_schema/
+    └─ migration.sql
+  └─ 20261001000000_durable_didit_sessions/
+    └─ migration.sql
+  └─ 20261002000000_durable_realtime_cursor/
+    └─ migration.sql
+  └─ 20261006000000_phase_01_marketplace_discovery/
+    └─ migration.sql
+  └─ 20261006010000_phase_01_listing_images/
+    └─ migration.sql
+  └─ 20261006020000_phase_01_storefront_branding/
+    └─ migration.sql
+  └─ 20261009000000_rejected_media_retention/
+    └─ migration.sql
+  └─ 20261012000000_inventory_transfers/
+    └─ migration.sql
+  └─ 20261012010000_goods_quotes_and_holds/
+    └─ migration.sql
+  └─ 20261012020000_goods_paid_orders/
+    └─ migration.sql
+  └─ 20261012030000_goods_order_cancellations/
+    └─ migration.sql
+  └─ 20261012040000_goods_pickup_fulfillment/
+    └─ migration.sql
+  └─ 20261012050000_goods_delivery_milestones/
+    └─ migration.sql
+  └─ 20261012060000_goods_returns/
+    └─ migration.sql
+  └─ 20261012070000_service_definitions/
+    └─ migration.sql
+  └─ 20261012080000_authoritative_schedules/
+    └─ migration.sql
+  └─ 20261012090000_atomic_booking_holds/
+    └─ migration.sql
+  └─ 20261012100000_paid_bookings/
+    └─ migration.sql
+  └─ 20261012110000_booking_cancellations/
+    └─ migration.sql
+  └─ 20261012120000_booking_amendments/
+    └─ migration.sql
+  └─ 20261012130000_substitutions_waitlists/
+    └─ migration.sql
+  └─ 20261012140000_booking_meetings/
+    └─ migration.sql
+  └─ 20261012150000_booking_attendance/
+    └─ migration.sql
+  └─ 20261012160000_immutable_ledger/
+    └─ migration.sql
+  └─ 20261012170000_mixed_cart_quotes/
+    └─ migration.sql
+  └─ 20261012180000_promotions_commission/
+    └─ migration.sql
+  └─ 20261013030000_atomic_mixed_holds/
+    └─ migration.sql
+  └─ 20261013040000_mixed_payment_inbox/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+(node:41596) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+(node:41642) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Built local Booking hold worker expiry smoke passed: loopback PostgreSQL/Redis, due hold and allocation expire without a Customer session.
+Built local any-Staff substitution HTTP smoke passed: private replacement, Customer notice and preserved allowance.
+Built local Booking amendment HTTP smoke passed: atomic replacement, unchanged purchased price and immutable original snapshot.
+Built local Booking cancellation HTTP smoke passed: snapshotted Standard policy, replay, terminal state and scoped refund completion.
+Built local paid Booking HTTP smoke passed: adult cookie scope, exact amount/deadline, attendee, policy, durable receipt, once-only commitment and terminal release denial.
+Built local waitlist HTTP smoke passed: scoped notification, no reservation or charge, removal and missing-key denial.
+Built local meeting HTTP/worker smoke passed: Staff self connection, asynchronous controlled assigned-Staff provisioning, private URI authority and protected replacement. No Google network call or live meeting acceptance.
+Built local read-only iCal HTTP smoke passed: current Customer scope, private event, UTC times and no attendee/provider details.
+Built local attendance HTTP smoke passed: private Customer QR, assigned Staff confirmation/replay, 48-hour earning seam and scoped contest freeze.
+Built local atomic Booking hold HTTP smoke passed: cookie/adult scope, fixed fifteen-minute terms, private any-Staff/named selection, current slot revalidation, replay/conflict/validation/anonymous denial, cross-mode capacity, release/replay, stale versions, concurrent last-Staff race and expired read recovery. Paid confirmation smoke runs separately above.
+(node:41685) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+(node:41730) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Built local mixed payment HTTP/actual worker passed: signed raw inbox, scope/Money rejection, durable synthetic receipt, fixed original deadline, capture liability, abandoned and late-success full refunds with exact ledger reversals. No Purchase or live provider claim.
+Built local atomic mixed hold HTTP/worker smoke passed: private recovery, 15-minute common deadline, stock/Staff/budget allocation, replay, foreign-scope denial, Cart lock, complete release and actual loopback worker expiry of all participants.
+Built local promotion/commission HTTP smoke passed: temporary audited Finance CLI grant/revoke, signed-cookie Owner/Finance isolation, explicit rates/coupons/campaigns, replay/validation, ordered funding, delivery exclusion, private any-Staff, non-tax receipt context, no quote reservations and frozen history after effective rate change.
+(node:41785) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+(node:41827) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Built local mixed Cart/quote HTTP smoke passed: signed cookie scope, version/replay/validation, explicit merge preview, multi-Vendor goods plus appointment totals, private no-store reads, no allocation, repricing and stale quote recovery.
+
+
+
+ NX   Successfully ran target test-integration for project platform-core and 5 tasks it depends on
+
+Nx read the output from the cache instead of running the command for 3 out of 6 tasks.
+
+  Run duration:      5m 5s
+  Cache:             3/6 hit (50%)
+  Critical path:     5m 4s (4 tasks)
+  Recoverable time:  <1ms
+
+  Recommendations:
+    - Speed up or split the longest tasks on the critical path:
+        platform-core:test-integration    4m 56s

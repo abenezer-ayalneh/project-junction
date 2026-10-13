@@ -29,3 +29,9 @@ Local C03 expands optional Cart promotion selection to one Vendor coupon plus on
 ## Local Phase 04 C04 hold transport — 2026-10-13
 
 `MixedHoldCommand` carries only `quoteId`. `MixedHoldRead` carries owned hold/quote/Cart IDs, `holding|released|expired`, fixed creation/expiry, root `reserved` and the original `MixedQuoteSnapshot`. The immutable snapshot's `reserved: false` describes its advisory evaluation; root `reserved` is authoritative for the current hold. Create/release results add `replayed`; `MixedCurrentHold` wraps a nullable hold for current Cart recovery. Concrete private any-Staff allocations never appear in these types. Payment/Purchase states are not introduced by C04.
+
+## Local Phase 04 C05 payment inbox and compensation — 2026-10-13
+
+`MixedPaymentStart` has only `holdId`; `MixedPaymentSimulation` has only `outcome`. `MixedPaymentRead` exposes payment/hold IDs, `holdState`, sandbox/local-controlled marker, exact Money, original dates, `pending_provider|unknown|succeeded|failed|refund_pending|refunded|no_payment_required`, `commitmentReady` and nullable `pending|unknown|completed` refund state. Create/simulator results add `replayed`; current recovery wraps nullable `payment`. `MixedPaymentWebhookAck` reports accepted/duplicate inbox delivery, not Purchase success. No signing key, private Staff or provider reference is exposed. Commitment readiness requires retained unexpired resources and verified capture, or a zero-payable no-charge path.
+
+All development and verification are local. [C05 evidence](../quality/PHASE-04-LOCAL-ACCEPTANCE-EVIDENCE.md#p04-c05--payment-inbox-and-compensation--2026-10-13).

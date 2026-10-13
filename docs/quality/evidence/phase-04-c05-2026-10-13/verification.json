@@ -1,0 +1,88 @@
+{
+	"date": "2026-10-13",
+	"chunk": "P04-C05",
+	"status": "complete_locally",
+	"environment": "user local machine; isolated loopback PostgreSQL schemas, built API and actual worker; actual local development schema",
+	"requirements": ["REQ-P04-CHK-002 payment/compensation foundation", "REQ-P04-FIN-001 capture/full-refund economic events"],
+	"checks": {
+		"focused": {
+			"status": "passed",
+			"postgresqlScenarios": 26,
+			"selection": "Phase 04 mixed payment inbox",
+			"target": "pnpm nx run platform-core:test-integration",
+			"log": "focused-postgresql-http-worker.log"
+		},
+		"regression": {
+			"status": "passed",
+			"postgresqlScenarios": 162,
+			"breakdown": {
+				"goods": 51,
+				"bookingHolds": 18,
+				"ledger": 10,
+				"cart": 20,
+				"promotion": 21,
+				"mixedHolds": 18,
+				"paymentInbox": 24
+			},
+			"note": "Final focused run contains the initial 24 C05 cases plus two initiation cases; counts overlap.",
+			"httpChecks": [
+				"mixed payment signed-cookie recovery and raw receipt authentication",
+				"actual worker abandoned and late-success refunds with exact ledger reversals",
+				"legacy Booking lifecycle and actual worker",
+				"mixed holds",
+				"promotion/commission/temporary Finance CLI",
+				"mixed Cart/quote"
+			],
+			"log": "regression-postgresql-http-worker.log"
+		},
+		"workspace": {
+			"status": "passed",
+			"unitTestsPassed": 110,
+			"workerTestsSkipped": 1,
+			"command": "pnpm nx run-many -t lint,typecheck,test --projects=contracts,platform-core,api,worker,web --parallel=3",
+			"log": "workspace-checks.log"
+		},
+		"migrationCompatibility": {
+			"status": "passed",
+			"migrations": 47,
+			"log": "migration-compatibility.log"
+		},
+		"populatedUpgrade": {
+			"status": "passed",
+			"log": "populated-upgrade.log"
+		},
+		"actualLocalSchema": {
+			"status": "passed",
+			"pendingMigrationsApplied": 1,
+			"currentMigrations": 47,
+			"actualMixedPaymentsRefundsReceiptsFinanceConfigurationRows": 0,
+			"logs": ["local-migration-before.log", "local-migration-deploy.log", "local-migration-after.log", "local-schema-health.log"]
+		},
+		"documentationAndPublicContracts": {
+			"status": "passed",
+			"commands": ["pnpm docs:check", "pnpm contracts:check"],
+			"logs": ["documentation-check.log", "public-contract-check.log"]
+		}
+	},
+	"implemented": [
+		"Owned original-deadline sandbox attempts, publication/adult check, current private recovery and timeout unknown",
+		"Raw HMAC authentication before JSON parsing, durable deduplicated immutable inbox and retained exceptions",
+		"Balanced positive capture into processor clearing/Customer refund liability without Purchase inference",
+		"Atomic abandoned/expiry compensation with complete resource release and stable full-refund operation",
+		"Outside-transaction provider refund I/O and once-only exact reversal/state/audit/outbox completion",
+		"Zero-payable no-provider/no-cash path"
+	],
+	"derivedLocalRules": [
+		"30-second local adapter response timeout becomes unknown",
+		"Five-minute signed delivery timestamp tolerance",
+		"No C05 commercial commit hook: ready capture is compensated if released/expired before C06 commitment"
+	],
+	"limitations": [
+		"Explicit local signing key remains unconfigured in the example; actual Finance policy/grants/payment/refund/receipt rows were not seeded",
+		"Local-controlled simulation only, no live Stripe/Chapa/provider or merchant/legal acceptance",
+		"Purchase split, scoped sale/funding/commission postings, full receipt/invoice and partial component refunds remain C06",
+		"Browser journey C07; earnings/reconciliation/payout C08-C09",
+		"Formal provider, independent accessibility/retention/target recovery and phase/public-release gates remain open"
+	],
+	"nextChunk": "P04-C06"
+}

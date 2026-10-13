@@ -4,6 +4,7 @@ import { createHmac, randomBytes, randomUUID } from 'node:crypto'
 import { once } from 'node:events'
 import { createServer } from 'node:net'
 
+import { LocalMixedPaymentAdapter } from '../libs/platform-core/dist/lib/local-mixed-payment.js'
 import { PostgresFoundation } from '../libs/platform-core/dist/lib/postgres-foundation.js'
 const url = new URL(process.env.DATABASE_URL ?? '')
 assert.ok(['localhost', '127.0.0.1'].includes(url.hostname))
@@ -159,6 +160,7 @@ try {
 			API_BIND_ADDRESS: '127.0.0.1',
 			BETTER_AUTH_URL: 'http://localhost:3000',
 			BETTER_AUTH_SECRET: secret,
+			JUNCTION_MIXED_PAYMENT_WEBHOOK_SECRET: secret,
 			JUNCTION_BOOKING_ATTENDANCE_SECRET: secret,
 			GOOGLE_CLIENT_ID: 'local-promotions.apps.googleusercontent.com',
 			GOOGLE_CLIENT_SECRET: 'local-test-only',
@@ -312,7 +314,9 @@ try {
 	assert.equal(changed.status, 201, JSON.stringify(changed.body))
 	assert.equal((await request(buyer, `/customer/checkout/quotes/${quote.body.quoteId}`)).body.snapshot.commission.totalMinorUnits, 160)
 	assert.equal((await request(buyer, '/customer/checkout/quotes', 'POST', command)).body.snapshot.commission.totalMinorUnits, 192)
-	if (process.env.MIXED_HOLD_HTTP_CHECK === '1') {
+	if (process.env.MIXED_HOLD_HTTP_CHECK === '1' || process.env.MIXED_PAYMENT_HTTP_CHECK === '1') {
+		let paymentProofId, duePaymentId
+		const paymentAdapter = new LocalMixedPaymentAdapter(secret)
 		const latest = await request(buyer, '/customer/checkout/quotes', 'POST', command)
 		assert.equal(latest.body.state, 'ready')
 		const holdCommand = { quoteId: latest.body.quoteId },
@@ -335,6 +339,75 @@ try {
 		assert.equal(await repository.db.staffAllocation.count({ where: { mixedIntent: { holdId: held.body.holdId }, state: 'held' } }), 1)
 		assert.equal((await repository.db.campaignBudgetBalance.findUniqueOrThrow({ where: { promotionId: campaign.body.promotionId } })).reserved, 320n)
 		assert.ok(!JSON.stringify(held.body).includes(staff.id))
+
+		if (process.env.MIXED_PAYMENT_HTTP_CHECK === '1') {
+			const startBody = { holdId: held.body.holdId },
+				startKey = randomUUID()
+			assert.equal((await request(null, '/customer/checkout/payments', 'POST', startBody)).status, 403)
+			assert.equal((await request(owner, '/customer/checkout/payments', 'POST', startBody)).status, 403)
+			assert.equal((await request(buyer, '/customer/checkout/payments', 'POST', { ...startBody, amount: 1 })).status, 400)
+			const payment = await request(buyer, '/customer/checkout/payments', 'POST', startBody, startKey)
+			assert.equal(payment.status, 201, JSON.stringify(payment.body))
+			paymentProofId = payment.body.paymentId
+			assert.equal(payment.body.expiresAt, held.body.expiresAt)
+			assert.equal(payment.body.sandbox, true)
+			assert.equal((await request(buyer, '/customer/checkout/payments', 'POST', startBody, startKey)).body.replayed, true)
+			assert.equal((await request(buyer, '/customer/checkout/payments', 'POST', startBody)).status, 409)
+			assert.equal((await request(owner, `/customer/checkout/payments/${paymentProofId}`)).status, 403)
+			const p = await repository.db.mixedPaymentAttempt.findUniqueOrThrow({ where: { id: paymentProofId } })
+			const event = {
+				eventId: randomUUID(),
+				paymentId: p.id,
+				workspaceId: p.workspaceId,
+				reference: p.providerReference,
+				merchant: 'junction',
+				environment: 'local-controlled',
+				amount: { minorUnits: 1, currency: 'ETB' },
+				outcome: 'succeeded',
+				occurredAt: new Date().toISOString(),
+			}
+			const raw = Buffer.from(JSON.stringify(event))
+			const unsigned = await fetch(`${origin}/payments/local-mixed-webhook`, {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: raw,
+			})
+			assert.equal(unsigned.status, 403)
+
+			const malformed = Buffer.from('{bad')
+			const unsignedMalformed = await fetch(`${origin}/payments/local-mixed-webhook`, {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: malformed,
+			})
+			assert.equal(unsignedMalformed.status, 403)
+			const signedMalformed = await fetch(`${origin}/payments/local-mixed-webhook`, {
+				method: 'POST',
+				headers: { 'content-type': 'application/json', 'x-junction-payment-signature': paymentAdapter.sign(malformed, new Date()) },
+				body: malformed,
+			})
+			assert.equal(signedMalformed.status, 200)
+			const wrongMoney = await fetch(`${origin}/payments/local-mixed-webhook`, {
+				method: 'POST',
+				headers: { 'content-type': 'application/json', 'x-junction-payment-signature': paymentAdapter.sign(raw, new Date()) },
+				body: raw,
+			})
+			assert.equal(wrongMoney.status, 200)
+			assert.equal((await request(buyer, `/customer/checkout/payments/${p.id}`)).body.state, 'pending_provider')
+			const simulated = await request(buyer, `/customer/checkout/payments/${p.id}/local-result`, 'POST', { outcome: 'succeeded' })
+			assert.equal(simulated.status, 201, JSON.stringify(simulated.body))
+			assert.equal(simulated.body.state, 'pending_provider')
+			const recoveredPayment = await request(buyer, `/customer/checkout/payments/${p.id}`)
+			assert.match(recoveredPayment.cacheControl ?? '', /no-store/)
+			assert.equal(recoveredPayment.body.state, 'succeeded')
+			assert.equal(recoveredPayment.body.commitmentReady, true)
+			const currentPayment = await request(buyer, '/customer/checkout/payments/current')
+			assert.equal(currentPayment.status, 200)
+			assert.equal(currentPayment.body.payment.paymentId, p.id)
+			assert.match(currentPayment.cacheControl ?? '', /no-store/)
+			assert.equal(await repository.db.goodsPurchase.count({ where: { customerId: buyer.user.id } }), 0)
+			assert.equal(await repository.db.ledgerTransaction.count({ where: { sourceId: p.id } }), 1)
+		}
 		const releaseKey = randomUUID(),
 			path = `/customer/checkout/holds/${held.body.holdId}/release`
 		assert.equal((await request(buyer, path, 'POST', undefined, releaseKey)).body.state, 'released')
@@ -382,8 +455,34 @@ try {
 			const priced = await controlled.createMixedQuote(buyer.session.id, randomUUID(), { cartId: saved.cartId, expectedVersion: saved.version })
 			assert.equal(priced.state, 'ready')
 			due = await controlled.createMixedHold(buyer.session.id, randomUUID(), { quoteId: priced.quoteId })
+			if (process.env.MIXED_PAYMENT_HTTP_CHECK === '1')
+				duePaymentId = (await controlled.startMixedPayment(buyer.session.id, randomUUID(), { holdId: due.holdId })).paymentId
 		} finally {
 			await controlled.close()
+		}
+
+		if (duePaymentId) {
+			const p = await repository.db.mixedPaymentAttempt.findUniqueOrThrow({ where: { id: duePaymentId } })
+			const payload = {
+					eventId: randomUUID(),
+					paymentId: p.id,
+					workspaceId: p.workspaceId,
+					reference: p.providerReference,
+					merchant: 'junction',
+					environment: 'local-controlled',
+					amount: { minorUnits: Number(p.amountMinorUnits), currency: p.currency },
+					outcome: 'succeeded',
+					occurredAt: new Date().toISOString(),
+				},
+				raw = Buffer.from(JSON.stringify(payload))
+			const deliver = () =>
+				fetch(`${origin}/payments/local-mixed-webhook`, {
+					method: 'POST',
+					headers: { 'content-type': 'application/json', 'x-junction-payment-signature': paymentAdapter.sign(raw, new Date()) },
+					body: raw,
+				})
+			assert.equal((await deliver()).status, 200)
+			assert.equal((await (await deliver()).json()).duplicate, true)
 		}
 		const redisUrl = new URL(process.env.REDIS_URL ?? '')
 		assert.ok(['localhost', '127.0.0.1'].includes(redisUrl.hostname))
@@ -403,7 +502,11 @@ try {
 			let expired = false
 			for (let attempt = 0; attempt < 60; attempt++) {
 				const row = await repository.db.mixedCheckoutHold.findUniqueOrThrow({ where: { id: due.holdId } })
-				if (row.state === 'expired') {
+				if (
+					row.state === 'expired' &&
+					(!duePaymentId || (await repository.db.mixedPaymentAttempt.findUniqueOrThrow({ where: { id: duePaymentId } })).state === 'refunded') &&
+					(!paymentProofId || (await repository.db.mixedPaymentAttempt.findUniqueOrThrow({ where: { id: paymentProofId } })).state === 'refunded')
+				) {
 					expired = true
 					break
 				}
@@ -411,6 +514,20 @@ try {
 				await new Promise((resolve) => setTimeout(resolve, 250))
 			}
 			assert.ok(expired, `Built worker did not expire mixed participants: ${workerLogs}`)
+
+			if (duePaymentId) {
+				for (const id of [paymentProofId, duePaymentId]) {
+					const entries = await repository.db.ledgerTransaction.findMany({ where: { sourceId: id }, include: { postings: true } })
+					assert.equal(entries.length, 2)
+					assert.equal(
+						entries.flatMap((t) => t.postings).reduce((sum, p) => sum + p.minorUnits, 0n),
+						0n,
+					)
+				}
+				console.log(
+					'Built local mixed payment HTTP/actual worker passed: signed raw inbox, scope/Money rejection, durable synthetic receipt, fixed original deadline, capture liability, abandoned and late-success full refunds with exact ledger reversals. No Purchase or live provider claim.',
+				)
+			}
 			assert.ok(workerLogs.includes('worker.started'))
 			assert.equal(await repository.db.staffAllocation.count({ where: { mixedIntent: { holdId: due.holdId }, state: 'held' } }), 0)
 			assert.equal(

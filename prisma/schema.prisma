@@ -1130,6 +1130,8 @@ model BookingRefund {
 }
 
 model LedgerTransaction {
+ mixedCapture MixedPaymentAttempt? @relation("MixedCapture")
+ mixedRefund MixedPaymentRefund? @relation("MixedRefund")
   id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
   workspaceId String @map("workspace_id") @db.Uuid
   economicEventId String @map("economic_event_id")
@@ -1274,6 +1276,7 @@ model CampaignBudgetBalance {
 }
 
 model MixedCheckoutHold {
+ payment MixedPaymentAttempt?
  id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
  quoteId String @unique @map("quote_id") @db.Uuid
  cartId String @map("cart_id") @db.Uuid
@@ -1318,4 +1321,40 @@ model MixedHoldBookingIntent {
  allocation StaffAllocation?
  @@unique([holdId,componentId])
  @@map("mixed_hold_booking_intents")
+}
+
+model MixedPaymentAttempt {
+ captureLedger LedgerTransaction? @relation("MixedCapture",fields:[captureLedgerId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+ id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+ holdId String @unique @map("hold_id") @db.Uuid
+ workspaceId String @map("workspace_id") @db.Uuid
+ customerId String @map("customer_id") @db.Uuid
+ provider String @default("local-controlled")
+ providerReference String @unique @map("provider_reference")
+ amountMinorUnits BigInt @map("amount_minor_units")
+ currency String @default("ETB")
+ state String @default("pending_provider")
+ createdAt DateTime @map("created_at") @db.Timestamptz(6)
+ expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+ captureLedgerId String? @unique @map("capture_ledger_id") @db.Uuid
+ capturedAt DateTime? @map("captured_at") @db.Timestamptz(6)
+ hold MixedCheckoutHold @relation(fields:[holdId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+ refund MixedPaymentRefund?
+ @@index([state,createdAt])
+ @@map("mixed_payment_attempts")
+}
+model MixedPaymentRefund {
+ reversalLedger LedgerTransaction? @relation("MixedRefund",fields:[reversalLedgerId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+ id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+ paymentId String @unique @map("payment_id") @db.Uuid
+ amountMinorUnits BigInt @map("amount_minor_units")
+ currency String @default("ETB")
+ state String @default("pending")
+ reason String
+ providerReference String? @unique @map("provider_reference")
+ reversalLedgerId String? @unique @map("reversal_ledger_id") @db.Uuid
+ createdAt DateTime @map("created_at") @db.Timestamptz(6)
+ completedAt DateTime? @map("completed_at") @db.Timestamptz(6)
+ payment MixedPaymentAttempt @relation(fields:[paymentId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+ @@map("mixed_payment_refunds")
 }

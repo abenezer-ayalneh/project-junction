@@ -1,5 +1,6 @@
 import { ConfigService } from '@nestjs/config'
 import { NestFactory } from '@nestjs/core'
+import type { NestExpressApplication } from '@nestjs/platform-express'
 import helmet from 'helmet'
 import { assertApplicationRuntimeConfiguration } from 'platform-core'
 
@@ -13,13 +14,16 @@ import { getApiRuntimeConfig } from './app/runtime/api-runtime.config'
 
 async function bootstrap() {
 	assertApplicationRuntimeConfiguration()
-	const app = await NestFactory.create(AppModule, { rawBody: true })
+	const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true })
 	const config = getApiRuntimeConfig(app.get(ConfigService))
 	const logger = createApiLogger(config.logLevel)
 	app.useLogger(logger)
 
 	app.enableShutdownHooks()
 	app.setGlobalPrefix('v1')
+	// Consume only this provider route as bytes before the default JSON parser.
+	// Authentication then precedes parsing, including malformed signed receipts.
+	app.useBodyParser('raw', { type: (request) => request.url?.split('?')[0] === '/v1/payments/local-mixed-webhook', limit: 65536, inflate: false })
 	app.use(helmet())
 	app.use((request: RequestWithContext, response: ResponseWithContext, next: () => void) => requestContextMiddleware(request, response, next))
 	if (process.env['JUNCTION_RUNTIME_MODE'] === 'local' || process.env['JUNCTION_RUNTIME_MODE'] === 'staging') {

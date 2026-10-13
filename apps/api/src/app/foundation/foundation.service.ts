@@ -402,6 +402,21 @@ export class FoundationService {
 	resolveVendorCoupon(sessionId: string | undefined, input: unknown) {
 		return this.durable.resolveVendorCoupon(sessionId, input)
 	}
+	readCurrentMixedPayment(sessionId: string | undefined) {
+		return this.durable.readCurrentMixedPayment(sessionId)
+	}
+	startMixedPayment(sessionId: string | undefined, key: string | undefined, input: unknown) {
+		return this.durable.startMixedPayment(sessionId, key, input)
+	}
+	readMixedPayment(sessionId: string | undefined, id: string) {
+		return this.durable.readMixedPayment(sessionId, id)
+	}
+	simulateMixedPayment(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.durable.simulateMixedPayment(sessionId, key, id, input)
+	}
+	receiveMixedPaymentWebhook(raw: Buffer | undefined, signature: string | undefined) {
+		return this.durable.receiveMixedPaymentWebhook(raw, signature)
+	}
 	readCurrentMixedHold(sessionId: string | undefined) {
 		return this.durable.readCurrentMixedHold(sessionId)
 	}

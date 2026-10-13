@@ -31,6 +31,7 @@ export class MixedCheckoutHolds {
 		private readonly goods: GoodsCheckout,
 		private readonly bookings: BookingHolds,
 		private readonly budget: PromotionBudget,
+		private readonly onTerminal?: (tx: Tx, holdId: string) => Promise<void>,
 	) {}
 	private async lock(tx: Tx) {
 		await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended('junction:goods-checkout',0))`
@@ -108,8 +109,13 @@ export class MixedCheckoutHolds {
 		await tx.staffAllocation.updateMany({ where: { mixedIntent: { holdId: hold.id }, state: 'held' }, data: { state } })
 		await this.budget.complete(tx, hold.quoteId, hold.id, 'released')
 		const updated = await tx.mixedCheckoutHold.update({ where: { id: hold.id }, data: { state, releasedAt: this.deps.now() } })
+		await this.onTerminal?.(tx, hold.id)
 		await this.facts(tx, updated, actorId, key)
 		return updated
+	}
+	async endInTransaction(tx: Tx, id: string, state: 'released' | 'expired') {
+		const hold = await tx.mixedCheckoutHold.findUniqueOrThrow({ where: { id } })
+		return this.terminal(tx, hold, state, null, null)
 	}
 	/** Caller takes the shared commerce lock. Release every participant in this same transaction. */
 	async expireInTransaction(tx: Tx, cartId?: string) {

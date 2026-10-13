@@ -5,6 +5,7 @@ export const MoneySchema = z.object({ minorUnits: z.number().int().safe(), curre
 export type Money = z.infer<typeof MoneySchema>
 export const LedgerAccountSchema = z.enum([
 	'processor_clearing',
+	'customer_refund_liability',
 	'vendor_payable',
 	'platform_commission',
 	'platform_promotion_expense',

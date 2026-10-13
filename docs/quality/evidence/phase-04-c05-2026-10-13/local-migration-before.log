@@ -1,0 +1,11 @@
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "public" at "127.0.0.1:55432"
+
+47 migrations found in prisma/migrations
+Following migration have not yet been applied:
+20261013040000_mixed_payment_inbox
+
+To apply migrations in development run prisma migrate dev.
+To apply migrations in production run prisma migrate deploy.

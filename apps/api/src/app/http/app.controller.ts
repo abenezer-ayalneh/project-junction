@@ -843,6 +843,57 @@ export class AppController {
 		return this.foundation.resolveVendorCoupon(sessionId, body)
 	}
 
+	@Post('customer/checkout/payments')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Start a local sandbox mixed payment with the original hold deadline.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.mixedPaymentStart })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.mixedPaymentResult })
+	startMixedPayment(@AuthenticatedSession() sessionId: string | undefined, @Headers('idempotency-key') key: string | undefined, @Body() body: unknown) {
+		return this.foundation.startMixedPayment(sessionId, key, body)
+	}
+	@Get('customer/checkout/payments/current')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Recover the current Cart payment after a lost response or reload.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.mixedCurrentPayment })
+	readCurrentMixedPayment(@AuthenticatedSession() sessionId: string | undefined) {
+		return this.foundation.readCurrentMixedPayment(sessionId)
+	}
+	@Get('customer/checkout/payments/:paymentId')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Recover authoritative sandbox payment and refund state.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.mixedPaymentRead })
+	readMixedPayment(@AuthenticatedSession() sessionId: string | undefined, @Param('paymentId') id: string) {
+		return this.foundation.readMixedPayment(sessionId, id)
+	}
+	@Post('customer/checkout/payments/:paymentId/local-result')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Generate an authenticated synthetic provider receipt in local development.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.mixedPaymentSimulation })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.mixedPaymentResult })
+	simulateMixedPayment(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('paymentId') id: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.simulateMixedPayment(sessionId, key, id, body)
+	}
+	@Post('payments/local-mixed-webhook')
+	@HttpCode(200)
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Authenticate a local sandbox provider receipt before durable inbox processing.' })
+	@ApiHeader({ name: 'x-junction-payment-signature', required: true })
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.mixedPaymentWebhookAck })
+	receiveMixedPaymentWebhook(@Req() request: { rawBody?: Buffer }, @Headers('x-junction-payment-signature') signature: string | undefined) {
+		return this.foundation.receiveMixedPaymentWebhook(request.rawBody, signature)
+	}
+
 	@Post('customer/checkout/holds')
 	@Header('Cache-Control', 'no-store')
 	@ApiOperation({ summary: 'Reserve all quoted stock, Staff and promotion budget atomically for fifteen minutes.' })
