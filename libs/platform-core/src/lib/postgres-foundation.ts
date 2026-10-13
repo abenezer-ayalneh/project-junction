@@ -10,6 +10,7 @@ import {
 	CatalogHealthSchema,
 	CatalogImportCommandSchema,
 	CatalogImportResultSchema,
+	CheckoutEligibilitySchema,
 	CustomerDiscoveryStateSchema,
 	DiscoveryPreferenceSchema,
 	DiscoveryPreferenceUpdateSchema,
@@ -496,6 +497,16 @@ export class PostgresFoundation {
 		const session = await this.db.session.findUnique({ where: { id: sessionId }, include: { user: true, workspace: true } })
 		if (!session?.user || session.revokedAt || session.expiresAt <= new Date() || session.workspace.kind !== 'real') throw new AccessDeniedError()
 		return { userId: session.user.id, email: session.user.email }
+	}
+
+	async readCheckoutEligibility(sessionId: string | undefined) {
+		const { userId } = await this.authenticatedIdentity(sessionId)
+		const user = await this.db.user.findUniqueOrThrow({ where: { id: userId }, select: { adultVerificationState: true, verifiedAt: true } })
+		return CheckoutEligibilitySchema.parse({
+			status: ['verified', 'rejected'].includes(user.adultVerificationState) ? user.adultVerificationState : 'unverified',
+			canReserve: user.adultVerificationState === 'verified' && user.verifiedAt !== null,
+			verificationDeferred: applicationRuntimeMode() === 'local',
+		})
 	}
 
 	async identityVerificationStatus(sessionId: string | undefined) {

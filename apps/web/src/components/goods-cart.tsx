@@ -6,6 +6,7 @@ import {
 	GoodsHoldResultSchema,
 	GoodsQuoteCommandSchema,
 	GoodsQuoteResultSchema,
+	type MixedCartSelection,
 	PublicListingDetailSchema,
 } from 'contracts'
 import Link from 'next/link'
@@ -24,7 +25,13 @@ type DeliveryDraft = { zoneId: string; contactName: string; phone: string; local
 const emptyDelivery = (): DeliveryDraft => ({ zoneId: '', contactName: '', phone: '', locality: '', address: '', longitude: '', latitude: '' })
 const pendingKey = 'junction:goods-hold-pending:v1'
 const PendingSchema = z.object({ quoteId: z.string().uuid(), key: z.string().uuid(), holdId: z.string().uuid().optional() })
-export function GoodsCart() {
+export function GoodsCart({
+	onCheckout,
+	checkoutLocked = false,
+}: {
+	onCheckout?: (groups: MixedCartSelection['goodsGroups']) => Promise<void>
+	checkoutLocked?: boolean
+}) {
 	const [lines, setLines] = useState<CartLine[] | null>(null)
 	const [details, setDetails] = useState<Record<string, Detail>>({})
 	const [delivery, setDelivery] = useState<Record<string, DeliveryDraft>>({})
@@ -35,19 +42,35 @@ export function GoodsCart() {
 	const [busy, setBusy] = useState(false)
 	const [now, setNow] = useState(0)
 	const running = useRef(false)
+	const unified = !!onCheckout
 	const quoteAttempt = useRef<{ body: unknown; key: string } | null>(null)
 	useEffect(() => {
 		try {
 			setLines(readCart())
 			const value = window.sessionStorage.getItem(pendingKey)
-			if (value) setPending(PendingSchema.parse(JSON.parse(value)))
+			if (value && !unified) setPending(PendingSchema.parse(JSON.parse(value)))
 		} catch {
 			setMessage('Saved Cart could not be read. Clear goods to start again.')
 			setLines([])
 		}
+		const sync = () => {
+			try {
+				setLines(readCart())
+				setQuote(null)
+				quoteAttempt.current = null
+			} catch {
+				setMessage('Saved Cart could not be read. Clear goods to start again.')
+			}
+		}
+		window.addEventListener('junction:cart-changed', sync)
+		window.addEventListener('storage', sync)
 		const timer = window.setInterval(() => setNow(Date.now()), 1000)
-		return () => window.clearInterval(timer)
-	}, [])
+		return () => {
+			window.clearInterval(timer)
+			window.removeEventListener('junction:cart-changed', sync)
+			window.removeEventListener('storage', sync)
+		}
+	}, [unified])
 	useEffect(() => {
 		if (!lines?.length) return
 		let current = true
@@ -73,7 +96,7 @@ export function GoodsCart() {
 		}, {}),
 	)
 	const activeHold = hold?.state === 'holding' || hold?.state === 'awaiting_payment'
-	const locked = busy || !!pending || activeHold
+	const locked = checkoutLocked || busy || !!pending || activeHold
 	function edit(next: CartLine[]) {
 		try {
 			writeCart(next)
@@ -132,7 +155,7 @@ export function GoodsCart() {
 		event.preventDefault()
 		void command(async () => {
 			if (quote && Date.parse(quote.expiresAt) <= Date.now()) quoteAttempt.current = null
-			const body = GoodsQuoteCommandSchema.parse({
+			const input = {
 				groups: groups.map((group) => {
 					const first = group[0]
 					const draft = delivery[first.listing.vendor.id] ?? emptyDelivery()
@@ -141,9 +164,9 @@ export function GoodsCart() {
 						locationId: first.locationId,
 						fulfillment:
 							first.method === 'pickup'
-								? { method: 'pickup' }
+								? { method: 'pickup' as const }
 								: {
-										method: 'delivery',
+										method: 'delivery' as const,
 										zoneId: draft.zoneId,
 										address: {
 											contactName: draft.contactName,
@@ -153,13 +176,26 @@ export function GoodsCart() {
 											point: [
 												draft.longitude === '' ? NaN : Number(draft.longitude),
 												draft.latitude === '' ? NaN : Number(draft.latitude),
-											],
+											] as [number, number],
 										},
 									},
 						lines: group.map((line) => ({ listingId: line.listing.id, sku: line.sku, quantity: line.quantity })),
 					}
 				}),
-			})
+			}
+			if (onCheckout) {
+				await onCheckout(
+					input.groups.map((group) => ({
+						...group,
+						lines: group.lines.map((line) => ({
+							...line,
+							expectedUnitPriceCents: lines?.find((saved) => saved.listing.id === line.listingId && saved.sku === line.sku)?.unitPriceCents ?? 0,
+						})),
+					})),
+				)
+				return
+			}
+			const body = GoodsQuoteCommandSchema.parse(input)
 			if (!quoteAttempt.current || JSON.stringify(quoteAttempt.current.body) !== JSON.stringify(body))
 				quoteAttempt.current = { body, key: window.crypto.randomUUID() }
 			const result = await goodsRequest('customer/goods/quotes', (data) => GoodsQuoteResultSchema.parse(data), body, quoteAttempt.current.key)
@@ -183,9 +219,11 @@ export function GoodsCart() {
 	return (
 		<div className="space-y-8">
 			<p className="text-sm text-muted-foreground">
-				This Cart is saved in this browser. Prices and stock are checked at checkout. Delivery contact details are not saved.
+				{unified
+					? 'Browser selections are checked at checkout. Delivery details are saved to your account only when you confirm the Cart merge.'
+					: 'This Cart is saved in this browser. Prices and stock are checked at checkout. Delivery contact details are not saved.'}
 			</p>
-			{!lines.length ? (
+			{!lines.length && !onCheckout ? (
 				<div className="space-y-4">
 					<p className="text-sm text-muted-foreground">No goods in Cart.</p>
 					<div className="flex justify-center gap-5">
@@ -199,6 +237,14 @@ export function GoodsCart() {
 				</div>
 			) : (
 				<form onSubmit={quoteCart} className="space-y-8">
+					{!lines.length ? (
+						<div className="space-y-3">
+							<p>No goods in this browser Cart.</p>
+							<Link className="underline" href="/search?kind=product">
+								Browse Products
+							</Link>
+						</div>
+					) : null}
 					{groups.map((group) => {
 						const first = group[0]
 						const vendorId = first.listing.vendor.id

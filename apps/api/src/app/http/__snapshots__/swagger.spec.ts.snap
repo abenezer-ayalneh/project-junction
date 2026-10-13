@@ -3146,6 +3146,31 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
         "type": "object",
       },
+      "CheckoutEligibility": {
+        "additionalProperties": false,
+        "properties": {
+          "canReserve": {
+            "type": "boolean",
+          },
+          "status": {
+            "enum": [
+              "unverified",
+              "verified",
+              "rejected",
+            ],
+            "type": "string",
+          },
+          "verificationDeferred": {
+            "type": "boolean",
+          },
+        },
+        "required": [
+          "status",
+          "canReserve",
+          "verificationDeferred",
+        ],
+        "type": "object",
+      },
       "CommissionRateCommand": {
         "additionalProperties": false,
         "properties": {
@@ -31679,6 +31704,33 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
         ],
         "summary": "Preview anonymous Cart merge, matching selections and current conflicts without saving.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/customer/checkout/eligibility": {
+      "get": {
+        "operationId": "AppController_readCheckoutEligibility",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckoutEligibility",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Read account checkout eligibility without initiating or enabling identity verification.",
         "tags": [
           "foundation",
         ],

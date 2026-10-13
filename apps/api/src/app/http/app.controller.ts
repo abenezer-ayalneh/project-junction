@@ -957,6 +957,15 @@ export class AppController {
 		return this.foundation.releaseMixedHold(sessionId, key, id)
 	}
 
+	@Get('customer/checkout/eligibility')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Read account checkout eligibility without initiating or enabling identity verification.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.checkoutEligibility })
+	readCheckoutEligibility(@AuthenticatedSession() sessionId: string | undefined) {
+		return this.foundation.readCheckoutEligibility(sessionId)
+	}
+
 	@Get('customer/cart')
 	@Header('Cache-Control', 'no-store')
 	@ApiOperation({ summary: 'Read the signed-in Customer Cart.' })

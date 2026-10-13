@@ -14,7 +14,7 @@ import {
 	writeAppointmentIntents,
 } from '@/lib/appointment-intents'
 
-export function AppointmentIntents() {
+export function AppointmentIntents({ locked = false }: { locked?: boolean }) {
 	const [intents, setIntents] = useState<AppointmentIntent[] | null>(null)
 	const [message, setMessage] = useState('')
 	const [corrupt, setCorrupt] = useState(false)
@@ -87,12 +87,14 @@ export function AppointmentIntents() {
 								{appointmentPrice(intent.priceCents)} · {intent.durationMinutes} minutes
 							</p>
 							<div className="flex flex-wrap justify-center gap-4">
-								<Link
-									href={`/listings/${intent.listing.id}?appointmentIntent=${intent.id}`}
-									className="self-center text-sm underline underline-offset-4">
-									Edit appointment
-								</Link>
-								<Button type="button" variant="outline" onClick={() => remove(intent.id)}>
+								{!locked ? (
+									<Link
+										href={`/listings/${intent.listing.id}?appointmentIntent=${intent.id}`}
+										className="self-center text-sm underline underline-offset-4">
+										Edit appointment
+									</Link>
+								) : null}
+								<Button type="button" variant="outline" disabled={locked} onClick={() => remove(intent.id)}>
 									Remove appointment
 								</Button>
 							</div>
@@ -103,7 +105,7 @@ export function AppointmentIntents() {
 				<p className="text-sm text-muted-foreground">No appointment intents in Cart.</p>
 			)}
 			{corrupt ? (
-				<Button type="button" variant="outline" onClick={clear}>
+				<Button type="button" variant="outline" disabled={locked} onClick={clear}>
 					Clear appointments
 				</Button>
 			) : null}

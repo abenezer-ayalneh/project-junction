@@ -608,6 +608,10 @@ try {
 			'Built local atomic mixed hold HTTP/worker smoke passed: private recovery, 15-minute common deadline, stock/Staff/budget allocation, replay, foreign-scope denial, Cart lock, complete release and actual loopback worker expiry of all participants.',
 		)
 	}
+	if (process.env.MIXED_CHECKOUT_BROWSER_CHECK === '1') {
+		const { checkUnifiedCheckoutBrowser } = await import('./check-unified-checkout-browser.mjs')
+		await checkUnifiedCheckoutBrowser({ repository, identity, origin, vendor, location, product, service, selection })
+	}
 	cli('revoke')
 	assert.equal(
 		(

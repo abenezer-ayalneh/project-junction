@@ -1,0 +1,139 @@
+
+ NX   Running target build for 2 projects and 3 tasks they depend on:
+
+- api
+- web
+
+
+
+> nx run contracts:build  [existing outputs match the cache, left as is]
+
+> tsc --build tsconfig.lib.json
+
+
+> nx run platform-core:generate-client  [existing outputs match the cache, left as is]
+
+> node tools/generate-prisma.mjs
+
+(node:73224) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `pnpm --trace-warnings ...` to show where the warning was created)
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+
+✔ Generated Prisma Client (v7.10.0) to ./libs/platform-core/generated/prisma in 400ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+
+
+> nx run platform-core:build  [existing outputs match the cache, left as is]
+
+> tsc --build tsconfig.lib.json
+
+
+> nx run api:build  [existing outputs match the cache, left as is]
+
+> webpack-cli build
+
+(node:19882) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+WARNING in ../../node_modules/.pnpm/pg@8.23.0/node_modules/pg/lib/native/client.js 7:11-31
+Module not found: Error: Can't resolve 'pg-native' in '/Users/abeni/Documents/projects/misc/project-junction/node_modules/.pnpm/pg@8.23.0/node_modules/pg/lib/native'
+
+WARNING in ../../node_modules/.pnpm/standardwebhooks@1.1.1/node_modules/standardwebhooks/dist/index.js
+Module Warning (from ../../node_modules/.pnpm/source-map-loader@5.0.0_webpack@5.110.2/node_modules/source-map-loader/dist/cjs.js):
+Failed to parse source map from '/Users/abeni/Documents/projects/misc/project-junction/node_modules/.pnpm/standardwebhooks@1.1.1/node_modules/standardwebhooks/src/index.ts' file: Error: ENOENT: no such file or directory, open '/Users/abeni/Documents/projects/misc/project-junction/node_modules/.pnpm/standardwebhooks@1.1.1/node_modules/standardwebhooks/src/index.ts'
+
+WARNING in ../../node_modules/.pnpm/standardwebhooks@1.1.1/node_modules/standardwebhooks/dist/timing_safe_equal.js
+Module Warning (from ../../node_modules/.pnpm/source-map-loader@5.0.0_webpack@5.110.2/node_modules/source-map-loader/dist/cjs.js):
+Failed to parse source map from '/Users/abeni/Documents/projects/misc/project-junction/node_modules/.pnpm/standardwebhooks@1.1.1/node_modules/standardwebhooks/src/timing_safe_equal.ts' file: Error: ENOENT: no such file or directory, open '/Users/abeni/Documents/projects/misc/project-junction/node_modules/.pnpm/standardwebhooks@1.1.1/node_modules/standardwebhooks/src/timing_safe_equal.ts'
+
+WARNING in ../../libs/platform-core/generated/prisma/runtime/client.js
+Module Warning (from ../../node_modules/.pnpm/source-map-loader@5.0.0_webpack@5.110.2/node_modules/source-map-loader/dist/cjs.js):
+Failed to parse source map from '/Users/abeni/Documents/projects/misc/project-junction/libs/platform-core/generated/prisma/runtime/client.js.map' file: Error: ENOENT: no such file or directory, open '/Users/abeni/Documents/projects/misc/project-junction/libs/platform-core/generated/prisma/runtime/client.js.map'
+
+WARNING in ../../node_modules/.pnpm/resend@6.29.0/node_modules/resend/dist/index.cjs 246:20-49
+Module not found: Error: Can't resolve '@react-email/render' in '/Users/abeni/Documents/projects/misc/project-junction/node_modules/.pnpm/resend@6.29.0/node_modules/resend/dist'
+
+WARNING in ../../node_modules/.pnpm/@better-auth+core@1.7.6_@better-auth+utils@0.4.2_@better-fetch+fetch@1.3.2_better-call@_0d2bc7a1df00020935f55bce76238bfa/node_modules/@better-auth/core/dist/instrumentation/api.mjs 7:27-55
+Module not found: Error: Can't resolve '@opentelemetry/api' in '/Users/abeni/Documents/projects/misc/project-junction/node_modules/.pnpm/@better-auth+core@1.7.6_@better-auth+utils@0.4.2_@better-fetch+fetch@1.3.2_better-call@_0d2bc7a1df00020935f55bce76238bfa/node_modules/@better-auth/core/dist/instrumentation'
+
+webpack compiled with 6 warnings (beaa3cefc526f2e4)
+
+> nx run web:build
+
+> next build
+
+▲ Next.js 16.3.5 (Turbopack)
+(node:27151) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✓ Running next.config.js took 20ms
+
+  Creating an optimized production build ...
+(node:27151) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:27179) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:27180) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✓ Compiled successfully in 3.1s
+  Running TypeScript ...
+  Finished TypeScript in 2.7s ...
+  Collecting page data using 9 workers ...
+(node:27348) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:27346) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:27347) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:27354) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:27350) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:27353) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:27349) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:27351) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:27352) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  Generating static pages using 9 workers (0/11) ...
+  Generating static pages using 9 workers (2/11) 
+  Generating static pages using 9 workers (5/11) 
+  Generating static pages using 9 workers (8/11) 
+✓ Generating static pages using 9 workers (11/11) in 343ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ○ /_not-found
+├ ○ /account
+├ ○ /account/reset
+├ ○ /account/verified
+├ ○ /account/verify-2fa
+├ ƒ /api/auth/[...all]
+├ ○ /cart
+├ ƒ /listings/[listingId]
+├ ○ /platform-review
+├ ƒ /purchases/[purchaseId]
+├ ƒ /search
+├ ○ /vendor-workspace
+└ ƒ /vendors/[slug]
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+
+
+ NX   Successfully ran target build for 2 projects and 3 tasks they depend on
+
+Nx read the output from the cache instead of running the command for 4 out of 5 tasks.
+
+  Run duration:      9.4s
+  Cache:             4/5 hit (80%)
+  Critical path:     9.0s (3 tasks)
+  Recoverable time:  <1ms

@@ -114,3 +114,9 @@ export const MixedHoldResultSchema = MixedHoldReadSchema.extend({ replayed: z.bo
 export const MixedHoldReleaseResultSchema = z.strictObject({ holdId: id, state: z.enum(['released', 'expired']), replayed: z.boolean() })
 
 export const MixedCurrentHoldSchema = z.strictObject({ hold: MixedHoldReadSchema.nullable() })
+
+export const CheckoutEligibilitySchema = z.strictObject({
+	status: z.enum(['unverified', 'verified', 'rejected']),
+	canReserve: z.boolean(),
+	verificationDeferred: z.boolean(),
+})
