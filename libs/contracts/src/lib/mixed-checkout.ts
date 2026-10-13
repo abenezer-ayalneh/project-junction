@@ -104,7 +104,7 @@ export const MixedHoldReadSchema = z.strictObject({
 	holdId: id,
 	quoteId: id,
 	cartId: id,
-	state: z.enum(['holding', 'released', 'expired']),
+	state: z.enum(['holding', 'released', 'expired', 'committed']),
 	createdAt: z.string().datetime(),
 	expiresAt: z.string().datetime(),
 	reserved: z.boolean(),

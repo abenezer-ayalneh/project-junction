@@ -4,6 +4,8 @@ export const DomainEventSchema = z.object({
 	eventId: z.string().uuid(),
 	type: z.enum([
 		'FoundationCommandAccepted',
+		'MixedComponentRefundCompleted',
+		'MixedPurchaseCommitted',
 		'MixedPaymentRequested',
 		'MixedPaymentResultRecorded',
 		'MixedPaymentChanged',

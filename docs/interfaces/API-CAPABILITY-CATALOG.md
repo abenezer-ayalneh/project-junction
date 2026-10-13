@@ -144,3 +144,11 @@ Private/no-store signed-cookie routes: `POST /v1/customer/checkout/payments` acc
 Only durable verified receipt processing can post a capture. The 30-second local adapter response timeout is a derived simulation rule, changes pending to unknown, and creates no retry charge or new deadline. Current/read recovery reports hold state, original deadline, commitment readiness and refund state. C05 never creates Purchase/Bookings/Orders; C06 owns commitment. Callback acknowledgement and browser outcome cannot confirm a Purchase.
 
 All development and verification are local. [C05 evidence](../quality/PHASE-04-LOCAL-ACCEPTANCE-EVIDENCE.md#p04-c05--payment-inbox-and-compensation--2026-10-13).
+
+## Local Phase 04 C06 Purchase split and receipt — 2026-10-13
+
+`GET /v1/customer/purchases/:purchaseId` is an owned private/no-store root read: immutable non-tax original receipt, independent Orders/Bookings with original funding, derived captured/refunded/pending totals, amendment addenda and seller invoice references. It does not expose concrete private any-Staff assignments. `MixedPaymentRead.purchaseId` is nullable until authoritative commitment; committed Hold state is explicit.
+
+`POST /v1/vendor/purchases/:purchaseId/invoices` requires an idempotency key, actual selling Vendor Owner membership, active Vendor scope and MFA under the documented local exception. Body contains only `invoiceNumber` and `documentUrl` (HTTPS without credentials). Replay returns the same immutable reference; changed keyed bodies conflict. Existing goods fulfillment/returns/cancellation and Booking amendment/meeting/attendance/cancellation routes retain their independent authority and state machines. No browser commitment endpoint or extra component payment is introduced.
+
+All development and verification are local. [C06 evidence](../quality/PHASE-04-LOCAL-ACCEPTANCE-EVIDENCE.md#p04-c06--purchase-split-and-receipt--2026-10-13).

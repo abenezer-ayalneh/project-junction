@@ -314,7 +314,7 @@ try {
 	assert.equal(changed.status, 201, JSON.stringify(changed.body))
 	assert.equal((await request(buyer, `/customer/checkout/quotes/${quote.body.quoteId}`)).body.snapshot.commission.totalMinorUnits, 160)
 	assert.equal((await request(buyer, '/customer/checkout/quotes', 'POST', command)).body.snapshot.commission.totalMinorUnits, 192)
-	if (process.env.MIXED_HOLD_HTTP_CHECK === '1' || process.env.MIXED_PAYMENT_HTTP_CHECK === '1') {
+	if (process.env.MIXED_HOLD_HTTP_CHECK === '1' || process.env.MIXED_PAYMENT_HTTP_CHECK === '1' || process.env.MIXED_PURCHASE_HTTP_CHECK === '1') {
 		let paymentProofId, duePaymentId
 		const paymentAdapter = new LocalMixedPaymentAdapter(secret)
 		const latest = await request(buyer, '/customer/checkout/quotes', 'POST', command)
@@ -394,13 +394,14 @@ try {
 			})
 			assert.equal(wrongMoney.status, 200)
 			assert.equal((await request(buyer, `/customer/checkout/payments/${p.id}`)).body.state, 'pending_provider')
+			assert.equal((await request(buyer, `/customer/checkout/holds/${held.body.holdId}/release`, 'POST')).body.state, 'released')
 			const simulated = await request(buyer, `/customer/checkout/payments/${p.id}/local-result`, 'POST', { outcome: 'succeeded' })
 			assert.equal(simulated.status, 201, JSON.stringify(simulated.body))
 			assert.equal(simulated.body.state, 'pending_provider')
 			const recoveredPayment = await request(buyer, `/customer/checkout/payments/${p.id}`)
 			assert.match(recoveredPayment.cacheControl ?? '', /no-store/)
-			assert.equal(recoveredPayment.body.state, 'succeeded')
-			assert.equal(recoveredPayment.body.commitmentReady, true)
+			assert.equal(recoveredPayment.body.state, 'refund_pending')
+			assert.equal(recoveredPayment.body.commitmentReady, false)
 			const currentPayment = await request(buyer, '/customer/checkout/payments/current')
 			assert.equal(currentPayment.status, 200)
 			assert.equal(currentPayment.body.payment.paymentId, p.id)
@@ -514,6 +515,61 @@ try {
 				await new Promise((resolve) => setTimeout(resolve, 250))
 			}
 			assert.ok(expired, `Built worker did not expire mixed participants: ${workerLogs}`)
+			if (process.env.MIXED_PURCHASE_HTTP_CHECK === '1') {
+				const cart = await request(buyer, '/customer/cart')
+				const saved = await request(buyer, '/customer/cart', 'PUT', { expectedVersion: cart.body.version, selection })
+				assert.equal(saved.status, 200, JSON.stringify(saved.body))
+				const quoted = await request(buyer, '/customer/checkout/quotes', 'POST', { cartId: saved.body.cartId, expectedVersion: saved.body.version })
+				assert.equal(quoted.body.state, 'ready', JSON.stringify(quoted.body))
+				const h = await request(buyer, '/customer/checkout/holds', 'POST', { quoteId: quoted.body.quoteId })
+				assert.equal(h.status, 201, JSON.stringify(h.body))
+				const p = await request(buyer, '/customer/checkout/payments', 'POST', { holdId: h.body.holdId })
+				assert.equal(p.status, 201, JSON.stringify(p.body))
+				assert.equal(
+					(await request(buyer, `/customer/checkout/payments/${p.body.paymentId}/local-result`, 'POST', { outcome: 'succeeded' })).status,
+					201,
+				)
+				const paid = await request(buyer, `/customer/checkout/payments/${p.body.paymentId}`)
+				assert.ok(paid.body.purchaseId, JSON.stringify(paid.body))
+				const path = `/customer/purchases/${paid.body.purchaseId}`
+				assert.equal((await request(null, path)).status, 403)
+				assert.equal((await request(owner, path)).status, 403)
+				const purchase = await request(buyer, path)
+				assert.equal(purchase.status, 200, JSON.stringify(purchase.body))
+				assert.match(purchase.cacheControl ?? '', /no-store/)
+				assert.equal(purchase.body.orders.length, 1)
+				assert.equal(purchase.body.bookings.length, 1)
+				assert.equal(purchase.body.receipt.taxCalculated, false)
+				const invoicePath = `/vendor/purchases/${paid.body.purchaseId}/invoices`,
+					invoiceKey = randomUUID()
+				const invoice = { invoiceNumber: 'LOCAL-C06', documentUrl: 'https://example.invalid/invoices/local-c06.pdf' }
+				assert.equal((await request(buyer, invoicePath, 'POST', invoice)).status, 403)
+				assert.equal((await request(owner, invoicePath, 'POST', invoice, invoiceKey)).status, 201)
+				assert.equal((await request(owner, invoicePath, 'POST', invoice, invoiceKey)).body.replayed, true)
+				const order = purchase.body.orders[0],
+					line = order.lines[0]
+				const cancelled = await request(owner, `/vendor/goods/orders/${order.orderId}/cancellations`, 'POST', {
+					note: 'Controlled independent goods cancellation',
+					lines: [{ lineId: line.lineId, quantity: line.quantity, stockDisposition: 'restock' }],
+				})
+				assert.equal(cancelled.status, 201, JSON.stringify(cancelled.body))
+				let refunded = false
+				for (let attempt = 0; attempt < 80; attempt++) {
+					const read = await request(buyer, path)
+					assert.equal(read.body.bookings[0].state, 'confirmed')
+					if (read.body.refundedMinorUnits > 0 && read.body.pendingRefundMinorUnits === 0) {
+						refunded = true
+						break
+					}
+					await new Promise((resolve) => setTimeout(resolve, 250))
+				}
+				assert.ok(refunded, `Built worker did not reconcile component refund: ${workerLogs}`)
+				assert.equal(await repository.db.goodsPaymentAttempt.count({ where: { hold: { mixedHoldId: h.body.holdId } } }), 0)
+				assert.equal(await repository.db.bookingPayment.count({ where: { hold: { mixedIntent: { holdId: h.body.holdId } } } }), 0)
+				console.log(
+					'Built local mixed Purchase HTTP/actual worker passed: one capture, private original receipt, independent Order/Booking, seller invoice replay and component refund with Booking preserved.',
+				)
+			}
 
 			if (duePaymentId) {
 				for (const id of [paymentProofId, duePaymentId]) {

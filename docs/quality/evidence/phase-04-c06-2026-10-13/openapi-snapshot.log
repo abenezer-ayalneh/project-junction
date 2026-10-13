@@ -1,0 +1,56 @@
+
+ NX   Running target test for project api and 3 tasks it depends on:
+
+
+
+> nx run contracts:build  [local cache]
+
+
+> nx run platform-core:generate-client  [existing outputs match the cache, left as is]
+
+
+> nx run platform-core:build
+
+> tsc --build tsconfig.lib.json
+
+
+> nx run api:test --updateSnapshot
+
+> jest --passWithNoTests=true --updateSnapshot
+
+(node:91997) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:92047) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:92046) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:92050) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:92048) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:92044) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:92045) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:92049) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+Snapshot Summary
+ › 1 snapshot updated from 1 test suite.
+
+Test Suites: 7 passed, 7 total
+Tests:       21 passed, 21 total
+Snapshots:   1 updated, 1 total
+Time:        3.812 s, estimated 7 s
+Ran all test suites.
+
+
+
+ NX   Successfully ran target test for project api and 3 tasks it depends on
+
+Nx read the output from the cache instead of running the command for 2 out of 4 tasks.
+
+  Run duration:      10.2s
+  Cache:             2/4 hit (50%)
+  Critical path:     9.8s (3 tasks)
+  Recoverable time:  <1ms

@@ -35,3 +35,9 @@ Local C03 expands optional Cart promotion selection to one Vendor coupon plus on
 `MixedPaymentStart` has only `holdId`; `MixedPaymentSimulation` has only `outcome`. `MixedPaymentRead` exposes payment/hold IDs, `holdState`, sandbox/local-controlled marker, exact Money, original dates, `pending_provider|unknown|succeeded|failed|refund_pending|refunded|no_payment_required`, `commitmentReady` and nullable `pending|unknown|completed` refund state. Create/simulator results add `replayed`; current recovery wraps nullable `payment`. `MixedPaymentWebhookAck` reports accepted/duplicate inbox delivery, not Purchase success. No signing key, private Staff or provider reference is exposed. Commitment readiness requires retained unexpired resources and verified capture, or a zero-payable no-charge path.
 
 All development and verification are local. [C05 evidence](../quality/PHASE-04-LOCAL-ACCEPTANCE-EVIDENCE.md#p04-c05--payment-inbox-and-compensation--2026-10-13).
+
+## Local Phase 04 C06 Purchase split and receipt — 2026-10-13
+
+`MixedPaymentRead` now carries nullable `purchaseId`; `MixedHoldRead`/payment `holdState` add `committed`. `MixedPurchaseRead` exposes original non-tax receipt, existing independent goods Order and Booking identifiers/states, exact original economic allocation per line/Booking, immutable invoice references, additive amendment records and captured/refunded/pending minor-unit totals. `MixedInvoiceCommand` accepts only invoice number and HTTPS document reference; `MixedInvoiceResult` returns opaque invoice ID and replay status. Receipt values remain original after lifecycle changes; addenda and derived refund totals show later economic facts separately.
+
+All development and verification are local. [C06 evidence](../quality/PHASE-04-LOCAL-ACCEPTANCE-EVIDENCE.md#p04-c06--purchase-split-and-receipt--2026-10-13).

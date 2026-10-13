@@ -388,7 +388,8 @@ export class Bookings {
 								amendedAt: now,
 							},
 						})
-						if (deltaCents < 0)
+						const mixedAmend = await this.dependencies.mixedRefunds?.amend(tx, bookingId, amendment.id, deltaCents, original.priceCents)
+						if (deltaCents < 0 && !mixedAmend)
 							await tx.bookingRefund.create({
 								data: { paymentId: booking.paymentId, semanticKey: `amendment:${amendment.id}`, amountCents: -deltaCents, createdAt: now },
 							})
@@ -474,7 +475,10 @@ export class Bookings {
 		const vendor = await tx.vendor.findUniqueOrThrow({ where: { id: booking.hold.vendorId } })
 		const snapshot = BookingSnapshotSchema.parse(booking.currentSnapshot ?? booking.snapshot)
 		const now = this.dependencies.now()
-		const refundCents = bookingCancellationRefund(snapshot.policy, snapshot.priceCents, new Date(snapshot.start), now, provider)
+		const grossRefund = bookingCancellationRefund(snapshot.policy, snapshot.priceCents, new Date(snapshot.start), now, provider)
+		const values = await this.dependencies.mixedRefunds?.remainingBookingValues(tx, bookingId, grossRefund, snapshot.priceCents)
+		const funding = values?.[0]
+		const refundCents = values?.reduce((sum, v) => sum + v.customer, 0) ?? grossRefund
 		const cancellation = await tx.bookingCancellation.create({
 			data: {
 				bookingId,
@@ -489,10 +493,20 @@ export class Bookings {
 		await tx.bookingSubstitution.updateMany({ where: { bookingId, state: 'pending' }, data: { state: 'withdrawn', decidedAt: now } })
 		await tx.booking.update({ where: { id: bookingId }, data: { state: 'cancelled', version: { increment: 1 } } })
 		await tx.staffAllocation.update({ where: { id: booking.allocationId }, data: { state: 'cancelled' } })
-		if (refundCents > 0)
-			await tx.bookingRefund.create({
-				data: { paymentId: booking.paymentId, semanticKey: `cancellation:${bookingId}`, amountCents: refundCents, createdAt: now },
+		if (refundCents > 0 || funding) {
+			const refund = await tx.bookingRefund.create({
+				data: {
+					paymentId: booking.paymentId,
+					mixedPaymentId: booking.mixedPurchaseId
+						? (await tx.mixedPurchase.findUniqueOrThrow({ where: { id: booking.mixedPurchaseId } })).paymentId
+						: null,
+					semanticKey: `cancellation:${bookingId}`,
+					amountCents: refundCents,
+					createdAt: now,
+				},
 			})
+			if (values) for (const value of values) await this.dependencies.mixedRefunds?.stage(tx, value, { bookingRefundId: refund.id })
+		}
 		for (const workspaceId of new Set([booking.hold.workspaceId, vendor.workspaceId])) {
 			await goodsAudit(tx, workspaceId, actorId, 'booking.cancelled', {
 				bookingId,
@@ -520,27 +534,29 @@ export class Bookings {
 		this.payments.assertLocal()
 		const due = await this.dependencies.db.bookingRefund.findMany({ where: { state: 'pending' }, orderBy: { id: 'asc' }, take: 100 })
 		for (const refund of due) {
-			const result = await this.payments.refund({ operationId: refund.id, paymentId: refund.paymentId, amountCents: refund.amountCents })
+			const paymentId = refund.paymentId
+			if (!paymentId) continue
+			const result = await this.payments.refund({ operationId: refund.id, paymentId: paymentId, amountCents: refund.amountCents })
 			await this.dependencies.db.$transaction(async (tx) => {
 				await this.lock(tx)
 				const current = await tx.bookingRefund.findUniqueOrThrow({ where: { id: refund.id } })
 				if (current.state !== 'pending') return
 				await tx.bookingRefund.update({ where: { id: refund.id }, data: { state: 'succeeded', reference: result.reference } })
-				const completed = await tx.bookingRefund.aggregate({ where: { paymentId: refund.paymentId, state: 'succeeded' }, _sum: { amountCents: true } })
+				const completed = await tx.bookingRefund.aggregate({ where: { paymentId: paymentId, state: 'succeeded' }, _sum: { amountCents: true } })
 				const original = await tx.bookingPayment.findUniqueOrThrow({
-					where: { id: refund.paymentId },
+					where: { id: paymentId },
 					include: { booking: { include: { amendments: true } } },
 				})
 				const captured = original.amountCents + (original.booking?.amendments ?? []).reduce((sum, a) => sum + Math.max(0, a.deltaCents), 0)
 				await tx.bookingPayment.update({
-					where: { id: refund.paymentId },
+					where: { id: paymentId },
 					data: { state: (completed._sum.amountCents ?? 0) >= captured ? 'refunded' : 'succeeded' },
 				})
-				const payment = await tx.bookingPayment.findUniqueOrThrow({ where: { id: refund.paymentId }, include: { hold: true } })
+				const payment = await tx.bookingPayment.findUniqueOrThrow({ where: { id: paymentId }, include: { hold: true } })
 				await goodsAudit(tx, payment.hold.workspaceId, null, 'booking.refund-completed', { refundId: refund.id, amountCents: refund.amountCents })
 				await goodsEmit(tx, () => this.dependencies.now(), payment.hold.workspaceId, 'BookingRefundCompleted', refund.id, 1, null, {
 					refundId: refund.id,
-					paymentId: refund.paymentId,
+					paymentId: paymentId,
 				})
 			})
 		}

@@ -27,6 +27,7 @@ export class MixedCheckoutPayments {
 		private readonly deps: GoodsDependencies,
 		private readonly holds: MixedCheckoutHolds,
 		private readonly adapter: LocalMixedPaymentAdapter,
+		private readonly commit?: (tx: Tx, payment: MixedPaymentAttempt) => Promise<unknown>,
 	) {}
 	private async lock(tx: Tx) {
 		await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended('junction:goods-checkout',0))`
@@ -38,9 +39,13 @@ export class MixedCheckoutPayments {
 		return { context, payment }
 	}
 	private async view(tx: Tx, id: string) {
-		const p = await tx.mixedPaymentAttempt.findUniqueOrThrow({ where: { id }, include: { hold: true, refund: true } })
+		const p = await tx.mixedPaymentAttempt.findUniqueOrThrow({
+			where: { id },
+			include: { hold: true, refund: true, purchase: true, goodsRefunds: true, bookingRefunds: true },
+		})
 		return MixedPaymentReadSchema.parse({
 			paymentId: p.id,
+			purchaseId: p.purchase?.id ?? null,
 			holdId: p.holdId,
 			holdState: p.hold.state,
 			state: p.state,
@@ -111,6 +116,7 @@ export class MixedCheckoutPayments {
 						holdId: hold.id,
 						sandbox: true,
 					})
+					if (payment.state === 'no_payment_required') await this.commit?.(tx, payment)
 					if (payment.amountMinorUnits > 0n)
 						await goodsEmit(tx, () => this.deps.now(), context.workspaceId, 'MixedPaymentRequested', payment.id, 1, key, {
 							paymentId: payment.id,
@@ -284,8 +290,7 @@ export class MixedCheckoutPayments {
 					} else state = 'superseded'
 				} else if (p.captureLedgerId) state = 'superseded'
 				else {
-					if (p.hold.state === 'holding' && (at >= p.expiresAt || this.deps.now() >= p.expiresAt))
-						await this.holds.endInTransaction(tx, p.hold.id, 'expired')
+					if (p.hold.state === 'holding' && at >= p.expiresAt) await this.holds.endInTransaction(tx, p.hold.id, 'expired', true)
 					const hold = await tx.mixedCheckoutHold.findUniqueOrThrow({ where: { id: p.holdId } })
 					const captured = await this.ledger.post(tx, {
 						workspaceId: p.workspaceId,
@@ -315,6 +320,8 @@ export class MixedCheckoutPayments {
 					})
 					await this.changed(tx, updated)
 					if (hold.state !== 'holding') await this.compensate(tx, updated, 'Verified success after hold ended.')
+					else if (this.commit && (await this.commit(tx, updated)) === null)
+						await this.holds.endInTransaction(tx, updated.holdId, this.deps.now() >= updated.expiresAt ? 'expired' : 'released', true)
 				}
 			}
 		}
@@ -339,6 +346,19 @@ export class MixedCheckoutPayments {
 			await this.changed(tx, updated)
 		}
 		return pending.length
+	}
+	async beforeExpiry(tx: Tx, holdId: string) {
+		const p = await tx.mixedPaymentAttempt.findUnique({ where: { holdId } })
+		if (p) {
+			await this.reconcileInTransaction(tx, p.id)
+			const current = await tx.mixedPaymentAttempt.findUniqueOrThrow({ where: { id: p.id }, include: { hold: true } })
+			if (
+				['succeeded', 'no_payment_required'].includes(current.state) &&
+				current.hold.state === 'holding' &&
+				(current.capturedAt ?? current.createdAt) < current.expiresAt
+			)
+				await this.commit?.(tx, current)
+		}
 	}
 	async reconcile() {
 		return this.deps.db.$transaction(

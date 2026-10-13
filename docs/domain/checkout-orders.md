@@ -140,3 +140,11 @@ Local states are `holding`, `released`, `expired`; payment/provider compensation
 One local-controlled attempt binds the owned mixed Hold and exact Money, keeps its original deadline, and cannot be replaced on timeout. Receipt truth is independent of browser success. Scoped current/read recovery reconciles durable receipts before returning state. Captured uncommitted value stays in Customer refund liability until C06 can atomically create Purchase/Orders/Bookings; no Purchase is created in C05. Release/expiry/known failure retires all resources. A captured abandoned/expired hold creates one full-amount compensation intent in the same transaction; late success never resurrects stock or Staff. Zero-payable attempts need no provider charge or cash ledger entry and remain subject to the original hold deadline.
 
 All development and verification are local. [C05 evidence](../quality/PHASE-04-LOCAL-ACCEPTANCE-EVIDENCE.md#p04-c05--payment-inbox-and-compensation--2026-10-13).
+
+## Local Phase 04 C06 Purchase split and receipt — 2026-10-13
+
+A timely verified original capture (or explicit zero-charge path) atomically creates one mixed Purchase and all independent Vendor Orders/Bookings, sells held stock, books original Staff and consumes reserved promotions. Any component failure rolls back the entire commitment while retaining the durable inbox for retry. Expiry drains already-durable timely receipts before releasing resources; abandoned, exact-deadline/late, or currently ineligible capture is compensated without resurrection.
+
+Internal goods/Booking projections preserve existing fulfillment/return/amendment/attendance authority and state machines; they are not extra payment attempts or new resource reservations. Cancelling or returning one component refunds only its original funding and leaves other components intact. Delivery correction retains the original paid zone/fee through the existing aftercare rules. Browser checkout/outcomes remain C07.
+
+All development and verification are local. [C06 evidence](../quality/PHASE-04-LOCAL-ACCEPTANCE-EVIDENCE.md#p04-c06--purchase-split-and-receipt--2026-10-13).

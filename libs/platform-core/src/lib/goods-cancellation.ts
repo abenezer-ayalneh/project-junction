@@ -122,19 +122,22 @@ export class GoodsCancellation {
 					throw new GoodsCheckoutConflictError('Returns require completed verified handoff.')
 				const group = GoodsQuoteSnapshotSchema.shape.groups.element.parse(order.snapshot)
 				let itemRefundCents = 0
-				const selected = command.lines.map((selection) => {
-					const line = order.lines.find((candidate) => candidate.id === selection.lineId)
-					if (!line) throw new AccessDeniedError()
-					const snapshot = GoodsQuoteSnapshotSchema.shape.groups.element.shape.lines.element.parse(line.snapshot)
-					const already = line.cancellationLines.reduce((total, prior) => total + prior.quantity, 0)
-					if (selection.quantity > snapshot.quantity - already)
-						throw new GoodsCheckoutConflictError(
-							'Selected cancellation quantity exceeds the remaining purchased quantity. Read the Order and choose a remaining quantity.',
-						)
-					const refundCents = snapshot.unitPriceCents * selection.quantity
-					itemRefundCents += refundCents
-					return { selection, line, snapshot, refundCents }
-				})
+				const selected = await Promise.all(
+					command.lines.map(async (selection) => {
+						const line = order.lines.find((candidate) => candidate.id === selection.lineId)
+						if (!line) throw new AccessDeniedError()
+						const snapshot = GoodsQuoteSnapshotSchema.shape.groups.element.shape.lines.element.parse(line.snapshot)
+						const already = line.cancellationLines.reduce((total, prior) => total + prior.quantity, 0)
+						if (selection.quantity > snapshot.quantity - already)
+							throw new GoodsCheckoutConflictError(
+								'Selected cancellation quantity exceeds the remaining purchased quantity. Read the Order and choose a remaining quantity.',
+							)
+						const funding = await this.dependencies.mixedRefunds?.goodsValue(tx, line.id, already, selection.quantity)
+						const refundCents = funding?.customer ?? snapshot.unitPriceCents * selection.quantity
+						itemRefundCents += refundCents
+						return { selection, line, snapshot, refundCents, funding }
+					}),
+				)
 				const remainingQuantity = order.lines.reduce(
 					(total, line) =>
 						total +
@@ -155,11 +158,21 @@ export class GoodsCancellation {
 				const refund = await tx.goodsRefundOperation.create({
 					data: {
 						paymentId: order.purchase.paymentId,
+						mixedPaymentId: order.purchase.mixedPurchaseId
+							? (await tx.mixedPurchase.findUniqueOrThrow({ where: { id: order.purchase.mixedPurchaseId } })).paymentId
+							: null,
 						semanticKey: `cancellation:${cancellationId}`,
 						amountCents: itemRefundCents + deliveryRefundCents,
 						createdAt: this.dependencies.now(),
 					},
 				})
+				if (order.purchase.mixedPurchaseId) {
+					for (const item of selected) if (item.funding) await this.dependencies.mixedRefunds?.stage(tx, item.funding, { goodsRefundId: refund.id })
+					if (deliveryRefundCents > 0) {
+						const funding = await this.dependencies.mixedRefunds?.deliveryValue(tx, order.id)
+						if (funding) await this.dependencies.mixedRefunds?.stage(tx, funding, { goodsRefundId: refund.id })
+					}
+				}
 				await tx.goodsOrderCancellation.create({
 					data: {
 						id: cancellationId,
@@ -231,8 +244,11 @@ export class GoodsCancellation {
 						{ fulfillmentId: order.fulfillment.id, orderId },
 					)
 				}
-				const payment = await tx.goodsPaymentAttempt.findUniqueOrThrow({ where: { id: order.purchase.paymentId } })
-				if (payment.state !== 'refund_pending') await tx.goodsPaymentAttempt.update({ where: { id: payment.id }, data: { state: 'refund_pending' } })
+				if (order.purchase.paymentId) {
+					const payment = await tx.goodsPaymentAttempt.findUniqueOrThrow({ where: { id: order.purchase.paymentId } })
+					if (payment.state !== 'refund_pending')
+						await tx.goodsPaymentAttempt.update({ where: { id: payment.id }, data: { state: 'refund_pending' } })
+				}
 				await goodsAudit(tx, order.vendorWorkspaceId, context.actor.userId, 'goods.order-cancelled', {
 					cancellationId,
 					orderId,

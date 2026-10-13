@@ -34,6 +34,7 @@ async function tick() {
 		await repository.reconcileMixedPayments()
 		await repository.expireMixedHolds()
 		await repository.reconcileMixedRefunds()
+		await repository.reconcileMixedComponentRefunds()
 		await repository.reconcileBookingPayments()
 		await repository.expireBookingHolds()
 		await repository.expireBookingSubstitutions()

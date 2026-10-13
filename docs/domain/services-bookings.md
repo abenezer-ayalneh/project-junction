@@ -102,3 +102,9 @@ Booking earnings remain pending until completion/no-show plus the snapshotted co
 - Calendar write/sync, recording, and transcription do not occur; `[DEC-099, DEC-147]`
 - completion/no-show evidence is scoped, private, and contestable; and `[DEC-035, DEC-036]`
 - only the affected Booking’s money freezes during dispute. `[DEC-038]`
+
+## Local Phase 04 C06 Purchase split and receipt — 2026-10-13
+
+Mixed Purchase creates the same independent Booking/immutable policy and original concrete occupancy used by existing amendment, substitution, meeting, Join and attendance workflows, with a root Purchase link instead of a fabricated standalone payment. Original economic funding lives on the mixed allocation and receipt. Cancellation/negative amendment allocates refund across remaining original/additive sources; positive controlled amendment records separate capture at the original rate. Changing one Booking never cancels other appointments or goods. Existing contest and earning timing remain independent; actual earning release is C08.
+
+All development and verification are local. [C06 evidence](../quality/PHASE-04-LOCAL-ACCEPTANCE-EVIDENCE.md#p04-c06--purchase-split-and-receipt--2026-10-13).

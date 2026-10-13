@@ -6,8 +6,9 @@ export const MixedPaymentStartSchema = z.strictObject({ holdId: id })
 export const MixedPaymentSimulationSchema = z.strictObject({ outcome: z.enum(['unknown', 'succeeded', 'failed']) })
 export const MixedPaymentReadSchema = z.strictObject({
 	paymentId: id,
+	purchaseId: id.nullable(),
 	holdId: id,
-	holdState: z.enum(['holding', 'released', 'expired']),
+	holdState: z.enum(['holding', 'released', 'expired', 'committed']),
 	state: z.enum(['pending_provider', 'unknown', 'succeeded', 'failed', 'refund_pending', 'refunded', 'no_payment_required']),
 	provider: z.literal('local-controlled'),
 	sandbox: z.literal(true),

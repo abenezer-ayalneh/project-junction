@@ -843,6 +843,30 @@ export class AppController {
 		return this.foundation.resolveVendorCoupon(sessionId, body)
 	}
 
+	@Get('customer/purchases/:purchaseId')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Read an owned mixed Purchase, its component states and non-tax receipt.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiOkResponse({ schema: OpenApiSchemaRefs.mixedPurchaseRead })
+	readMixedPurchase(@AuthenticatedSession() sessionId: string | undefined, @Param('purchaseId') id: string) {
+		return this.foundation.readMixedPurchase(sessionId, id)
+	}
+	@Post('vendor/purchases/:purchaseId/invoices')
+	@Header('Cache-Control', 'no-store')
+	@ApiOperation({ summary: 'Attach an external invoice document reference for an owned seller component.' })
+	@ApiSecurity('junction-auth-cookie')
+	@ApiHeader({ name: 'idempotency-key', required: true })
+	@ApiBody({ schema: OpenApiSchemaRefs.mixedInvoiceCommand })
+	@ApiCreatedResponse({ schema: OpenApiSchemaRefs.mixedInvoiceResult })
+	attachMixedInvoice(
+		@AuthenticatedSession() sessionId: string | undefined,
+		@Headers('idempotency-key') key: string | undefined,
+		@Param('purchaseId') id: string,
+		@Body() body: unknown,
+	) {
+		return this.foundation.attachMixedInvoice(sessionId, key, id, body)
+	}
+
 	@Post('customer/checkout/payments')
 	@Header('Cache-Control', 'no-store')
 	@ApiOperation({ summary: 'Start a local sandbox mixed payment with the original hold deadline.' })

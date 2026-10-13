@@ -123,14 +123,14 @@ export class PromotionBudget {
 		await this.fact(tx, updated, state, now)
 		return updated
 	}
-	async complete(tx: Tx, quoteId: string, holdRef: string, state: 'released' | 'consumed') {
+	async complete(tx: Tx, quoteId: string, holdRef: string, state: 'released' | 'consumed', eligibleAt?: Date) {
 		await this.lock(tx)
 		const rows = await tx.promotionReservation.findMany({ where: { quoteId }, orderBy: { promotionId: 'asc' } })
 		if (rows.some((r) => r.holdRef !== holdRef)) throw new GoodsCheckoutConflictError('Promotion reservations belong to a different hold.')
 		const result = []
 		for (const row of rows) {
 			await tx.$queryRaw`SELECT id FROM promotion_definitions WHERE id=${row.promotionId}::uuid FOR UPDATE`
-			result.push(await this.terminal(tx, row, state, this.now()))
+			result.push(await this.terminal(tx, row, state, eligibleAt ?? this.now()))
 		}
 		return result
 	}

@@ -32,6 +32,7 @@ export class MixedCheckoutHolds {
 		private readonly bookings: BookingHolds,
 		private readonly budget: PromotionBudget,
 		private readonly onTerminal?: (tx: Tx, holdId: string) => Promise<void>,
+		private readonly beforeExpiry?: (tx: Tx, holdId: string) => Promise<void>,
 	) {}
 	private async lock(tx: Tx) {
 		await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended('junction:goods-checkout',0))`
@@ -80,8 +81,13 @@ export class MixedCheckoutHolds {
 				{ holdId: hold.id, quoteId: hold.quoteId, expiresAt: hold.expiresAt.toISOString() },
 			)
 	}
-	private async terminal(tx: Tx, hold: MixedCheckoutHold, state: 'released' | 'expired', actorId: string | null, key: string | null) {
+	private async terminal(tx: Tx, hold: MixedCheckoutHold, state: 'released' | 'expired', actorId: string | null, key: string | null, skipExpiry = false) {
 		if (hold.state !== 'holding') return hold
+		if (state === 'expired' && !skipExpiry) {
+			await this.beforeExpiry?.(tx, hold.id)
+			hold = await tx.mixedCheckoutHold.findUniqueOrThrow({ where: { id: hold.id } })
+			if (hold.state !== 'holding') return hold
+		}
 		await this.vendorLocks(tx, MixedQuoteSnapshotSchema.parse(hold.snapshot))
 		const lines = await tx.mixedHoldStockLine.findMany({ where: { holdId: hold.id }, orderBy: { id: 'asc' } })
 		for (const line of lines) {
@@ -113,9 +119,9 @@ export class MixedCheckoutHolds {
 		await this.facts(tx, updated, actorId, key)
 		return updated
 	}
-	async endInTransaction(tx: Tx, id: string, state: 'released' | 'expired') {
+	async endInTransaction(tx: Tx, id: string, state: 'released' | 'expired', skipExpiry = false) {
 		const hold = await tx.mixedCheckoutHold.findUniqueOrThrow({ where: { id } })
-		return this.terminal(tx, hold, state, null, null)
+		return this.terminal(tx, hold, state, null, null, skipExpiry)
 	}
 	/** Caller takes the shared commerce lock. Release every participant in this same transaction. */
 	async expireInTransaction(tx: Tx, cartId?: string) {

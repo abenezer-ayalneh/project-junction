@@ -94,6 +94,8 @@ import type { MeetingProviderAdapter } from './meeting-provider.js'
 import { MixedCartCheckout } from './mixed-cart.js'
 import { MixedCheckoutHolds } from './mixed-holds.js'
 import { MixedCheckoutPayments } from './mixed-payments.js'
+import { MixedPurchases } from './mixed-purchases.js'
+import { MixedComponentRefunds } from './mixed-refunds.js'
 import { PromotionBudget } from './promotion-budget.js'
 import { applicationRuntimeMode } from './runtime.js'
 import { ServiceDefinitions } from './service-definitions.js'
@@ -157,6 +159,8 @@ export class PostgresFoundation {
 	private readonly scheduling: ServiceScheduling
 	private readonly services: ServiceDefinitions
 	private readonly checkoutFinance: CheckoutFinanceConfiguration
+	private readonly mixedPurchases: MixedPurchases
+	private readonly mixedRefunds: MixedComponentRefunds
 	private readonly mixedPayments: MixedCheckoutPayments
 	private readonly mixedHolds: MixedCheckoutHolds
 	private readonly mixedCart: MixedCartCheckout
@@ -180,6 +184,16 @@ export class PostgresFoundation {
 		const schema = new URL(url).searchParams.get('schema') ?? 'public'
 		if (!/^[a-z_][a-z0-9_]*$/.test(schema)) throw new Error('Unsupported database schema name.')
 		this.db = new PrismaClient({ adapter: new PrismaPg({ connectionString: url, options: `-c search_path=${schema},public` }, { schema }) })
+		this.mixedRefunds = new MixedComponentRefunds(
+			{
+				db: this.db,
+				derive: (tx, s, options) => this.derive(tx, s, options),
+				lockWorkspace: (tx, id) => this.workspaceLock(tx, id),
+				replay: (tx, ctx, k, m, r, c) => this.replayOrCreate(tx, ctx, k, m, r, c),
+				now: goodsClock,
+			},
+			mixedPayments ?? new LocalMixedPaymentAdapter(),
+		)
 		this.scheduling = new ServiceScheduling({
 			db: this.db,
 			derive: (tx, sessionId) => this.derive(tx, sessionId),
@@ -195,6 +209,7 @@ export class PostgresFoundation {
 				replay: (tx, context, key, method, request, create) => this.replayOrCreate(tx, context, key, method, request, create),
 				now: goodsClock,
 				payments: goodsPayments,
+				mixedRefunds: this.mixedRefunds,
 			},
 			this.scheduling,
 		)
@@ -257,6 +272,7 @@ export class PostgresFoundation {
 			replay: (tx, context, key, method, request, create) => this.replayOrCreate(tx, context, key, method, request, create),
 			now: goodsClock,
 			payments: goodsPayments,
+			mixedRefunds: this.mixedRefunds,
 		})
 		const pricing = new CheckoutPricing()
 		this.checkoutFinance = new CheckoutFinanceConfiguration(
@@ -296,6 +312,17 @@ export class PostgresFoundation {
 			this.bookingHolds,
 			new PromotionBudget(goodsClock, pricing),
 			(tx, id) => this.mixedPayments.abandoned(tx, id),
+			(tx, id) => this.mixedPayments.beforeExpiry(tx, id),
+		)
+		this.mixedPurchases = new MixedPurchases(
+			{
+				db: this.db,
+				derive: (tx, s, options) => this.derive(tx, s, options),
+				lockWorkspace: (tx, id) => this.workspaceLock(tx, id),
+				replay: (tx, ctx, k, m, r, c) => this.replayOrCreate(tx, ctx, k, m, r, c),
+				now: goodsClock,
+			},
+			new PromotionBudget(goodsClock, pricing),
 		)
 		this.mixedPayments = new MixedCheckoutPayments(
 			{
@@ -307,6 +334,7 @@ export class PostgresFoundation {
 			},
 			this.mixedHolds,
 			mixedPayments ?? new LocalMixedPaymentAdapter(),
+			(tx, p) => this.mixedPurchases.commit(tx, p),
 		)
 		this.externalEffects = externalEffects ?? new UnconfiguredExternalEffectAdapter()
 		this.mediaStore = mediaStore ?? S3MediaStore.fromEnvironment()
@@ -861,6 +889,15 @@ export class PostgresFoundation {
 	}
 	resolveVendorCoupon(sessionId: string | undefined, input: unknown) {
 		return this.checkoutFinance.resolveCoupon(sessionId, input)
+	}
+	readMixedPurchase(sessionId: string | undefined, id: string) {
+		return this.mixedPurchases.read(sessionId, id)
+	}
+	attachMixedInvoice(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.mixedPurchases.invoice(sessionId, key, id, input)
+	}
+	reconcileMixedComponentRefunds() {
+		return this.mixedRefunds.reconcile()
 	}
 	readCurrentMixedPayment(sessionId: string | undefined) {
 		return this.mixedPayments.current(sessionId)

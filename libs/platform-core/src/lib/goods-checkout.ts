@@ -767,6 +767,7 @@ export class GoodsCheckout {
 				})
 				let completed = 0
 				for (const refund of refunds) {
+					if (!refund.paymentId || !refund.payment) continue
 					let result: { reference: string }
 					try {
 						result = await this.payments.refund({ operationId: refund.id, paymentId: refund.paymentId, amountCents: refund.amountCents })

@@ -17091,6 +17091,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
                   "holding",
                   "released",
                   "expired",
+                  "committed",
                 ],
                 "type": "string",
               },
@@ -17162,6 +17163,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
                   "holding",
                   "released",
                   "expired",
+                  "committed",
                 ],
                 "type": "string",
               },
@@ -17174,6 +17176,12 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
                 "enum": [
                   "local-controlled",
                 ],
+                "type": "string",
+              },
+              "purchaseId": {
+                "format": "uuid",
+                "nullable": true,
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
                 "type": "string",
               },
               "refundState": {
@@ -17206,6 +17214,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             },
             "required": [
               "paymentId",
+              "purchaseId",
               "holdId",
               "holdState",
               "state",
@@ -18787,6 +18796,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
               "holding",
               "released",
               "expired",
+              "committed",
             ],
             "type": "string",
           },
@@ -20380,6 +20390,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
               "holding",
               "released",
               "expired",
+              "committed",
             ],
             "type": "string",
           },
@@ -20393,6 +20404,44 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           "expiresAt",
           "reserved",
           "snapshot",
+          "replayed",
+        ],
+        "type": "object",
+      },
+      "MixedInvoiceCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "documentUrl": {
+            "format": "uri",
+            "maxLength": 2000,
+            "type": "string",
+          },
+          "invoiceNumber": {
+            "maxLength": 120,
+            "minLength": 1,
+            "type": "string",
+          },
+        },
+        "required": [
+          "invoiceNumber",
+          "documentUrl",
+        ],
+        "type": "object",
+      },
+      "MixedInvoiceResult": {
+        "additionalProperties": false,
+        "properties": {
+          "invoiceId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "replayed": {
+            "type": "boolean",
+          },
+        },
+        "required": [
+          "invoiceId",
           "replayed",
         ],
         "type": "object",
@@ -20442,6 +20491,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
               "holding",
               "released",
               "expired",
+              "committed",
             ],
             "type": "string",
           },
@@ -20454,6 +20504,12 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             "enum": [
               "local-controlled",
             ],
+            "type": "string",
+          },
+          "purchaseId": {
+            "format": "uuid",
+            "nullable": true,
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
             "type": "string",
           },
           "refundState": {
@@ -20486,6 +20542,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         },
         "required": [
           "paymentId",
+          "purchaseId",
           "holdId",
           "holdState",
           "state",
@@ -20544,6 +20601,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
               "holding",
               "released",
               "expired",
+              "committed",
             ],
             "type": "string",
           },
@@ -20556,6 +20614,12 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
             "enum": [
               "local-controlled",
             ],
+            "type": "string",
+          },
+          "purchaseId": {
+            "format": "uuid",
+            "nullable": true,
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
             "type": "string",
           },
           "refundState": {
@@ -20591,6 +20655,7 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         },
         "required": [
           "paymentId",
+          "purchaseId",
           "holdId",
           "holdState",
           "state",
@@ -20652,6 +20717,2617 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         "required": [
           "accepted",
           "duplicate",
+        ],
+        "type": "object",
+      },
+      "MixedPurchaseRead": {
+        "additionalProperties": false,
+        "properties": {
+          "addenda": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "additionId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "commissionMinorUnits": {
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+                "componentId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "createdAt": {
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                  "type": "string",
+                },
+                "customerMinorUnits": {
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+                "kind": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "additionId",
+                "componentId",
+                "kind",
+                "customerMinorUnits",
+                "commissionMinorUnits",
+                "createdAt",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "bookings": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "bookingId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "confirmedAt": {
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                  "type": "string",
+                },
+                "customerAmendments": {
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+                "funding": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "commissionBasisMinorUnits": {
+                      "maximum": 2147483647,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "commissionMinorUnits": {
+                      "maximum": 2147483647,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "componentId": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "customerMinorUnits": {
+                      "maximum": 2147483647,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "key": {
+                      "type": "string",
+                    },
+                    "kind": {
+                      "enum": [
+                        "goods",
+                        "booking",
+                      ],
+                      "type": "string",
+                    },
+                    "listMinorUnits": {
+                      "maximum": 2147483647,
+                      "minimum": 1,
+                      "type": "integer",
+                    },
+                    "listingId": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "platformSubsidyMinorUnits": {
+                      "maximum": 2147483647,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "quantity": {
+                      "exclusiveMinimum": true,
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "sku": {
+                      "nullable": true,
+                      "type": "string",
+                    },
+                    "unitSegments": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "commissionUnitMinorUnits": {
+                            "maximum": 2147483647,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                          "customerUnitMinorUnits": {
+                            "maximum": 2147483647,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                          "listUnitMinorUnits": {
+                            "maximum": 2147483647,
+                            "minimum": 1,
+                            "type": "integer",
+                          },
+                          "platformSubsidyUnitMinorUnits": {
+                            "maximum": 2147483647,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                          "quantity": {
+                            "exclusiveMinimum": true,
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                          "vendorDiscountUnitMinorUnits": {
+                            "maximum": 2147483647,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                          "vendorEarningUnitMinorUnits": {
+                            "maximum": 2147483647,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                        },
+                        "required": [
+                          "quantity",
+                          "listUnitMinorUnits",
+                          "vendorDiscountUnitMinorUnits",
+                          "platformSubsidyUnitMinorUnits",
+                          "customerUnitMinorUnits",
+                          "commissionUnitMinorUnits",
+                          "vendorEarningUnitMinorUnits",
+                        ],
+                        "type": "object",
+                      },
+                      "maxItems": 6,
+                      "minItems": 1,
+                      "type": "array",
+                    },
+                    "vendorDiscountMinorUnits": {
+                      "maximum": 2147483647,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "vendorEarningMinorUnits": {
+                      "maximum": 2147483647,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "vendorId": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "key",
+                    "componentId",
+                    "vendorId",
+                    "listingId",
+                    "sku",
+                    "kind",
+                    "quantity",
+                    "listMinorUnits",
+                    "vendorDiscountMinorUnits",
+                    "platformSubsidyMinorUnits",
+                    "customerMinorUnits",
+                    "commissionBasisMinorUnits",
+                    "commissionMinorUnits",
+                    "vendorEarningMinorUnits",
+                    "unitSegments",
+                  ],
+                  "type": "object",
+                },
+                "originalSnapshot": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "addons": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "durationMinutes": {
+                            "maximum": 480,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string",
+                          },
+                          "label": {
+                            "maxLength": 120,
+                            "minLength": 2,
+                            "type": "string",
+                          },
+                          "priceCents": {
+                            "maximum": 100000000,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                        },
+                        "required": [
+                          "id",
+                          "label",
+                          "priceCents",
+                          "durationMinutes",
+                        ],
+                        "type": "object",
+                      },
+                      "type": "array",
+                    },
+                    "attendee": {
+                      "additionalProperties": false,
+                      "nullable": true,
+                      "properties": {
+                        "name": {
+                          "maxLength": 120,
+                          "minLength": 1,
+                          "type": "string",
+                        },
+                        "notes": {
+                          "maxLength": 500,
+                          "type": "string",
+                        },
+                      },
+                      "required": [
+                        "name",
+                      ],
+                      "type": "object",
+                    },
+                    "bufferAfterMinutes": {
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "bufferBeforeMinutes": {
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "commission": {
+                      "enum": [
+                        null,
+                      ],
+                      "nullable": true,
+                      "type": "string",
+                    },
+                    "configurationVersion": {
+                      "exclusiveMinimum": true,
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "currency": {
+                      "enum": [
+                        "ETB",
+                      ],
+                      "type": "string",
+                    },
+                    "durationMinutes": {
+                      "exclusiveMinimum": true,
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "end": {
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                      "type": "string",
+                    },
+                    "listingId": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "locationCity": {
+                      "nullable": true,
+                      "type": "string",
+                    },
+                    "locationId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "locationLabel": {
+                      "nullable": true,
+                      "type": "string",
+                    },
+                    "mode": {
+                      "enum": [
+                        "in_person",
+                        "online",
+                      ],
+                      "type": "string",
+                    },
+                    "optionId": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "optionLabel": {
+                      "type": "string",
+                    },
+                    "optionPriceCents": {
+                      "exclusiveMinimum": true,
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "policy": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "amendmentLimit": {
+                          "exclusiveMinimum": true,
+                          "maximum": 9007199254740991,
+                          "minimum": 0,
+                          "type": "integer",
+                        },
+                        "contestHours": {
+                          "enum": [
+                            48,
+                          ],
+                          "type": "number",
+                        },
+                        "fullRefundHours": {
+                          "exclusiveMinimum": true,
+                          "maximum": 9007199254740991,
+                          "minimum": 0,
+                          "type": "integer",
+                        },
+                        "partialRefundHours": {
+                          "exclusiveMinimum": true,
+                          "maximum": 9007199254740991,
+                          "minimum": 0,
+                          "type": "integer",
+                        },
+                        "template": {
+                          "enum": [
+                            "flexible",
+                            "standard",
+                          ],
+                          "type": "string",
+                        },
+                        "version": {
+                          "enum": [
+                            1,
+                          ],
+                          "type": "number",
+                        },
+                      },
+                      "required": [
+                        "template",
+                        "version",
+                        "fullRefundHours",
+                        "partialRefundHours",
+                        "amendmentLimit",
+                        "contestHours",
+                      ],
+                      "type": "object",
+                    },
+                    "priceCents": {
+                      "exclusiveMinimum": true,
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "promotion": {
+                      "enum": [
+                        null,
+                      ],
+                      "nullable": true,
+                      "type": "string",
+                    },
+                    "rulesVersion": {
+                      "exclusiveMinimum": true,
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "selectedStaffId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "serviceTitle": {
+                      "type": "string",
+                    },
+                    "start": {
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                      "type": "string",
+                    },
+                    "timezone": {
+                      "maxLength": 80,
+                      "minLength": 1,
+                      "type": "string",
+                    },
+                    "vendorId": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "listingId",
+                    "vendorId",
+                    "serviceTitle",
+                    "optionId",
+                    "optionLabel",
+                    "addons",
+                    "mode",
+                    "locationId",
+                    "locationLabel",
+                    "locationCity",
+                    "selectedStaffId",
+                    "timezone",
+                    "start",
+                    "end",
+                    "currency",
+                    "priceCents",
+                    "durationMinutes",
+                    "bufferBeforeMinutes",
+                    "bufferAfterMinutes",
+                    "configurationVersion",
+                    "rulesVersion",
+                    "policy",
+                    "optionPriceCents",
+                    "promotion",
+                    "commission",
+                  ],
+                  "type": "object",
+                },
+                "snapshot": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "addons": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "durationMinutes": {
+                            "maximum": 480,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string",
+                          },
+                          "label": {
+                            "maxLength": 120,
+                            "minLength": 2,
+                            "type": "string",
+                          },
+                          "priceCents": {
+                            "maximum": 100000000,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                        },
+                        "required": [
+                          "id",
+                          "label",
+                          "priceCents",
+                          "durationMinutes",
+                        ],
+                        "type": "object",
+                      },
+                      "type": "array",
+                    },
+                    "attendee": {
+                      "additionalProperties": false,
+                      "nullable": true,
+                      "properties": {
+                        "name": {
+                          "maxLength": 120,
+                          "minLength": 1,
+                          "type": "string",
+                        },
+                        "notes": {
+                          "maxLength": 500,
+                          "type": "string",
+                        },
+                      },
+                      "required": [
+                        "name",
+                      ],
+                      "type": "object",
+                    },
+                    "bufferAfterMinutes": {
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "bufferBeforeMinutes": {
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "commission": {
+                      "enum": [
+                        null,
+                      ],
+                      "nullable": true,
+                      "type": "string",
+                    },
+                    "configurationVersion": {
+                      "exclusiveMinimum": true,
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "currency": {
+                      "enum": [
+                        "ETB",
+                      ],
+                      "type": "string",
+                    },
+                    "durationMinutes": {
+                      "exclusiveMinimum": true,
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "end": {
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                      "type": "string",
+                    },
+                    "listingId": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "locationCity": {
+                      "nullable": true,
+                      "type": "string",
+                    },
+                    "locationId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "locationLabel": {
+                      "nullable": true,
+                      "type": "string",
+                    },
+                    "mode": {
+                      "enum": [
+                        "in_person",
+                        "online",
+                      ],
+                      "type": "string",
+                    },
+                    "optionId": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "optionLabel": {
+                      "type": "string",
+                    },
+                    "optionPriceCents": {
+                      "exclusiveMinimum": true,
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "policy": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "amendmentLimit": {
+                          "exclusiveMinimum": true,
+                          "maximum": 9007199254740991,
+                          "minimum": 0,
+                          "type": "integer",
+                        },
+                        "contestHours": {
+                          "enum": [
+                            48,
+                          ],
+                          "type": "number",
+                        },
+                        "fullRefundHours": {
+                          "exclusiveMinimum": true,
+                          "maximum": 9007199254740991,
+                          "minimum": 0,
+                          "type": "integer",
+                        },
+                        "partialRefundHours": {
+                          "exclusiveMinimum": true,
+                          "maximum": 9007199254740991,
+                          "minimum": 0,
+                          "type": "integer",
+                        },
+                        "template": {
+                          "enum": [
+                            "flexible",
+                            "standard",
+                          ],
+                          "type": "string",
+                        },
+                        "version": {
+                          "enum": [
+                            1,
+                          ],
+                          "type": "number",
+                        },
+                      },
+                      "required": [
+                        "template",
+                        "version",
+                        "fullRefundHours",
+                        "partialRefundHours",
+                        "amendmentLimit",
+                        "contestHours",
+                      ],
+                      "type": "object",
+                    },
+                    "priceCents": {
+                      "exclusiveMinimum": true,
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "promotion": {
+                      "enum": [
+                        null,
+                      ],
+                      "nullable": true,
+                      "type": "string",
+                    },
+                    "rulesVersion": {
+                      "exclusiveMinimum": true,
+                      "maximum": 9007199254740991,
+                      "minimum": 0,
+                      "type": "integer",
+                    },
+                    "selectedStaffId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "serviceTitle": {
+                      "type": "string",
+                    },
+                    "start": {
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                      "type": "string",
+                    },
+                    "timezone": {
+                      "maxLength": 80,
+                      "minLength": 1,
+                      "type": "string",
+                    },
+                    "vendorId": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "listingId",
+                    "vendorId",
+                    "serviceTitle",
+                    "optionId",
+                    "optionLabel",
+                    "addons",
+                    "mode",
+                    "locationId",
+                    "locationLabel",
+                    "locationCity",
+                    "selectedStaffId",
+                    "timezone",
+                    "start",
+                    "end",
+                    "currency",
+                    "priceCents",
+                    "durationMinutes",
+                    "bufferBeforeMinutes",
+                    "bufferAfterMinutes",
+                    "configurationVersion",
+                    "rulesVersion",
+                    "policy",
+                    "optionPriceCents",
+                    "promotion",
+                    "commission",
+                  ],
+                  "type": "object",
+                },
+                "state": {
+                  "type": "string",
+                },
+                "version": {
+                  "exclusiveMinimum": true,
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+              },
+              "required": [
+                "bookingId",
+                "state",
+                "version",
+                "confirmedAt",
+                "snapshot",
+                "funding",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "capturedMinorUnits": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "holdId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "invoices": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "createdAt": {
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                  "type": "string",
+                },
+                "documentUrl": {
+                  "type": "string",
+                },
+                "invoiceId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "invoiceNumber": {
+                  "type": "string",
+                },
+                "vendorId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "invoiceId",
+                "vendorId",
+                "invoiceNumber",
+                "documentUrl",
+                "createdAt",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "orders": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "fulfillmentId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "lines": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "cancelledQuantity": {
+                        "maximum": 9007199254740991,
+                        "minimum": 0,
+                        "type": "integer",
+                      },
+                      "funding": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "commissionBasisMinorUnits": {
+                            "maximum": 2147483647,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                          "commissionMinorUnits": {
+                            "maximum": 2147483647,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                          "componentId": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string",
+                          },
+                          "customerMinorUnits": {
+                            "maximum": 2147483647,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                          "key": {
+                            "type": "string",
+                          },
+                          "kind": {
+                            "enum": [
+                              "goods",
+                              "booking",
+                            ],
+                            "type": "string",
+                          },
+                          "listMinorUnits": {
+                            "maximum": 2147483647,
+                            "minimum": 1,
+                            "type": "integer",
+                          },
+                          "listingId": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string",
+                          },
+                          "platformSubsidyMinorUnits": {
+                            "maximum": 2147483647,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                          "quantity": {
+                            "exclusiveMinimum": true,
+                            "maximum": 9007199254740991,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                          "sku": {
+                            "nullable": true,
+                            "type": "string",
+                          },
+                          "unitSegments": {
+                            "items": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "commissionUnitMinorUnits": {
+                                  "maximum": 2147483647,
+                                  "minimum": 0,
+                                  "type": "integer",
+                                },
+                                "customerUnitMinorUnits": {
+                                  "maximum": 2147483647,
+                                  "minimum": 0,
+                                  "type": "integer",
+                                },
+                                "listUnitMinorUnits": {
+                                  "maximum": 2147483647,
+                                  "minimum": 1,
+                                  "type": "integer",
+                                },
+                                "platformSubsidyUnitMinorUnits": {
+                                  "maximum": 2147483647,
+                                  "minimum": 0,
+                                  "type": "integer",
+                                },
+                                "quantity": {
+                                  "exclusiveMinimum": true,
+                                  "maximum": 9007199254740991,
+                                  "minimum": 0,
+                                  "type": "integer",
+                                },
+                                "vendorDiscountUnitMinorUnits": {
+                                  "maximum": 2147483647,
+                                  "minimum": 0,
+                                  "type": "integer",
+                                },
+                                "vendorEarningUnitMinorUnits": {
+                                  "maximum": 2147483647,
+                                  "minimum": 0,
+                                  "type": "integer",
+                                },
+                              },
+                              "required": [
+                                "quantity",
+                                "listUnitMinorUnits",
+                                "vendorDiscountUnitMinorUnits",
+                                "platformSubsidyUnitMinorUnits",
+                                "customerUnitMinorUnits",
+                                "commissionUnitMinorUnits",
+                                "vendorEarningUnitMinorUnits",
+                              ],
+                              "type": "object",
+                            },
+                            "maxItems": 6,
+                            "minItems": 1,
+                            "type": "array",
+                          },
+                          "vendorDiscountMinorUnits": {
+                            "maximum": 2147483647,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                          "vendorEarningMinorUnits": {
+                            "maximum": 2147483647,
+                            "minimum": 0,
+                            "type": "integer",
+                          },
+                          "vendorId": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string",
+                          },
+                        },
+                        "required": [
+                          "key",
+                          "componentId",
+                          "vendorId",
+                          "listingId",
+                          "sku",
+                          "kind",
+                          "quantity",
+                          "listMinorUnits",
+                          "vendorDiscountMinorUnits",
+                          "platformSubsidyMinorUnits",
+                          "customerMinorUnits",
+                          "commissionBasisMinorUnits",
+                          "commissionMinorUnits",
+                          "vendorEarningMinorUnits",
+                          "unitSegments",
+                        ],
+                        "type": "object",
+                      },
+                      "lineId": {
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                        "type": "string",
+                      },
+                      "quantity": {
+                        "exclusiveMinimum": true,
+                        "maximum": 9007199254740991,
+                        "minimum": 0,
+                        "type": "integer",
+                      },
+                    },
+                    "required": [
+                      "lineId",
+                      "quantity",
+                      "cancelledQuantity",
+                      "funding",
+                    ],
+                    "type": "object",
+                  },
+                  "type": "array",
+                },
+                "locationId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "orderId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "state": {
+                  "type": "string",
+                },
+                "vendorId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "orderId",
+                "vendorId",
+                "locationId",
+                "state",
+                "fulfillmentId",
+                "lines",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "paidAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string",
+          },
+          "paymentId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "pendingRefundMinorUnits": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "purchaseId": {
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "type": "string",
+          },
+          "receipt": {
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "enum": [
+                  "non_tax_platform_receipt",
+                ],
+                "type": "string",
+              },
+              "snapshot": {
+                "additionalProperties": false,
+                "properties": {
+                  "bookings": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "componentId": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string",
+                        },
+                        "policy": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "amendmentLimit": {
+                              "exclusiveMinimum": true,
+                              "maximum": 9007199254740991,
+                              "minimum": 0,
+                              "type": "integer",
+                            },
+                            "contestHours": {
+                              "enum": [
+                                48,
+                              ],
+                              "type": "number",
+                            },
+                            "fullRefundHours": {
+                              "exclusiveMinimum": true,
+                              "maximum": 9007199254740991,
+                              "minimum": 0,
+                              "type": "integer",
+                            },
+                            "partialRefundHours": {
+                              "exclusiveMinimum": true,
+                              "maximum": 9007199254740991,
+                              "minimum": 0,
+                              "type": "integer",
+                            },
+                            "template": {
+                              "enum": [
+                                "flexible",
+                                "standard",
+                              ],
+                              "type": "string",
+                            },
+                            "version": {
+                              "enum": [
+                                1,
+                              ],
+                              "type": "number",
+                            },
+                          },
+                          "required": [
+                            "template",
+                            "version",
+                            "fullRefundHours",
+                            "partialRefundHours",
+                            "amendmentLimit",
+                            "contestHours",
+                          ],
+                          "type": "object",
+                        },
+                        "quantity": {
+                          "enum": [
+                            1,
+                          ],
+                          "type": "number",
+                        },
+                        "snapshot": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "addons": {
+                              "items": {
+                                "additionalProperties": false,
+                                "properties": {
+                                  "durationMinutes": {
+                                    "maximum": 480,
+                                    "minimum": 0,
+                                    "type": "integer",
+                                  },
+                                  "id": {
+                                    "format": "uuid",
+                                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                                    "type": "string",
+                                  },
+                                  "label": {
+                                    "maxLength": 120,
+                                    "minLength": 2,
+                                    "type": "string",
+                                  },
+                                  "priceCents": {
+                                    "maximum": 100000000,
+                                    "minimum": 0,
+                                    "type": "integer",
+                                  },
+                                },
+                                "required": [
+                                  "id",
+                                  "label",
+                                  "priceCents",
+                                  "durationMinutes",
+                                ],
+                                "type": "object",
+                              },
+                              "type": "array",
+                            },
+                            "bufferAfterMinutes": {
+                              "maximum": 9007199254740991,
+                              "minimum": 0,
+                              "type": "integer",
+                            },
+                            "bufferBeforeMinutes": {
+                              "maximum": 9007199254740991,
+                              "minimum": 0,
+                              "type": "integer",
+                            },
+                            "configurationVersion": {
+                              "exclusiveMinimum": true,
+                              "maximum": 9007199254740991,
+                              "minimum": 0,
+                              "type": "integer",
+                            },
+                            "currency": {
+                              "enum": [
+                                "ETB",
+                              ],
+                              "type": "string",
+                            },
+                            "durationMinutes": {
+                              "exclusiveMinimum": true,
+                              "maximum": 9007199254740991,
+                              "minimum": 0,
+                              "type": "integer",
+                            },
+                            "end": {
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                              "type": "string",
+                            },
+                            "listingId": {
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string",
+                            },
+                            "locationCity": {
+                              "nullable": true,
+                              "type": "string",
+                            },
+                            "locationId": {
+                              "format": "uuid",
+                              "nullable": true,
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string",
+                            },
+                            "locationLabel": {
+                              "nullable": true,
+                              "type": "string",
+                            },
+                            "mode": {
+                              "enum": [
+                                "in_person",
+                                "online",
+                              ],
+                              "type": "string",
+                            },
+                            "optionId": {
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string",
+                            },
+                            "optionLabel": {
+                              "type": "string",
+                            },
+                            "priceCents": {
+                              "exclusiveMinimum": true,
+                              "maximum": 9007199254740991,
+                              "minimum": 0,
+                              "type": "integer",
+                            },
+                            "rulesVersion": {
+                              "exclusiveMinimum": true,
+                              "maximum": 9007199254740991,
+                              "minimum": 0,
+                              "type": "integer",
+                            },
+                            "selectedStaffId": {
+                              "format": "uuid",
+                              "nullable": true,
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string",
+                            },
+                            "serviceTitle": {
+                              "type": "string",
+                            },
+                            "start": {
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                              "type": "string",
+                            },
+                            "timezone": {
+                              "maxLength": 80,
+                              "minLength": 1,
+                              "type": "string",
+                            },
+                            "vendorId": {
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string",
+                            },
+                          },
+                          "required": [
+                            "listingId",
+                            "vendorId",
+                            "serviceTitle",
+                            "optionId",
+                            "optionLabel",
+                            "addons",
+                            "mode",
+                            "locationId",
+                            "locationLabel",
+                            "locationCity",
+                            "selectedStaffId",
+                            "timezone",
+                            "start",
+                            "end",
+                            "currency",
+                            "priceCents",
+                            "durationMinutes",
+                            "bufferBeforeMinutes",
+                            "bufferAfterMinutes",
+                            "configurationVersion",
+                            "rulesVersion",
+                          ],
+                          "type": "object",
+                        },
+                      },
+                      "required": [
+                        "componentId",
+                        "quantity",
+                        "snapshot",
+                        "policy",
+                      ],
+                      "type": "object",
+                    },
+                    "type": "array",
+                  },
+                  "commission": {
+                    "additionalProperties": false,
+                    "nullable": true,
+                    "properties": {
+                      "basis": {
+                        "enum": [
+                          "after_vendor_discount_before_platform_subsidy_excluding_delivery",
+                        ],
+                        "type": "string",
+                      },
+                      "rates": {
+                        "items": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "affectedVendorId": {
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string",
+                            },
+                            "basisMinorUnits": {
+                              "maximum": 2147483647,
+                              "minimum": 0,
+                              "type": "integer",
+                            },
+                            "basisPoints": {
+                              "maximum": 10000,
+                              "minimum": 0,
+                              "type": "integer",
+                            },
+                            "commissionMinorUnits": {
+                              "maximum": 2147483647,
+                              "minimum": 0,
+                              "type": "integer",
+                            },
+                            "effectiveFrom": {
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                              "type": "string",
+                            },
+                            "effectiveUntil": {
+                              "format": "date-time",
+                              "nullable": true,
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                              "type": "string",
+                            },
+                            "rateId": {
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string",
+                            },
+                            "source": {
+                              "enum": [
+                                "global",
+                                "vendor_override",
+                              ],
+                              "type": "string",
+                            },
+                            "vendorId": {
+                              "format": "uuid",
+                              "nullable": true,
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string",
+                            },
+                            "version": {
+                              "enum": [
+                                1,
+                              ],
+                              "type": "number",
+                            },
+                          },
+                          "required": [
+                            "rateId",
+                            "version",
+                            "vendorId",
+                            "basisPoints",
+                            "effectiveFrom",
+                            "effectiveUntil",
+                            "affectedVendorId",
+                            "source",
+                            "basisMinorUnits",
+                            "commissionMinorUnits",
+                          ],
+                          "type": "object",
+                        },
+                        "type": "array",
+                      },
+                      "rounding": {
+                        "enum": [
+                          "largest_remainder_half_up_per_vendor",
+                        ],
+                        "type": "string",
+                      },
+                      "totalMinorUnits": {
+                        "maximum": 2147483647,
+                        "minimum": 0,
+                        "type": "integer",
+                      },
+                    },
+                    "required": [
+                      "basis",
+                      "rounding",
+                      "rates",
+                      "totalMinorUnits",
+                    ],
+                    "type": "object",
+                  },
+                  "conflicts": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "enum": [
+                            "unavailable",
+                            "price_changed",
+                            "terms_changed",
+                            "selection_conflict",
+                            "capacity_conflict",
+                            "limit_exceeded",
+                            "promotion_unavailable",
+                            "commission_unavailable",
+                          ],
+                          "type": "string",
+                        },
+                        "currentPriceCents": {
+                          "exclusiveMinimum": true,
+                          "maximum": 2147483647,
+                          "minimum": 0,
+                          "nullable": true,
+                          "type": "integer",
+                        },
+                        "expectedPriceCents": {
+                          "exclusiveMinimum": true,
+                          "maximum": 2147483647,
+                          "minimum": 0,
+                          "nullable": true,
+                          "type": "integer",
+                        },
+                        "kind": {
+                          "enum": [
+                            "goods",
+                            "booking",
+                            "cart",
+                          ],
+                          "type": "string",
+                        },
+                        "listingId": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string",
+                        },
+                        "message": {
+                          "type": "string",
+                        },
+                        "referenceId": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string",
+                        },
+                        "sku": {
+                          "nullable": true,
+                          "type": "string",
+                        },
+                      },
+                      "required": [
+                        "kind",
+                        "referenceId",
+                        "listingId",
+                        "sku",
+                        "code",
+                        "message",
+                        "expectedPriceCents",
+                        "currentPriceCents",
+                      ],
+                      "type": "object",
+                    },
+                    "type": "array",
+                  },
+                  "evaluatedAt": {
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                    "type": "string",
+                  },
+                  "goods": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "componentId": {
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                          "type": "string",
+                        },
+                        "group": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "configurationVersion": {
+                              "exclusiveMinimum": true,
+                              "maximum": 9007199254740991,
+                              "minimum": 0,
+                              "type": "integer",
+                            },
+                            "deliveryFeeCents": {
+                              "maximum": 2147483647,
+                              "minimum": 0,
+                              "type": "integer",
+                            },
+                            "deliveryZone": {
+                              "additionalProperties": false,
+                              "nullable": true,
+                              "properties": {
+                                "etaMinutes": {
+                                  "maximum": 10080,
+                                  "minimum": 1,
+                                  "type": "integer",
+                                },
+                                "feeCents": {
+                                  "maximum": 2147483647,
+                                  "minimum": 0,
+                                  "type": "integer",
+                                },
+                                "freeDeliveryThresholdCents": {
+                                  "maximum": 2147483647,
+                                  "minimum": 0,
+                                  "nullable": true,
+                                  "type": "integer",
+                                },
+                                "id": {
+                                  "format": "uuid",
+                                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                                  "type": "string",
+                                },
+                                "label": {
+                                  "maxLength": 80,
+                                  "minLength": 1,
+                                  "type": "string",
+                                },
+                                "minimumCents": {
+                                  "maximum": 2147483647,
+                                  "minimum": 0,
+                                  "type": "integer",
+                                },
+                                "polygon": {
+                                  "items": {
+                                    "items": {
+                                      "anyOf": [
+                                        {
+                                          "maximum": 180,
+                                          "minimum": -180,
+                                          "type": "number",
+                                        },
+                                        {
+                                          "maximum": 90,
+                                          "minimum": -90,
+                                          "type": "number",
+                                        },
+                                      ],
+                                    },
+                                    "maxItems": 2,
+                                    "minItems": 2,
+                                    "type": "array",
+                                  },
+                                  "maxItems": 100,
+                                  "minItems": 4,
+                                  "type": "array",
+                                },
+                              },
+                              "required": [
+                                "id",
+                                "label",
+                                "polygon",
+                                "feeCents",
+                                "minimumCents",
+                                "freeDeliveryThresholdCents",
+                                "etaMinutes",
+                              ],
+                              "type": "object",
+                            },
+                            "etaMinutes": {
+                              "exclusiveMinimum": true,
+                              "maximum": 9007199254740991,
+                              "minimum": 0,
+                              "nullable": true,
+                              "type": "integer",
+                            },
+                            "failedDeliveryRetryHours": {
+                              "enum": [
+                                48,
+                              ],
+                              "nullable": true,
+                              "type": "number",
+                            },
+                            "fulfillment": {
+                              "oneOf": [
+                                {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "method": {
+                                      "enum": [
+                                        "pickup",
+                                      ],
+                                      "type": "string",
+                                    },
+                                  },
+                                  "required": [
+                                    "method",
+                                  ],
+                                  "type": "object",
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "address": {
+                                      "additionalProperties": false,
+                                      "properties": {
+                                        "address": {
+                                          "maxLength": 300,
+                                          "minLength": 1,
+                                          "type": "string",
+                                        },
+                                        "contactName": {
+                                          "maxLength": 120,
+                                          "minLength": 1,
+                                          "type": "string",
+                                        },
+                                        "instructions": {
+                                          "maxLength": 500,
+                                          "type": "string",
+                                        },
+                                        "locality": {
+                                          "maxLength": 120,
+                                          "minLength": 1,
+                                          "type": "string",
+                                        },
+                                        "phone": {
+                                          "maxLength": 40,
+                                          "minLength": 5,
+                                          "type": "string",
+                                        },
+                                        "point": {
+                                          "items": {
+                                            "anyOf": [
+                                              {
+                                                "maximum": 180,
+                                                "minimum": -180,
+                                                "type": "number",
+                                              },
+                                              {
+                                                "maximum": 90,
+                                                "minimum": -90,
+                                                "type": "number",
+                                              },
+                                            ],
+                                          },
+                                          "maxItems": 2,
+                                          "minItems": 2,
+                                          "type": "array",
+                                        },
+                                      },
+                                      "required": [
+                                        "contactName",
+                                        "phone",
+                                        "locality",
+                                        "address",
+                                        "point",
+                                      ],
+                                      "type": "object",
+                                    },
+                                    "method": {
+                                      "enum": [
+                                        "delivery",
+                                      ],
+                                      "type": "string",
+                                    },
+                                    "zoneId": {
+                                      "format": "uuid",
+                                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                                      "type": "string",
+                                    },
+                                  },
+                                  "required": [
+                                    "method",
+                                    "zoneId",
+                                    "address",
+                                  ],
+                                  "type": "object",
+                                },
+                              ],
+                            },
+                            "lines": {
+                              "items": {
+                                "additionalProperties": false,
+                                "properties": {
+                                  "listingId": {
+                                    "format": "uuid",
+                                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                                    "type": "string",
+                                  },
+                                  "listingVersion": {
+                                    "exclusiveMinimum": true,
+                                    "maximum": 9007199254740991,
+                                    "minimum": 0,
+                                    "type": "integer",
+                                  },
+                                  "policy": {
+                                    "additionalProperties": false,
+                                    "properties": {
+                                      "changeOfMindDays": {
+                                        "anyOf": [
+                                          {
+                                            "enum": [
+                                              7,
+                                            ],
+                                            "type": "number",
+                                          },
+                                          {
+                                            "enum": [
+                                              14,
+                                            ],
+                                            "type": "number",
+                                          },
+                                        ],
+                                      },
+                                      "faultProtectionDays": {
+                                        "enum": [
+                                          30,
+                                        ],
+                                        "type": "number",
+                                      },
+                                      "restockingFeeCents": {
+                                        "enum": [
+                                          0,
+                                        ],
+                                        "type": "number",
+                                      },
+                                      "returnTemplate": {
+                                        "enum": [
+                                          "standard",
+                                          "flexible",
+                                        ],
+                                        "type": "string",
+                                      },
+                                      "startsAt": {
+                                        "enum": [
+                                          "verified_handoff",
+                                        ],
+                                        "type": "string",
+                                      },
+                                    },
+                                    "required": [
+                                      "returnTemplate",
+                                      "changeOfMindDays",
+                                      "faultProtectionDays",
+                                      "restockingFeeCents",
+                                      "startsAt",
+                                    ],
+                                    "type": "object",
+                                  },
+                                  "quantity": {
+                                    "exclusiveMinimum": true,
+                                    "maximum": 9007199254740991,
+                                    "minimum": 0,
+                                    "type": "integer",
+                                  },
+                                  "sku": {
+                                    "nullable": true,
+                                    "type": "string",
+                                  },
+                                  "subtotalCents": {
+                                    "maximum": 2147483647,
+                                    "minimum": 0,
+                                    "type": "integer",
+                                  },
+                                  "unitPriceCents": {
+                                    "maximum": 2147483647,
+                                    "minimum": 0,
+                                    "type": "integer",
+                                  },
+                                },
+                                "required": [
+                                  "listingId",
+                                  "listingVersion",
+                                  "sku",
+                                  "quantity",
+                                  "unitPriceCents",
+                                  "subtotalCents",
+                                  "policy",
+                                ],
+                                "type": "object",
+                              },
+                              "minItems": 1,
+                              "type": "array",
+                            },
+                            "locationId": {
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string",
+                            },
+                            "pickupGraceHours": {
+                              "enum": [
+                                48,
+                              ],
+                              "nullable": true,
+                              "type": "number",
+                            },
+                            "pickupWindowHours": {
+                              "enum": [
+                                72,
+                              ],
+                              "nullable": true,
+                              "type": "number",
+                            },
+                            "vendorId": {
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string",
+                            },
+                          },
+                          "required": [
+                            "vendorId",
+                            "locationId",
+                            "configurationVersion",
+                            "fulfillment",
+                            "deliveryZone",
+                            "deliveryFeeCents",
+                            "etaMinutes",
+                            "pickupWindowHours",
+                            "pickupGraceHours",
+                            "failedDeliveryRetryHours",
+                            "lines",
+                          ],
+                          "type": "object",
+                        },
+                      },
+                      "required": [
+                        "componentId",
+                        "group",
+                      ],
+                      "type": "object",
+                    },
+                    "type": "array",
+                  },
+                  "promotion": {
+                    "additionalProperties": false,
+                    "nullable": true,
+                    "properties": {
+                      "allocations": {
+                        "items": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "commissionBasisMinorUnits": {
+                              "maximum": 2147483647,
+                              "minimum": 0,
+                              "type": "integer",
+                            },
+                            "commissionMinorUnits": {
+                              "maximum": 2147483647,
+                              "minimum": 0,
+                              "type": "integer",
+                            },
+                            "componentId": {
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string",
+                            },
+                            "customerMinorUnits": {
+                              "maximum": 2147483647,
+                              "minimum": 0,
+                              "type": "integer",
+                            },
+                            "key": {
+                              "type": "string",
+                            },
+                            "kind": {
+                              "enum": [
+                                "goods",
+                                "booking",
+                              ],
+                              "type": "string",
+                            },
+                            "listMinorUnits": {
+                              "maximum": 2147483647,
+                              "minimum": 1,
+                              "type": "integer",
+                            },
+                            "listingId": {
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string",
+                            },
+                            "platformSubsidyMinorUnits": {
+                              "maximum": 2147483647,
+                              "minimum": 0,
+                              "type": "integer",
+                            },
+                            "quantity": {
+                              "exclusiveMinimum": true,
+                              "maximum": 9007199254740991,
+                              "minimum": 0,
+                              "type": "integer",
+                            },
+                            "sku": {
+                              "nullable": true,
+                              "type": "string",
+                            },
+                            "unitSegments": {
+                              "items": {
+                                "additionalProperties": false,
+                                "properties": {
+                                  "commissionUnitMinorUnits": {
+                                    "maximum": 2147483647,
+                                    "minimum": 0,
+                                    "type": "integer",
+                                  },
+                                  "customerUnitMinorUnits": {
+                                    "maximum": 2147483647,
+                                    "minimum": 0,
+                                    "type": "integer",
+                                  },
+                                  "listUnitMinorUnits": {
+                                    "maximum": 2147483647,
+                                    "minimum": 1,
+                                    "type": "integer",
+                                  },
+                                  "platformSubsidyUnitMinorUnits": {
+                                    "maximum": 2147483647,
+                                    "minimum": 0,
+                                    "type": "integer",
+                                  },
+                                  "quantity": {
+                                    "exclusiveMinimum": true,
+                                    "maximum": 9007199254740991,
+                                    "minimum": 0,
+                                    "type": "integer",
+                                  },
+                                  "vendorDiscountUnitMinorUnits": {
+                                    "maximum": 2147483647,
+                                    "minimum": 0,
+                                    "type": "integer",
+                                  },
+                                  "vendorEarningUnitMinorUnits": {
+                                    "maximum": 2147483647,
+                                    "minimum": 0,
+                                    "type": "integer",
+                                  },
+                                },
+                                "required": [
+                                  "quantity",
+                                  "listUnitMinorUnits",
+                                  "vendorDiscountUnitMinorUnits",
+                                  "platformSubsidyUnitMinorUnits",
+                                  "customerUnitMinorUnits",
+                                  "commissionUnitMinorUnits",
+                                  "vendorEarningUnitMinorUnits",
+                                ],
+                                "type": "object",
+                              },
+                              "maxItems": 6,
+                              "minItems": 1,
+                              "type": "array",
+                            },
+                            "vendorDiscountMinorUnits": {
+                              "maximum": 2147483647,
+                              "minimum": 0,
+                              "type": "integer",
+                            },
+                            "vendorEarningMinorUnits": {
+                              "maximum": 2147483647,
+                              "minimum": 0,
+                              "type": "integer",
+                            },
+                            "vendorId": {
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string",
+                            },
+                          },
+                          "required": [
+                            "key",
+                            "componentId",
+                            "vendorId",
+                            "listingId",
+                            "sku",
+                            "kind",
+                            "quantity",
+                            "listMinorUnits",
+                            "vendorDiscountMinorUnits",
+                            "platformSubsidyMinorUnits",
+                            "customerMinorUnits",
+                            "commissionBasisMinorUnits",
+                            "commissionMinorUnits",
+                            "vendorEarningMinorUnits",
+                            "unitSegments",
+                          ],
+                          "type": "object",
+                        },
+                        "type": "array",
+                      },
+                      "customerPayableMinorUnits": {
+                        "maximum": 2147483647,
+                        "minimum": 0,
+                        "type": "integer",
+                      },
+                      "deliveryMinorUnits": {
+                        "maximum": 2147483647,
+                        "minimum": 0,
+                        "type": "integer",
+                      },
+                      "grossSaleMinorUnits": {
+                        "maximum": 2147483647,
+                        "minimum": 0,
+                        "type": "integer",
+                      },
+                      "platformCampaign": {
+                        "additionalProperties": false,
+                        "nullable": true,
+                        "properties": {
+                          "allocated": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "currency": {
+                                "pattern": "^[A-Z]{3}$",
+                                "type": "string",
+                              },
+                              "minorUnits": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "type": "integer",
+                              },
+                            },
+                            "required": [
+                              "minorUnits",
+                              "currency",
+                            ],
+                            "type": "object",
+                          },
+                          "definition": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "code": {
+                                "pattern": "^[A-Za-z0-9_-]{2,40}$",
+                                "type": "string",
+                              },
+                              "minimumMinorUnits": {
+                                "maximum": 2147483647,
+                                "minimum": 0,
+                                "type": "integer",
+                              },
+                              "perCustomerLimit": {
+                                "exclusiveMinimum": true,
+                                "maximum": 9007199254740991,
+                                "minimum": 0,
+                                "nullable": true,
+                                "type": "integer",
+                              },
+                              "refundFundingRule": {
+                                "enum": [
+                                  "proportional_original_allocations",
+                                ],
+                                "type": "string",
+                              },
+                              "rule": {
+                                "oneOf": [
+                                  {
+                                    "additionalProperties": false,
+                                    "properties": {
+                                      "kind": {
+                                        "enum": [
+                                          "fixed",
+                                        ],
+                                        "type": "string",
+                                      },
+                                      "minorUnits": {
+                                        "maximum": 2147483647,
+                                        "minimum": 1,
+                                        "type": "integer",
+                                      },
+                                    },
+                                    "required": [
+                                      "kind",
+                                      "minorUnits",
+                                    ],
+                                    "type": "object",
+                                  },
+                                  {
+                                    "additionalProperties": false,
+                                    "properties": {
+                                      "basisPoints": {
+                                        "maximum": 10000,
+                                        "minimum": 1,
+                                        "type": "integer",
+                                      },
+                                      "kind": {
+                                        "enum": [
+                                          "percentage",
+                                        ],
+                                        "type": "string",
+                                      },
+                                      "maximumMinorUnits": {
+                                        "maximum": 2147483647,
+                                        "minimum": 1,
+                                        "nullable": true,
+                                        "type": "integer",
+                                      },
+                                    },
+                                    "required": [
+                                      "kind",
+                                      "basisPoints",
+                                      "maximumMinorUnits",
+                                    ],
+                                    "type": "object",
+                                  },
+                                ],
+                              },
+                              "scope": {
+                                "additionalProperties": false,
+                                "properties": {
+                                  "kinds": {
+                                    "items": {
+                                      "enum": [
+                                        "goods",
+                                        "booking",
+                                      ],
+                                      "type": "string",
+                                    },
+                                    "maxItems": 2,
+                                    "minItems": 1,
+                                    "type": "array",
+                                  },
+                                  "listingIds": {
+                                    "items": {
+                                      "format": "uuid",
+                                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                                      "type": "string",
+                                    },
+                                    "maxItems": 500,
+                                    "type": "array",
+                                  },
+                                },
+                                "required": [
+                                  "kinds",
+                                  "listingIds",
+                                ],
+                                "type": "object",
+                              },
+                              "usageLimit": {
+                                "exclusiveMinimum": true,
+                                "maximum": 9007199254740991,
+                                "minimum": 0,
+                                "nullable": true,
+                                "type": "integer",
+                              },
+                              "validFrom": {
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                                "type": "string",
+                              },
+                              "validUntil": {
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                                "type": "string",
+                              },
+                            },
+                            "required": [
+                              "code",
+                              "validFrom",
+                              "validUntil",
+                              "scope",
+                              "rule",
+                              "minimumMinorUnits",
+                              "usageLimit",
+                              "perCustomerLimit",
+                              "refundFundingRule",
+                            ],
+                            "type": "object",
+                          },
+                          "funding": {
+                            "enum": [
+                              "vendor",
+                              "platform",
+                            ],
+                            "type": "string",
+                          },
+                          "kind": {
+                            "enum": [
+                              "vendor_coupon",
+                              "platform_campaign",
+                            ],
+                            "type": "string",
+                          },
+                          "promotionId": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string",
+                          },
+                          "vendorId": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string",
+                          },
+                          "vendorIds": {
+                            "items": {
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string",
+                            },
+                            "maxItems": 500,
+                            "type": "array",
+                          },
+                          "version": {
+                            "enum": [
+                              1,
+                            ],
+                            "type": "number",
+                          },
+                        },
+                        "required": [
+                          "promotionId",
+                          "version",
+                          "kind",
+                          "vendorId",
+                          "definition",
+                          "vendorIds",
+                          "funding",
+                          "allocated",
+                        ],
+                        "type": "object",
+                      },
+                      "platformSubsidyMinorUnits": {
+                        "maximum": 2147483647,
+                        "minimum": 0,
+                        "type": "integer",
+                      },
+                      "receiptContext": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "contractingSellers": {
+                            "enum": [
+                              "vendors",
+                            ],
+                            "type": "string",
+                          },
+                          "currency": {
+                            "enum": [
+                              "ETB",
+                            ],
+                            "type": "string",
+                          },
+                          "deliveryThresholdBasis": {
+                            "enum": [
+                              "list_sale_before_promotions",
+                            ],
+                            "type": "string",
+                          },
+                          "kind": {
+                            "enum": [
+                              "non_tax_platform_receipt",
+                            ],
+                            "type": "string",
+                          },
+                          "paymentMerchant": {
+                            "enum": [
+                              "junction",
+                            ],
+                            "type": "string",
+                          },
+                          "refundFundingRule": {
+                            "enum": [
+                              "proportional_original_allocations",
+                            ],
+                            "type": "string",
+                          },
+                          "taxCalculated": {
+                            "enum": [
+                              false,
+                            ],
+                            "type": "boolean",
+                          },
+                        },
+                        "required": [
+                          "kind",
+                          "taxCalculated",
+                          "deliveryThresholdBasis",
+                          "currency",
+                          "paymentMerchant",
+                          "contractingSellers",
+                          "refundFundingRule",
+                        ],
+                        "type": "object",
+                      },
+                      "vendorCoupon": {
+                        "additionalProperties": false,
+                        "nullable": true,
+                        "properties": {
+                          "allocated": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "currency": {
+                                "pattern": "^[A-Z]{3}$",
+                                "type": "string",
+                              },
+                              "minorUnits": {
+                                "maximum": 9007199254740991,
+                                "minimum": -9007199254740991,
+                                "type": "integer",
+                              },
+                            },
+                            "required": [
+                              "minorUnits",
+                              "currency",
+                            ],
+                            "type": "object",
+                          },
+                          "definition": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "code": {
+                                "pattern": "^[A-Za-z0-9_-]{2,40}$",
+                                "type": "string",
+                              },
+                              "minimumMinorUnits": {
+                                "maximum": 2147483647,
+                                "minimum": 0,
+                                "type": "integer",
+                              },
+                              "perCustomerLimit": {
+                                "exclusiveMinimum": true,
+                                "maximum": 9007199254740991,
+                                "minimum": 0,
+                                "nullable": true,
+                                "type": "integer",
+                              },
+                              "refundFundingRule": {
+                                "enum": [
+                                  "proportional_original_allocations",
+                                ],
+                                "type": "string",
+                              },
+                              "rule": {
+                                "oneOf": [
+                                  {
+                                    "additionalProperties": false,
+                                    "properties": {
+                                      "kind": {
+                                        "enum": [
+                                          "fixed",
+                                        ],
+                                        "type": "string",
+                                      },
+                                      "minorUnits": {
+                                        "maximum": 2147483647,
+                                        "minimum": 1,
+                                        "type": "integer",
+                                      },
+                                    },
+                                    "required": [
+                                      "kind",
+                                      "minorUnits",
+                                    ],
+                                    "type": "object",
+                                  },
+                                  {
+                                    "additionalProperties": false,
+                                    "properties": {
+                                      "basisPoints": {
+                                        "maximum": 10000,
+                                        "minimum": 1,
+                                        "type": "integer",
+                                      },
+                                      "kind": {
+                                        "enum": [
+                                          "percentage",
+                                        ],
+                                        "type": "string",
+                                      },
+                                      "maximumMinorUnits": {
+                                        "maximum": 2147483647,
+                                        "minimum": 1,
+                                        "nullable": true,
+                                        "type": "integer",
+                                      },
+                                    },
+                                    "required": [
+                                      "kind",
+                                      "basisPoints",
+                                      "maximumMinorUnits",
+                                    ],
+                                    "type": "object",
+                                  },
+                                ],
+                              },
+                              "scope": {
+                                "additionalProperties": false,
+                                "properties": {
+                                  "kinds": {
+                                    "items": {
+                                      "enum": [
+                                        "goods",
+                                        "booking",
+                                      ],
+                                      "type": "string",
+                                    },
+                                    "maxItems": 2,
+                                    "minItems": 1,
+                                    "type": "array",
+                                  },
+                                  "listingIds": {
+                                    "items": {
+                                      "format": "uuid",
+                                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                                      "type": "string",
+                                    },
+                                    "maxItems": 500,
+                                    "type": "array",
+                                  },
+                                },
+                                "required": [
+                                  "kinds",
+                                  "listingIds",
+                                ],
+                                "type": "object",
+                              },
+                              "usageLimit": {
+                                "exclusiveMinimum": true,
+                                "maximum": 9007199254740991,
+                                "minimum": 0,
+                                "nullable": true,
+                                "type": "integer",
+                              },
+                              "validFrom": {
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                                "type": "string",
+                              },
+                              "validUntil": {
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                                "type": "string",
+                              },
+                            },
+                            "required": [
+                              "code",
+                              "validFrom",
+                              "validUntil",
+                              "scope",
+                              "rule",
+                              "minimumMinorUnits",
+                              "usageLimit",
+                              "perCustomerLimit",
+                              "refundFundingRule",
+                            ],
+                            "type": "object",
+                          },
+                          "funding": {
+                            "enum": [
+                              "vendor",
+                              "platform",
+                            ],
+                            "type": "string",
+                          },
+                          "kind": {
+                            "enum": [
+                              "vendor_coupon",
+                              "platform_campaign",
+                            ],
+                            "type": "string",
+                          },
+                          "promotionId": {
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string",
+                          },
+                          "vendorId": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                            "type": "string",
+                          },
+                          "vendorIds": {
+                            "items": {
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                              "type": "string",
+                            },
+                            "maxItems": 500,
+                            "type": "array",
+                          },
+                          "version": {
+                            "enum": [
+                              1,
+                            ],
+                            "type": "number",
+                          },
+                        },
+                        "required": [
+                          "promotionId",
+                          "version",
+                          "kind",
+                          "vendorId",
+                          "definition",
+                          "vendorIds",
+                          "funding",
+                          "allocated",
+                        ],
+                        "type": "object",
+                      },
+                      "vendorDiscountMinorUnits": {
+                        "maximum": 2147483647,
+                        "minimum": 0,
+                        "type": "integer",
+                      },
+                    },
+                    "required": [
+                      "vendorCoupon",
+                      "platformCampaign",
+                      "allocations",
+                      "grossSaleMinorUnits",
+                      "deliveryMinorUnits",
+                      "vendorDiscountMinorUnits",
+                      "platformSubsidyMinorUnits",
+                      "customerPayableMinorUnits",
+                      "receiptContext",
+                    ],
+                    "type": "object",
+                  },
+                  "reserved": {
+                    "enum": [
+                      false,
+                    ],
+                    "type": "boolean",
+                  },
+                  "total": {
+                    "additionalProperties": false,
+                    "nullable": true,
+                    "properties": {
+                      "currency": {
+                        "pattern": "^[A-Z]{3}$",
+                        "type": "string",
+                      },
+                      "minorUnits": {
+                        "maximum": 9007199254740991,
+                        "minimum": -9007199254740991,
+                        "type": "integer",
+                      },
+                    },
+                    "required": [
+                      "minorUnits",
+                      "currency",
+                    ],
+                    "type": "object",
+                  },
+                },
+                "required": [
+                  "evaluatedAt",
+                  "goods",
+                  "bookings",
+                  "total",
+                  "conflicts",
+                  "reserved",
+                  "promotion",
+                  "commission",
+                ],
+                "type": "object",
+              },
+              "taxCalculated": {
+                "enum": [
+                  false,
+                ],
+                "type": "boolean",
+              },
+            },
+            "required": [
+              "kind",
+              "taxCalculated",
+              "snapshot",
+            ],
+            "type": "object",
+          },
+          "refundedMinorUnits": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer",
+          },
+          "sandbox": {
+            "enum": [
+              true,
+            ],
+            "type": "boolean",
+          },
+        },
+        "required": [
+          "purchaseId",
+          "paymentId",
+          "holdId",
+          "paidAt",
+          "sandbox",
+          "capturedMinorUnits",
+          "refundedMinorUnits",
+          "pendingRefundMinorUnits",
+          "addenda",
+          "receipt",
+          "orders",
+          "bookings",
+          "invoices",
         ],
         "type": "object",
       },
@@ -30150,6 +32826,42 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
         ],
       },
     },
+    "/v1/customer/purchases/{purchaseId}": {
+      "get": {
+        "operationId": "AppController_readMixedPurchase",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "purchaseId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MixedPurchaseRead",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Read an owned mixed Purchase, its component states and non-tax receipt.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
     "/v1/discovery/preference": {
       "post": {
         "operationId": "AppController_setDiscoveryPreference",
@@ -33570,6 +36282,60 @@ exports[`OpenAPI v1 contract publishes a stable, persistence-free public contrac
           },
         ],
         "summary": "Record scoped vendor return lifecycle evidence or inspection outcome.",
+        "tags": [
+          "foundation",
+        ],
+      },
+    },
+    "/v1/vendor/purchases/{purchaseId}/invoices": {
+      "post": {
+        "operationId": "AppController_attachMixedInvoice",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "purchaseId",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+          {
+            "in": "header",
+            "name": "idempotency-key",
+            "required": true,
+            "schema": {
+              "type": "string",
+            },
+          },
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MixedInvoiceCommand",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MixedInvoiceResult",
+                },
+              },
+            },
+            "description": "",
+          },
+        },
+        "security": [
+          {
+            "junction-auth-cookie": [],
+          },
+        ],
+        "summary": "Attach an external invoice document reference for an owned seller component.",
         "tags": [
           "foundation",
         ],

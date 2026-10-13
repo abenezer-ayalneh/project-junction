@@ -524,6 +524,8 @@ model GoodsQuote {
 }
 
 model GoodsHold {
+ mixedHold MixedCheckoutHold? @relation(fields:[mixedHoldId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+ mixedHoldId String? @unique @map("mixed_hold_id") @db.Uuid
   id          String               @id @default(dbgenerated("uuidv7()")) @db.Uuid
   quoteId     String               @unique @map("quote_id") @db.Uuid
   quote       GoodsQuote           @relation(fields: [quoteId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -542,6 +544,8 @@ model GoodsHold {
 }
 
 model GoodsHoldLine {
+ mixedStockLine MixedHoldStockLine? @relation(fields:[mixedStockLineId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+ mixedStockLineId String? @unique @map("mixed_stock_line_id") @db.Uuid
   orderLine         GoodsOrderLine?
   id                String          @id @default(dbgenerated("uuidv7()")) @db.Uuid
   holdId            String          @map("hold_id") @db.Uuid
@@ -581,8 +585,8 @@ model GoodsPaymentAttempt {
 
 model GoodsLocalPaymentResult {
   id          String              @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  paymentId   String              @unique @map("payment_id") @db.Uuid
-  payment     GoodsPaymentAttempt @relation(fields: [paymentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  paymentId   String?              @unique @map("payment_id") @db.Uuid
+  payment     GoodsPaymentAttempt? @relation(fields: [paymentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   outcome     String
   succeededAt DateTime?           @map("succeeded_at") @db.Timestamptz(6)
   receivedAt  DateTime            @default(now()) @map("received_at") @db.Timestamptz(6)
@@ -591,11 +595,13 @@ model GoodsLocalPaymentResult {
 }
 
 model GoodsPurchase {
+ mixedPurchaseId String? @unique @map("mixed_purchase_id") @db.Uuid
+ mixedPurchase MixedPurchase? @relation(fields:[mixedPurchaseId],references:[id],onDelete:NoAction,onUpdate:NoAction)
   id          String              @id @default(dbgenerated("uuidv7()")) @db.Uuid
   holdId      String              @unique @map("hold_id") @db.Uuid
   hold        GoodsHold           @relation(fields: [holdId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  paymentId   String              @unique @map("payment_id") @db.Uuid
-  payment     GoodsPaymentAttempt @relation(fields: [paymentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  paymentId   String?              @unique @map("payment_id") @db.Uuid
+  payment     GoodsPaymentAttempt? @relation(fields: [paymentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   customerId  String              @map("customer_id") @db.Uuid
   workspaceId String              @map("workspace_id") @db.Uuid
   customer    User                @relation(fields: [customerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -633,6 +639,7 @@ model GoodsVendorOrder {
 }
 
 model GoodsOrderLine {
+ mixedFunding MixedCommerceAllocation?
   returns           GoodsReturnCase[]
   cancellationLines GoodsCancellationLine[]
   id                String                  @id @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -648,10 +655,13 @@ model GoodsOrderLine {
 }
 
 model GoodsRefundOperation {
+ mixedPaymentId String? @map("mixed_payment_id") @db.Uuid
+ mixedPayment MixedPaymentAttempt? @relation(fields:[mixedPaymentId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+ funding MixedRefundFunding[]
   cancellation      GoodsOrderCancellation?
   id                String                  @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  paymentId         String                  @map("payment_id") @db.Uuid
-  payment           GoodsPaymentAttempt     @relation(fields: [paymentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  paymentId         String?                  @map("payment_id") @db.Uuid
+  payment           GoodsPaymentAttempt?     @relation(fields: [paymentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   semanticKey       String                  @unique @map("semantic_key")
   amountCents       Int                     @map("amount_cents")
   state             String                  @default("pending")
@@ -929,6 +939,8 @@ model StaffAllocation {
 }
 
 model BookingHold {
+ mixedIntent MixedHoldBookingIntent? @relation(fields:[mixedIntentId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+ mixedIntentId String? @unique @map("mixed_intent_id") @db.Uuid
   payment BookingPayment?
   booking Booking?
   id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -975,6 +987,9 @@ model BookingPaymentReceipt {
 }
 
 model Booking {
+ mixedFunding MixedCommerceAllocation?
+ mixedPurchaseId String? @map("mixed_purchase_id") @db.Uuid
+ mixedPurchase MixedPurchase? @relation(fields:[mixedPurchaseId],references:[id],onDelete:NoAction,onUpdate:NoAction)
   attendance BookingAttendance?
   meeting BookingMeeting?
   substitutions BookingSubstitution[]
@@ -985,8 +1000,8 @@ model Booking {
   id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
   holdId String @unique @map("hold_id") @db.Uuid
   hold BookingHold @relation(fields: [holdId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  paymentId String @unique @map("payment_id") @db.Uuid
-  payment BookingPayment @relation(fields: [paymentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  paymentId String? @unique @map("payment_id") @db.Uuid
+  payment BookingPayment? @relation(fields: [paymentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   allocationId String @unique @map("allocation_id") @db.Uuid
   allocation StaffAllocation @relation(fields: [allocationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   snapshot Json
@@ -1118,9 +1133,12 @@ model BookingMeeting {
 }
 
 model BookingRefund {
+ mixedPaymentId String? @map("mixed_payment_id") @db.Uuid
+ mixedPayment MixedPaymentAttempt? @relation(fields:[mixedPaymentId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+ funding MixedRefundFunding[]
   id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  paymentId String @map("payment_id") @db.Uuid
-  payment BookingPayment @relation(fields: [paymentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  paymentId String? @map("payment_id") @db.Uuid
+  payment BookingPayment? @relation(fields: [paymentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   semanticKey String @unique @map("semantic_key")
   amountCents Int @map("amount_cents")
   state String @default("pending")
@@ -1130,6 +1148,8 @@ model BookingRefund {
 }
 
 model LedgerTransaction {
+ mixedAdditionalCapture MixedAdditionalCapture?
+ mixedRefundFunding MixedRefundFunding?
  mixedCapture MixedPaymentAttempt? @relation("MixedCapture")
  mixedRefund MixedPaymentRefund? @relation("MixedRefund")
   id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -1276,6 +1296,7 @@ model CampaignBudgetBalance {
 }
 
 model MixedCheckoutHold {
+ goodsProjection GoodsHold?
  payment MixedPaymentAttempt?
  id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
  quoteId String @unique @map("quote_id") @db.Uuid
@@ -1296,6 +1317,7 @@ model MixedCheckoutHold {
  @@map("mixed_checkout_holds")
 }
 model MixedHoldStockLine {
+ goodsProjection GoodsHoldLine?
  id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
  holdId String @map("hold_id") @db.Uuid
  componentId String @map("component_id") @db.Uuid
@@ -1310,6 +1332,7 @@ model MixedHoldStockLine {
  @@map("mixed_hold_stock_lines")
 }
 model MixedHoldBookingIntent {
+ bookingProjection BookingHold?
  id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
  holdId String @map("hold_id") @db.Uuid
  componentId String @map("component_id") @db.Uuid
@@ -1324,6 +1347,9 @@ model MixedHoldBookingIntent {
 }
 
 model MixedPaymentAttempt {
+ goodsRefunds GoodsRefundOperation[]
+ bookingRefunds BookingRefund[]
+ purchase MixedPurchase?
  captureLedger LedgerTransaction? @relation("MixedCapture",fields:[captureLedgerId],references:[id],onDelete:NoAction,onUpdate:NoAction)
  id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
  holdId String @unique @map("hold_id") @db.Uuid
@@ -1357,4 +1383,95 @@ model MixedPaymentRefund {
  completedAt DateTime? @map("completed_at") @db.Timestamptz(6)
  payment MixedPaymentAttempt @relation(fields:[paymentId],references:[id],onDelete:NoAction,onUpdate:NoAction)
  @@map("mixed_payment_refunds")
+}
+
+model MixedPurchase {
+ id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+ paymentId String @unique @map("payment_id") @db.Uuid
+ holdId String @unique @map("hold_id") @db.Uuid
+ workspaceId String @map("workspace_id") @db.Uuid
+ customerId String @map("customer_id") @db.Uuid
+ snapshot Json
+ paidAt DateTime @map("paid_at") @db.Timestamptz(6)
+ createdAt DateTime @map("created_at") @db.Timestamptz(6)
+ payment MixedPaymentAttempt @relation(fields:[paymentId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+ goods GoodsPurchase?
+ bookings Booking[]
+ allocations MixedCommerceAllocation[]
+ invoices MixedExternalInvoice[]
+ @@index([workspaceId,customerId,createdAt])
+ @@map("mixed_purchases")
+}
+model MixedCommerceAllocation {
+ additionalCaptures MixedAdditionalCapture[]
+ refunds MixedRefundFunding[]
+ goodsOrderLine GoodsOrderLine? @relation(fields:[goodsOrderLineId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+ booking Booking? @relation(fields:[bookingId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+ id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+ purchaseId String @map("purchase_id") @db.Uuid
+ key String
+ componentId String @map("component_id") @db.Uuid
+ kind String
+ vendorId String @map("vendor_id") @db.Uuid
+ vendorWorkspaceId String @map("vendor_workspace_id") @db.Uuid
+ locationId String? @map("location_id") @db.Uuid
+ goodsOrderLineId String? @unique @map("goods_order_line_id") @db.Uuid
+ bookingId String? @unique @map("booking_id") @db.Uuid
+ snapshot Json
+ purchase MixedPurchase @relation(fields:[purchaseId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+ @@unique([purchaseId,key])
+ @@map("mixed_commerce_allocations")
+}
+model MixedExternalInvoice {
+ id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+ purchaseId String @map("purchase_id") @db.Uuid
+ vendorId String @map("vendor_id") @db.Uuid
+ actorId String @map("actor_id") @db.Uuid
+ invoiceNumber String @map("invoice_number")
+ documentUrl String @map("document_url")
+ createdAt DateTime @map("created_at") @db.Timestamptz(6)
+ purchase MixedPurchase @relation(fields:[purchaseId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+ @@map("mixed_external_invoices")
+}
+
+model MixedRefundFunding {
+ additionalCaptureId String? @map("additional_capture_id") @db.Uuid
+ additionalCapture MixedAdditionalCapture? @relation(fields:[additionalCaptureId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+ providerReference String? @map("provider_reference")
+ id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+ allocationId String @map("allocation_id") @db.Uuid
+ allocation MixedCommerceAllocation @relation(fields:[allocationId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+ goodsRefundId String? @map("goods_refund_id") @db.Uuid
+ goodsRefund GoodsRefundOperation? @relation(fields:[goodsRefundId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+ bookingRefundId String? @map("booking_refund_id") @db.Uuid
+ bookingRefund BookingRefund? @relation(fields:[bookingRefundId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+ quantity Int
+ offset Int
+ numerator Int
+ denominator Int
+ customerMinorUnits Int @map("customer_minor_units")
+ subsidyMinorUnits Int @map("subsidy_minor_units")
+ commissionMinorUnits Int @map("commission_minor_units")
+ vendorMinorUnits Int @map("vendor_minor_units")
+ ledgerId String? @unique @map("ledger_id") @db.Uuid
+ ledger LedgerTransaction? @relation(fields:[ledgerId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+ createdAt DateTime @map("created_at") @db.Timestamptz(6)
+ @@map("mixed_refund_funding")
+}
+
+model MixedAdditionalCapture {
+ id String @id @default(dbgenerated("uuidv7()")) @db.Uuid
+ allocationId String @map("allocation_id") @db.Uuid
+ allocation MixedCommerceAllocation @relation(fields:[allocationId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+ sourceId String @unique @map("source_id") @db.Uuid
+ sourceKind String @map("source_kind")
+ providerReference String @unique @map("provider_reference")
+ customerMinorUnits Int @map("customer_minor_units")
+ commissionMinorUnits Int @map("commission_minor_units")
+ vendorMinorUnits Int @map("vendor_minor_units")
+ ledgerId String @unique @map("ledger_id") @db.Uuid
+ ledger LedgerTransaction @relation(fields:[ledgerId],references:[id],onDelete:NoAction,onUpdate:NoAction)
+ createdAt DateTime @map("created_at") @db.Timestamptz(6)
+ refunds MixedRefundFunding[]
+ @@map("mixed_additional_captures")
 }

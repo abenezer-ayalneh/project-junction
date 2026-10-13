@@ -118,11 +118,14 @@ import {
 	MixedHoldReadSchema,
 	MixedHoldReleaseResultSchema,
 	MixedHoldResultSchema,
+	MixedInvoiceCommandSchema,
+	MixedInvoiceResultSchema,
 	MixedPaymentReadSchema,
 	MixedPaymentResultSchema,
 	MixedPaymentSimulationSchema,
 	MixedPaymentStartSchema,
 	MixedPaymentWebhookAckSchema,
+	MixedPurchaseReadSchema,
 	MixedQuoteCommandSchema,
 	MixedQuoteReadSchema,
 	MixedQuoteResultSchema,
@@ -171,6 +174,9 @@ function schemaFor(schema: z.ZodType): SchemaObject {
 
 export const OpenApiSchemaRefs = {
 	mixedCurrentHold: { $ref: '#/components/schemas/MixedCurrentHold' },
+	mixedPurchaseRead: { $ref: '#/components/schemas/MixedPurchaseRead' },
+	mixedInvoiceCommand: { $ref: '#/components/schemas/MixedInvoiceCommand' },
+	mixedInvoiceResult: { $ref: '#/components/schemas/MixedInvoiceResult' },
 	mixedCurrentPayment: { $ref: '#/components/schemas/MixedCurrentPayment' },
 	mixedPaymentStart: { $ref: '#/components/schemas/MixedPaymentStart' },
 	mixedPaymentRead: { $ref: '#/components/schemas/MixedPaymentRead' },
@@ -347,6 +353,9 @@ export const OpenApiSchemaRefs = {
 function publicSchemas(): Record<string, SchemaObject> {
 	return {
 		AccessContextResponse: schemaFor(AccessContextResponseSchema),
+		MixedPurchaseRead: schemaFor(MixedPurchaseReadSchema),
+		MixedInvoiceCommand: schemaFor(MixedInvoiceCommandSchema),
+		MixedInvoiceResult: schemaFor(MixedInvoiceResultSchema),
 		MixedCurrentPayment: schemaFor(MixedCurrentPaymentSchema),
 		MixedPaymentStart: schemaFor(MixedPaymentStartSchema),
 		MixedPaymentRead: schemaFor(MixedPaymentReadSchema),

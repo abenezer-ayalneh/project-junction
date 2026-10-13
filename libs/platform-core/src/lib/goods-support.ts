@@ -6,7 +6,9 @@ import { Prisma, type PrismaClient } from '../../generated/prisma/index.js'
 import type { LocalGoodsPaymentAdapter } from './local-goods-payment.js'
 type Transaction = Prisma.TransactionClient
 export const goodsJson = (value: unknown) => JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue
+import type { MixedComponentRefunds } from './mixed-refunds.js'
 export interface GoodsDependencies {
+	mixedRefunds?: MixedComponentRefunds
 	payments?: LocalGoodsPaymentAdapter
 	expireMixed?(tx: Transaction): Promise<number>
 	db: PrismaClient

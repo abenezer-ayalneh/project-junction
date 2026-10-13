@@ -1,0 +1,5 @@
+
+> project-junction@0.0.0 docs:check /Users/abeni/Documents/projects/misc/project-junction
+> node tools/docs-check.mjs
+
+Phase 00 documentation audit passed: 16 requirement mappings, 5 acceptance scenarios, 184 manifest documents, and 127 target-status labels.

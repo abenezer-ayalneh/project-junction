@@ -402,6 +402,12 @@ export class FoundationService {
 	resolveVendorCoupon(sessionId: string | undefined, input: unknown) {
 		return this.durable.resolveVendorCoupon(sessionId, input)
 	}
+	readMixedPurchase(sessionId: string | undefined, id: string) {
+		return this.durable.readMixedPurchase(sessionId, id)
+	}
+	attachMixedInvoice(sessionId: string | undefined, key: string | undefined, id: string, input: unknown) {
+		return this.durable.attachMixedInvoice(sessionId, key, id, input)
+	}
 	readCurrentMixedPayment(sessionId: string | undefined) {
 		return this.durable.readCurrentMixedPayment(sessionId)
 	}

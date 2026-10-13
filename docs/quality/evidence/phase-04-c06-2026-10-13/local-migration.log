@@ -1,0 +1,46 @@
+{"environment":"actual loopback development schema","before":[{"applied":47}]}
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "public" at "127.0.0.1:55432"
+
+48 migrations found in prisma/migrations
+
+Applying migration `20261013050000_mixed_purchase_commit`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20261013050000_mixed_purchase_commit/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "junction", schema "public" at "127.0.0.1:55432"
+
+48 migrations found in prisma/migrations
+
+Database schema is up to date!
+{
+  "after": [
+    {
+      "applied": 48
+    }
+  ],
+  "counts": {
+    "platformFinanceGrant": 0,
+    "commissionRate": 0,
+    "promotionDefinition": 0,
+    "promotionReservation": 0,
+    "mixedCheckoutHold": 0,
+    "mixedPaymentAttempt": 0,
+    "mixedPaymentRefund": 0,
+    "mixedPurchase": 0,
+    "mixedCommerceAllocation": 0,
+    "mixedAdditionalCapture": 0,
+    "mixedRefundFunding": 0,
+    "mixedExternalInvoice": 0
+  }
+}

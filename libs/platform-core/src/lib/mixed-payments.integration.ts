@@ -150,6 +150,10 @@ suite('Phase 04 mixed payment inbox PostgreSQL', () => {
 		adapter = new LocalMixedPaymentAdapter(secret)
 		repository = new PostgresFoundation(process.env['DATABASE_URL']!, undefined, undefined, undefined, undefined, clock, undefined, undefined, adapter)
 		other = new PostgresFoundation(process.env['DATABASE_URL']!, undefined, undefined, undefined, undefined, clock, undefined, undefined, adapter)
+		// C05 cash participant is verified in isolation. Production wiring commits through C06.
+		for (const repo of [repository, other])
+			jest.spyOn((repo as unknown as { mixedPurchases: { commit: () => Promise<unknown> } }).mixedPurchases, 'commit').mockResolvedValue(undefined)
+
 		// Mixed hold fixtures explicitly configure their controlled zero-rate
 		// policy; production does not infer a commission when none was published.
 		if (!(await repository.db.commissionRate.findFirst({ where: { vendorId: null, effectiveFrom: { lte: now } } }))) {
@@ -489,6 +493,7 @@ suite('Phase 04 mixed payment inbox PostgreSQL', () => {
 			undefined,
 			new Uncertain(secret),
 		)
+		jest.spyOn((other as unknown as { mixedPurchases: { commit: () => Promise<unknown> } }).mixedPurchases, 'commit').mockResolvedValue(undefined)
 		const f = await checkout()
 		await repository.releaseMixedHold(f.c.session.id, randomUUID(), f.h.holdId)
 		await receive(await event(f.payment.paymentId))
