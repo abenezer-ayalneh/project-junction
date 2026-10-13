@@ -152,3 +152,11 @@ Local verification:
 - Fifty-migration Prisma compatibility/populated upgrade and disposable restore rehearsal pass; actual loopback schema is current at 50, with zero Finance grants/records, mixed Purchases or earning revisions. No actual policy or commerce fixture was seeded.
 
 [Verification record](./evidence/phase-04-c09-2026-10-13/verification.json). [Financial rules](../domain/PAYMENTS-LEDGER-PROMOTIONS-AND-PAYOUTS.md#local-phase-04-c09-reconciliation-and-payout-simulation--2026-10-13). All development/verification is on the user's machine. Monday 00:00 UTC and later-week failed-transfer retry are derived local simulation rules. External provider transfer/payout fetching, target Stripe sandbox/Connect, live money and formal phase/public-release acceptance remain open. **Next:** `P04-C10` — Mixed finance acceptance and phase gate.
+
+## P04-C10 — Mixed finance acceptance and phase gate — 2026-10-13
+
+**Complete locally.** All Phase 04 requirements and TST-P04-001–004 are mapped in the [final acceptance audit](./evidence/phase-04-c10-2026-10-13/acceptance-audit.md). The combined two-Vendor journey proves both promotion funders, explicit original commission, mixed Purchase, partial original Return refund and unaffected independent components followed by reconciled per-seller payouts. Distinct approval additionally revalidates the proposer's current Vendor affiliation.
+
+The final uninterrupted run passes 365 PostgreSQL cases across 24 isolated suites, built HTTP/actual worker and fresh Edge desktop/mobile plus unavailable-stock/expired-hold/late-refund boundaries. Five-project Nx lint/typecheck/unit checks pass (123 tests, one unrelated worker skip), web build and 50-migration compatibility/populated upgrade/restore pass. Initial timeout diagnostic history is retained; final full verification passes the previously timed-out case. Actual local schema has no Finance or mixed commerce seeded. [Verification](./evidence/phase-04-c10-2026-10-13/verification.json).
+
+No local Phase 04 chunk remains. Local simulation does not accept target Stripe sandbox/Connect/transfer fetching, formal Phase 02–03 entry/exit, real Meet, independent accessibility, governing retention, target storage/recovery or public release. All development/testing is local; no live funds, remote deployment or Phase 05 work.

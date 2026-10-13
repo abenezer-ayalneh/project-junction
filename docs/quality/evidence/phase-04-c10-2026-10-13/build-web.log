@@ -1,0 +1,88 @@
+
+ NX   Running target build for project web and 3 tasks it depends on:
+
+
+
+> nx run contracts:build  [existing outputs match the cache, left as is]
+
+
+> nx run platform-core:generate-client  [existing outputs match the cache, left as is]
+
+
+> nx run platform-core:build  [existing outputs match the cache, left as is]
+
+
+> nx run web:build
+
+> next build
+
+▲ Next.js 16.3.5 (Turbopack)
+(node:77236) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✓ Running next.config.js took 10ms
+
+  Creating an optimized production build ...
+(node:77236) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:77246) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✓ Compiled successfully in 2.9s
+  Running TypeScript ...
+  Finished TypeScript in 4.0s ...
+  Collecting page data using 9 workers ...
+(node:77378) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:77384) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:77379) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:77377) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:77385) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:77382) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:77380) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:77381) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:77383) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  Generating static pages using 9 workers (0/11) ...
+  Generating static pages using 9 workers (2/11)
+  Generating static pages using 9 workers (5/11)
+  Generating static pages using 9 workers (8/11)
+✓ Generating static pages using 9 workers (11/11) in 520ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ○ /_not-found
+├ ○ /account
+├ ○ /account/reset
+├ ○ /account/verified
+├ ○ /account/verify-2fa
+├ ƒ /api/auth/[...all]
+├ ○ /cart
+├ ƒ /listings/[listingId]
+├ ○ /platform-review
+├ ƒ /purchases/[purchaseId]
+├ ƒ /search
+├ ○ /vendor-workspace
+└ ƒ /vendors/[slug]
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+
+
+ NX   Successfully ran target build for project web and 3 tasks it depends on
+
+Nx read the output from the cache instead of running the command for 3 out of 4 tasks.
+
+  Run duration:      10.5s
+  Cache:             3/4 hit (75%)
+  Critical path:     10.1s (3 tasks)
+  Recoverable time:  <1ms

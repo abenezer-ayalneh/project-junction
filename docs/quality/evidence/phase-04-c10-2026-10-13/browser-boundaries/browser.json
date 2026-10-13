@@ -1,0 +1,20 @@
+{
+	"browser": "Microsoft Edge",
+	"viewports": [1440, 390],
+	"checks": [
+		"anonymous authorization",
+		"explicit merge with existing quantity",
+		"two Vendors and independent appointment",
+		"repricing acknowledgment",
+		"lost hold response and reload recovery",
+		"unverified identity payment disabled",
+		"offline unknown payment and refresh recovery",
+		"one authoritative payment and Purchase",
+		"two Orders and one Booking receipt",
+		"no horizontal overflow",
+		"expired hold preserves uncertain payment recovery",
+		"late success shows compensated refund without a Purchase",
+		"unavailable component blocks all-or-nothing reserve in served UI"
+	],
+	"passed": true
+}

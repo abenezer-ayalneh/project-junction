@@ -134,7 +134,8 @@ export class FinanceSettlement {
 						const originalActor = await tx.platformFinanceGrant.findFirst({
 							where: { userId: p.actorId ?? '', revokedAt: null, expiresAt: { gt: new Date() }, settlementWorkspaceIds: { has: w } },
 						})
-						if (!originalActor) throw new AccessDeniedError('Proposal authority expired or was revoked.')
+						if (!originalActor || (await tx.vendorMembership.findFirst({ where: { userId: p.actorId ?? '', revokedAt: null } })))
+							throw new AccessDeniedError('Proposal authority expired, was revoked or has Vendor affiliation.')
 						if (p.kind === 'fee_proposal') {
 							const data = p.payload as { feeKind: 'processor' | 'dispute'; amountMinorUnits: number; reason: string; reference: string }
 							await new ImmutableLedger().post(tx, {

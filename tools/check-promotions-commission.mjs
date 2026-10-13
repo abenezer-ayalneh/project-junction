@@ -610,7 +610,7 @@ try {
 	}
 	if (process.env.MIXED_CHECKOUT_BROWSER_CHECK === '1') {
 		const { checkUnifiedCheckoutBrowser } = await import('./check-unified-checkout-browser.mjs')
-		await checkUnifiedCheckoutBrowser({ repository, identity, origin, vendor, location, product, service, selection })
+		await checkUnifiedCheckoutBrowser({ repository, identity, origin, vendor, location, product, service, selection, finance, secret })
 	}
 	if (process.env.EARNING_HTTP_CHECK === '1') {
 		const { checkComponentEarnings } = await import('./check-component-earnings.mjs')

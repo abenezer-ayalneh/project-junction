@@ -145,3 +145,7 @@ Phase 02 `P02-C09`–`P02-C11` subsequently completed local pickup, Vendor deliv
 ## Phase 03 local acceptance — 2026-10-12
 
 TST-P03-001–004 have complete local allocation, controlled policy/delta/refund, meeting compensation/attendance contest and served Edge selection/recovery evidence. All 108 Phase 03 scenarios and 108 prior regressions pass. Formal financial ledger/live provider/accessibility gates remain separate. See [C11 evidence](../quality/evidence/phase-03-c11-2026-10-12/acceptance-audit.md).
+
+## Phase 04 final local acceptance — 2026-10-13
+
+P04-C01–C10 are complete locally. TST-P04-001–004 and every Phase 04 requirement are mapped to current PostgreSQL, built HTTP/actual worker, source finance vectors and fresh served Edge evidence in the [Phase 04 final audit](./evidence/phase-04-c10-2026-10-13/acceptance-audit.md). Local earning-window and payout integration now supplies the previously deferred Phase 02–03 mixed-finance dependencies; legacy standalone commerce is not retrospectively posted. Formal provider, phase-entry/exit and public-release gates remain open.

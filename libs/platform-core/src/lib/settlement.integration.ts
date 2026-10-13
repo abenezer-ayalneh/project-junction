@@ -573,4 +573,114 @@ suite('Phase 04 reconciliation and payouts PostgreSQL', () => {
 		await command(a, w, { action: 'simulate_result', transferId: t.id, outcome: 'succeeded' })
 		expect(await repository.db.ledgerTransaction.count({ where: { sourceId: t.id } })).toBe(2)
 	})
+	test('C10 acceptance: multi-Vendor promoted mixed Purchase, partial original refund and independent weekly payouts reconcile', async () => {
+		process.env['JUNCTION_GOODS_HANDOFF_SECRET'] = secret
+		process.env['JUNCTION_BOOKING_ATTENDANCE_SECRET'] = secret
+		const c = await customer(),
+			v = await vendor(),
+			second = await vendor(),
+			controller = await finance(v.owner.workspace.id)
+		for (const seller of [v, second])
+			await repository.publishCommissionRate(controller.session.id, randomUUID(), {
+				vendorId: seller.vendor.id,
+				basisPoints: 1500,
+				effectiveFrom: '2026-10-12T00:00:00Z',
+				effectiveUntil: null,
+				reason: 'Explicit C10 original 15 percent fixture.',
+			})
+		const promotion = await campaign(5000)
+		const coupon = await repository.publishVendorCoupon(v.owner.session.id, randomUUID(), {
+			definition: { ...promotion.definition, code: 'C10_' + randomUUID().slice(0, 8), rule: { kind: 'fixed', minorUnits: 50 } },
+			reason: 'Original Vendor-funded C10 discount.',
+		})
+		const q = await prepared(c, {
+			goodsGroups: [{ ...v.selection.goodsGroups[0], lines: [{ ...v.selection.goodsGroups[0].lines[0], quantity: 2 }] }, second.selection.goodsGroups[0]],
+			bookings: [...v.selection.bookings, ...second.selection.bookings],
+			promotions: { vendorCouponId: coupon.promotionId, platformCampaignId: promotion.promotionId },
+		})
+		const h = await hold(c.session.id, q.quoteId),
+			p = await repository.startMixedPayment(c.session.id, randomUUID(), { holdId: h.holdId }),
+			e = await event(p.paymentId)
+		await Promise.all([receive(e), receive(e, other)])
+		const paidResult = await repository.readMixedPayment(c.session.id, p.paymentId),
+			purchase = await repository.readMixedPurchase(c.session.id, paidResult.purchaseId!)
+		expect(purchase.orders).toHaveLength(2)
+		expect(purchase.bookings).toHaveLength(2)
+		expect(purchase.receipt.taxCalculated).toBe(false)
+		expect(purchase.receipt.snapshot.promotion?.vendorDiscountMinorUnits).toBe(50)
+		expect(purchase.receipt.snapshot.promotion?.platformSubsidyMinorUnits).toBe(100)
+		const f = {
+				c,
+				v,
+				purchase,
+				order: purchase.orders.find((o) => o.vendorId === v.vendor.id)!,
+				booking: purchase.bookings.find((b) => b.snapshot.vendorId === v.vendor.id)!,
+			},
+			g = {
+				c,
+				v: second,
+				purchase,
+				order: purchase.orders.find((o) => o.vendorId === second.vendor.id)!,
+				booking: purchase.bookings.find((b) => b.snapshot.vendorId === second.vendor.id)!,
+			}
+		await goodsHandoff(f)
+		await goodsHandoff(g)
+		await bookingComplete(f)
+		await bookingComplete(g)
+		now = new Date(now.getTime() + 8 * 86400000)
+		const returned = await claim(f)
+		const unaffectedBefore = await repository.readVendorEarnings(g.v.owner.session.id)
+		for (const input of [
+			{ action: 'approve', instructions: 'Return the selected original unit.' },
+			{ action: 'ship', evidence: 'The Customer shipped the original unit.' },
+			{ action: 'receive', evidence: 'The original unit was received.' },
+			{ action: 'inspect', evidence: 'Inspection confirms the fault.', stockDisposition: 'restock' },
+			{ action: 'refund', evidence: 'Refund this original unit after inspection.' },
+		])
+			await repository.actOnGoodsReturn(
+				input.action === 'ship' ? c.session.id : v.owner.session.id,
+				randomUUID(),
+				returned.returnId,
+				input,
+				input.action === 'ship' ? 'customer' : 'vendor',
+			)
+		await repository.reconcileMixedComponentRefunds()
+		const frozenReceipt = (await repository.readMixedPurchase(c.session.id, purchase.purchaseId)).receipt
+		expect(frozenReceipt).toEqual(purchase.receipt)
+		expect((await repository.readVendorEarnings(g.v.owner.session.id)).lots).toEqual(unaffectedBefore.lots)
+		const owners = [f, g]
+		for (const owner of owners) {
+			const { a } = await policy(owner)
+			const w = owner.v.owner.workspace.id
+			const expected = (await repository.readVendorEarnings(owner.v.owner.session.id)).lots.reduce((sum, l) => sum + l.amounts.available, 0)
+			await command(a, w, { action: 'run_weekly' })
+			const t = await transfer(w)
+			expect((t.payload as { amount: number }).amount).toBe(expected)
+			await command(a, w, { action: 'simulate_result', transferId: t.id, outcome: 'succeeded' })
+			expect((await command(a, w, { action: 'reconcile' })).records[0].payload['matched']).toBe(true)
+		}
+		const customerFinance = await finance(c.workspace.id)
+		expect((await command(customerFinance, c.workspace.id, { action: 'reconcile' })).records[0].payload['matched']).toBe(true)
+		const unbalanced = await repository.db.$queryRaw<
+			{ id: string }[]
+		>`SELECT transaction_id AS id FROM ledger_postings GROUP BY transaction_id HAVING sum(minor_units)<>0`
+		expect(unbalanced).toEqual([])
+		expect(await repository.db.mixedPurchase.count({ where: { paymentId: p.paymentId } })).toBe(1)
+	})
+	test('C10 acceptance: newly affiliated Vendor proposer loses approval eligibility despite an unrevoked Finance grant', async () => {
+		const f = await paid(),
+			w = f.c.workspace.id,
+			a = await finance(w),
+			b = await finance(w)
+		const p = await command(a, w, {
+			action: 'propose_fee',
+			feeKind: 'processor',
+			amountMinorUnits: 10,
+			reference: randomUUID(),
+			evidence: 'Controlled fee awaiting distinct approval.',
+		})
+		await repository.db.vendorMembership.create({ data: { vendorId: f.v.vendor.id, userId: a.user.id, role: 'vendor_staff', locationIds: [] } })
+		await expect(command(b, w, { action: 'approve', proposalId: p.records[0].id })).rejects.toThrow('Vendor affiliation')
+		expect(await repository.db.ledgerTransaction.count({ where: { sourceId: p.records[0].id } })).toBe(0)
+	})
 })
